@@ -10,8 +10,11 @@ public class OfferRepo {
      * @params:
      * 
      */
-    Long create() {
-        //
+    public Long create() {
+
+        Long newId = Long.valueOf(1);
+
+        return newId;
     }
 
     /*
@@ -20,8 +23,11 @@ public class OfferRepo {
      * @params:
      * 
      */
-    bool update() {
-        //
+    public boolean update() {
+
+        boolean isUpdated = true;
+
+        return isUpdated;
     }
 
     /*
@@ -30,7 +36,10 @@ public class OfferRepo {
      * @params:
      * 
      */
-    bool remove() {
-        //
+    public boolean remove() {
+
+        boolean isRemoved = true;
+
+        return isRemoved;
     }
 }

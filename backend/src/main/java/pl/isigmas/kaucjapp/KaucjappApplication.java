@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class KaucjappApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(KaucjappApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(KaucjappApplication.class, args);
+    }
 
 }
