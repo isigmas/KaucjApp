@@ -1,48 +1,33 @@
 package pl.isigmas.kaucjapp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "offers")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Offer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "offer_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "creator_id", nullable = false)
     private User creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "collector_id")
     private User collector;
 
-    private Integer kaucjaBottlesCount;
-    private Integer nonKaucjaBottlesCount;
+    @OneToOne(mappedBy = "offer", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private OfferInfo info;
 
-    private String pickupAddress;
-
-    private String pickupInstructions;
-
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private OfferStatus status = OfferStatus.OPEN;
-
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime timeCreated;
-
-    private LocalDateTime timeCompleted;
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL)
+    private List<OfferCount> counts;
 }
