@@ -1,25 +1,36 @@
 package pl.isigmas.kaucjapp.repository;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import pl.isigmas.kaucjapp.DTO.OfferDTO;
 
-@RestController
-@RequestMapping("/offers")
 public class OfferRepo {
 
-    @GetMapping("/create")
-    public String create() {
-        return "Ready!";
+    /*
+     * Create new offer and return its id
+     * 
+     * @params:
+     * 
+     */
+    Long create() {
+        //
     }
 
-    @GetMapping("/update")
-    public String update() {
-        return "update";
+    /*
+     * Update offer return true if update was successful, false otherwise
+     * 
+     * @params:
+     * 
+     */
+    bool update() {
+        //
     }
 
-    @GetMapping("/remove")
-    public String remove() {
-        return "remove";
+    /*
+     * Remove offer and return true if remove was successful, false otherwise
+     * 
+     * @params:
+     * 
+     */
+    bool remove() {
+        //
     }
 }
