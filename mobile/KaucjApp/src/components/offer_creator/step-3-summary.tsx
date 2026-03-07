@@ -1,9 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import Animated, { Easing, FadeInUp, Layout } from "react-native-reanimated";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
+import Animated, { Easing, FadeInUp } from "react-native-reanimated";
 import { colors } from "@/src/theme";
 import { OfferData } from "./create-offer";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
+import { useCreateOffer } from "@/src/api/useOffer";
 
 interface ExtendedOfferData extends OfferData {
   address?: string;
@@ -14,10 +22,24 @@ interface ExtendedOfferData extends OfferData {
 
 interface Step3SummaryProps {
   data: ExtendedOfferData;
-  onBack: () => void;
 }
 
-export default function Step3Summary({ data, onBack }: Step3SummaryProps) {
+export default function Step3Summary({ data }: Step3SummaryProps) {
+  const { mutate: createOffer, isPending } = useCreateOffer();
+
+  const handleSubmit = () => {
+    console.log("Button pressed");
+    createOffer(data, {
+      onSuccess: (responseData) => {
+        console.log("200: ", responseData);
+        alert("Oferta została opublikowana!");
+      },
+      onError: (error) => {
+       
+      },
+    });
+  };
+
   const totalDepositValue =
     data.plasticBottles * 0.5 + data.glassBottles * 1 + data.cans * 0.5;
 
@@ -161,6 +183,18 @@ export default function Step3Summary({ data, onBack }: Step3SummaryProps) {
           )}
         </View>
       </Animated.View>
+
+      <Pressable
+        style={[styles.buttonPrimary, isPending && styles.buttonDisabled]}
+        onPress={handleSubmit}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Opublikuj</Text>
+        )}
+      </Pressable>
     </ScrollView>
   );
 }
@@ -309,4 +343,23 @@ const styles = StyleSheet.create({
     color: "#92400E",
     lineHeight: 18,
   },
+  buttonPrimary: {
+    flex: 1,
+    backgroundColor: colors.primary.base,
+    padding: 16,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  buttonSecondary: {
+    flex: 1,
+    backgroundColor: "#E5E7EB",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    backgroundColor: colors.primary.light,
+  },
+  buttonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
+  buttonTextSecondary: { color: "#111827", fontWeight: "700", fontSize: 16 },
 });
