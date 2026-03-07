@@ -32,6 +32,8 @@ public class OfferRepo {
         info.setOffer(offer);
         info.setPickupAddress(dto.getPickupAddress());
         info.setPickupInstructions(dto.getPickupInstructions());
+        info.setLatitude(dto.getLatitude());
+        info.setLongitude(dto.getLongitude());
         info.setStatus(OfferStatus.OPEN);
         offer.setInfo(info);
 
@@ -71,6 +73,8 @@ public class OfferRepo {
     public boolean update(Long offerId, OfferDTO dto) {
         return offerRepository.findById(offerId).map(offer -> {
             if (offer.getInfo() != null) {
+                if(dto.getLatitude() != null) offer.getInfo().setLatitude(dto.getLatitude());
+                if(dto.getLongitude() != null) offer.getInfo().setLongitude(dto.getLongitude());
                 if(dto.getPickupAddress() != null) offer.getInfo().setPickupAddress(dto.getPickupAddress());
                 if(dto.getPickupInstructions() != null) offer.getInfo().setPickupInstructions(dto.getPickupInstructions());
             }

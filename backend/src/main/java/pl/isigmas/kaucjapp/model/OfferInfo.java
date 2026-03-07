@@ -20,7 +20,8 @@ public class OfferInfo {
     @MapsId
     @JoinColumn(name = "offer_id")
     private Offer offer;
-
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private String pickupAddress;
     private String pickupInstructions;
 
