@@ -16,4 +16,5 @@ public class BottlePrice {
     private Long id;
 
     private BigDecimal price;
+    private BigDecimal fee;
 }
