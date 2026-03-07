@@ -60,7 +60,7 @@ export default function Profile() {
               <Text style={styles.settingsText}>Ustawienia profilu</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards" as any)}>
+            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards")}>
               <Text style={styles.rewardsText}>Nagrody za punkty</Text>
             </TouchableOpacity>
 
