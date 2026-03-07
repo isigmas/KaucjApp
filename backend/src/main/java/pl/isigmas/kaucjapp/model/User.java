@@ -15,7 +15,12 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
+    private String name;
+    private String surname;
     private String username;
     private String phoneNumber;
+    private String email;
     private String defaultAddress;
+    private String defaultLatitude;
+    private String defaultLongitude;
 }

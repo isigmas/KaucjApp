@@ -43,3 +43,5 @@ services:
       - SPRING_DATASOURCE_USERNAME=myuser
       - SPRING_DATASOURCE_PASSWORD=secret
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_SQL_INIT_MODE=always

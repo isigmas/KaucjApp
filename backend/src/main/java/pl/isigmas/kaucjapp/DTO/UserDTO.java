@@ -1,27 +1,37 @@
 package pl.isigmas.kaucjapp.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
 
-    private Long creatorId;
-    private java.math.BigDecimal latitude;
-    private java.math.BigDecimal longitude;
-    private Integer kaucjaQuantity;
-    private Integer nonKaucjaQuantity;
-    private String pickupAddress;
-    private String pickupInstructions;
+    @JsonProperty("user_id")
+    private Long id;
 
-    private Long userId;
-    private String userName;
+    private String name;
+
+    private String surname;
+
+    private String username;
+
+    @JsonProperty("phone_number")
+    private String phoneNumber;
+
     private String email;
-    private int phoneNumber;
-    private java.math.BigDecimal defaultLatitude;
-    private java.math.BigDecimal defaultLongitude;
 
+    @JsonProperty("default_address")
+    private String defaultAddress;
+
+    @JsonProperty("default_latitude")
+    private String defaultLatitude;
+
+    @JsonProperty("default_longitude")
+    private String defaultLongitude;
 }
