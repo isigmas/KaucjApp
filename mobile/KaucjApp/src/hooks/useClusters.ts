@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Dimensions } from "react-native";
 import Supercluster from "supercluster";
 import type { Region } from "react-native-maps";
-import type { BottleAd } from "@/src/lib/mockData";
+import type { Offer } from "@/src/lib/mockData";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -11,7 +11,7 @@ const CLUSTER_RADIUS = 55;
 const MAX_ZOOM = 18;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-export type AdPoint = Supercluster.PointFeature<BottleAd>;
+export type AdPoint = Supercluster.PointFeature<Offer>;
 
 export interface ClusterProps {
   totalBottles: number;
@@ -50,15 +50,17 @@ function regionToBBox(region: Region): [number, number, number, number] {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 export function useClusters(
-  ads: BottleAd[],
+  ads: Offer[],
   region: Region
 ): ClusterOrPoint[] {
   const index = useMemo(() => {
-    const sc = new Supercluster<BottleAd, ClusterProps>({
+    const sc = new Supercluster<Offer, ClusterProps>({
       radius: CLUSTER_RADIUS,
       maxZoom: MAX_ZOOM,
       minZoom: 0, 
-      map: (props) => ({ totalBottles: props.bottleCount }),
+      map: (props) => ({
+        totalBottles: props.items.reduce((sum, i) => sum + i.quantity, 0),
+      }),
       reduce: (accumulated, props) => {
         accumulated.totalBottles += props.totalBottles;
       },
@@ -69,7 +71,7 @@ export function useClusters(
         type: "Feature" as const,
         geometry: {
           type: "Point" as const,
-          coordinates: [ad.coordinate.longitude, ad.coordinate.latitude],
+          coordinates: [ad.longitude, ad.latitude],
         },
         properties: ad,
       }))

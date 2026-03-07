@@ -100,15 +100,16 @@ export default function HomeScreen() {
             );
           }
 
-          const ad = item.properties;
+          const offer = item.properties;
+          const totalQty = offer.items.reduce((s, i) => s + i.quantity, 0);
           return (
             <StableMarker
-              key={`pin-${ad.id}`}
+              key={`pin-${offer.offer_id}`}
               coordinate={coordinate}
-              title={ad.title}
-              description={`${ad.seller} · ${ad.bottleCount} szt.`}
+              title={offer.address}
+              description={`${offer.user.username} · ${totalQty} szt.`}
             >
-              <BottlePin count={ad.bottleCount} />
+              <BottlePin count={totalQty} />
             </StableMarker>
           );
         })}
