@@ -7,6 +7,10 @@ export default function HomeLayout() {
         name="index"
         options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
+        <Stack.Screen
+            name="profileSettings/index"
+            options={{ headerShown: false, headerLargeTitleEnabled: false }}
+        />
     </Stack>
   );
 }
