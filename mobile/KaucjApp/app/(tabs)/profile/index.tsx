@@ -18,10 +18,9 @@ const styles = StyleSheet.create({
   },
 });*/
 
-import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, BackHandler, SafeAreaView, Platform } from "react-native";
-import { useRouter, Stack } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from "react-native";
+import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE!;
@@ -29,7 +28,6 @@ const USER_ID = process.env.EXPO_PUBLIC_USER_ID!;
 
 export default function Profile() {
   const router = useRouter();
-  const handleExitApp = () => BackHandler.exitApp();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -100,7 +98,7 @@ export default function Profile() {
               <Text style={styles.settingsText}>Ustawienia profilu</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards" as any)}>
+            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards")}>
               <Text style={styles.rewardsText}>Nagrody za punkty</Text>
             </TouchableOpacity>
 

@@ -12,11 +12,11 @@ export default function HomeLayout() {
             options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
         <Stack.Screen
-            name="rewards/index.tsx"
+            name="rewards/index"
             options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
         <Stack.Screen
-            name="rewards/rewardsHowWork/index.tsx"
+            name="rewards/rewardsHowWork/index"
             options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
 

@@ -1,16 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {
-    View,
-    Text,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    SafeAreaView,
-    Platform,
-    ScrollView,
-    ActivityIndicator
-} from "react-native";
-import { useRouter, Stack } from "expo-router";
+import React, { useState} from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Platform } from "react-native";
+import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE!;
