@@ -6,7 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.model.*;
 import pl.isigmas.kaucjapp.repository.*;
-
+import pl.isigmas.kaucjapp.DTO.OfferResponseDTO;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,5 +107,49 @@ public class OfferService {
             return true;
         }
         return false;
+    }
+
+    public List<OfferResponseDTO> getAll() {
+        return offerRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private OfferResponseDTO mapToResponseDTO(Offer offer) {
+
+        OfferResponseDTO.UserDTO userDTO = null;
+        if (offer.getCreator() != null) {
+            userDTO = OfferResponseDTO.UserDTO.builder()
+                    .userId(offer.getCreator().getId())
+                    .username(offer.getCreator().getUsername())
+                    .build();
+        }
+
+        List<OfferResponseDTO.ItemDTO> itemDTOs = new ArrayList<>();
+        if (offer.getCounts() != null) {
+            itemDTOs = offer.getCounts().stream()
+                    .map(count -> OfferResponseDTO.ItemDTO.builder()
+                            .bottleId(count.getBottlePrice() != null ? count.getBottlePrice().getId() : null)
+                            .quantity(count.getQuantity())
+                            .price(count.getBottlePrice() != null && count.getBottlePrice().getPrice() != null
+                                    ? count.getBottlePrice().getPrice().doubleValue() : 0.0)
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        return OfferResponseDTO.builder()
+                .offerId(offer.getId())
+                .status(offer.getInfo() != null && offer.getInfo().getStatus() != null
+                        ? offer.getInfo().getStatus().name() : null)
+                .latitude(offer.getInfo() != null && offer.getInfo().getLatitude() != null
+                ? offer.getInfo().getLatitude().doubleValue() : null)
+                .longitude(offer.getInfo() != null && offer.getInfo().getLongitude() != null
+                ? offer.getInfo().getLongitude().doubleValue() : null)
+                .pickupAddress(offer.getInfo() != null ? offer.getInfo().getPickupAddress() : null)
+                .pickupInstructions(offer.getInfo() != null ? offer.getInfo().getPickupInstructions() : null)
+                .createdAt(offer.getInfo() != null ? offer.getInfo().getTimeCreated() : null)
+                .user(userDTO)
+                .items(itemDTOs)
+                .build();
     }
 }
