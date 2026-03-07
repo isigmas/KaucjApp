@@ -28,6 +28,20 @@ public class UserController {
         }
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
+        log.info("Fetching user with ID: {}", id);
+        UserDTO userDTO = userService.getUserById(id);
+
+        if (userDTO == null) {
+            log.warn("User with ID {} not found", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok(userDTO);
+    }
+
+
     @PutMapping("/user/{id}")
     public ResponseEntity<Void> update(@RequestBody UserDTO updatedUser, @PathVariable Long id) {
         try {

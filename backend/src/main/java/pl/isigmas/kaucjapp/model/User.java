@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "users")
@@ -21,6 +22,6 @@ public class User {
     private String phoneNumber;
     private String email;
     private String defaultAddress;
-    private String defaultLatitude;
-    private String defaultLongitude;
+    private BigDecimal defaultLatitude;
+    private BigDecimal defaultLongitude;
 }

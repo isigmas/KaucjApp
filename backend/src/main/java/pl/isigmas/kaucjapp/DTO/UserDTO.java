@@ -30,8 +30,8 @@ public class UserDTO {
     private String defaultAddress;
 
     @JsonProperty("default_latitude")
-    private String defaultLatitude;
+    private java.math.BigDecimal defaultLatitude;
 
     @JsonProperty("default_longitude")
-    private String defaultLongitude;
+    private java.math.BigDecimal defaultLongitude;
 }
