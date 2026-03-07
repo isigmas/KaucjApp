@@ -24,4 +24,7 @@ public class User {
     private String defaultAddress;
     private BigDecimal defaultLatitude;
     private BigDecimal defaultLongitude;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Rating rating;
 }

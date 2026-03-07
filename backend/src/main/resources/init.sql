@@ -10,6 +10,13 @@ CREATE TABLE users (
                        default_longitude DECIMAL(9,6)
 );
 
+CREATE TABLE ratings (
+                         user_id BIGINT PRIMARY KEY,
+                         current_avg DECIMAL(9,6) DEFAULT 0.0,
+                         number_of_feedbacks BIGINT DEFAULT 0,
+                         CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE offers (
                         offer_id BIGSERIAL PRIMARY KEY,
                         creator_id BIGINT NOT NULL,
