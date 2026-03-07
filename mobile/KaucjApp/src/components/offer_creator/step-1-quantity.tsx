@@ -15,7 +15,8 @@ export default function Step1Quantity({
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>1. What do you have?</Text>
-      <Text>Bottles: {data.bottles}</Text>
+      <Text>Plastic Bottles: {data.plasticBottles}</Text>
+      <Text>Glass Bottles: {data.glassBottles}</Text>
       <Text>Cans: {data.cans}</Text>
     </View>
   );

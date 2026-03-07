@@ -1,9 +1,10 @@
 import { colors } from "@/src/theme";
+
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 
 export default function RootLayout() {
   return (
-    <NativeTabs>
+    <NativeTabs minimizeBehavior="automatic">
       <NativeTabs.Trigger name="home">
         <Label>Mapa</Label>
         <Icon

@@ -1,35 +1,35 @@
 import { colors } from "@/src/theme";
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Step1Quantity from "./step-1-quantity";
-import Step2Price from "./step-2-price";
-import Step3Location from "./step-3-location";
-import Step4Summary from "./step-4-summary";
+import Step2Location from "./step-2-location";
+import Step3Summary from "./step-3-summary";
+import { StepNavigation } from "./navigation";
 
 export interface OfferData {
-  bottles: number;
+  plasticBottles: number;
+  glassBottles: number;
   cans: number;
-  askingPrice: number;
+  plasticPrice: number;
+  glassPrice: number;
+  cansPrice: number;
   location: string;
 }
+const STEPS = [
+  { number: 1, label: "Ilość i cena" },
+  { number: 2, label: "Adres" },
+  { number: 3, label: "Podgląd" },
+];
 
 const triggerSlideInAnimation = (animatedValue: Animated.Value) => {
-  // Reset to initial state (off-screen right and slightly transparent)
   animatedValue.setValue(0);
 
   Animated.spring(animatedValue, {
     toValue: 1,
-    friction: 9, // Higher friction = less bounce
-    tension: 60, // Higher tension = faster speed
-    useNativeDriver: true, // Crucial for 60fps performance
+    friction: 9, //  less bounce
+    tension: 60, //  speed
+    useNativeDriver: true,
   }).start();
 };
 
@@ -53,9 +53,12 @@ const getSlideInStyles = (animatedValue: Animated.Value) => {
 export default function CreateOfferScreen() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [offerData, setOfferData] = useState<OfferData>({
-    bottles: 10,
+    plasticBottles: 0,
+    glassBottles: 0,
     cans: 0,
-    askingPrice: 0,
+    plasticPrice: 0.2,
+    glassPrice: 0.2,
+    cansPrice: 0.2,
     location: "",
   });
 
@@ -70,7 +73,7 @@ export default function CreateOfferScreen() {
     setOfferData((prev) => ({ ...prev, ...newData }));
   };
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   // Dynamic component rendering
@@ -86,11 +89,10 @@ export default function CreateOfferScreen() {
       case 1:
         return <Step1Quantity {...props} />;
       case 2:
-        return <Step2Price {...props} />;
+        return <Step2Location {...props} />;
       case 3:
-        return <Step3Location {...props} />;
-      case 4:
-        return <Step4Summary {...props} />;
+        return <Step3Summary {...props} />;
+
       default:
         return null;
     }
@@ -99,16 +101,51 @@ export default function CreateOfferScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressText}>Step {currentStep} of 4</Text>
-        <View style={styles.progressBarBackground}>
-          <Animated.View
-            style={[
-              styles.progressBarFill,
-              { width: `${(currentStep / 4) * 100}%` },
-            ]}
-          />
-        </View>
+      <View style={styles.progressOuter}>
+        {STEPS.map((step) => {
+          const isDone = step.number < currentStep;
+          const isActive = step.number === currentStep;
+          return (
+            <React.Fragment key={step.number}>
+              <View style={styles.stepNode}>
+                <View
+                  style={[
+                    styles.stepDot,
+                    isActive && styles.stepDotActive,
+                    isDone && styles.stepDotDone,
+                  ]}
+                >
+                  {isDone ? (
+                    <Text style={styles.stepDotCheck}>✓</Text>
+                  ) : (
+                    <Text
+                      style={[
+                        styles.stepDotNumber,
+                        isActive && styles.stepDotNumberActive,
+                      ]}
+                    >
+                      {step.number}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.stepLabel,
+                    isActive && styles.stepLabelActive,
+                    isDone && styles.stepLabelDone,
+                  ]}
+                >
+                  {step.label}
+                </Text>
+              </View>
+              {step.number < STEPS.length && (
+                <View
+                  style={[styles.stepLine, isDone && styles.stepLineDone]}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
       </View>
 
       {/* Animated Step Container */}
@@ -117,14 +154,14 @@ export default function CreateOfferScreen() {
       >
         {renderStep()}
       </Animated.View>
-      <View style={styles.row}>
-        <Pressable style={styles.buttonSecondary} onPress={prevStep}>
-          <Text style={styles.buttonTextSecondary}>Back</Text>
-        </Pressable>
-        <Pressable style={styles.button} onPress={nextStep}>
-          <Text style={styles.buttonText}>Next: Summary</Text>
-        </Pressable>
-      </View>
+
+      {/* navigatoin */}
+      <StepNavigation
+        currentStep={currentStep}
+        totalSteps={3}
+        nextStep={nextStep}
+        prevStep={prevStep}
+      />
     </SafeAreaView>
   );
 }
@@ -132,36 +169,109 @@ export default function CreateOfferScreen() {
 // --- 5. Skeleton Styles ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.main },
-  progressContainer: { padding: 20 },
-  progressText: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 8,
-    fontWeight: "600",
+
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
-  progressBarBackground: {
-    height: 6,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 3,
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#10B981",
-    borderRadius: 3,
-  },
-  animatedWrapper: { flex: 1, padding: 20 },
-  stepContainer: { flex: 1 },
-  stepTitle: {
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: "800",
-    color: "#111827",
-    marginBottom: 24,
+    color: colors.text.primary,
+    letterSpacing: -0.4,
   },
+  headerSub: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    marginTop: 3,
+    fontWeight: "500",
+  },
+  // prgoress bar
+  progressOuter: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 28,
+    marginBottom: 20,
+    marginTop: 45,
+  },
+  stepNode: {
+    alignItems: "center",
+    gap: 5,
+  },
+  stepDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.background.subtle,
+    borderWidth: 1.5,
+    borderColor: colors.status.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  stepDotActive: {
+    backgroundColor: colors.primary.base,
+    borderColor: colors.primary.base,
+    shadowColor: colors.primary.base,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  stepDotDone: {
+    backgroundColor: colors.primary.dark,
+    borderColor: colors.primary.dark,
+  },
+  stepDotNumber: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.text.muted,
+  },
+  stepDotNumberActive: {
+    color: colors.text.white,
+  },
+  stepDotCheck: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.text.white,
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.text.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    textAlign: "center",
+    maxWidth: 64,
+  },
+  stepLabelActive: {
+    color: colors.primary.base,
+  },
+  stepLabelDone: {
+    color: colors.primary.dark,
+  },
+  stepLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: colors.status.border,
+    marginHorizontal: 6,
+    marginTop: 14,
+  },
+  stepLineDone: {
+    backgroundColor: colors.primary.dark,
+  },
+
+  animatedWrapper: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: "auto",
-    marginBottom: 20,
+    marginBottom: 60,
+    paddingHorizontal: 20,
   },
   button: {
     backgroundColor: "#10B981",
@@ -170,6 +280,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     alignItems: "center",
+    width: 1 / 2,
+  },
+  buttonPlaceholder: {
+    width: 1 / 2,
   },
   buttonSecondary: {
     backgroundColor: "#E5E7EB",

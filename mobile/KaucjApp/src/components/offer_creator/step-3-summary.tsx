@@ -3,25 +3,23 @@ import React from "react";
 import { OfferData } from "./create-offer";
 import { colors } from "@/src/theme";
 
-interface Step4SummaryProps {
+interface Step3SummaryProps {
   data: OfferData;
   updateData: (newData: Partial<OfferData>) => void;
-  onNext: () => void;
-  onBack: () => void;
 }
 
-export default function Step4Summary({
-  data,
-  updateData,
-  onNext,
-  onBack,
-}: Step4SummaryProps) {
+export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>4. Summary</Text>
       <View style={styles.summaryBox}>
-        <Text>Total Items: {data.bottles + data.cans}</Text>
-        <Text>Your Profit: {data.askingPrice} PLN</Text>
+        <Text>
+          Total Items: {data.plasticBottles + data.glassBottles + data.cans}
+        </Text>
+        <Text>
+          Your Profit: {data.cansPrice + data.plasticPrice + data.glassPrice}{" "}
+          PLN
+        </Text>
         <Text>Location: {data.location}</Text>
       </View>
     </View>

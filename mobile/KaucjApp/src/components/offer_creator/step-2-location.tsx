@@ -3,19 +3,15 @@ import React from "react";
 import { colors } from "@/src/theme";
 import { OfferData } from "./create-offer";
 
-interface Step3LocationProps {
+interface Step2LocationProps {
   data: OfferData;
   updateData: (newData: Partial<OfferData>) => void;
-  onNext: () => void;
-  onBack: () => void;
 }
 
-export default function Step3Location({
+export default function Step2Location({
   data,
   updateData,
-  onNext,
-  onBack,
-}: Step3LocationProps) {
+}: Step2LocationProps) {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>3. Pickup Location</Text>
