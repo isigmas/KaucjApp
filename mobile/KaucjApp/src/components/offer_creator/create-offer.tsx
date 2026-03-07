@@ -14,6 +14,7 @@ export interface OfferData {
   glassPrice: number;
   cansPrice: number;
   location: string;
+  notes?: string;
 }
 const STEPS = [
   { number: 1, label: "Ilość i cena" },
@@ -26,7 +27,7 @@ const triggerSlideInAnimation = (animatedValue: Animated.Value) => {
 
   Animated.spring(animatedValue, {
     toValue: 1,
-    friction: 9, //  less bounce
+    friction: 9,
     tension: 60, //  speed
     useNativeDriver: true,
   }).start();
