@@ -166,6 +166,7 @@ public class OfferService {
                     .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_id));
 
             if (offer.getInfo() != null) {
+                offer.getInfo().setStatus(OfferStatus.RESERVED);
                 offer.setCollector(user);
                 return true;
             }
