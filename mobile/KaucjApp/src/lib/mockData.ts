@@ -16,6 +16,11 @@ export interface Offer {
   created_at: string;
 }
 
+/** Helper: ISO string for N minutes ago (keeps "Nowe" filter testable). */
+function minutesAgo(min: number): string {
+  return new Date(Date.now() - min * 60_000).toISOString();
+}
+
 export const MOCK_ADS: Offer[] = [
   {
     offer_id: 1,
@@ -29,7 +34,7 @@ export const MOCK_ADS: Offer[] = [
       { bottle_id: 1, quantity: 30, price: 0.5 },
       { bottle_id: 2, quantity: 20, price: 0.25 },
     ],
-    created_at: "2026-03-06T10:00:00Z",
+    created_at: minutesAgo(45), // ~45 min ago → passes "Nowe"
   },
   {
     offer_id: 2,
@@ -39,8 +44,8 @@ export const MOCK_ADS: Offer[] = [
     address: "ul. Grodzka 40, Kraków",
     pickup_info: "Sklep na parterze, pytać o Marka",
     user: { user_id: 2, username: "marek_t" },
-    items: [{ bottle_id: 3, quantity: 32, price: 0.25 }],
-    created_at: "2026-03-06T11:30:00Z",
+    items: [{ bottle_id: 3, quantity: 12, price: 0.25 }],
+    created_at: minutesAgo(20), // ~20 min ago → passes "Nowe"
   },
   {
     offer_id: 3,
@@ -55,7 +60,7 @@ export const MOCK_ADS: Offer[] = [
       { bottle_id: 5, quantity: 15, price: 0.25 },
       { bottle_id: 6, quantity: 5, price: 1.0 },
     ],
-    created_at: "2026-03-05T09:15:00Z",
+    created_at: "2026-03-05T09:15:00Z", // old
   },
   {
     offer_id: 4,
@@ -66,7 +71,7 @@ export const MOCK_ADS: Offer[] = [
     pickup_info: "Garaż podziemny, miejsce 14",
     user: { user_id: 4, username: "tomek_r" },
     items: [{ bottle_id: 7, quantity: 25, price: 0.25 }],
-    created_at: "2026-03-06T14:00:00Z",
+    created_at: "2026-03-06T14:00:00Z", // old
   },
   {
     offer_id: 5,
@@ -80,7 +85,7 @@ export const MOCK_ADS: Offer[] = [
       { bottle_id: 8, quantity: 50, price: 0.5 },
       { bottle_id: 9, quantity: 30, price: 0.25 },
     ],
-    created_at: "2026-03-04T16:45:00Z",
+    created_at: "2026-03-04T16:45:00Z", // old
   },
 ];
 
