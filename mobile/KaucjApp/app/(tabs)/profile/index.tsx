@@ -36,14 +36,18 @@ export default function Profile() {
   const [email, setEmail] = useState("");
 
   const fetchProfile = async () => {
-    const response = await fetch("https://twoje-api.pl/api/profile");
-    const data = await response.json();
-    setFirstName(data.first_name);
-    setLastName(data.last_name);
-    setPhone(data.phone_number);
-    setAddress(data.address);
-    setUsername(data.username);
-    setEmail(data.email);
+    try {
+      const response = await fetch("http://192.168.203.135:8080/api/user");
+      const data = await response.json();
+      setFirstName(data.first_name);
+      setLastName(data.last_name);
+      setPhone(data.phone_number);
+      setAddress(data.address);
+      setUsername(data.username);
+      setEmail(data.email);
+    } catch (error) {
+      console.log("Failed to fetch profile:", error);
+    }
   };
 
   useEffect(() => {

@@ -83,7 +83,7 @@ export default function ProfileSettings() {
         };
 
         try {
-            await fetch("https://twoje-api.pl/api/profile", {
+            await fetch("http://192.168.203.135:8080/api/user", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
