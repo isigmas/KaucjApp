@@ -35,7 +35,7 @@ export default function ProfileSettings() {
             <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: "minimal", headerTitle: "Edytuj profil", headerTransparent: true }}/>
 
 
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+            <View style={styles.container}>
                 {/*<View style={styles.header}>*/}
                 {/*    <Text style={styles.title}>Edytuj profil</Text>*/}
                 {/*</View>*/}
@@ -43,17 +43,17 @@ export default function ProfileSettings() {
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Imię i nazwisko</Text>
-                        <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.text.muted} />
+                        <TextInput style={styles.input} value={name} onChangeText={setName} returnKeyType={"done"} keyboardType={"name-phone-pad"} placeholderTextColor={colors.text.muted} />
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Numer telefonu</Text>
-                        <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor={colors.text.muted} />
+                        <TextInput style={styles.input} value={phone} onChangeText={setPhone} returnKeyType={"done"} keyboardType={"numeric"} placeholderTextColor={colors.text.muted} />
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Adres zamieszkania</Text>
-                        <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholderTextColor={colors.text.muted} />
+                        <TextInput style={styles.input} value={address} onChangeText={setAddress} returnKeyType={"done"} keyboardType={"email-address"} placeholderTextColor={colors.text.muted} />
                     </View>
                 </View>
 
@@ -65,7 +65,7 @@ export default function ProfileSettings() {
                         <Text style={styles.cancelText}>Anuluj</Text>
                     </TouchableOpacity>
                 </View>
-            </KeyboardAvoidingView>
+                </View>
         </SafeAreaView>
     );
 }

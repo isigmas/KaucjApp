@@ -60,6 +60,10 @@ export default function Profile() {
               <Text style={styles.settingsText}>Ustawienia profilu</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards" as any)}>
+              <Text style={styles.rewardsText}>Nagrody za punkty</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8}>
               <Text style={styles.logoutText}>Wyloguj się</Text>
             </TouchableOpacity>
@@ -90,6 +94,8 @@ const styles = StyleSheet.create({
   settingsText: { color: colors.primary.dark, fontSize: 16, fontWeight: "700" },
   logoutButton: { backgroundColor: colors.status.error, paddingVertical: 16, borderRadius: 16, alignItems: "center", ...Platform.select({ ios: { shadowColor: colors.primary.base, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 8 }, android: { elevation: 6 } }) },
   logoutText: { color: colors.text.white, fontSize: 16, fontWeight: "700" },
+  rewardsButton: { backgroundColor: colors.primary.light, paddingVertical: 16, borderRadius: 16, alignItems: "center", borderWidth: 1, borderColor: colors.status.warning },
+  rewardsText: { color: colors.status.warning, fontSize: 16, fontWeight: "700"},
   exitButton: { backgroundColor: colors.background.subtle, paddingVertical: 16, borderRadius: 16, alignItems: "center", borderWidth: 1, borderColor: colors.status.border },
   exitText: { color: colors.status.error, fontSize: 16, fontWeight: "700" },
 });

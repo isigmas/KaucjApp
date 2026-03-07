@@ -11,6 +11,15 @@ export default function HomeLayout() {
             name="profileSettings/index"
             options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
+        <Stack.Screen
+            name="rewards/index.tsx"
+            options={{ headerShown: false, headerLargeTitleEnabled: false }}
+        />
+        <Stack.Screen
+            name="rewards/rewardsHowWork/index.tsx"
+            options={{ headerShown: false, headerLargeTitleEnabled: false }}
+        />
+
     </Stack>
   );
 }
