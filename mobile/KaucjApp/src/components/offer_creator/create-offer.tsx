@@ -1,19 +1,10 @@
 import { colors } from "@/src/theme";
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Step1Quantity from "./step-1-quantity";
 import Step2Location from "./step-2-location";
 import Step3Summary from "./step-3-summary";
-import { StepNavigation } from "./navigation";
 
 export interface OfferData {
   plasticBottles: number;
@@ -59,7 +50,7 @@ const getSlideInStyles = (animatedValue: Animated.Value) => {
 };
 
 export default function CreateOfferScreen() {
-  const [currentStep, setCurrentStep] = useState<number>(2);
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [offerData, setOfferData] = useState<OfferData>({
     plasticBottles: 10,
     glassBottles: 0,
@@ -115,7 +106,10 @@ export default function CreateOfferScreen() {
           const isActive = step.number === currentStep;
           return (
             <React.Fragment key={step.number}>
-              <View style={styles.stepNode}>
+              <Pressable
+                style={styles.stepNode}
+                onPress={() => setCurrentStep(step.number)}
+              >
                 <View
                   style={[
                     styles.stepDot,
@@ -145,7 +139,7 @@ export default function CreateOfferScreen() {
                 >
                   {step.label}
                 </Text>
-              </View>
+              </Pressable>
               {step.number < STEPS.length && (
                 <View
                   style={[styles.stepLine, isDone && styles.stepLineDone]}
