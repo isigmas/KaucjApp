@@ -28,7 +28,6 @@ jobs:
       - name: Run Spring Boot Tests (including Testcontainers)
         env:
           TESTCONTAINERS_RYUK_DISABLED: true
-          TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
         run: ./mvnw test 
 
       - name: Build app (docker compose)
