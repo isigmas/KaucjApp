@@ -1,6 +1,7 @@
 import type { Offer } from "@/src/lib/mockData";
 
-const API_BASE = "http://192.168.203.135:8080";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || "No env";
+console.log(`[API] Using base URL: ${API_BASE}`);
 
 /**
  * Fetches all available offers from the backend.
