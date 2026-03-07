@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api")
@@ -24,7 +27,7 @@ public class OfferController {
     public ResponseEntity<Void> create(@RequestBody OfferDTO newOffer) {
         Long newId;
         try {
-            newId = repo.create();
+            newId = repo.create(newOffer);
         } catch (Exception e) {
             log.error("Error creating offer: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -38,7 +41,7 @@ public class OfferController {
     public ResponseEntity<Void> update(@RequestBody OfferDTO updatedOffer, @PathVariable Long id) {
         boolean done;
         try {
-            done = repo.update();
+            done = repo.update(id,updatedOffer);
         } catch (Exception e) {
             log.error("Error updating offer with ID " + id + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
