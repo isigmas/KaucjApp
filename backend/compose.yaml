@@ -1,14 +1,14 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    build:
+      context: .
+      dockerfile: Dockerfile.db
     environment:
       - POSTGRES_DB=kaucjappdb
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=myuser
     ports:
       - '5432:5432'
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myuser -d kaucjappdb"]
       interval: 5s
