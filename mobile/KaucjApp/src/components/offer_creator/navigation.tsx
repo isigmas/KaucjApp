@@ -76,14 +76,12 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {/* Clever Animated Progress Dots */}
-
       {/* Navigation Buttons Row */}
       <View style={styles.buttonRow}>
         {currentStep > 1 ? (
           <Animated.View
-            entering={FadeInLeft.springify().damping(15)}
-            exiting={FadeOutLeft.springify().damping(15)}
+            entering={FadeInLeft.springify().damping(40)}
+            exiting={FadeOutLeft}
             layout={Layout.springify()}
             style={styles.buttonWrapper}
           >
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
   },
   baseButton: {
     height: 48,
-    borderRadius: 12,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",

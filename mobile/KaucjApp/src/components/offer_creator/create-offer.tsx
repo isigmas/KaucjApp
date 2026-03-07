@@ -53,7 +53,7 @@ const getSlideInStyles = (animatedValue: Animated.Value) => {
 export default function CreateOfferScreen() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [offerData, setOfferData] = useState<OfferData>({
-    plasticBottles: 0,
+    plasticBottles: 10,
     glassBottles: 0,
     cans: 0,
     plasticPrice: 0.2,
@@ -156,12 +156,12 @@ export default function CreateOfferScreen() {
       </Animated.View>
 
       {/* navigatoin */}
-      <StepNavigation
+      {/* <StepNavigation
         currentStep={currentStep}
         totalSteps={3}
         nextStep={nextStep}
         prevStep={prevStep}
-      />
+      /> */}
     </SafeAreaView>
   );
 }
