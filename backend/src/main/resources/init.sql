@@ -1,8 +1,13 @@
 CREATE TABLE users (
                        user_id BIGSERIAL PRIMARY KEY,
                        username VARCHAR(255) NOT NULL UNIQUE,
+                       name VARCHAR(255) NOT NULL,
+                       surname VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) NOT NULL,
                        phone_number VARCHAR(50),
-                       default_address VARCHAR(255)
+                       default_address VARCHAR(255),
+                       default_latitude DECIMAL(9,6),
+                       default_longitude DECIMAL(9,6)
 );
 
 CREATE TABLE offers (
@@ -16,8 +21,7 @@ CREATE TABLE offers (
 
 CREATE TABLE bottle_price(
     bottle_id BIGINT PRIMARY KEY,
-    price DECIMAL(10, 2),
-    CONSTRAINT check_bottle_id CHECK (bottle_id IN (1,2))
+    price DECIMAL(10, 2)
 );
 
 CREATE TABLE counts(
