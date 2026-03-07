@@ -1,5 +1,5 @@
 import React, { useState} from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 import { Stack } from "expo-router";
