@@ -2,11 +2,12 @@ import React, { useCallback, useRef, useEffect, useMemo, useState } from "react"
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, type Region } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LocateFixed } from "lucide-react-native";
+import { LocateFixed, Compass } from "lucide-react-native";
 
 import { useLocation } from "@/src/hooks/useLocation";
 import { useClusters, isCluster } from "@/src/hooks/useClusters";
-import { MOCK_ADS, DEFAULT_REGION, type Offer } from "@/src/lib/mockData";
+import { DEFAULT_REGION, type Offer } from "@/src/lib/mockData";
+import { fetchOffers } from "@/src/lib/api";
 import { colors } from "@/src/theme";
 import { MapHeader } from "@/src/components/map/MapHeader";
 import { BottlePin } from "@/src/components/map/BottlePin";
@@ -51,9 +52,34 @@ const offerTotalQty = (offer: Offer) =>
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { coords, loading, errorMsg } = useLocation();
+  const { coords, loading: locationLoading, errorMsg } = useLocation();
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
+
+  // ── Offers from API ─────────────────────────────────────────────────────────
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
+  const [offersError, setOffersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setOffersLoading(true);
+    setOffersError(null);
+
+    fetchOffers()
+      .then((data) => {
+        if (!cancelled) setOffers(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setOffersError(err.message ?? "Nie udało się pobrać ofert.");
+      })
+      .finally(() => {
+        if (!cancelled) setOffersLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
 
   // Filter state
   const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
@@ -76,12 +102,19 @@ export default function HomeScreen() {
     }
   }, [coords]);
 
+  // Funkcja resetująca obrót mapy do północy
+  const resetNorth = useCallback(() => {
+    if (mapRef.current) {
+      mapRef.current.animateCamera({ heading: 0, pitch: 0 });
+    }
+  }, []);
+
   const filteredAds = useMemo(() => {
     const now = Date.now();
     const noGlass = activeAttributes.includes("no_glass");
     const onlyNew = activeAttributes.includes("new");
 
-    return MOCK_ADS.filter((offer) => {
+    return offers.filter((offer) => {
       if (activeQuantity !== null && offerTotalQty(offer) < activeQuantity) return false;
       if (noGlass && offer.items.some((i) => GLASS_BOTTLE_IDS.has(i.bottle_id))) return false;
       if (onlyNew) {
@@ -90,15 +123,15 @@ export default function HomeScreen() {
       }
       return true;
     });
-  }, [activeQuantity, activeAttributes]);
+  }, [activeQuantity, activeAttributes, offers]);
 
   const clusters = useClusters(filteredAds, region);
 
   useEffect(() => {
     if (coords) centerOnUser();
-  }, [coords]);
+  }, [coords, centerOnUser]);
 
-  if (loading) {
+  if (locationLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary.base} />
@@ -111,6 +144,14 @@ export default function HomeScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>{errorMsg}</Text>
+      </View>
+    );
+  }
+
+  if (offersError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{offersError}</Text>
       </View>
     );
   }
@@ -158,7 +199,14 @@ export default function HomeScreen() {
       </MapView>
 
       <MapHeader balancePLN={42.5} />
-      
+
+      {offersLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="small" color={colors.primary.base} />
+          <Text style={styles.loadingOverlayText}>Ładowanie ofert…</Text>
+        </View>
+      )}
+
       <CategoryFilters
         activeQuantity={activeQuantity}
         onQuantityChange={setActiveQuantity}
@@ -166,8 +214,18 @@ export default function HomeScreen() {
         onAttributesChange={setActiveAttributes}
       />
 
+      {/* PRZYCISK KOMPASU (Reset północy) */}
       <TouchableOpacity 
-        style={[styles.locationButton, { bottom: insets.bottom + 60}]} 
+        style={[styles.mapButton, { bottom: insets.bottom + 126 }]} 
+        onPress={resetNorth}
+        activeOpacity={0.8}
+      >
+        <Compass size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+
+      {/* PRZYCISK LOKALIZACJI */}
+      <TouchableOpacity 
+        style={[styles.mapButton, { bottom: insets.bottom + 60 }]} 
         onPress={centerOnUser}
         activeOpacity={0.8}
       >
@@ -193,7 +251,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 32,
   },
-  locationButton: {
+  loadingOverlay: {
+    position: "absolute",
+    top: "50%",
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  loadingOverlayText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text.secondary,
+  },
+  mapButton: {
     position: 'absolute',
     right: 20,
     backgroundColor: colors.background.main,
