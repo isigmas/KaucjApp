@@ -18,11 +18,14 @@ const styles = StyleSheet.create({
   },
 });*/
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, BackHandler, SafeAreaView, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors } from "@/src/theme";
-import { Stack } from "expo-router";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE!;
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID!;
 
 export default function Profile() {
   const router = useRouter();
@@ -37,22 +40,27 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch("http://192.168.203.135:8080/api/user");
-      const data = await response.json();
-      setFirstName(data.first_name);
-      setLastName(data.last_name);
-      setPhone(data.phone_number);
-      setAddress(data.address);
-      setUsername(data.username);
-      setEmail(data.email);
+      const response = await fetch(`${API_BASE}/user/${USER_ID}`);
+      const text = await response.text();
+      if (!response.ok || !text) return;
+      const data = JSON.parse(text);
+      setUsername(data.username ?? "");
+      setFirstName(data.name ?? "");
+      setLastName(data.surname ?? "");
+      setEmail(data.email ?? "");
+      setPhone(data.phone_number ?? "");
+      setAddress(data.default_address ?? "");
     } catch (error) {
       console.log("Failed to fetch profile:", error);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  // Re-fetch every time the screen gains focus (e.g. after editing settings)
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [])
+  );
 
   return (
       <SafeAreaView style={styles.safeArea}>

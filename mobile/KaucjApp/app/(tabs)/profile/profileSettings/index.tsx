@@ -1,97 +1,152 @@
-/*import { View, Text } from "react-native";
-import React from "react";
-import { StyleSheet } from "react-native";
-
-export default function Profile() {
-  return (
-    <View style={styles.container}>
-      <Text>Profile</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});*/
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
     StyleSheet,
     TextInput,
-    FlatList,
     TouchableOpacity,
     SafeAreaView,
     Platform,
-    ScrollView
+    ScrollView,
+    ActivityIndicator
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import { colors } from "@/src/theme";
-import { Stack } from "expo-router";
-import {red} from "react-native-reanimated/lib/typescript/Colors";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE!;
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID!;
 
 export default function ProfileSettings() {
     const router = useRouter();
-    const [firstName, setFirstName] = useState("Jan");
-    const [lastName, setLastName] = useState("Kowalski");
-    const [username, setUsername] = useState("@jankowalski");
-    const [phone, setPhone] = useState("+48 123 456 789");
-    const [email, setEmail] = useState("jkowalski123@spoko.pl");
-    const [address, setAddress] = useState("ul. Wawelska 1, Kraków");
+    const [loading, setLoading] = useState(true);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [username, setUsername] = useState("");
+    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [address, setAddress] = useState("");
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch(`${API_BASE}/user/${USER_ID}`);
+                if (!res.ok) return;
+                const text = await res.text();
+                if (!text) return;
+                const data = JSON.parse(text);
+                setFirstName(data.name ?? "");
+                setLastName(data.surname ?? "");
+                setUsername(data.username ?? "");
+                setEmail(data.email ?? "");
+                setPhone(data.phone_number ?? "");
+                setAddress(data.default_address ?? "");
+            } catch (e) {
+                console.log("[ProfileSettings] fetch error:", e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
 
     const [latitude, setLatitude] = useState<number | null>(null);
     const [longitude, setLongitude] = useState<number | null>(null);
 
     const getCoordinates = async (addr: string) => {
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
-                { headers: { "User-Agent": "my-react-native-app" } }
-            );
-            const data = await response.json();
-            if (!data || data.length === 0) return null;
+        const STREET_PREFIX_RE =
+            /^(?:ul\.?|ul|alej[ae]|alejka|al\.?|al|plac|pl\.?|pl|osiedl[ae]|os\.?|os|skwer|skw\.?|bulwar|bul\.?|pasaż|pas\.?|droga|szosa|trakt|rondo|park|promenada|prom\.?)\s+/i;
+        const FLAT_SUFFIX_RE =
+            /\s+(?:m\.?|lok\.?|mieszkanie|lokal|apt\.?)\s*\d+[a-zA-Z]?\s*$/i;
+        const POSTAL_RE = /\b\d{2}-\d{3}\b\s*/g;
 
-            const lat = parseFloat(data[0].lat);
-            const lon = parseFloat(data[0].lon);
-            setLatitude(lat);
-            setLongitude(lon);
-            return { lat, lon };
+        const commaIdx = addr.lastIndexOf(",");
+        const rawStreet = (commaIdx !== -1 ? addr.slice(0, commaIdx) : addr).trim();
+        const rawCity   = (commaIdx !== -1 ? addr.slice(commaIdx + 1) : "").trim();
+
+        const street = rawStreet.replace(STREET_PREFIX_RE, "").replace(FLAT_SUFFIX_RE, "").trim();
+        const city   = rawCity.replace(POSTAL_RE, "").trim();
+
+        const buildUrl = (params: Record<string, string>) => {
+            const base = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&email=kaucjapp%40example.com";
+            return base + "&" + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+        };
+
+        const urls = [
+            buildUrl({ street, ...(city ? { city } : {}) }),
+            buildUrl({ q: addr }),
+        ];
+
+        try {
+            for (const url of urls) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    continue;
+                }
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    setLatitude(lat);
+                    setLongitude(lon);
+                    return { lat, lon };
+                }
+            }
+            return null;
         } catch (error) {
-            console.log(error);
+            console.log("[getCoordinates] error:", error);
             return null;
         }
     };
 
     const sendProfileData = async () => {
+        console.log("[sendProfileData] called, address:", address);
         const coords = await getCoordinates(address);
-        if (!coords) return;
+        if (!coords) {
+            console.log("[sendProfileData] could not resolve coordinates, aborting");
+            return;
+        }
 
         const payload = {
-            first_name: firstName,
-            last_name: lastName,
-            user_name: username,
+            name: firstName,
+            surname: lastName,
+            username: username,
+            email: email,
             phone_number: phone,
-            e_mail: email,
-            address: address,
-            latitude: coords.lat,
-            longitude: coords.lon
+            default_address: address,
+            default_latitude: coords.lat,
+            default_longitude: coords.lon
         };
 
         try {
-            await fetch("http://192.168.203.135:8080/api/user", {
-                method: "POST",
+            const url = `${API_BASE}/user/${USER_ID}`;
+
+            const putRes = await fetch(url, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
+
+            if (putRes.status === 404) {
+                await fetch(`${API_BASE}/user`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            }
         } catch (error) {
-            console.log(error);
+            console.log("[sendProfileData] error:", error);
         }
     };
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: "minimal", headerTitle: "Edytuj profil", headerTransparent: true }}/>
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                    <ActivityIndicator size="large" color={colors.primary.base} />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
