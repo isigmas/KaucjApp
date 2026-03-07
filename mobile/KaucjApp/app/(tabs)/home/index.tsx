@@ -1,43 +1,93 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useCallback, useRef, useEffect, useMemo, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, type Region } from "react-native-maps";
 
 import { useLocation } from "@/src/hooks/useLocation";
 import { useClusters, isCluster } from "@/src/hooks/useClusters";
-import { MOCK_ADS, DEFAULT_REGION } from "@/src/lib/mockData";
+import { MOCK_ADS, DEFAULT_REGION, type Offer } from "@/src/lib/mockData";
 import { colors } from "@/src/theme";
 import { MapHeader } from "@/src/components/map/MapHeader";
-import { SearchBarOverlay } from "@/src/components/map/SearchBarOverlay";
 import { BottlePin } from "@/src/components/map/BottlePin";
 import { ClusterPin } from "@/src/components/map/ClusterPin";
+import {
+  CategoryFilters,
+  type QuantityFilter,
+} from "@/src/components/CategoryFilters";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const GLASS_BOTTLE_IDS = new Set([1]);
+const NEW_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 /**
- * Wrapper that starts with tracksViewChanges=true so the native Google Maps
- * renderer waits for the custom React view to fully lay out before snapshotting
- * it into a native bitmap, then locks to false to prevent re-snapshotting on
- * every re-render (which causes the disappearing-marker flicker).
+ * Wrapper that gives Google Maps time to snapshot the custom React view into a
+ * native bitmap before we stop re-snapshotting on every render.
  */
 function StableMarker({
   children,
   ...markerProps
 }: React.ComponentProps<typeof Marker>) {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  const handleLayout = useCallback(() => {
+    // requestAnimationFrame ensures the native bitmap capture completes
+    // before we lock tracking off (prevents blank/invisible markers).
+    requestAnimationFrame(() => setTracksViewChanges(false));
+  }, []);
+
   return (
     <Marker
       {...markerProps}
       tracksViewChanges={tracksViewChanges}
-      onLayout={() => setTracksViewChanges(false)}
+      onLayout={handleLayout}
     >
       {children}
     </Marker>
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function offerTotalQty(offer: Offer): number {
+  return offer.items.reduce((sum, i) => sum + i.quantity, 0);
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { coords, loading, errorMsg } = useLocation();
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
-  const clusters = useClusters(MOCK_ADS, region);
+
+  // Filter state
+  const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
+  const [activeAttributes, setActiveAttributes] = useState<string[]>([]);
+
+  // Fingerprint that changes whenever any filter toggles – used as a key prefix
+  // so every marker fully remounts and StableMarker restarts its lifecycle.
+  const filterKey = useMemo(
+    () => `${activeQuantity ?? "x"}_${activeAttributes.join(",")}`,
+    [activeQuantity, activeAttributes],
+  );
+
+  const filteredAds = useMemo(() => {
+    const now = Date.now();
+    const noGlass = activeAttributes.includes("no_glass");
+    const onlyNew = activeAttributes.includes("new");
+
+    return MOCK_ADS.filter((offer) => {
+      if (activeQuantity !== null && offerTotalQty(offer) < activeQuantity) {
+        return false;
+      }
+      if (noGlass && offer.items.some((i) => GLASS_BOTTLE_IDS.has(i.bottle_id))) {
+        return false;
+      }
+      if (onlyNew) {
+        const age = now - new Date(offer.created_at).getTime();
+        if (age > NEW_THRESHOLD_MS) return false;
+      }
+      return true;
+    });
+  }, [activeQuantity, activeAttributes]);
+
+  const clusters = useClusters(filteredAds, region);
 
   useEffect(() => {
     if (coords && mapRef.current) {
@@ -48,7 +98,7 @@ export default function HomeScreen() {
           latitudeDelta: 0.015,
           longitudeDelta: 0.015,
         },
-        800
+        800,
       );
     }
   }, [coords]);
@@ -83,13 +133,13 @@ export default function HomeScreen() {
         onRegionChangeComplete={setRegion}
       >
         {clusters.map((item) => {
-          const [longitude, latitude] = item.geometry.coordinates;
-          const coordinate = { latitude, longitude };
+          const [lng, lat] = item.geometry.coordinates;
+          const coordinate = { latitude: lat, longitude: lng };
 
           if (isCluster(item)) {
             return (
               <StableMarker
-                key={`cluster-${item.id}`}
+                key={`${filterKey}-c${item.id}`}
                 coordinate={coordinate}
               >
                 <ClusterPin
@@ -100,22 +150,28 @@ export default function HomeScreen() {
             );
           }
 
-          const ad = item.properties;
+          const offer = item.properties;
+          const qty = offerTotalQty(offer);
           return (
             <StableMarker
-              key={`pin-${ad.id}`}
+              key={`${filterKey}-p${offer.offer_id}`}
               coordinate={coordinate}
-              title={ad.title}
-              description={`${ad.seller} · ${ad.bottleCount} szt.`}
+              title={offer.address}
+              description={`${offer.user.username} · ${qty} szt.`}
             >
-              <BottlePin count={ad.bottleCount} />
+              <BottlePin count={qty} />
             </StableMarker>
           );
         })}
       </MapView>
 
       <MapHeader balancePLN={42.5} />
-      <SearchBarOverlay />
+      <CategoryFilters
+        activeQuantity={activeQuantity}
+        onQuantityChange={setActiveQuantity}
+        activeAttributes={activeAttributes}
+        onAttributesChange={setActiveAttributes}
+      />
     </View>
   );
 }
