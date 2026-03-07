@@ -2,7 +2,7 @@ package pl.isigmas.kaucjapp.controller;
 
 import lombok.RequiredArgsConstructor;
 import pl.isigmas.kaucjapp.DTO.OfferDTO;
-import pl.isigmas.kaucjapp.repository.OfferRepo;
+import pl.isigmas.kaucjapp.service.OfferService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @RequiredArgsConstructor
 public class OfferController {
 
-    private final OfferRepo repo;
+    private final OfferService offerService;
 
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
 
@@ -27,7 +27,7 @@ public class OfferController {
     public ResponseEntity<Void> create(@RequestBody OfferDTO newOffer) {
         Long newId;
         try {
-            newId = repo.create(newOffer);
+            newId = offerService.create(newOffer);
         } catch (Exception e) {
             log.error("Error creating offer: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -41,7 +41,7 @@ public class OfferController {
     public ResponseEntity<Void> update(@RequestBody OfferDTO updatedOffer, @PathVariable Long id) {
         boolean done;
         try {
-            done = repo.update(id,updatedOffer);
+            done = offerService.update(id,updatedOffer);
         } catch (Exception e) {
             log.error("Error updating offer with ID " + id + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

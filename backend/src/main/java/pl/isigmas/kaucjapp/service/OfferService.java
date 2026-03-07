@@ -1,17 +1,18 @@
-package pl.isigmas.kaucjapp.repository;
+package pl.isigmas.kaucjapp.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.model.*;
+import pl.isigmas.kaucjapp.repository.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Repository
+@Service
 @RequiredArgsConstructor
-public class OfferRepo {
+public class OfferService {
 
     private final OfferRepository offerRepository;
     private final UserRepository userRepository;
