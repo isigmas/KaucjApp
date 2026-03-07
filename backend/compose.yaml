@@ -21,6 +21,8 @@ services:
       target: builder
     environment:
       - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: ["./mvnw", "test"]
