@@ -1,37 +1,20 @@
 package pl.isigmas.kaucjapp.DTO;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OfferDTO {
-    private String title;
-    private String description;
-    private double price;
 
-    public OfferDTO(String title, String description, double price) {
-        this.title = title;
-        this.description = description;
-        this.price = price;
-    }
+    private Long creatorId;
+    private java.math.BigDecimal latitude;
+    private java.math.BigDecimal longitude;
+    private Integer kaucjaQuantity;
+    private Integer nonKaucjaQuantity;
+    private String pickupAddress;
+    private String pickupInstructions;
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
 }

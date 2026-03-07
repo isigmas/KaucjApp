@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "offer_info")
@@ -20,7 +21,8 @@ public class OfferInfo {
     @MapsId
     @JoinColumn(name = "offer_id")
     private Offer offer;
-
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private String pickupAddress;
     private String pickupInstructions;
 

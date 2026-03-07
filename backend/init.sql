@@ -33,6 +33,8 @@ CREATE TABLE counts(
 
 CREATE TABLE offer_info (
                     offer_id BIGINT PRIMARY KEY,
+                    latitude DECIMAL(9,6),
+                    longitude DECIMAL(9,6),
                     pickup_address VARCHAR(255),
                     pickup_instructions TEXT,
                     status VARCHAR(50) NOT NULL DEFAULT 'OPEN',
