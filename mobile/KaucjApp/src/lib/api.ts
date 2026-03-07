@@ -1,6 +1,6 @@
 import type { Offer } from "@/src/lib/mockData";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "http://192.168.203.135:8080";
 
 /**
  * Fetches all available offers from the backend.
