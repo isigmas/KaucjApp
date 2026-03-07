@@ -12,6 +12,18 @@ export default function HomeLayout() {
           title: "Nowa oferta",
         }}
       />
+
+      <Stack.Screen
+        name="map-sheet"
+        options={{
+          presentation: "formSheet",
+          headerTitle: "Wybierz lokalizację",
+          headerStyle: { backgroundColor: "transparent" },
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [0.8, 1],
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
     </Stack>
   );
 }

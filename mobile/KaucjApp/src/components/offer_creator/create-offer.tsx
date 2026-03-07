@@ -1,6 +1,14 @@
 import { colors } from "@/src/theme";
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Step1Quantity from "./step-1-quantity";
 import Step2Location from "./step-2-location";
@@ -51,7 +59,7 @@ const getSlideInStyles = (animatedValue: Animated.Value) => {
 };
 
 export default function CreateOfferScreen() {
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(2);
   const [offerData, setOfferData] = useState<OfferData>({
     plasticBottles: 10,
     glassBottles: 0,
