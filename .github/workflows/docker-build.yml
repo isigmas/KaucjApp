@@ -1,0 +1,39 @@
+name: Test Docker Build - backend
+
+on:
+  push:
+    branches: [ "main", "backend" ]
+  pull_request:
+    branches: [ "main", "backend" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Pull source code
+        uses: actions/checkout@v4
+
+      - name: Build app (docker compose)
+        run: docker compose build
+
+      - name: Launch containers in background
+        run: docker compose up -d
+
+      - name: Verify service
+        run: |
+          sleep 15
+          docker compose logs app
+
+          echo "Checking server status"
+          RESPONSE=$(curl -s http://localhost:8080/api/status)
+          if [ "$RESPONSE" == "Ready!" ]; then
+            echo "Success: Server is ready "
+          else
+            echo "Error: Expecting 'Ready!',  got '$RESPONSE'"
+            exit 1
+          fi
