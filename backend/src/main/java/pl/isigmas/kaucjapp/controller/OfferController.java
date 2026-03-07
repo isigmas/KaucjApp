@@ -70,6 +70,24 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @PostMapping("/reserve-offer/{offer_id}/{user_id}")
+    public ResponseEntity<Void> reserveOffer(@PathVariable Long offer_id, @PathVariable Long user_id) {
+        boolean reserved;
+        try {
+            reserved = service.reserveOffer(offer_id, user_id);
+            if (!reserved) {
+                log.warn("Failed to reserve offer with ID " + offer_id + " for user ID " + user_id);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            log.info("Offer reserved, Offer ID: " + offer_id + ", User ID: " + user_id);
+        } catch (Exception e) {
+            log.error("Error reserving offer with ID " + offer_id + " for user ID " + user_id + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     @GetMapping("/szosti")
     public ResponseEntity<List<OfferResponseDTO>> getAll() {
         List<OfferResponseDTO> offers;
