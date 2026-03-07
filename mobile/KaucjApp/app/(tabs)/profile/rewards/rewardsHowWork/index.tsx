@@ -62,7 +62,7 @@ export default function FAQ() {
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: colors.background.main },
     container: { padding: 24 },
-    title: { fontSize: 28, fontWeight: "800", color: colors.text.primary, marginBottom: 24, letterSpacing: -0.5 },
+    title: { fontSize: 28, fontWeight: "800", color: colors.primary.dark, marginBottom: 24, letterSpacing: -0.5, textAlign: "center" },
     itemContainer: {
         backgroundColor: colors.background.card,
         borderRadius: 16,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 20
     },
-    questionText: { fontSize: 16, fontWeight: "600", color: colors.text.primary, flex: 1 },
+    questionText: { fontSize: 16, fontWeight: "600", color: colors.primary.base, flex: 1 },
     answerContainer: { paddingHorizontal: 20, paddingBottom: 20 },
     answerText: { fontSize: 15, color: colors.text.secondary, lineHeight: 22 },
 });
