@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.DTO.UserDTO;
 import pl.isigmas.kaucjapp.service.UserService;
+import pl.isigmas.kaucjapp.service.RatingService;
+import pl.isigmas.kaucjapp.DTO.RatingDTO;
+import pl.isigmas.kaucjapp.DTO.RatingRequestDTO;
 
 @Slf4j
 @RestController
@@ -15,6 +18,7 @@ import pl.isigmas.kaucjapp.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final RatingService ratingService;
 
     @PostMapping("/user")
     public ResponseEntity<Void> create(@RequestBody UserDTO newUser) {
@@ -70,4 +74,27 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/user/{id}/rating")
+    public ResponseEntity<RatingDTO> getUserRating(@PathVariable Long id) {
+        log.info("Fetching rating for user ID: {}", id);
+        RatingDTO ratingDTO = ratingService.getRatingDTO(id);
+
+        return ratingDTO != null
+                ? ResponseEntity.ok(ratingDTO)
+                : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/user/{id}/rating")
+    public ResponseEntity<Void> addRating(@PathVariable Long id, @RequestBody RatingRequestDTO ratingRequest) {
+        try {
+            ratingService.addRating(id, ratingRequest.getScore());
+            log.info("Added rating {} for user ID: {}", ratingRequest.getScore(), id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error adding rating for user {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }
