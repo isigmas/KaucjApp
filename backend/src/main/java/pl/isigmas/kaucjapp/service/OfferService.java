@@ -3,6 +3,8 @@ package pl.isigmas.kaucjapp.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
 import pl.isigmas.kaucjapp.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.model.*;
 import pl.isigmas.kaucjapp.repository.*;
@@ -132,7 +134,8 @@ public class OfferService {
                             .bottleId(count.getBottlePrice() != null ? count.getBottlePrice().getId() : null)
                             .quantity(count.getQuantity())
                             .price(count.getBottlePrice() != null && count.getBottlePrice().getPrice() != null
-                                    ? count.getBottlePrice().getPrice().doubleValue() : 0.0)
+                                    ? count.getBottlePrice().getPrice().doubleValue()
+                                    : 0.0)
                             .build())
                     .collect(Collectors.toList());
         }
@@ -140,16 +143,35 @@ public class OfferService {
         return OfferResponseDTO.builder()
                 .offerId(offer.getId())
                 .status(offer.getInfo() != null && offer.getInfo().getStatus() != null
-                        ? offer.getInfo().getStatus().name() : null)
+                        ? offer.getInfo().getStatus().name()
+                        : null)
                 .latitude(offer.getInfo() != null && offer.getInfo().getLatitude() != null
-                ? offer.getInfo().getLatitude().doubleValue() : null)
+                        ? offer.getInfo().getLatitude().doubleValue()
+                        : null)
                 .longitude(offer.getInfo() != null && offer.getInfo().getLongitude() != null
-                ? offer.getInfo().getLongitude().doubleValue() : null)
+                        ? offer.getInfo().getLongitude().doubleValue()
+                        : null)
                 .pickupAddress(offer.getInfo() != null ? offer.getInfo().getPickupAddress() : null)
                 .pickupInstructions(offer.getInfo() != null ? offer.getInfo().getPickupInstructions() : null)
                 .createdAt(offer.getInfo() != null ? offer.getInfo().getTimeCreated() : null)
                 .user(userDTO)
                 .items(itemDTOs)
                 .build();
+    }
+
+    @Transactional
+    public boolean reserveOffer(Long offer_id, Long user_id) {
+        return offerRepository.findById(offer_id).map(offer -> {
+            User user = userRepository.findById(user_id)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_id));
+
+            if (offer.getInfo() != null) {
+                offer.setCollector(user);
+                return true;
+            }
+
+            return false;
+
+        }).orElse(false);
     }
 }
