@@ -11,6 +11,7 @@ class TestcontainersConfiguration {
 
     @Bean
     @ServiceConnection
+    @SuppressWarnings("resource")
     PostgreSQLContainer postgresContainer() {
         return new PostgreSQLContainer(DockerImageName.parse("postgres:latest")).withInitScript("init.sql");
     }
