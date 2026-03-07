@@ -19,14 +19,13 @@ const styles = StyleSheet.create({
 });*/
 
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, BackHandler, SafeAreaView, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 import { Stack } from "expo-router";
 
 export default function Profile() {
   const router = useRouter();
-  const handleExitApp = () => BackHandler.exitApp();
 
   return (
       <SafeAreaView style={styles.safeArea}>
