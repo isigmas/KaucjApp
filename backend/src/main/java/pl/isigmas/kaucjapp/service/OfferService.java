@@ -44,10 +44,15 @@ public class OfferService {
         List<OfferCount> counts = new ArrayList<>();
 
         if (dto.getAQuantity() != null && dto.getAQuantity() > 0) {
-            BottlePrice aPrice = bottlePriceRepository.findById(1L).orElse(null);
+            BottlePrice aPrice = bottlePriceRepository.save(
+                    BottlePrice.builder()
+                            .price(dto.getAPrice())
+                            .fee(dto.getAFee())
+                            .build()
+            );
             if (aPrice != null) {
                 OfferCount aCount = new OfferCount();
-                aCount.setId(new OfferCountId(null, 1L));
+                aCount.setId(new OfferCountId(null, aPrice.getId()));
                 aCount.setOffer(offer);
                 aCount.setBottlePrice(aPrice);
                 aCount.setQuantity(dto.getAQuantity());
@@ -56,10 +61,15 @@ public class OfferService {
         }
 
         if (dto.getBQuantity() != null && dto.getBQuantity() > 0) {
-            BottlePrice bPrice = bottlePriceRepository.findById(1L).orElse(null);
+            BottlePrice bPrice = bottlePriceRepository.save(
+                    BottlePrice.builder()
+                            .price(dto.getBPrice())
+                            .fee(dto.getBFee())
+                            .build()
+            );
             if (bPrice != null) {
                 OfferCount bCount = new OfferCount();
-                bCount.setId(new OfferCountId(null, 1L));
+                bCount.setId(new OfferCountId(null, bPrice.getId()));
                 bCount.setOffer(offer);
                 bCount.setBottlePrice(bPrice);
                 bCount.setQuantity(dto.getBQuantity());
@@ -68,10 +78,15 @@ public class OfferService {
         }
 
         if (dto.getCQuantity() != null && dto.getCQuantity() > 0) {
-            BottlePrice cPrice = bottlePriceRepository.findById(1L).orElse(null);
+            BottlePrice cPrice = bottlePriceRepository.save(
+                    BottlePrice.builder()
+                            .price(dto.getCPrice())
+                            .fee(dto.getCFee())
+                            .build()
+            );
             if (cPrice != null) {
                 OfferCount cCount = new OfferCount();
-                cCount.setId(new OfferCountId(null, 1L));
+                cCount.setId(new OfferCountId(null, cPrice.getId()));
                 cCount.setOffer(offer);
                 cCount.setBottlePrice(cPrice);
                 cCount.setQuantity(dto.getCQuantity());
@@ -101,10 +116,24 @@ public class OfferService {
 
             if (offer.getCounts() != null) {
                 for (OfferCount count : offer.getCounts()) {
-                    if (count.getBottlePrice().getId() == 1L && dto.getKaucjaQuantity() != null) {
-                        count.setQuantity(dto.getKaucjaQuantity());
-                    } else if (count.getBottlePrice().getId() == 2L && dto.getNonKaucjaQuantity() != null) {
-                        count.setQuantity(dto.getNonKaucjaQuantity());
+                    var bottlePrice = count.getBottlePrice();
+                    if (bottlePrice == null) continue;
+
+                    if (dto.getAQuantity() != null) {
+                        bottlePrice.setPrice(dto.getAPrice());
+                        bottlePrice.setFee(dto.getAFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getAQuantity());
+                    } else if (dto.getBQuantity() != null) {
+                        bottlePrice.setPrice(dto.getBPrice());
+                        bottlePrice.setFee(dto.getBFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getBQuantity());
+                    } else if (dto.getCQuantity() != null) {
+                        bottlePrice.setPrice(dto.getCPrice());
+                        bottlePrice.setFee(dto.getCFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getCQuantity());
                     }
                 }
             }
@@ -112,15 +141,6 @@ public class OfferService {
             offerRepository.save(offer);
             return true;
         }).orElse(false);
-    }
-
-    @Transactional
-    public boolean remove(Long offerId) {
-        if (offerRepository.existsById(offerId)) {
-            offerRepository.deleteById(offerId);
-            return true;
-        }
-        return false;
     }
 
     public List<OfferResponseDTO> getAll() {
