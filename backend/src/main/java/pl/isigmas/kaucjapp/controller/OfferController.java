@@ -81,7 +81,21 @@ public class OfferController {
                 log.warn("Failed to reserve offer with ID " + offer_id + " for user ID " + user_id);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
-            log.info("Offer reserved, Offer ID: " + offer_id + ", User ID: " + user_id);
+            String messageStatus = switch (new_status.trim().toLowerCase()) {
+                case "OPEN" -> "open";
+                case "RESERVED" -> "reserved";
+                case "COMPLETED" -> "completed";
+                case "CANCELED" -> "canceled";
+                default -> "";
+            };
+
+            if (messageStatus.isEmpty()) {
+                log.warn("Invalid status provided: " + new_status);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            } else {
+                log.info("Offer " + messageStatus, "Offer ID: " + offer_id + ", User ID: " + user_id);
+            }
+
         } catch (Exception e) {
             log.error("Error reserving offer with ID " + offer_id + " for user ID " + user_id + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
