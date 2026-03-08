@@ -23,7 +23,7 @@ export type ClusterOrPoint = AdPoint | ClusterPoint;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function regionToZoom(region: Region): number {
   const zoom = Math.log2((360 * (SCREEN_WIDTH / 256)) / region.longitudeDelta);
-  return Math.max(0, Math.min(MAX_ZOOM, Math.floor(zoom)));
+  return Math.max(0, Math.min(MAX_ZOOM, Math.round(zoom)));
 }
 
 function regionToBBox(region: Region): [number, number, number, number] {

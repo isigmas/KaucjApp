@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  Animated,
+  PanResponder,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MapPin, Info, User, X } from "lucide-react-native";
@@ -13,7 +15,7 @@ import { colors } from "@/src/theme";
 import type { Offer } from "@/src/lib/mockData";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.5;
+const SHEET_HEIGHT = SCREEN_HEIGHT * 0.55; 
 
 const BOTTLE_NAMES: Record<number, string> = {
   1: "Butelka szklana 0,5 L",
@@ -29,26 +31,106 @@ function bottleName(id: number): string {
 interface OfferSheetProps {
   offer: Offer;
   onClose: () => void;
-  onReserve: () => void;
+  onReserve: (offer: Offer) => void;
 }
 
 export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
   const insets = useSafeAreaInsets();
+  const totalPrice = offer.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const NAVBAR_BUFFER = 55;
 
-  // Earnings = sum of (price - fee) * quantity for each item
-  const totalEarnings = offer.items.reduce(
-    (sum, i) => sum + (i.price - i.fee) * i.quantity,
-    0,
-  );
+  // ── Animacje ────────────────────────────────────────────────────────────
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  const handleClose = useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 150, // Bardzo szybkie chowanie (150ms)
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  }, [onClose, slideAnim]);
+
+  const handleReserve = useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      onReserve(offer);
+    });
+  }, [onReserve, offer, slideAnim]);
+
+  // Wjazd komponentu po zamontowaniu (Ekstremalnie szybki)
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      stiffness: 450, // Bardzo sztywna sprężyna (szybki wjazd)
+      damping: 25,    // Mocne hamowanie na końcu (brak irytującego bujania)
+      mass: 0.2,      // Bardzo lekki komponent (reaguje w ułamku sekundy)
+    }).start();
+  }, [slideAnim]);
+
+  // ── Gesty (Swipe to dismiss) ────────────────────────────────────────────
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Zwiększony margines błędu (10px), żeby zwykłe dotknięcia nie aktywowały gestu
+        return gestureState.dy > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 1.2) {
+          handleClose();
+        } else {
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            stiffness: 400,
+            damping: 25,
+            mass: 0.2,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  // ────────────────────────────────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, { height: SHEET_HEIGHT, paddingBottom: insets.bottom + 12 }]}>
-      {/* Handle bar */}
-      <View style={styles.handleRow}>
-        <View style={styles.handle} />
-        <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-          <X size={18} color={colors.text.muted} />
-        </Pressable>
+    <Animated.View 
+      style={[
+        styles.container, 
+        { 
+          height: SHEET_HEIGHT, 
+          paddingBottom: insets.bottom + NAVBAR_BUFFER,
+          transform: [{ translateY: slideAnim }] 
+        }
+      ]}
+    >
+      {/* Guzik X wyciągnięty na zewnątrz strefy gestów (PanResponder).
+        Teraz gesty nie blokują jego klikania. Ogromny hitSlop.
+      */}
+      <Pressable 
+        onPress={handleClose} 
+        style={styles.closeBtn} 
+        hitSlop={{ top: 25, bottom: 25, left: 25, right: 25 }}
+      >
+        <X size={24} color={colors.text.muted} />
+      </Pressable>
+
+      {/* Obszar odpowiedzialny TYLKO za gesty przeciągania */}
+      <View style={styles.headerArea} {...panResponder.panHandlers}>
+        <View style={styles.handleRow}>
+          <View style={styles.handle} />
+        </View>
       </View>
 
       <ScrollView
@@ -56,77 +138,54 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Address */}
         <View style={styles.row}>
           <MapPin size={18} color={colors.primary.base} />
           <Text style={styles.address}>{offer.address}</Text>
         </View>
 
-        {/* Pickup info */}
         <View style={styles.row}>
           <Info size={18} color={colors.accent.base} />
           <Text style={styles.pickup}>{offer.pickup_info}</Text>
         </View>
 
-        {/* User */}
         <View style={styles.row}>
           <User size={18} color={colors.text.secondary} />
           <Text style={styles.username}>{offer.user.username}</Text>
         </View>
 
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Items header */}
-        <View style={styles.itemHeader}>
-          <Text style={[styles.sectionTitle, { flex: 1 }]}>Butelki</Text>
-          <Text style={[styles.sectionTitle, { width: 50, textAlign: "center" }]}>Opłata</Text>
-          <Text style={[styles.sectionTitle, { width: 60, textAlign: "right" }]}>Zarobek</Text>
-        </View>
+        <Text style={styles.sectionTitle}>Butelki</Text>
 
-        {/* Items list */}
-        {offer.items.map((item, idx) => {
-          const itemEarnings = (item.price - item.fee) * item.quantity;
-          return (
-            <View key={idx} style={styles.itemRow}>
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
-                <Text style={styles.itemQty}>× {item.quantity}</Text>
-              </View>
-              <Text style={styles.itemFee}>
-                {item.fee === 0 ? "—" : `${(item.fee * item.quantity).toFixed(2)} zł`}
-              </Text>
-              <Text style={[styles.itemEarnings, itemEarnings < 0 && styles.negative]}>
-                {itemEarnings === 0
-                  ? "Za darmo"
-                  : `${itemEarnings > 0 ? "+" : ""}${itemEarnings.toFixed(2)} zł`}
-              </Text>
+        {offer.items.map((item, idx) => (
+          <View key={idx} style={styles.itemRow}>
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
+              <Text style={styles.itemQty}>× {item.quantity}</Text>
             </View>
-          );
-        })}
+            <Text style={styles.itemPrice}>
+              {item.price === 0 ? "Za darmo" : `${(item.price * item.quantity).toFixed(2)} zł`}
+            </Text>
+          </View>
+        ))}
 
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Total */}
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Twój zarobek</Text>
-          <Text style={[styles.totalValue, totalEarnings < 0 && styles.negative]}>
-            {totalEarnings === 0
-              ? "Za darmo"
-              : `${totalEarnings > 0 ? "+" : ""}${totalEarnings.toFixed(2)} zł`}
+          <Text style={styles.totalLabel}>Razem</Text>
+          <Text style={styles.totalValue}>
+            {totalPrice === 0 ? "Za darmo" : `${totalPrice.toFixed(2)} zł`}
           </Text>
         </View>
       </ScrollView>
 
-      {/* Reserve button */}
       <Pressable
         style={({ pressed }) => [styles.reserveBtn, pressed && styles.reserveBtnPressed]}
-        onPress={onReserve}
+        onPress={handleReserve}
       >
         <Text style={styles.reserveText}>Zarezerwuj</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -139,161 +198,58 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    zIndex: 50,
+    elevation: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
-    elevation: 16,
   },
-
+  headerArea: {
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: "transparent",
+  },
   handleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 10,
-    paddingBottom: 4,
-    paddingHorizontal: 16,
   },
   handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
+    width: 40,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.status.border,
   },
   closeBtn: {
     position: "absolute",
     right: 16,
     top: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.background.subtle,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10, // Najwyższy zIndex wewnątrz komponentu
   },
-
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-
-  row: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    marginBottom: 12,
-  },
-  address: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  pickup: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text.secondary,
-    lineHeight: 20,
-  },
-  username: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text.primary,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: colors.status.border,
-    marginVertical: 12,
-  },
-
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: colors.text.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-
-  itemHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    backgroundColor: colors.background.subtle,
-    borderRadius: 10,
-    marginBottom: 6,
-  },
-  itemInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 13,
-    color: colors.text.primary,
-    fontWeight: "500",
-  },
-  itemQty: {
-    fontSize: 12,
-    color: colors.text.muted,
-    fontWeight: "600",
-  },
-  itemFee: {
-    width: 50,
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.text.muted,
-    textAlign: "center",
-  },
-  itemEarnings: {
-    width: 60,
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.primary.dark,
-    textAlign: "right",
-  },
-  negative: {
-    color: colors.status.error,
-  },
-
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: colors.primary.base,
-  },
-
-  reserveBtn: {
-    marginHorizontal: 20,
-    marginTop: 10,
-    backgroundColor: colors.primary.base,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  reserveBtnPressed: {
-    backgroundColor: colors.primary.dark,
-  },
-  reserveText: {
-    color: colors.text.white,
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 12 },
+  address: { flex: 1, fontSize: 16, fontWeight: "700", color: colors.text.primary },
+  pickup: { flex: 1, fontSize: 14, color: colors.text.secondary, lineHeight: 20 },
+  username: { flex: 1, fontSize: 14, fontWeight: "600", color: colors.text.primary },
+  divider: { height: 1, backgroundColor: colors.status.border, marginVertical: 12 },
+  sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.text.muted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 },
+  itemRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, paddingHorizontal: 4, backgroundColor: colors.background.subtle, borderRadius: 10, marginBottom: 6 },
+  itemInfo: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1, paddingLeft: 8 },
+  itemName: { fontSize: 14, color: colors.text.primary, fontWeight: "500" },
+  itemQty: { fontSize: 13, color: colors.text.muted, fontWeight: "600" },
+  itemPrice: { fontSize: 14, fontWeight: "700", color: colors.primary.dark, paddingRight: 8 },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  totalLabel: { fontSize: 16, fontWeight: "700", color: colors.text.primary },
+  totalValue: { fontSize: 18, fontWeight: "800", color: colors.primary.base },
+  reserveBtn: { marginHorizontal: 20, marginTop: 5  , backgroundColor: colors.primary.base, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
+  reserveBtnPressed: { backgroundColor: colors.primary.dark },
+  reserveText: { color: colors.text.white, fontSize: 16, fontWeight: "700" },
 });

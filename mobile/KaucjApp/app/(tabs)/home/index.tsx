@@ -213,24 +213,6 @@ export default function HomeScreen() {
         onAttributesChange={setActiveAttributes}
       />
 
-      {/* PRZYCISK KOMPASU (Reset północy) */}
-      <TouchableOpacity 
-        style={[styles.mapButton, { bottom: insets.bottom + 126 }]} 
-        onPress={resetNorth}
-        activeOpacity={0.8}
-      >
-        <Compass size={24} color={colors.text.secondary} />
-      </TouchableOpacity>
-
-      {/* PRZYCISK LOKALIZACJI */}
-      <TouchableOpacity 
-        style={[styles.mapButton, { bottom: insets.bottom + 60 }]} 
-        onPress={centerOnUser}
-        activeOpacity={0.8}
-      >
-        <LocateFixed size={24} color={colors.primary.base} />
-      </TouchableOpacity>
-
       {selectedOffer && (
         <OfferSheet
           offer={selectedOffer}
@@ -241,6 +223,24 @@ export default function HomeScreen() {
           }}
         />
       )}
+
+      {/* PRZYCISK KOMPASU (Reset północy) – below sheet */}
+      <TouchableOpacity 
+        style={[styles.mapButton, { bottom: insets.bottom + 126 }]} 
+        onPress={resetNorth}
+        activeOpacity={0.8}
+      >
+        <Compass size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+
+      {/* PRZYCISK LOKALIZACJI – below sheet */}
+      <TouchableOpacity 
+        style={[styles.mapButton, { bottom: insets.bottom + 60 }]} 
+        onPress={centerOnUser}
+        activeOpacity={0.8}
+      >
+        <LocateFixed size={24} color={colors.primary.base} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
   mapButton: {
     position: 'absolute',
     right: 20,
+    zIndex: 10,
     backgroundColor: colors.background.main,
     width: 54,
     height: 54,
