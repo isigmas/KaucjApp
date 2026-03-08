@@ -15,7 +15,7 @@ import { colors } from "@/src/theme";
 import type { Offer } from "@/src/lib/mockData";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.55; 
+const SHEET_HEIGHT = SCREEN_HEIGHT * 0.65; 
 
 const BOTTLE_NAMES: Record<number, string> = {
   1: "Butelka szklana 0,5 L",
@@ -36,10 +36,25 @@ interface OfferSheetProps {
 
 export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
   const insets = useSafeAreaInsets();
+  
+  // Twój zarobek (suma price)
   const totalEarnings = offer.items.reduce(
-    (sum, item) => sum + (item.price - item.fee) * item.quantity,
+    (sum, item) => sum + item.price * item.quantity,
     0,
   );
+
+  // Opłata dla wystawiającego (suma fee)
+  const totalFee = offer.items.reduce(
+    (sum, item) => sum + item.fee * item.quantity,
+    0,
+  );
+
+  // Całkowita wartość butelek (price + fee)
+  const totalTogether = offer.items.reduce(
+    (sum, item) => sum + (item.price + item.fee) * item.quantity,
+    0,
+  );
+  
   const NAVBAR_BUFFER = 55;
 
   // ── Animacje ────────────────────────────────────────────────────────────
@@ -48,7 +63,7 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
   const handleClose = useCallback(() => {
     Animated.timing(slideAnim, {
       toValue: SCREEN_HEIGHT,
-      duration: 150, // Bardzo szybkie chowanie (150ms)
+      duration: 150, 
       useNativeDriver: true,
     }).start(() => {
       onClose();
@@ -65,14 +80,13 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
     });
   }, [onReserve, offer, slideAnim]);
 
-  // Wjazd komponentu po zamontowaniu (Ekstremalnie szybki)
   useEffect(() => {
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
-      stiffness: 450, // Bardzo sztywna sprężyna (szybki wjazd)
-      damping: 25,    // Mocne hamowanie na końcu (brak irytującego bujania)
-      mass: 0.2,      // Bardzo lekki komponent (reaguje w ułamku sekundy)
+      stiffness: 450, 
+      damping: 25,    
+      mass: 0.2,      
     }).start();
   }, [slideAnim]);
 
@@ -81,7 +95,6 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Zwiększony margines błędu (10px), żeby zwykłe dotknięcia nie aktywowały gestu
         return gestureState.dy > 10;
       },
       onPanResponderMove: (_, gestureState) => {
@@ -118,9 +131,6 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
         }
       ]}
     >
-      {/* Guzik X wyciągnięty na zewnątrz strefy gestów (PanResponder).
-        Teraz gesty nie blokują jego klikania. Ogromny hitSlop.
-      */}
       <Pressable 
         onPress={handleClose} 
         style={styles.closeBtn} 
@@ -129,7 +139,6 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
         <X size={24} color={colors.text.muted} />
       </Pressable>
 
-      {/* Obszar odpowiedzialny TYLKO za gesty przeciągania */}
       <View style={styles.headerArea} {...panResponder.panHandlers}>
         <View style={styles.handleRow}>
           <View style={styles.handle} />
@@ -167,20 +176,36 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
               <Text style={styles.itemQty}>× {item.quantity}</Text>
             </View>
             <Text style={styles.itemPrice}>
-              {(item.price - item.fee) <= 0
-                ? "Za darmo"
-                : `+${((item.price - item.fee) * item.quantity).toFixed(2)} zł`}
+              {item.price <= 0
+                ? "0.00 zł"
+                : `+${(item.price * item.quantity).toFixed(2)} zł`}
             </Text>
           </View>
         ))}
 
         <View style={styles.divider} />
 
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Zarobisz</Text>
-          <Text style={styles.totalValue}>
-            {totalEarnings <= 0 ? "Za darmo" : `+${totalEarnings.toFixed(2)} zł`}
-          </Text>
+        <View style={styles.summaryContainer}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Razem</Text>
+            <Text style={styles.summaryValueBase}>
+              {totalTogether <= 0 ? "0.00 zł" : `${totalTogether.toFixed(2)} zł`}
+            </Text>
+          </View>
+
+          <View style={[styles.summaryRow, { marginTop: 2 }]}>
+            <Text style={styles.summaryLabel}>Dla wystawiającego</Text>
+            <Text style={styles.summaryValueFee}>
+              {totalFee <= 0 ? "0.00 zł" : `-${totalFee.toFixed(2)} zł`}
+            </Text>
+          </View>
+          
+          <View style={[styles.summaryRow, styles.summaryHighlightRow]}>
+            <Text style={styles.summaryLabelHighlight}>Zarobisz</Text>
+            <Text style={styles.summaryValueHighlight}>
+              {totalEarnings <= 0 ? "0.00 zł" : `+${totalEarnings.toFixed(2)} zł`}
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -236,7 +261,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.subtle,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 10, // Najwyższy zIndex wewnątrz komponentu
+    zIndex: 10,
   },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
@@ -251,10 +276,50 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 14, color: colors.text.primary, fontWeight: "500" },
   itemQty: { fontSize: 13, color: colors.text.muted, fontWeight: "600" },
   itemPrice: { fontSize: 14, fontWeight: "700", color: colors.primary.dark, paddingRight: 8 },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  totalLabel: { fontSize: 16, fontWeight: "700", color: colors.text.primary },
-  totalValue: { fontSize: 18, fontWeight: "800", color: colors.primary.base },
-  reserveBtn: { marginHorizontal: 20, marginTop: 5  , backgroundColor: colors.primary.base, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
+  
+  summaryContainer: {
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  summaryRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  summaryHighlightRow: {
+    marginTop: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.status.border,
+  },
+  summaryLabel: { 
+    fontSize: 14, 
+    fontWeight: "600", 
+    color: colors.text.secondary 
+  },
+  summaryValueBase: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text.primary,
+  },
+  summaryValueFee: { 
+    fontSize: 15, 
+    fontWeight: "700", 
+    color: colors.status.error 
+  },
+  summaryLabelHighlight: { 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: colors.text.primary 
+  },
+  summaryValueHighlight: { 
+    fontSize: 18, 
+    fontWeight: "800", 
+    color: colors.primary.base 
+  },
+  
+  reserveBtn: { marginHorizontal: 20, marginTop: 5, backgroundColor: colors.primary.base, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
   reserveBtnPressed: { backgroundColor: colors.primary.dark },
   reserveText: { color: colors.text.white, fontSize: 16, fontWeight: "700" },
 });
