@@ -66,3 +66,47 @@ export async function reserveOffer(
     throw new Error(`[reserveOffer] ${res.status} ${res.statusText}`);
   }
 }
+
+export async function fetchReservedOffers(userId: number): Promise<Offer[]> {
+  const res = await fetch(`${API_BASE}/api/szosti/reserved/${userId}`);
+
+  if (!res.ok) {
+    throw new Error(`[fetchReservedOffers] ${res.status} ${res.statusText}`);
+  }
+
+  const data: unknown[] = await res.json();
+
+  return data.map((raw: any) => ({
+    offer_id: raw.offer_id,
+    status: (raw.status as string).toLowerCase() as Offer["status"],
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+    address: raw.address,
+    pickup_info: raw.pickup_info,
+    user: {
+      user_id: raw.user.user_id,
+      username: raw.user.username,
+    },
+    items: raw.items.map((i: any) => ({
+      bottle_id: i.bottle_id,
+      quantity: i.quantity,
+      price: i.price,
+      fee: i.fee,
+    })),
+    created_at: raw.created_at,
+  }));
+}
+
+export async function completeOffer(
+  offerId: number,
+  userId: number,
+): Promise<void> {
+  const res = await fetch(
+    `${API_BASE}/api/complete-offer/${offerId}/${userId}`,
+    { method: "POST" },
+  );
+
+  if (!res.ok) {
+    throw new Error(`[completeOffer] ${res.status} ${res.statusText}`);
+  }
+}

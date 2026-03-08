@@ -219,4 +219,25 @@ public class OfferService {
         }
         return false;
     }
+
+    public List<OfferResponseDTO> getReservedByCollector(Long userId) {
+        return offerRepository.findByCollectorIdAndInfoStatus(userId, OfferStatus.RESERVED).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public boolean completeOffer(Long offerId, Long userId) {
+        return offerRepository.findById(offerId).map(offer -> {
+            if (offer.getCollector() == null || !offer.getCollector().getId().equals(userId)) {
+                return false;
+            }
+            if (offer.getInfo() == null || offer.getInfo().getStatus() != OfferStatus.RESERVED) {
+                return false;
+            }
+            offer.getInfo().setStatus(OfferStatus.COMPLETED);
+            offer.getInfo().setTimeCompleted(java.time.LocalDateTime.now());
+            return true;
+        }).orElse(false);
+    }
 }
