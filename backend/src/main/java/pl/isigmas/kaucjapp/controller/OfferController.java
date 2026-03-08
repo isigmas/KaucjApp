@@ -81,7 +81,7 @@ public class OfferController {
                 log.warn("Failed to reserve offer with ID " + offer_id + " for user ID " + user_id);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
-            String messageStatus = switch (new_status.trim().toLowerCase()) {
+            String messageStatus = switch (new_status.trim().toUpperCase()) {
                 case "OPEN" -> "open";
                 case "RESERVED" -> "reserved";
                 case "COMPLETED" -> "completed";
