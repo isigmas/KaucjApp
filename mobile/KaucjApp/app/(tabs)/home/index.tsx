@@ -7,7 +7,7 @@ import { LocateFixed, Compass } from "lucide-react-native";
 import { useLocation } from "@/src/hooks/useLocation";
 import { useClusters, isCluster } from "@/src/hooks/useClusters";
 import { DEFAULT_REGION, type Offer } from "@/src/lib/mockData";
-import { fetchOffers } from "@/src/lib/api";
+import { fetchOffers, reserveOffer } from "@/src/lib/api";
 import { colors } from "@/src/theme";
 import { BottlePin } from "@/src/components/map/BottlePin";
 import { ClusterPin } from "@/src/components/map/ClusterPin";
@@ -81,9 +81,28 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, []);
 
+// TODO: replace with real auth user id once auth is implemented
+  const CURRENT_USER_ID = 1;
+
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [reserving, setReserving] = useState(false);
+  const [reserveError, setReserveError] = useState<string | null>(null);
   const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
   const [activeAttributes, setActiveAttributes] = useState<string[]>([]);
+
+  const handleReserve = useCallback(async (offer: Offer) => {
+    setReserving(true);
+    setReserveError(null);
+    try {
+      await reserveOffer(offer.offer_id, CURRENT_USER_ID);
+      setOffers((prev) => prev.filter((o) => o.offer_id !== offer.offer_id));
+      setSelectedOffer(null);
+    } catch (err: any) {
+      setReserveError(err.message ?? "Nie udało się zarezerwować oferty.");
+    } finally {
+      setReserving(false);
+    }
+  }, []);
 
   const filterKey = useMemo(
     () => `${activeQuantity ?? "x"}_${activeAttributes.join(",")}`,
@@ -112,6 +131,7 @@ export default function HomeScreen() {
     const onlyFree = activeAttributes.includes("free");
 
     return offers.filter((offer) => {
+      if (offer.status !== "open") return false;
       if (activeQuantity !== null && offerTotalQty(offer) < activeQuantity) return false;
       if (noGlass && offer.items.some((i) => GLASS_BOTTLE_IDS.has(i.bottle_id))) return false;
       if (onlyFree && !offer.items.every((i) => i.fee === 0)) return false;
@@ -221,10 +241,10 @@ export default function HomeScreen() {
       {selectedOffer && (
         <OfferSheet
           offer={selectedOffer}
-          onClose={() => setSelectedOffer(null)}
-          onReserve={() => {
-            setSelectedOffer(null);
-          }}
+          onClose={() => { setSelectedOffer(null); setReserveError(null); }}
+          onReserve={handleReserve}
+          reserving={reserving}
+          reserveError={reserveError}
         />
       )}
 
