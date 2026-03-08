@@ -101,4 +101,28 @@ public class OfferController {
         }
         return ResponseEntity.ok(offers);
     }
+
+    @GetMapping("/szosti/{userId}")
+    public ResponseEntity<List<OfferResponseDTO>> getUserOffers(@PathVariable Long userId) {
+        List<OfferResponseDTO> offers;
+        try {
+            offers = service.getAllByUserId(userId);
+        } catch (Exception e) {
+            log.error("Error fetching offers for user ID " + userId + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        return ResponseEntity.ok(offers);
+    }
+
+    @GetMapping("/szosti/reserved/{userId}")
+    public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@PathVariable Long userId) {
+        List<OfferResponseDTO> offers;
+        try {
+            offers = service.getReservedOffersByUserId(userId);
+        } catch (Exception e) {
+            log.error("Error fetching reserved offers for user ID " + userId + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        return ResponseEntity.ok(offers);
+    }
 }
