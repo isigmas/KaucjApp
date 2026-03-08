@@ -15,6 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
+import { useOffersByID } from "@/src/api/useOffer";
 
 // --- Types based on your JSON ---
 interface OfferItem {
@@ -216,6 +217,10 @@ const OfferCard = ({
 export default function MyOffers() {
   const [offers, setOffers] = useState<Offer[]>(INITIAL_OFFERS);
 
+  const { data, isPending } = useOffersByID("1");
+  if (isPending) return <Text>Loading...</Text>;
+  if (!data) return <Text>Error</Text>;
+
   const markAsCompleted = (id: number) => {
     // Optimistic UI update - in a real app, you'd trigger a mutation here first
     setOffers((prevOffers) =>
@@ -234,6 +239,7 @@ export default function MyOffers() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
+      <Text></Text>
       <View style={styles.listContainer}>
         {offers.map((offer, index) => (
           <OfferCard

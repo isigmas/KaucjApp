@@ -50,3 +50,14 @@ export const useCreateOffer = () => {
     },
   });
 };
+
+export const useOffersByID = (id: string) => {
+  return useQuery({
+    queryKey: ["offers", id],
+    queryFn: async (): Promise<Offer[]> => {
+      const { data } = await apiClient.get(`/api/szosti/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
+};
