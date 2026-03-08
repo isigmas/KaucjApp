@@ -30,21 +30,21 @@ class EndpointTests {
     @Test
     void testCreateUser() throws Exception {
         String json = """
-            {
-                "name": "Jan",
-                "surname": "Kowalski",
-                "username": "jkowalski%s",
-                "phoneNumber": "123456789",
-                "email": "jan%s@example.com",
-                "defaultAddress": "ul. Testowa 1",
-                "defaultLatitude": 52.2297,
-                "defaultLongitude": 21.0122
-            }
-            """.formatted(System.currentTimeMillis(), System.currentTimeMillis());
+                {
+                    "name": "Jan",
+                    "surname": "Kowalski",
+                    "username": "jkowalski%s",
+                    "phoneNumber": "123456789",
+                    "email": "jan%s@example.com",
+                    "defaultAddress": "ul. Testowa 1",
+                    "defaultLatitude": 52.2297,
+                    "defaultLongitude": 21.0122
+                }
+                """.formatted(System.currentTimeMillis(), System.currentTimeMillis());
 
         mockMvc.perform(post("/api/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
                 .andExpect(status().isCreated());
     }
 
@@ -63,20 +63,27 @@ class EndpointTests {
     @Test
     void testCreateOffer() throws Exception {
         String json = """
-            {
-                "creatorId": 1,
-                "latitude": 52.2297,
-                "longitude": 21.0122,
-                "kaucjaQuantity": 10,
-                "nonKaucjaQuantity": 5,
-                "pickupAddress": "ul. Odbiorcza 1",
-                "pickupInstructions": "Zadzwonic po przybyciu"
-            }
-            """;
+                {
+                    "creatorId": 1,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 10,
+                    "aPrice": 10.0,
+                    "aFee": 5.0,
+                    "bQuantity": 10,
+                    "bPrice": 10.0,
+                    "bFee": 5.0,
+                    "cQuantity": 10,
+                    "cPrice": 10.0,
+                    "cFee": 5.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Zadzwonic po przybyciu"
+                }
+                """;
 
         mockMvc.perform(post("/api/offer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
                 .andExpect(status().isCreated());
     }
 
