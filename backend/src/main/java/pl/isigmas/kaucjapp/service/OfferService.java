@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.DTO.OfferResponseDTO;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -135,6 +136,19 @@ public class OfferService {
                 .collect(Collectors.toList());
     }
 
+
+    public List<OfferResponseDTO> getAllByUserId(Long userId) {
+        return offerRepository.findByCreatorId(userId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
+        return offerRepository.findByCollectorIdAndInfoStatus(userId, OfferStatus.RESERVED).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
         OfferResponseDTO.UserDTO userDTO = null;
         if (offer.getCreator() != null) {
@@ -190,18 +204,34 @@ public class OfferService {
     }
 
     @Transactional
-    public boolean reserveOffer(Long offer_id, Long user_id) {
+    public boolean changeStatus(Long offer_id, Optional<Long> user_id, String new_status) {
         return offerRepository.findById(offer_id).map(offer -> {
-            User user = userRepository.findById(user_id)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user_id));
+            boolean change = false;
+
+            User user = user_id
+                    .map(id -> userRepository.findById(id)
+                            .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id)))
+                    .orElse(null);
+
+            var status = switch (new_status.trim().toUpperCase()) {
+                case "OPEN" -> OfferStatus.OPEN;
+                case "RESERVED" -> OfferStatus.RESERVED;
+                case "COMPLETED" -> OfferStatus.COMPLETED;
+                case "CANCELED" -> OfferStatus.CANCELED;
+                default -> null;
+            };
 
             if (offer.getInfo() != null) {
-                offer.getInfo().setStatus(OfferStatus.RESERVED);
-                offer.setCollector(user);
-                return true;
+                offer.getInfo().setStatus(status);
+                change = true;
             }
 
-            return false;
+            if (status == OfferStatus.RESERVED) {
+                offer.setCollector(user);
+                change = true;
+            }
+
+            return change;
 
         }).orElse(false);
     }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -70,11 +71,12 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PostMapping("/reserve-offer/{offer_id}/{user_id}")
-    public ResponseEntity<Void> reserveOffer(@PathVariable Long offer_id, @PathVariable Long user_id) {
+    @PostMapping("/change-offer-status/{offer_id}/{user_id}/{new_status}")
+    public ResponseEntity<Void> reserveOffer(@PathVariable Long offer_id, @PathVariable Optional<Long> user_id,
+            @PathVariable String new_status) {
         boolean reserved;
         try {
-            reserved = service.reserveOffer(offer_id, user_id);
+            reserved = service.changeStatus(offer_id, user_id, new_status);
             if (!reserved) {
                 log.warn("Failed to reserve offer with ID " + offer_id + " for user ID " + user_id);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -95,6 +97,30 @@ public class OfferController {
             offers = service.getAll();
         } catch (Exception e) {
             log.error("Error fetching offers: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        return ResponseEntity.ok(offers);
+    }
+
+    @GetMapping("/szosti/{userId}")
+    public ResponseEntity<List<OfferResponseDTO>> getUserOffers(@PathVariable Long userId) {
+        List<OfferResponseDTO> offers;
+        try {
+            offers = service.getAllByUserId(userId);
+        } catch (Exception e) {
+            log.error("Error fetching offers for user ID " + userId + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        return ResponseEntity.ok(offers);
+    }
+
+    @GetMapping("/szosti/reserved/{userId}")
+    public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@PathVariable Long userId) {
+        List<OfferResponseDTO> offers;
+        try {
+            offers = service.getReservedOffersByUserId(userId);
+        } catch (Exception e) {
+            log.error("Error fetching reserved offers for user ID " + userId + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
         return ResponseEntity.ok(offers);

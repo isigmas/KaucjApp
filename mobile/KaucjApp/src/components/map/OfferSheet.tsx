@@ -34,9 +34,11 @@ interface OfferSheetProps {
   offer: Offer;
   onClose: () => void;
   onReserve: (offer: Offer) => void;
+  reserving?: boolean;
+  reserveError?: string | null;
 }
 
-export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
+export function OfferSheet({ offer, onClose, onReserve, reserving = false, reserveError = null }: OfferSheetProps) {
   const insets = useSafeAreaInsets();
 
   // ── User rating ─────────────────────────────────────────────────────────
@@ -200,19 +202,24 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
 
         <Text style={styles.sectionTitle}>Butelki</Text>
 
-        {offer.items.map((item, idx) => (
-          <View key={idx} style={styles.itemRow}>
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
-              <Text style={styles.itemQty}>× {item.quantity}</Text>
+        {offer.items.map((item, idx) => {
+          // Obliczamy pełną wartość: cena w kaucjomacie (price) + opłata dla wystawiającego (fee)
+          const itemTotal = (item.price + item.fee) * item.quantity;
+          
+          return (
+            <View key={idx} style={styles.itemRow}>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
+                <Text style={styles.itemQty}>× {item.quantity}</Text>
+              </View>
+              <Text style={styles.itemPrice}>
+                {itemTotal <= 0
+                  ? "0.00 zł"
+                  : `+${itemTotal.toFixed(2)} zł`}
+              </Text>
             </View>
-            <Text style={styles.itemPrice}>
-              {item.price <= 0
-                ? "0.00 zł"
-                : `+${(item.price * item.quantity).toFixed(2)} zł`}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
 
         <View style={styles.divider} />
 
@@ -241,11 +248,24 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
       </ScrollView>
 
       <Pressable
-        style={({ pressed }) => [styles.reserveBtn, pressed && styles.reserveBtnPressed]}
+        style={({ pressed }) => [
+          styles.reserveBtn,
+          (pressed || reserving) && styles.reserveBtnPressed,
+          reserving && styles.reserveBtnDisabled,
+        ]}
         onPress={handleReserve}
+        disabled={reserving}
       >
-        <Text style={styles.reserveText}>Zarezerwuj</Text>
+        {reserving ? (
+          <ActivityIndicator size="small" color={colors.text.white} />
+        ) : (
+          <Text style={styles.reserveText}>Zarezerwuj</Text>
+        )}
       </Pressable>
+
+      {reserveError && (
+        <Text style={styles.reserveErrorText}>{reserveError}</Text>
+      )}
     </Animated.View>
   );
 }
@@ -371,5 +391,15 @@ const styles = StyleSheet.create({
   
   reserveBtn: { marginHorizontal: 20, marginTop: 5, backgroundColor: colors.primary.base, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
   reserveBtnPressed: { backgroundColor: colors.primary.dark },
+  reserveBtnDisabled: { opacity: 0.7 },
   reserveText: { color: colors.text.white, fontSize: 16, fontWeight: "700" },
+  reserveErrorText: {
+    textAlign: "center",
+    color: colors.status.error,
+    fontSize: 13,
+    fontWeight: "500",
+    marginTop: 8,
+    marginHorizontal: 20,
+    marginBottom: 4,
+  },
 });
