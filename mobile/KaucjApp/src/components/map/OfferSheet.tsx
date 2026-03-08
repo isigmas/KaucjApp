@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,13 @@ import {
   Dimensions,
   Animated,
   PanResponder,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MapPin, Info, User, X } from "lucide-react-native";
+import { MapPin, Info, User, X, Star } from "lucide-react-native";
 import { colors } from "@/src/theme";
 import type { Offer } from "@/src/lib/mockData";
+import { fetchUserRating, type UserRating } from "@/src/lib/api";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.65; 
@@ -36,6 +38,23 @@ interface OfferSheetProps {
 
 export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
   const insets = useSafeAreaInsets();
+
+  // ── User rating ─────────────────────────────────────────────────────────
+  const [rating, setRating] = useState<UserRating | null>(null);
+  const [ratingLoading, setRatingLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRatingLoading(true);
+    setRating(null);
+
+    fetchUserRating(offer.user.user_id)
+      .then((data) => { if (!cancelled) setRating(data); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setRatingLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [offer.user.user_id]);
   
   // Twój zarobek (suma price)
   const totalEarnings = offer.items.reduce(
@@ -164,6 +183,17 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
         <View style={styles.row}>
           <User size={18} color={colors.text.secondary} />
           <Text style={styles.username}>{offer.user.username}</Text>
+          {ratingLoading ? (
+            <ActivityIndicator size="small" color={colors.status.warning} />
+          ) : rating ? (
+            <View style={styles.ratingBadge}>
+              <Star size={13} color={colors.status.warning} fill={colors.status.warning} />
+              <Text style={styles.ratingText}>
+                {rating.current_avg.toFixed(1)}
+              </Text>
+              <Text style={styles.ratingCount}>({rating.number_of_feedbacks})</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.divider} />
@@ -269,7 +299,26 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 12 },
   address: { flex: 1, fontSize: 16, fontWeight: "700", color: colors.text.primary },
   pickup: { flex: 1, fontSize: 14, color: colors.text.secondary, lineHeight: 20 },
-  username: { flex: 1, fontSize: 14, fontWeight: "600", color: colors.text.primary },
+  username: { fontSize: 14, fontWeight: "600", color: colors.text.primary },
+  ratingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: colors.background.subtle,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.text.primary,
+  },
+  ratingCount: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: colors.text.muted,
+  },
   divider: { height: 1, backgroundColor: colors.status.border, marginVertical: 12 },
   sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.text.muted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 },
   itemRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, paddingHorizontal: 4, backgroundColor: colors.background.subtle, borderRadius: 10, marginBottom: 6 },

@@ -36,3 +36,19 @@ export async function fetchOffers(): Promise<Offer[]> {
     created_at: raw.created_at,
   }));
 }
+
+export interface UserRating {
+  user_id: number;
+  current_avg: number;
+  number_of_feedbacks: number;
+}
+
+export async function fetchUserRating(userId: number): Promise<UserRating> {
+  const res = await fetch(`${API_BASE}/api/user/${userId}/rating`);
+
+  if (!res.ok) {
+    throw new Error(`[fetchUserRating] ${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
+}
