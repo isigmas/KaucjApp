@@ -43,27 +43,39 @@ public class OfferService {
 
         List<OfferCount> counts = new ArrayList<>();
 
-        if (dto.getKaucjaQuantity() != null && dto.getKaucjaQuantity() > 0) {
-            BottlePrice kaucjaPrice = bottlePriceRepository.findById(1L).orElse(null);
-            if (kaucjaPrice != null) {
-                OfferCount kaucjaCount = new OfferCount();
-                kaucjaCount.setId(new OfferCountId(null, 1L));
-                kaucjaCount.setOffer(offer);
-                kaucjaCount.setBottlePrice(kaucjaPrice);
-                kaucjaCount.setQuantity(dto.getKaucjaQuantity());
-                counts.add(kaucjaCount);
+        if (dto.getAQuantity() != null && dto.getAQuantity() > 0) {
+            BottlePrice aPrice = bottlePriceRepository.findById(1L).orElse(null);
+            if (aPrice != null) {
+                OfferCount aCount = new OfferCount();
+                aCount.setId(new OfferCountId(null, 1L));
+                aCount.setOffer(offer);
+                aCount.setBottlePrice(aPrice);
+                aCount.setQuantity(dto.getAQuantity());
+                counts.add(aCount);
             }
         }
 
-        if (dto.getNonKaucjaQuantity() != null && dto.getNonKaucjaQuantity() > 0) {
-            BottlePrice nonKaucjaPrice = bottlePriceRepository.findById(2L).orElse(null);
-            if (nonKaucjaPrice != null) {
-                OfferCount nonKaucjaCount = new OfferCount();
-                nonKaucjaCount.setId(new OfferCountId(null, 2L));
-                nonKaucjaCount.setOffer(offer);
-                nonKaucjaCount.setBottlePrice(nonKaucjaPrice);
-                nonKaucjaCount.setQuantity(dto.getNonKaucjaQuantity());
-                counts.add(nonKaucjaCount);
+        if (dto.getBQuantity() != null && dto.getBQuantity() > 0) {
+            BottlePrice bPrice = bottlePriceRepository.findById(1L).orElse(null);
+            if (bPrice != null) {
+                OfferCount bCount = new OfferCount();
+                bCount.setId(new OfferCountId(null, 1L));
+                bCount.setOffer(offer);
+                bCount.setBottlePrice(bPrice);
+                bCount.setQuantity(dto.getBQuantity());
+                counts.add(bCount);
+            }
+        }
+
+        if (dto.getCQuantity() != null && dto.getCQuantity() > 0) {
+            BottlePrice cPrice = bottlePriceRepository.findById(1L).orElse(null);
+            if (cPrice != null) {
+                OfferCount cCount = new OfferCount();
+                cCount.setId(new OfferCountId(null, 1L));
+                cCount.setOffer(offer);
+                cCount.setBottlePrice(cPrice);
+                cCount.setQuantity(dto.getCQuantity());
+                counts.add(cCount);
             }
         }
 
@@ -133,10 +145,12 @@ public class OfferService {
                         var bottlePriceEntity = count.getBottlePrice();
 
                         double basePrice = (bottlePriceEntity != null && bottlePriceEntity.getPrice() != null)
-                                ? bottlePriceEntity.getPrice().doubleValue() : 0.0;
+                                ? bottlePriceEntity.getPrice().doubleValue()
+                                : 0.0;
 
                         double userFee = (bottlePriceEntity != null && bottlePriceEntity.getFee() != null)
-                                ? bottlePriceEntity.getFee().doubleValue() : 0.0;
+                                ? bottlePriceEntity.getFee().doubleValue()
+                                : 0.0;
 
                         double finalPriceForCollector = basePrice - userFee;
 
@@ -156,9 +170,11 @@ public class OfferService {
                         ? offer.getInfo().getStatus().name()
                         : null)
                 .latitude(offer.getInfo() != null && offer.getInfo().getLatitude() != null
-                        ? offer.getInfo().getLatitude().doubleValue() : null)
+                        ? offer.getInfo().getLatitude().doubleValue()
+                        : null)
                 .longitude(offer.getInfo() != null && offer.getInfo().getLongitude() != null
-                        ? offer.getInfo().getLongitude().doubleValue() : null)
+                        ? offer.getInfo().getLongitude().doubleValue()
+                        : null)
                 .pickupAddress(offer.getInfo() != null ? offer.getInfo().getPickupAddress() : null)
                 .pickupInstructions(offer.getInfo() != null ? offer.getInfo().getPickupInstructions() : null)
                 .createdAt(offer.getInfo() != null ? offer.getInfo().getTimeCreated() : null)
@@ -182,5 +198,10 @@ public class OfferService {
             return false;
 
         }).orElse(false);
+    }
+
+    private boolean quantityVarCheck(OfferDTO dto) {
+        return (dto.getAQuantity() != null && dto.getBQuantity() != null && dto.getCQuantity() != null
+                && dto.getAQuantity() + dto.getBQuantity() + dto.getCQuantity() > 0);
     }
 }
