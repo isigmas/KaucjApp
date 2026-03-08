@@ -136,6 +136,19 @@ public class OfferService {
                 .collect(Collectors.toList());
     }
 
+
+    public List<OfferResponseDTO> getAllByUserId(Long userId) {
+        return offerRepository.findByCreatorId(userId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
+        return offerRepository.findByCollectorIdAndInfoStatus(userId, OfferStatus.RESERVED).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
         OfferResponseDTO.UserDTO userDTO = null;
         if (offer.getCreator() != null) {
