@@ -48,8 +48,7 @@ public class OfferService {
                     BottlePrice.builder()
                             .price(dto.getAPrice())
                             .fee(dto.getAFee())
-                            .build()
-            );
+                            .build());
             if (aPrice != null) {
                 OfferCount aCount = new OfferCount();
                 aCount.setId(new OfferCountId(null, aPrice.getId()));
@@ -65,8 +64,7 @@ public class OfferService {
                     BottlePrice.builder()
                             .price(dto.getBPrice())
                             .fee(dto.getBFee())
-                            .build()
-            );
+                            .build());
             if (bPrice != null) {
                 OfferCount bCount = new OfferCount();
                 bCount.setId(new OfferCountId(null, bPrice.getId()));
@@ -82,8 +80,7 @@ public class OfferService {
                     BottlePrice.builder()
                             .price(dto.getCPrice())
                             .fee(dto.getCFee())
-                            .build()
-            );
+                            .build());
             if (cPrice != null) {
                 OfferCount cCount = new OfferCount();
                 cCount.setId(new OfferCountId(null, cPrice.getId()));
@@ -117,7 +114,8 @@ public class OfferService {
             if (offer.getCounts() != null) {
                 for (OfferCount count : offer.getCounts()) {
                     var bottlePrice = count.getBottlePrice();
-                    if (bottlePrice == null) continue;
+                    if (bottlePrice == null)
+                        continue;
 
                     if (dto.getAQuantity() != null) {
                         bottlePrice.setPrice(dto.getAPrice());
@@ -223,5 +221,14 @@ public class OfferService {
     private boolean quantityVarCheck(OfferDTO dto) {
         return (dto.getAQuantity() != null && dto.getBQuantity() != null && dto.getCQuantity() != null
                 && dto.getAQuantity() + dto.getBQuantity() + dto.getCQuantity() > 0);
+    }
+
+    @Transactional
+    public boolean remove(Long offerId) {
+        if (offerRepository.existsById(offerId)) {
+            offerRepository.deleteById(offerId);
+            return true;
+        }
+        return false;
     }
 }
