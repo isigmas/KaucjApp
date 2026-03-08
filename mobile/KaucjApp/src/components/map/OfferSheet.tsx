@@ -80,13 +80,14 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
     });
   }, [onReserve, offer, slideAnim]);
 
+  // Ekstremalnie szybki wjazd komponentu
   useEffect(() => {
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
-      stiffness: 450, 
-      damping: 25,    
-      mass: 0.2,      
+      stiffness: 700, // Mocno naciągnięta sprężyna = błyskawiczny start
+      damping: 30,    // Tłumienie trzymające ją w ryzach (brak odbijania)
+      mass: 0.1,      // Minimalna masa = zero bezwładności na starcie
     }).start();
   }, [slideAnim]);
 
@@ -109,9 +110,9 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
           Animated.spring(slideAnim, {
             toValue: 0,
             useNativeDriver: true,
-            stiffness: 400,
-            damping: 25,
-            mass: 0.2,
+            stiffness: 700,
+            damping: 30,
+            mass: 0.1,
           }).start();
         }
       },
