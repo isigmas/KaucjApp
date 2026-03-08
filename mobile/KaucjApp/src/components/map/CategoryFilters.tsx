@@ -29,7 +29,7 @@ const QUANTITY_CHIPS: QuantityChip[] = [
 
 const ATTRIBUTE_CHIPS: AttributeChip[] = [
   { key: "no_glass", label: "Bez szkła" },
-  { key: "new", label: "Nowe" },
+  { key: "free", label: "Darmowe" },
 ];
 
 /* ── Props ────────────────────────────────────────────────────────────── */
@@ -66,7 +66,7 @@ export function CategoryFilters({
   };
 
   return (
-    <View style={[styles.wrapper, { top: insets.top + 60 }]}>
+    <View style={[styles.wrapper, { top: insets.top + 8 }]}>
       <View style={styles.row}>
         {QUANTITY_CHIPS.map((chip) => {
           const active = activeQuantity === chip.value;
