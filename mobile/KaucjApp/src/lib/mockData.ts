@@ -7,7 +7,7 @@ export interface BottleItem {
 
 export interface Offer {
   offer_id: number;
-  status: "open" | "reserved" | "completed";
+  status: "open" | "reserved" | "completed" | "canceled";
   latitude: number;
   longitude: number;
   address: string;

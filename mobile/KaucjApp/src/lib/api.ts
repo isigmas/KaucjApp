@@ -52,3 +52,17 @@ export async function fetchUserRating(userId: number): Promise<UserRating> {
 
   return res.json();
 }
+
+export async function reserveOffer(
+  offerId: number,
+  userId: number,
+): Promise<void> {
+  const res = await fetch(
+    `${API_BASE}/api/reserve-offer/${offerId}/${userId}`,
+    { method: "POST" },
+  );
+
+  if (!res.ok) {
+    throw new Error(`[reserveOffer] ${res.status} ${res.statusText}`);
+  }
+}
