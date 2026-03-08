@@ -92,8 +92,10 @@ public class OfferController {
             if (messageStatus.isEmpty()) {
                 log.warn("Invalid status provided: " + new_status);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            } else if (messageStatus.equals("reserver")) {
+                log.info("Offer reserved, Offer ID: " + offer_id + ", User ID: " + user_id);
             } else {
-                log.info("Offer " + messageStatus, "Offer ID: " + offer_id + ", User ID: " + user_id);
+                log.info("Offer " + messageStatus, ", User ID: " + user_id);
             }
 
         } catch (Exception e) {
