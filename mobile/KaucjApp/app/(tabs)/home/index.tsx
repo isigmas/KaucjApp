@@ -166,7 +166,13 @@ export default function HomeScreen() {
         showsMyLocationButton={false}
         showsPointsOfInterest={false}
         onRegionChangeComplete={setRegion}
-        onPress={() => setSelectedOffer(null)}
+        onPress={(e) => {
+          // On Android, marker taps also fire MapView.onPress;
+          // only dismiss the sheet on genuine map taps.
+          if (e.nativeEvent.action === "press") {
+            setSelectedOffer(null);
+          }
+        }}
       >
         {clusters.map((item) => {
           const [lng, lat] = item.geometry.coordinates;

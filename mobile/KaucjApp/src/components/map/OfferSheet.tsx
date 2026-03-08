@@ -36,7 +36,10 @@ interface OfferSheetProps {
 
 export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
   const insets = useSafeAreaInsets();
-  const totalPrice = offer.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalEarnings = offer.items.reduce(
+    (sum, item) => sum + (item.price - item.fee) * item.quantity,
+    0,
+  );
   const NAVBAR_BUFFER = 55;
 
   // ── Animacje ────────────────────────────────────────────────────────────
@@ -164,7 +167,9 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
               <Text style={styles.itemQty}>× {item.quantity}</Text>
             </View>
             <Text style={styles.itemPrice}>
-              {item.price === 0 ? "Za darmo" : `${(item.price * item.quantity).toFixed(2)} zł`}
+              {(item.price - item.fee) <= 0
+                ? "Za darmo"
+                : `+${((item.price - item.fee) * item.quantity).toFixed(2)} zł`}
             </Text>
           </View>
         ))}
@@ -172,9 +177,9 @@ export function OfferSheet({ offer, onClose, onReserve }: OfferSheetProps) {
         <View style={styles.divider} />
 
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Razem</Text>
+          <Text style={styles.totalLabel}>Zarobisz</Text>
           <Text style={styles.totalValue}>
-            {totalPrice === 0 ? "Za darmo" : `${totalPrice.toFixed(2)} zł`}
+            {totalEarnings <= 0 ? "Za darmo" : `+${totalEarnings.toFixed(2)} zł`}
           </Text>
         </View>
       </ScrollView>
