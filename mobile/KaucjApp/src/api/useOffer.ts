@@ -30,17 +30,22 @@ export const useCreateOffer = () => {
         creatorId: 1,
         latitude: newOffer.latitude || null,
         longitude: newOffer.longitude || null,
+        aQuantity: newOffer.plasticBottles,
+        aPrice: 0.5,
+        aFee: newOffer.plasticPrice,
+        bQuantity: newOffer.glassBottles,
+        bPrice: 1,
+        bFee: newOffer.glassPrice,
+        cQuantity: newOffer.cans,
+        cPrice: 0.5,
+        cFee: newOffer.cansPrice,
         pickupAddress: newOffer.address,
-        notes: newOffer.notes,
-        plasticBottles: newOffer.plasticBottles,
-        glassBottles: newOffer.glassBottles,
-        cans: newOffer.cans,
-        sellerPrice: sellerPrice,
+        pickupInstructions: newOffer.notes,
       };
 
       console.log("payload: ", JSON.stringify(payload, null, 2));
 
-      const { data } = await apiClient.post("/offers", payload);
+      const { data } = await apiClient.post("/offer", payload);
       return data;
     },
     onSuccess: () => {
