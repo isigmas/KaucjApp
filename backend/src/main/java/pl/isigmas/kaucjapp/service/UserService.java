@@ -4,13 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.isigmas.kaucjapp.DTO.UserDTO;
 import pl.isigmas.kaucjapp.model.User;
+import pl.isigmas.kaucjapp.model.Rating;
 import pl.isigmas.kaucjapp.repository.UserRepository;
+import pl.isigmas.kaucjapp.repository.RatingRepository;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RatingRepository ratingRepository;
 
     public UserDTO getUserById(Long id) {
         return userRepository.findById(id)
@@ -21,6 +26,12 @@ public class UserService {
     public UserDTO createUser(UserDTO userDTO) {
         User user = mapToEntity(userDTO);
         User savedUser = userRepository.save(user);
+        Rating initialRating = Rating.builder()
+                .user(savedUser)
+                .currentAvg(BigDecimal.ZERO)
+                .numberOfFeedbacks(0L)
+                .build();
+        ratingRepository.save(initialRating);
         return mapToDTO(savedUser);
     }
 

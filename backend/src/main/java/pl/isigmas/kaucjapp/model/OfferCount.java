@@ -18,7 +18,7 @@ public class OfferCount {
     @JoinColumn(name = "offer_id")
     private Offer offer;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @MapsId("bottleId")
     @JoinColumn(name = "bottle_id")
     private BottlePrice bottlePrice;

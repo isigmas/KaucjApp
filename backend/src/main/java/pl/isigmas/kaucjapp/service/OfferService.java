@@ -43,28 +43,40 @@ public class OfferService {
 
         List<OfferCount> counts = new ArrayList<>();
 
-        if (dto.getKaucjaQuantity() != null && dto.getKaucjaQuantity() > 0) {
-            BottlePrice kaucjaPrice = bottlePriceRepository.findById(1L).orElse(null);
-            if (kaucjaPrice != null) {
-                OfferCount kaucjaCount = new OfferCount();
-                kaucjaCount.setId(new OfferCountId(null, 1L));
-                kaucjaCount.setOffer(offer);
-                kaucjaCount.setBottlePrice(kaucjaPrice);
-                kaucjaCount.setQuantity(dto.getKaucjaQuantity());
-                counts.add(kaucjaCount);
-            }
+        if (dto.getAQuantity() != null && dto.getAQuantity() > 0) {
+            BottlePrice aPrice = BottlePrice.builder()
+                    .price(dto.getAPrice())
+                    .fee(dto.getAFee())
+                    .build();
+            OfferCount aCount = new OfferCount();
+            aCount.setOffer(offer);
+            aCount.setBottlePrice(aPrice);
+            aCount.setQuantity(dto.getAQuantity());
+            counts.add(aCount);
         }
 
-        if (dto.getNonKaucjaQuantity() != null && dto.getNonKaucjaQuantity() > 0) {
-            BottlePrice nonKaucjaPrice = bottlePriceRepository.findById(2L).orElse(null);
-            if (nonKaucjaPrice != null) {
-                OfferCount nonKaucjaCount = new OfferCount();
-                nonKaucjaCount.setId(new OfferCountId(null, 2L));
-                nonKaucjaCount.setOffer(offer);
-                nonKaucjaCount.setBottlePrice(nonKaucjaPrice);
-                nonKaucjaCount.setQuantity(dto.getNonKaucjaQuantity());
-                counts.add(nonKaucjaCount);
-            }
+        if (dto.getBQuantity() != null && dto.getBQuantity() > 0) {
+            BottlePrice bPrice = BottlePrice.builder()
+                    .price(dto.getBPrice())
+                    .fee(dto.getBFee())
+                    .build();
+            OfferCount bCount = new OfferCount();
+            bCount.setOffer(offer);
+            bCount.setBottlePrice(bPrice);
+            bCount.setQuantity(dto.getBQuantity());
+            counts.add(bCount);
+        }
+
+        if (dto.getCQuantity() != null && dto.getCQuantity() > 0) {
+            BottlePrice cPrice = BottlePrice.builder()
+                    .price(dto.getCPrice())
+                    .fee(dto.getCFee())
+                    .build();
+            OfferCount cCount = new OfferCount();
+            cCount.setOffer(offer);
+            cCount.setBottlePrice(cPrice);
+            cCount.setQuantity(dto.getCQuantity());
+            counts.add(cCount);
         }
 
         offer.setCounts(counts);
@@ -89,10 +101,25 @@ public class OfferService {
 
             if (offer.getCounts() != null) {
                 for (OfferCount count : offer.getCounts()) {
-                    if (count.getBottlePrice().getId() == 1L && dto.getKaucjaQuantity() != null) {
-                        count.setQuantity(dto.getKaucjaQuantity());
-                    } else if (count.getBottlePrice().getId() == 2L && dto.getNonKaucjaQuantity() != null) {
-                        count.setQuantity(dto.getNonKaucjaQuantity());
+                    var bottlePrice = count.getBottlePrice();
+                    if (bottlePrice == null)
+                        continue;
+
+                    if (dto.getAQuantity() != null) {
+                        bottlePrice.setPrice(dto.getAPrice());
+                        bottlePrice.setFee(dto.getAFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getAQuantity());
+                    } else if (dto.getBQuantity() != null) {
+                        bottlePrice.setPrice(dto.getBPrice());
+                        bottlePrice.setFee(dto.getBFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getBQuantity());
+                    } else if (dto.getCQuantity() != null) {
+                        bottlePrice.setPrice(dto.getCPrice());
+                        bottlePrice.setFee(dto.getCFee());
+                        bottlePriceRepository.save(bottlePrice);
+                        count.setQuantity(dto.getCQuantity());
                     }
                 }
             }
@@ -102,15 +129,6 @@ public class OfferService {
         }).orElse(false);
     }
 
-    @Transactional
-    public boolean remove(Long offerId) {
-        if (offerRepository.existsById(offerId)) {
-            offerRepository.deleteById(offerId);
-            return true;
-        }
-        return false;
-    }
-
     public List<OfferResponseDTO> getAll() {
         return offerRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
@@ -118,7 +136,6 @@ public class OfferService {
     }
 
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
-
         OfferResponseDTO.UserDTO userDTO = null;
         if (offer.getCreator() != null) {
             userDTO = OfferResponseDTO.UserDTO.builder()
@@ -130,13 +147,26 @@ public class OfferService {
         List<OfferResponseDTO.ItemDTO> itemDTOs = new ArrayList<>();
         if (offer.getCounts() != null) {
             itemDTOs = offer.getCounts().stream()
-                    .map(count -> OfferResponseDTO.ItemDTO.builder()
-                            .bottleId(count.getBottlePrice() != null ? count.getBottlePrice().getId() : null)
-                            .quantity(count.getQuantity())
-                            .price(count.getBottlePrice() != null && count.getBottlePrice().getPrice() != null
-                                    ? count.getBottlePrice().getPrice().doubleValue()
-                                    : 0.0)
-                            .build())
+                    .map(count -> {
+                        var bottlePriceEntity = count.getBottlePrice();
+
+                        double basePrice = (bottlePriceEntity != null && bottlePriceEntity.getPrice() != null)
+                                ? bottlePriceEntity.getPrice().doubleValue()
+                                : 0.0;
+
+                        double userFee = (bottlePriceEntity != null && bottlePriceEntity.getFee() != null)
+                                ? bottlePriceEntity.getFee().doubleValue()
+                                : 0.0;
+
+                        double finalPriceForCollector = basePrice - userFee;
+
+                        return OfferResponseDTO.ItemDTO.builder()
+                                .bottleId(bottlePriceEntity != null ? bottlePriceEntity.getId() : null)
+                                .quantity(count.getQuantity())
+                                .price(finalPriceForCollector)
+                                .fee(userFee)
+                                .build();
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -174,5 +204,19 @@ public class OfferService {
             return false;
 
         }).orElse(false);
+    }
+
+    private boolean quantityVarCheck(OfferDTO dto) {
+        return (dto.getAQuantity() != null && dto.getBQuantity() != null && dto.getCQuantity() != null
+                && dto.getAQuantity() + dto.getBQuantity() + dto.getCQuantity() > 0);
+    }
+
+    @Transactional
+    public boolean remove(Long offerId) {
+        if (offerRepository.existsById(offerId)) {
+            offerRepository.deleteById(offerId);
+            return true;
+        }
+        return false;
     }
 }
