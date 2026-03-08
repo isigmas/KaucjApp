@@ -2,9 +2,26 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import { OfferData } from "../components/offer_creator/create-offer";
 
-interface Offer {
-  id: string;
-  plasticBottles: number;
+interface OfferItem {
+  bottle_id: number;
+  fee: number;
+  price: number;
+  quantity: number;
+}
+
+export interface Offer {
+  offer_id: number;
+  address: string;
+  created_at: string;
+  items: OfferItem[];
+  latitude: number;
+  longitude: number;
+  pickup_info: string | null;
+  status: "OPEN" | "COMPLETED"; // Assuming COMPLETED is the finished state
+  user: {
+    user_id: number;
+    username: string;
+  };
 }
 
 export const useOffers = () => {
@@ -56,8 +73,43 @@ export const useOffersByID = (id: string) => {
     queryKey: ["offers", id],
     queryFn: async (): Promise<Offer[]> => {
       const { data } = await apiClient.get(`/api/szosti/${id}`);
+
+      const mappedData = data.map((offer: any) => ({
+        address: offer.address,
+        created_at: offer.created_at,
+        items: offer.items.map((item: any) => ({ ...item })),
+        latitude: offer.latitude,
+        longitude: offer.longitude,
+        offer_id: offer.offer_id,
+        pickup_info: offer.pickup_info,
+        status: offer.status,
+        user: offer.user,
+      }));
+
+      console.log("Mapped data: ", JSON.stringify(mappedData, null, 2));
+
       return data;
     },
     enabled: !!id,
+  });
+};
+
+export const useCompleteOffer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      offerId,
+      idUser,
+    }: {
+      offerId: number;
+      idUser: string;
+    }) => {
+      await apiClient.post(
+        `/api/change-offer-status/${offerId}/${idUser}/completed`,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["offers"] });
+    },
   });
 };

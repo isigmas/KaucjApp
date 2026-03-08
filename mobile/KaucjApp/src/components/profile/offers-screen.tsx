@@ -15,30 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
-import { useOffersByID } from "@/src/api/useOffer";
-
-// --- Types based on your JSON ---
-interface OfferItem {
-  bottle_id: number;
-  fee: number;
-  price: number;
-  quantity: number;
-}
-
-interface Offer {
-  offer_id: number;
-  address: string;
-  created_at: string;
-  items: OfferItem[];
-  latitude: number;
-  longitude: number;
-  pickup_info: string | null;
-  status: "OPEN" | "COMPLETED"; // Assuming COMPLETED is the finished state
-  user: {
-    user_id: number;
-    username: string;
-  };
-}
+import { Offer, useCompleteOffer, useOffersByID } from "@/src/api/useOffer";
 
 // --- Mappers ---
 const getBottleInfo = (id: number) => {
@@ -63,36 +40,6 @@ const formatDate = (dateString: string) => {
     minute: "2-digit",
   });
 };
-
-// --- Mock Data ---
-const INITIAL_OFFERS: Offer[] = [
-  {
-    address: "Wrocławska 15/2",
-    created_at: "2026-03-08T02:45:22.81902",
-    items: [
-      { bottle_id: 2, fee: 0.3, price: 0.2, quantity: 10 },
-      { bottle_id: 3, fee: 0.2, price: 0.8, quantity: 3 },
-      { bottle_id: 4, fee: 0.2, price: 0.3, quantity: 3 },
-    ],
-    latitude: 50.05382,
-    longitude: 19.935006,
-    offer_id: 2,
-    pickup_info: "Zadzwonić domofonem nr 4",
-    status: "OPEN",
-    user: { user_id: 1, username: "aska co daje" },
-  },
-  {
-    address: "Karmelicka 8",
-    created_at: "2026-03-05T14:20:00.00000",
-    items: [{ bottle_id: 2, fee: 0.3, price: 0.15, quantity: 20 }],
-    latitude: 50.0621,
-    longitude: 19.9312,
-    offer_id: 3,
-    pickup_info: null,
-    status: "COMPLETED",
-    user: { user_id: 1, username: "aska co daje" },
-  },
-];
 
 // --- Offer Card Component ---
 const OfferCard = ({
@@ -215,22 +162,15 @@ const OfferCard = ({
 
 // --- Main Screen ---
 export default function MyOffers() {
-  const [offers, setOffers] = useState<Offer[]>(INITIAL_OFFERS);
-
-  const { data, isPending } = useOffersByID("1");
+  const { data: offers, isPending } = useOffersByID("1");
+  const { mutate: completeOffer } = useCompleteOffer();
   if (isPending) return <Text>Loading...</Text>;
-  if (!data) return <Text>Error</Text>;
+  if (!offers) return <Text>Error</Text>;
 
   const markAsCompleted = (id: number) => {
-    // Optimistic UI update - in a real app, you'd trigger a mutation here first
-    setOffers((prevOffers) =>
-      prevOffers.map((offer) =>
-        offer.offer_id === id ? { ...offer, status: "COMPLETED" } : offer,
-      ),
-    );
+    console.log("Marking offer as completed, id: ", id);
+    completeOffer({ offerId: id, idUser: "1" });
   };
-
-  const activeCount = offers.filter((o) => o.status === "OPEN").length;
 
   return (
     <ScrollView
@@ -239,7 +179,6 @@ export default function MyOffers() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-      <Text></Text>
       <View style={styles.listContainer}>
         {offers.map((offer, index) => (
           <OfferCard
