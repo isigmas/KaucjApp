@@ -23,7 +23,7 @@ export type ClusterOrPoint = AdPoint | ClusterPoint;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function regionToZoom(region: Region): number {
   const zoom = Math.log2((360 * (SCREEN_WIDTH / 256)) / region.longitudeDelta);
-  return Math.max(0, Math.min(MAX_ZOOM, Math.round(zoom)));
+  return Math.max(0, Math.min(MAX_ZOOM, Math.floor(zoom)));
 }
 
 function regionToBBox(region: Region): [number, number, number, number] {
@@ -41,7 +41,10 @@ function regionToBBox(region: Region): [number, number, number, number] {
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
-export function useClusters(ads: Offer[], region: Region): ClusterOrPoint[] {
+export function useClusters(
+  ads: Offer[],
+  region: Region,
+): { clusters: ClusterOrPoint[]; zoom: number } {
   const index = useMemo(() => {
     const sc = new Supercluster<Offer, ClusterProps>({
       radius: CLUSTER_RADIUS,
@@ -70,8 +73,12 @@ export function useClusters(ads: Offer[], region: Region): ClusterOrPoint[] {
   }, [ads]);
 
   return useMemo(() => {
-    if (!region?.longitudeDelta) return [];
-    return index.getClusters(regionToBBox(region), regionToZoom(region)) as ClusterOrPoint[];
+    if (!region?.longitudeDelta) return { clusters: [], zoom: 0 };
+    const zoom = regionToZoom(region);
+    return {
+      clusters: index.getClusters(regionToBBox(region), zoom) as ClusterOrPoint[],
+      zoom,
+    };
   }, [index, region]);
 }
 

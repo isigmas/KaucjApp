@@ -22,8 +22,9 @@ import {
 const GLASS_BOTTLE_IDS = new Set([1]);
 
 /**
- * Prevents flickering of custom markers on Google Maps by locking 
- * bitmap generation after the initial layout.
+ * Locks tracksViewChanges after the initial bitmap is captured.
+ * The component remounts whenever its key changes (zoom / filter changes),
+ * so the timer always fires for a freshly‑mounted instance.
  */
 function StableMarker({
   children,
@@ -31,15 +32,15 @@ function StableMarker({
 }: React.ComponentProps<typeof Marker>) {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
-  const handleLayout = useCallback(() => {
-    requestAnimationFrame(() => setTracksViewChanges(false));
+  useEffect(() => {
+    const timer = setTimeout(() => setTracksViewChanges(false), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <Marker
       {...markerProps}
       tracksViewChanges={tracksViewChanges}
-      onLayout={handleLayout}
     >
       {children}
     </Marker>
@@ -81,14 +82,10 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, []);
 
-  // Selected offer for bottom sheet
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-
-  // Filter state
   const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
   const [activeAttributes, setActiveAttributes] = useState<string[]>([]);
 
-  // Unique key for markers to force remount on filter change
   const filterKey = useMemo(
     () => `${activeQuantity ?? "x"}_${activeAttributes.join(",")}`,
     [activeQuantity, activeAttributes],
@@ -105,7 +102,6 @@ export default function HomeScreen() {
     }
   }, [coords]);
 
-  // Funkcja resetująca obrót mapy do północy
   const resetNorth = useCallback(() => {
     if (mapRef.current) {
       mapRef.current.animateCamera({ heading: 0, pitch: 0 });
@@ -124,7 +120,7 @@ export default function HomeScreen() {
     });
   }, [activeQuantity, activeAttributes, offers]);
 
-  const clusters = useClusters(filteredAds, region);
+  const { clusters, zoom } = useClusters(filteredAds, region);
 
   useEffect(() => {
     if (coords) centerOnUser();
@@ -166,9 +162,8 @@ export default function HomeScreen() {
         showsMyLocationButton={false}
         showsPointsOfInterest={false}
         onRegionChangeComplete={setRegion}
+        moveOnMarkerPress={false}
         onPress={(e) => {
-          // On Android, marker taps also fire MapView.onPress;
-          // only dismiss the sheet on genuine map taps.
           if (e.nativeEvent.action === "press") {
             setSelectedOffer(null);
           }
@@ -180,7 +175,11 @@ export default function HomeScreen() {
 
           if (isCluster(item)) {
             return (
-              <StableMarker key={`${filterKey}-c${item.id}`} coordinate={coordinate}>
+              <StableMarker
+                // zoom in key forces full remount when cluster↔pin boundary crosses
+                key={`${filterKey}-z${zoom}-cluster-${item.id}`}
+                coordinate={coordinate}
+              >
                 <ClusterPin
                   totalBottles={item.properties.totalBottles}
                   adCount={item.properties.point_count}
@@ -193,9 +192,12 @@ export default function HomeScreen() {
           const qty = offerTotalQty(offer);
           return (
             <StableMarker
-              key={`${filterKey}-p${offer.offer_id}`}
+              key={`${filterKey}-z${zoom}-pin-${offer.offer_id}`}
               coordinate={coordinate}
-              onPress={() => setSelectedOffer(offer)}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedOffer(offer);
+              }}
             >
               <BottlePin count={qty} />
             </StableMarker>
@@ -224,13 +226,11 @@ export default function HomeScreen() {
           offer={selectedOffer}
           onClose={() => setSelectedOffer(null)}
           onReserve={() => {
-            // TODO: call reservation endpoint
             setSelectedOffer(null);
           }}
         />
       )}
 
-      {/* PRZYCISK KOMPASU (Reset północy) – below sheet */}
       <TouchableOpacity 
         style={[styles.mapButton, { bottom: insets.bottom + 126 }]} 
         onPress={resetNorth}
@@ -239,7 +239,6 @@ export default function HomeScreen() {
         <Compass size={24} color={colors.text.secondary} />
       </TouchableOpacity>
 
-      {/* PRZYCISK LOKALIZACJI – below sheet */}
       <TouchableOpacity 
         style={[styles.mapButton, { bottom: insets.bottom + 60 }]} 
         onPress={centerOnUser}
