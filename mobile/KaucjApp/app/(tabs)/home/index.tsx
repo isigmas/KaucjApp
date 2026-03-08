@@ -9,7 +9,6 @@ import { useClusters, isCluster } from "@/src/hooks/useClusters";
 import { DEFAULT_REGION, type Offer } from "@/src/lib/mockData";
 import { fetchOffers } from "@/src/lib/api";
 import { colors } from "@/src/theme";
-import { MapHeader } from "@/src/components/map/MapHeader";
 import { BottlePin } from "@/src/components/map/BottlePin";
 import { ClusterPin } from "@/src/components/map/ClusterPin";
 import { OfferSheet } from "@/src/components/map/OfferSheet";
@@ -204,8 +203,6 @@ export default function HomeScreen() {
           );
         })}
       </MapView>
-
-      <MapHeader balancePLN={42.5} />
 
       {offersLoading && (
         <View style={styles.loadingOverlay}>
