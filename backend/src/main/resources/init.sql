@@ -28,7 +28,8 @@ CREATE TABLE offers (
 
 CREATE TABLE bottle_price(
     bottle_id BIGINT PRIMARY KEY,
-    price DECIMAL(10, 2)
+    price DECIMAL(10, 2),
+    fee DECIMAL(10, 2)
 );
 
 CREATE TABLE counts(

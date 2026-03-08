@@ -29,6 +29,7 @@ public class OfferResponseDTO {
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
+
     @Data
     @Builder
     public static class UserDTO {
@@ -44,5 +45,7 @@ public class OfferResponseDTO {
         private Long bottleId;
         private Integer quantity;
         private Double price;
+        private Double fee;
     }
+
 }

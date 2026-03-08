@@ -118,7 +118,6 @@ public class OfferService {
     }
 
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
-
         OfferResponseDTO.UserDTO userDTO = null;
         if (offer.getCreator() != null) {
             userDTO = OfferResponseDTO.UserDTO.builder()
@@ -130,13 +129,24 @@ public class OfferService {
         List<OfferResponseDTO.ItemDTO> itemDTOs = new ArrayList<>();
         if (offer.getCounts() != null) {
             itemDTOs = offer.getCounts().stream()
-                    .map(count -> OfferResponseDTO.ItemDTO.builder()
-                            .bottleId(count.getBottlePrice() != null ? count.getBottlePrice().getId() : null)
-                            .quantity(count.getQuantity())
-                            .price(count.getBottlePrice() != null && count.getBottlePrice().getPrice() != null
-                                    ? count.getBottlePrice().getPrice().doubleValue()
-                                    : 0.0)
-                            .build())
+                    .map(count -> {
+                        var bottlePriceEntity = count.getBottlePrice();
+
+                        double basePrice = (bottlePriceEntity != null && bottlePriceEntity.getPrice() != null)
+                                ? bottlePriceEntity.getPrice().doubleValue() : 0.0;
+
+                        double userFee = (bottlePriceEntity != null && bottlePriceEntity.getFee() != null)
+                                ? bottlePriceEntity.getFee().doubleValue() : 0.0;
+
+                        double finalPriceForCollector = basePrice - userFee;
+
+                        return OfferResponseDTO.ItemDTO.builder()
+                                .bottleId(bottlePriceEntity != null ? bottlePriceEntity.getId() : null)
+                                .quantity(count.getQuantity())
+                                .price(finalPriceForCollector)
+                                .fee(userFee)
+                                .build();
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -146,11 +156,9 @@ public class OfferService {
                         ? offer.getInfo().getStatus().name()
                         : null)
                 .latitude(offer.getInfo() != null && offer.getInfo().getLatitude() != null
-                        ? offer.getInfo().getLatitude().doubleValue()
-                        : null)
+                        ? offer.getInfo().getLatitude().doubleValue() : null)
                 .longitude(offer.getInfo() != null && offer.getInfo().getLongitude() != null
-                        ? offer.getInfo().getLongitude().doubleValue()
-                        : null)
+                        ? offer.getInfo().getLongitude().doubleValue() : null)
                 .pickupAddress(offer.getInfo() != null ? offer.getInfo().getPickupAddress() : null)
                 .pickupInstructions(offer.getInfo() != null ? offer.getInfo().getPickupInstructions() : null)
                 .createdAt(offer.getInfo() != null ? offer.getInfo().getTimeCreated() : null)
