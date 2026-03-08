@@ -71,29 +71,18 @@ export default function Profile() {
               <View style={styles.avatarPlaceholder} />
               <View style={styles.badge} />
             </View>
+
             <Text style={styles.fullName}>{firstName} {lastName}</Text>
             <View style={styles.tag}>
-              <Text style={styles.username}>@{username}</Text>
+              <Text style={styles.username}>{username}</Text>
+            </View>
+
+            <View style = {styles.rating}>
+              <Text style={styles.ratingStatus}>(4.00 / 5.00)</Text>
+              <Text style={styles.ratingStatus}>★ ★ ★ ★ ☆</Text>
             </View>
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Telefon</Text>
-              <Text style={styles.value}>{phone}</Text>
-            </View>
-
-            <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Adres</Text>
-              <Text style={styles.value}>{address}</Text>
-            </View>
-
-            <View style={styles.divider} />
-              <Text style={styles.label}>Email</Text>
-              <Text style={styles.value}>{email}</Text>
-
-          </View>
 
           <View style={styles.actionContainer}>
             <TouchableOpacity style={styles.settingsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/profileSettings")}>
@@ -118,14 +107,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background.main },
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "space-between", paddingBottom: 30 },
   header: { alignItems: "center", marginTop: 40 },
-  avatarContainer: { position: "relative", marginBottom: 16 },
+  rating: { justifyContent: "center", alignItems: "center"},
+  ratingStatus: { fontSize: 32,  marginTop: -1, transform: [{translateY: 32}]},
+  avatarContainer: { position: "relative", marginBottom: 16},
   avatarPlaceholder: { width: 110, height: 110, borderRadius: 55, backgroundColor: colors.primary.light, borderWidth: 3, borderColor: colors.background.card, ...Platform.select({ ios: { shadowColor: colors.primary.dark, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10 }, android: { elevation: 8 } }) },
   badge: { position: "absolute", bottom: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.status.success, borderWidth: 2, borderColor: colors.background.card },
   fullName: { fontSize: 24, fontWeight: "800", color: colors.text.primary, letterSpacing: -0.5 },
   tag: { backgroundColor: colors.primary.light, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20, marginTop: 8 },
   username: { fontSize: 14, fontWeight: "600", color: colors.primary.dark },
   card: { backgroundColor: colors.background.card, borderRadius: 24, padding: 24, marginVertical: 32, ...Platform.select({ ios: { shadowColor: colors.text.primary, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 16 }, android: { elevation: 4 } }) },
-  infoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 },
+  infoRow: { flexDirection: "column", justifyContent: "flex-start", alignItems: "center", paddingVertical: 4 },
   label: { fontSize: 15, color: colors.text.secondary, fontWeight: "500" },
   value: { fontSize: 15, color: colors.text.primary, fontWeight: "700" },
   divider: { height: 1, backgroundColor: colors.background.subtle, marginVertical: 8},
