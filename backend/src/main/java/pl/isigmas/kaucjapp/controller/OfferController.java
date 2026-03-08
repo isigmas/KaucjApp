@@ -99,32 +99,4 @@ public class OfferController {
         }
         return ResponseEntity.ok(offers);
     }
-
-    @GetMapping("/szosti/reserved/{userId}")
-    public ResponseEntity<List<OfferResponseDTO>> getReservedByCollector(@PathVariable Long userId) {
-        List<OfferResponseDTO> offers;
-        try {
-            offers = service.getReservedByCollector(userId);
-        } catch (Exception e) {
-            log.error("Error fetching reserved offers for user " + userId + ": " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-        return ResponseEntity.ok(offers);
-    }
-
-    @PostMapping("/complete-offer/{offer_id}/{user_id}")
-    public ResponseEntity<Void> completeOffer(@PathVariable Long offer_id, @PathVariable Long user_id) {
-        try {
-            boolean completed = service.completeOffer(offer_id, user_id);
-            if (!completed) {
-                log.warn("Failed to complete offer with ID " + offer_id + " for user ID " + user_id);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-            log.info("Offer completed, Offer ID: " + offer_id + ", User ID: " + user_id);
-        } catch (Exception e) {
-            log.error("Error completing offer with ID " + offer_id + " for user ID " + user_id + ": " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-        return ResponseEntity.status(HttpStatus.OK).build();
-    }
 }
