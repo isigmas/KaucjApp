@@ -1,6 +1,7 @@
 import type { Offer } from "@/src/lib/mockData";
 
-const API_BASE = "http://192.168.203.135:8080";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || "No env";
+console.log(`[API] Using base URL: ${API_BASE}`);
 
 /**
  * Fetches all available offers from the backend.
@@ -30,7 +31,24 @@ export async function fetchOffers(): Promise<Offer[]> {
       bottle_id: i.bottle_id,
       quantity: i.quantity,
       price: i.price,
+      fee: i.fee,
     })),
     created_at: raw.created_at,
   }));
+}
+
+export interface UserRating {
+  user_id: number;
+  current_avg: number;
+  number_of_feedbacks: number;
+}
+
+export async function fetchUserRating(userId: number): Promise<UserRating> {
+  const res = await fetch(`${API_BASE}/api/user/${userId}/rating`);
+
+  if (!res.ok) {
+    throw new Error(`[fetchUserRating] ${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
 }

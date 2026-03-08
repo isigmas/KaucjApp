@@ -18,14 +18,49 @@ const styles = StyleSheet.create({
   },
 });*/
 
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, BackHandler, SafeAreaView, Platform } from "react-native";
+import { useRouter, Stack } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors } from "@/src/theme";
-import { Stack } from "expo-router";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE!;
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID!;
 
 export default function Profile() {
   const router = useRouter();
+  const handleExitApp = () => BackHandler.exitApp();
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/user/${USER_ID}`);
+      const text = await response.text();
+      if (!response.ok || !text) return;
+      const data = JSON.parse(text);
+      setUsername(data.username ?? "");
+      setFirstName(data.name ?? "");
+      setLastName(data.surname ?? "");
+      setEmail(data.email ?? "");
+      setPhone(data.phone_number ?? "");
+      setAddress(data.default_address ?? "");
+    } catch (error) {
+      console.log("Failed to fetch profile:", error);
+    }
+  };
+
+  // Re-fetch every time the screen gains focus (e.g. after editing settings)
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [])
+  );
 
   return (
       <SafeAreaView style={styles.safeArea}>
@@ -36,30 +71,25 @@ export default function Profile() {
               <View style={styles.avatarPlaceholder} />
               <View style={styles.badge} />
             </View>
-            <Text style={styles.fullName}>Jan Kowalski</Text>
+
+            <Text style={styles.fullName}>{firstName} {lastName}</Text>
             <View style={styles.tag}>
-              <Text style={styles.username}>@janekkowalski</Text>
+              <Text style={styles.username}>{username}</Text>
+            </View>
+
+            <View style = {styles.rating}>
+              <Text style={styles.ratingStatus}>(4.00 / 5.00)</Text>
+              <Text style={styles.ratingStatus}>★ ★ ★ ★ ☆</Text>
             </View>
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Telefon</Text>
-              <Text style={styles.value}>+48 123 456 789</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Adres</Text>
-              <Text style={styles.value}>ul. Wawelska 1, Kraków</Text>
-            </View>
-          </View>
 
           <View style={styles.actionContainer}>
             <TouchableOpacity style={styles.settingsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/profileSettings")}>
               <Text style={styles.settingsText}>Ustawienia profilu</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards")}>
+            <TouchableOpacity style={styles.rewardsButton} activeOpacity={0.8} onPress={() => router.push("/(tabs)/profile/rewards" as any)}>
               <Text style={styles.rewardsText}>Nagrody za punkty</Text>
             </TouchableOpacity>
 
@@ -77,23 +107,25 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background.main },
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "space-between", paddingBottom: 30 },
   header: { alignItems: "center", marginTop: 40 },
-  avatarContainer: { position: "relative", marginBottom: 16 },
+  rating: { justifyContent: "center", alignItems: "center"},
+  ratingStatus: { fontSize: 32,  marginTop: -1, transform: [{translateY: 32}]},
+  avatarContainer: { position: "relative", marginBottom: 16},
   avatarPlaceholder: { width: 110, height: 110, borderRadius: 55, backgroundColor: colors.primary.light, borderWidth: 3, borderColor: colors.background.card, ...Platform.select({ ios: { shadowColor: colors.primary.dark, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10 }, android: { elevation: 8 } }) },
   badge: { position: "absolute", bottom: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.status.success, borderWidth: 2, borderColor: colors.background.card },
   fullName: { fontSize: 24, fontWeight: "800", color: colors.text.primary, letterSpacing: -0.5 },
   tag: { backgroundColor: colors.primary.light, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20, marginTop: 8 },
   username: { fontSize: 14, fontWeight: "600", color: colors.primary.dark },
   card: { backgroundColor: colors.background.card, borderRadius: 24, padding: 24, marginVertical: 32, ...Platform.select({ ios: { shadowColor: colors.text.primary, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 16 }, android: { elevation: 4 } }) },
-  infoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8 },
+  infoRow: { flexDirection: "column", justifyContent: "flex-start", alignItems: "center", paddingVertical: 4 },
   label: { fontSize: 15, color: colors.text.secondary, fontWeight: "500" },
   value: { fontSize: 15, color: colors.text.primary, fontWeight: "700" },
-  divider: { height: 1, backgroundColor: colors.background.subtle, marginVertical: 12 },
+  divider: { height: 1, backgroundColor: colors.background.subtle, marginVertical: 8},
   actionContainer: { gap: 12 },
-  settingsButton: { backgroundColor: colors.primary.light, paddingVertical: 16, borderRadius: 16, alignItems: "center", borderWidth: 1, borderColor: colors.primary.dark },
+  settingsButton: { backgroundColor: colors.primary.light, paddingVertical: 16, borderRadius: 16, alignItems: "center" },
   settingsText: { color: colors.primary.dark, fontSize: 16, fontWeight: "700" },
   logoutButton: { backgroundColor: colors.status.error, paddingVertical: 16, borderRadius: 16, alignItems: "center", ...Platform.select({ ios: { shadowColor: colors.primary.base, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 8 }, android: { elevation: 6 } }) },
   logoutText: { color: colors.text.white, fontSize: 16, fontWeight: "700" },
-  rewardsButton: { backgroundColor: colors.primary.light, paddingVertical: 16, borderRadius: 16, alignItems: "center", borderWidth: 1, borderColor: colors.status.warning },
+  rewardsButton: { backgroundColor: colors.primary.light, paddingVertical: 16, borderRadius: 16, alignItems: "center" },
   rewardsText: { color: colors.status.warning, fontSize: 16, fontWeight: "700"},
   exitButton: { backgroundColor: colors.background.subtle, paddingVertical: 16, borderRadius: 16, alignItems: "center", borderWidth: 1, borderColor: colors.status.border },
   exitText: { color: colors.status.error, fontSize: 16, fontWeight: "700" },
