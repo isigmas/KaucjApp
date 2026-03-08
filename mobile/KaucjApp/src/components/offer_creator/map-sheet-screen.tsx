@@ -5,6 +5,7 @@ import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import * as Location from "expo-location";
 import { useNavigation, useRouter } from "expo-router";
 import { colors } from "@/src/theme";
+import { useLocationStore } from "@/src/state/location";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -12,8 +13,12 @@ export default function MapSheetScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const navigation = useNavigation();
+  const pickedLocation = useLocationStore((state) => state.pickedLocation);
+  const setPickedLocation = useLocationStore(
+    (state) => state.setPickedLocation,
+  );
 
-  //  Kraków
+  // Kraków Fallback
   const KRAKOW_REGION = {
     latitude: 50.0647,
     longitude: 19.945,
@@ -21,9 +26,20 @@ export default function MapSheetScreen() {
     longitudeDelta: 0.05,
   };
 
+  // 2. Determine the starting point (Store > Fallback)
+  const initialStartingRegion = pickedLocation
+    ? {
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
+        latitudeDelta: 0.01, // Keep it nicely zoomed in on their pin
+        longitudeDelta: 0.01,
+      }
+    : KRAKOW_REGION;
+
+  // 3. Initialize state with our chosen starting point
   const [selectedCoordinate, setSelectedCoordinate] = useState({
-    latitude: KRAKOW_REGION.latitude,
-    longitude: KRAKOW_REGION.longitude,
+    latitude: initialStartingRegion.latitude,
+    longitude: initialStartingRegion.longitude,
   });
 
   useLayoutEffect(() => {
@@ -37,6 +53,22 @@ export default function MapSheetScreen() {
   }, [navigation, selectedCoordinate]);
 
   useEffect(() => {
+    if (pickedLocation) {
+      const cords = {
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
+      };
+      mapRef.current?.animateToRegion(
+        {
+          ...cords,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        3000,
+      );
+      return;
+    }
+
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -74,6 +106,12 @@ export default function MapSheetScreen() {
 
   const handleConfirm = () => {
     // TODO: Save selectedCoordinate.
+    console.log("Selected coordinate:", selectedCoordinate);
+
+    setPickedLocation({
+      latitude: selectedCoordinate.latitude,
+      longitude: selectedCoordinate.longitude,
+    });
 
     router.back();
   };

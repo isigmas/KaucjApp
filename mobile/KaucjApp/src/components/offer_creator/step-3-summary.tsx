@@ -12,16 +12,10 @@ import { colors } from "@/src/theme";
 import { OfferData } from "./create-offer";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import { useCreateOffer } from "@/src/api/useOffer";
-
-interface ExtendedOfferData extends OfferData {
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  notes?: string;
-}
+import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 
 interface Step3SummaryProps {
-  data: ExtendedOfferData;
+  data: OfferData;
 }
 
 export default function Step3Summary({ data }: Step3SummaryProps) {
@@ -34,9 +28,7 @@ export default function Step3Summary({ data }: Step3SummaryProps) {
         console.log("200: ", responseData);
         alert("Oferta została opublikowana!");
       },
-      onError: (error) => {
-       
-      },
+      onError: (error) => {},
     });
   };
 
@@ -163,6 +155,39 @@ export default function Step3Summary({ data }: Step3SummaryProps) {
               {data.address ? data.address : "Nie podano dokładnego adresu"}
             </Text>
           </View>
+          {data.latitude && data.longitude && (
+            <View
+              style={{
+                height: 100,
+                marginTop: 8,
+                borderRadius: 24,
+                overflow: "hidden",
+              }}
+            >
+              <MapView
+                provider={PROVIDER_DEFAULT}
+                style={styles.mapThumbnail}
+                region={{
+                  latitude: data.latitude,
+                  longitude: data.longitude,
+                  latitudeDelta: 0.0007,
+                  longitudeDelta: 0.0007,
+                }}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                scrollEnabled={false}
+                zoomEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: data.latitude!,
+                    longitude: data.longitude!,
+                  }}
+                  pinColor={colors.primary.base}
+                />
+              </MapView>
+            </View>
+          )}
 
           {data.notes ? (
             <View style={[styles.lineItemColumn, { marginTop: 16 }]}>
@@ -228,6 +253,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  mapThumbnail: {
+    ...StyleSheet.absoluteFillObject,
   },
   cardHeader: {
     flexDirection: "row",

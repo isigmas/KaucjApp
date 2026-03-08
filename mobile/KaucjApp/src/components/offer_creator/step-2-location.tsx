@@ -14,17 +14,11 @@ import { BlurView } from "expo-blur";
 import { colors } from "@/src/theme";
 import { OfferData } from "./create-offer";
 import { Link } from "expo-router";
-
-interface ExtendedOfferData extends OfferData {
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  notes?: string;
-}
+import { useLocationStore } from "@/src/state/location";
 
 interface Step2LocationProps {
-  data: ExtendedOfferData;
-  updateData: (newData: Partial<ExtendedOfferData>) => void;
+  data: OfferData;
+  updateData: (newData: Partial<OfferData>) => void;
 }
 
 export default function Step2Location({
@@ -32,6 +26,7 @@ export default function Step2Location({
   updateData,
 }: Step2LocationProps) {
   const [isNotesExpanded, setIsNotesExpanded] = useState(!!data.notes);
+  const pickedLocation = useLocationStore((state) => state.pickedLocation);
 
   const [previewRegion, setPreviewRegion] = useState({
     latitude: data.latitude || 50.0647,
@@ -41,6 +36,21 @@ export default function Step2Location({
   });
 
   useEffect(() => {
+    if (pickedLocation) {
+      updateData({
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
+      });
+
+      setPreviewRegion({
+        latitude: pickedLocation.latitude,
+        longitude: pickedLocation.longitude,
+        latitudeDelta: 0.003,
+        longitudeDelta: 0.003,
+      });
+      return;
+    }
+
     if (data.latitude && data.longitude) {
       setPreviewRegion({
         latitude: data.latitude,
@@ -71,7 +81,7 @@ export default function Step2Location({
         console.warn("Could not fetch location for thumbnail preview", error);
       }
     })();
-  }, [data.latitude, data.longitude]);
+  }, [data.latitude, data.longitude, pickedLocation]);
 
   const hasSelectedLocation = !!data.latitude;
 
@@ -100,18 +110,41 @@ export default function Step2Location({
               rotateEnabled={false}
               scrollEnabled={false}
               zoomEnabled={false}
-            ></MapView>
+            >
+              {hasSelectedLocation && (
+                <Marker
+                  coordinate={{
+                    latitude: data.latitude!,
+                    longitude: data.longitude!,
+                  }}
+                  pinColor={colors.primary.base}
+                />
+              )}
+            </MapView>
 
-            <BlurView
-              intensity={5}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
+            {!hasSelectedLocation && (
+              <BlurView
+                intensity={5}
+                tint="dark"
+                style={StyleSheet.absoluteFill}
+              />
+            )}
           </View>
 
           {/* floating button */}
-          <View style={styles.thumbnailOverlay}>
-            <View style={styles.thumbnailPill}>
+          <View
+            style={
+              hasSelectedLocation
+                ? styles.thumbnailOverlaySelected
+                : styles.thumbnailOverlay
+            }
+          >
+            <View
+              style={[
+                styles.thumbnailPill,
+                hasSelectedLocation && { opacity: 0.75 },
+              ]}
+            >
               <Text style={styles.thumbnailPillIcon}>📍</Text>
               <Text style={styles.thumbnailPillText}>
                 {hasSelectedLocation ? "Zmień lokalizację" : "Wybierz na mapie"}
@@ -211,6 +244,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  thumbnailOverlaySelected: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
   thumbnailPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -224,6 +262,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
     gap: 6,
+    marginBottom: 12,
   },
   thumbnailPillIcon: {
     fontSize: 16,
