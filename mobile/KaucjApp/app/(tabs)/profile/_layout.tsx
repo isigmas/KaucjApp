@@ -19,6 +19,10 @@ export default function HomeLayout() {
             name="rewards/rewardsHowWork/index"
             options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
+        <Stack.Screen
+            name="bookings"
+            options={{ headerShown: false }}
+        />
 
     </Stack>
   );
