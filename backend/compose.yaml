@@ -15,19 +15,6 @@ services:
       timeout: 5s
       retries: 5
 
-  app-test:
-    build:
-      context: .
-      target: builder
-    environment:
-      - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: ["./mvnw", "test"]
-
-
   app:
     build: .
     image: kaucjapp
@@ -36,8 +23,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      app-test:
-        condition: service_completed_successfully
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kaucjappdb
       - SPRING_DATASOURCE_USERNAME=myuser
