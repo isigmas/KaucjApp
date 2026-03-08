@@ -7,6 +7,10 @@ export default function HomeLayout() {
         name="index"
         options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
+      <Stack.Screen
+        name="confirmation"
+        options={{ headerShown: false, headerLargeTitleEnabled: false }}
+      />
     </Stack>
   );
 }

@@ -14,7 +14,7 @@ export default function RootLayout() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="create">
-        <Label>Wystaw butelki</Label>
+        <Label>Dodaj</Label>
         <Icon
           selectedColor={colors.primary.base}
           sf={{ default: "plus.circle", selected: "plus.circle.fill" }}

@@ -16,6 +16,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { Offer, useCompleteOffer, useOffersByID } from "@/src/api/useOffer";
+import { useRouter } from "expo-router";
 
 // --- Mappers ---
 const getBottleInfo = (id: number) => {
@@ -164,12 +165,21 @@ const OfferCard = ({
 export default function MyOffers() {
   const { data: offers, isPending } = useOffersByID("1");
   const { mutate: completeOffer } = useCompleteOffer();
+  const router = useRouter();
+
   if (isPending) return <Text>Loading...</Text>;
   if (!offers) return <Text>Error</Text>;
 
   const markAsCompleted = (id: number) => {
     console.log("Marking offer as completed, id: ", id);
-    completeOffer({ offerId: id, idUser: "1" });
+    completeOffer(
+      { offerId: id, idUser: "1" },
+      {
+        onSuccess: () => {
+          router.push("/profile/offers/confirmation");
+        },
+      },
+    );
   };
 
   return (
