@@ -2,6 +2,7 @@ export interface BottleItem {
   bottle_id: number;
   quantity: number;
   price: number;
+  fee: number;
 }
 
 export interface Offer {

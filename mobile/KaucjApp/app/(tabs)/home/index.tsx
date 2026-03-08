@@ -12,6 +12,7 @@ import { colors } from "@/src/theme";
 import { MapHeader } from "@/src/components/map/MapHeader";
 import { BottlePin } from "@/src/components/map/BottlePin";
 import { ClusterPin } from "@/src/components/map/ClusterPin";
+import { OfferSheet } from "@/src/components/map/OfferSheet";
 import {
   CategoryFilters,
   type QuantityFilter,
@@ -19,7 +20,6 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const GLASS_BOTTLE_IDS = new Set([1]);
-const NEW_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2h
 
 /**
  * Prevents flickering of custom markers on Google Maps by locking 
@@ -81,6 +81,9 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, []);
 
+  // Selected offer for bottom sheet
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+
   // Filter state
   const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
   const [activeAttributes, setActiveAttributes] = useState<string[]>([]);
@@ -110,17 +113,13 @@ export default function HomeScreen() {
   }, []);
 
   const filteredAds = useMemo(() => {
-    const now = Date.now();
     const noGlass = activeAttributes.includes("no_glass");
-    const onlyNew = activeAttributes.includes("new");
+    const onlyFree = activeAttributes.includes("free");
 
     return offers.filter((offer) => {
       if (activeQuantity !== null && offerTotalQty(offer) < activeQuantity) return false;
       if (noGlass && offer.items.some((i) => GLASS_BOTTLE_IDS.has(i.bottle_id))) return false;
-      if (onlyNew) {
-        const age = now - new Date(offer.created_at).getTime();
-        if (age > NEW_THRESHOLD_MS) return false;
-      }
+      if (onlyFree && !offer.items.every((i) => i.fee === 0)) return false;
       return true;
     });
   }, [activeQuantity, activeAttributes, offers]);
@@ -167,6 +166,7 @@ export default function HomeScreen() {
         showsMyLocationButton={false}
         showsPointsOfInterest={false}
         onRegionChangeComplete={setRegion}
+        onPress={() => setSelectedOffer(null)}
       >
         {clusters.map((item) => {
           const [lng, lat] = item.geometry.coordinates;
@@ -189,8 +189,7 @@ export default function HomeScreen() {
             <StableMarker
               key={`${filterKey}-p${offer.offer_id}`}
               coordinate={coordinate}
-              title={offer.address}
-              description={`${offer.user.username} · ${qty} szt.`}
+              onPress={() => setSelectedOffer(offer)}
             >
               <BottlePin count={qty} />
             </StableMarker>
@@ -231,6 +230,17 @@ export default function HomeScreen() {
       >
         <LocateFixed size={24} color={colors.primary.base} />
       </TouchableOpacity>
+
+      {selectedOffer && (
+        <OfferSheet
+          offer={selectedOffer}
+          onClose={() => setSelectedOffer(null)}
+          onReserve={() => {
+            // TODO: call reservation endpoint
+            setSelectedOffer(null);
+          }}
+        />
+      )}
     </View>
   );
 }

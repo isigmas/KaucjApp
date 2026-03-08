@@ -29,7 +29,7 @@ const QUANTITY_CHIPS: QuantityChip[] = [
 
 const ATTRIBUTE_CHIPS: AttributeChip[] = [
   { key: "no_glass", label: "Bez szkła" },
-  { key: "new", label: "Nowe" },
+  { key: "free", label: "Darmowe" },
 ];
 
 /* ── Props ────────────────────────────────────────────────────────────── */

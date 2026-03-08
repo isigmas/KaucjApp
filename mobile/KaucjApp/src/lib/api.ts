@@ -31,6 +31,7 @@ export async function fetchOffers(): Promise<Offer[]> {
       bottle_id: i.bottle_id,
       quantity: i.quantity,
       price: i.price,
+      fee: i.fee,
     })),
     created_at: raw.created_at,
   }));
