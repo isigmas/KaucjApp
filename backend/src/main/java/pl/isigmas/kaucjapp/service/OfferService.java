@@ -44,51 +44,39 @@ public class OfferService {
         List<OfferCount> counts = new ArrayList<>();
 
         if (dto.getAQuantity() != null && dto.getAQuantity() > 0) {
-            BottlePrice aPrice = bottlePriceRepository.save(
-                    BottlePrice.builder()
-                            .price(dto.getAPrice())
-                            .fee(dto.getAFee())
-                            .build());
-            if (aPrice != null) {
-                OfferCount aCount = new OfferCount();
-                aCount.setId(new OfferCountId(null, aPrice.getId()));
-                aCount.setOffer(offer);
-                aCount.setBottlePrice(aPrice);
-                aCount.setQuantity(dto.getAQuantity());
-                counts.add(aCount);
-            }
+            BottlePrice aPrice = BottlePrice.builder()
+                    .price(dto.getAPrice())
+                    .fee(dto.getAFee())
+                    .build();
+            OfferCount aCount = new OfferCount();
+            aCount.setOffer(offer);
+            aCount.setBottlePrice(aPrice);
+            aCount.setQuantity(dto.getAQuantity());
+            counts.add(aCount);
         }
 
         if (dto.getBQuantity() != null && dto.getBQuantity() > 0) {
-            BottlePrice bPrice = bottlePriceRepository.save(
-                    BottlePrice.builder()
-                            .price(dto.getBPrice())
-                            .fee(dto.getBFee())
-                            .build());
-            if (bPrice != null) {
-                OfferCount bCount = new OfferCount();
-                bCount.setId(new OfferCountId(null, bPrice.getId()));
-                bCount.setOffer(offer);
-                bCount.setBottlePrice(bPrice);
-                bCount.setQuantity(dto.getBQuantity());
-                counts.add(bCount);
-            }
+            BottlePrice bPrice = BottlePrice.builder()
+                    .price(dto.getBPrice())
+                    .fee(dto.getBFee())
+                    .build();
+            OfferCount bCount = new OfferCount();
+            bCount.setOffer(offer);
+            bCount.setBottlePrice(bPrice);
+            bCount.setQuantity(dto.getBQuantity());
+            counts.add(bCount);
         }
 
         if (dto.getCQuantity() != null && dto.getCQuantity() > 0) {
-            BottlePrice cPrice = bottlePriceRepository.save(
-                    BottlePrice.builder()
-                            .price(dto.getCPrice())
-                            .fee(dto.getCFee())
-                            .build());
-            if (cPrice != null) {
-                OfferCount cCount = new OfferCount();
-                cCount.setId(new OfferCountId(null, cPrice.getId()));
-                cCount.setOffer(offer);
-                cCount.setBottlePrice(cPrice);
-                cCount.setQuantity(dto.getCQuantity());
-                counts.add(cCount);
-            }
+            BottlePrice cPrice = BottlePrice.builder()
+                    .price(dto.getCPrice())
+                    .fee(dto.getCFee())
+                    .build();
+            OfferCount cCount = new OfferCount();
+            cCount.setOffer(offer);
+            cCount.setBottlePrice(cPrice);
+            cCount.setQuantity(dto.getCQuantity());
+            counts.add(cCount);
         }
 
         offer.setCounts(counts);

@@ -27,7 +27,7 @@ CREATE TABLE offers (
 );
 
 CREATE TABLE bottle_price(
-    bottle_id BIGINT PRIMARY KEY,
+    bottle_id BIGSERIAL PRIMARY KEY,
     price DECIMAL(10, 2),
     fee DECIMAL(10, 2)
 );

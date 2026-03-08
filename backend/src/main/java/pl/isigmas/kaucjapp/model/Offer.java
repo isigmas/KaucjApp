@@ -28,6 +28,6 @@ public class Offer {
     @PrimaryKeyJoinColumn
     private OfferInfo info;
 
-    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OfferCount> counts;
 }
