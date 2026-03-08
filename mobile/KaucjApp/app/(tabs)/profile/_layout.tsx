@@ -7,23 +7,28 @@ export default function HomeLayout() {
         name="index"
         options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
-        <Stack.Screen
-            name="profileSettings/index"
-            options={{ headerShown: false, headerLargeTitleEnabled: false }}
-        />
-        <Stack.Screen
-            name="rewards/index"
-            options={{ headerShown: false, headerLargeTitleEnabled: false }}
-        />
-        <Stack.Screen
-            name="rewards/rewardsHowWork/index"
-            options={{ headerShown: false, headerLargeTitleEnabled: false }}
-        />
-        <Stack.Screen
-            name="bookings"
-            options={{ headerShown: false }}
-        />
+      <Stack.Screen
+        name="profileSettings/index"
+        options={{ headerShown: false, headerLargeTitleEnabled: false }}
+      />
+      <Stack.Screen
+        name="rewards/index"
+        options={{ headerShown: false, headerLargeTitleEnabled: false }}
+      />
+      <Stack.Screen
+        name="rewards/rewardsHowWork/index"
+        options={{ headerShown: false, headerLargeTitleEnabled: false }}
+      />
 
+      <Stack.Screen
+        name="offers"
+        options={{
+          headerTitle: "Moje oferty",
+          headerLargeTitleEnabled: true,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen name="bookings" options={{ headerShown: false }} />
     </Stack>
   );
 }
