@@ -10,10 +10,12 @@ export interface OfferData {
   plasticBottles: number;
   glassBottles: number;
   cans: number;
+  latitude?: number;
+  longitude?: number;
   plasticPrice: number;
   glassPrice: number;
   cansPrice: number;
-  location: string;
+  address: string;
   notes?: string;
 }
 const STEPS = [
@@ -59,7 +61,7 @@ export default function CreateOfferScreen() {
     plasticPrice: 0.2,
     glassPrice: 0.2,
     cansPrice: 0.2,
-    location: "",
+    address: "",
   });
 
   const slideAnim = useRef(new Animated.Value(0)).current;

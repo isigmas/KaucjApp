@@ -28,9 +28,9 @@ export const useCreateOffer = () => {
 
       const payload = {
         creatorId: 1,
-        latitude: 0,
-        longitude: 0,
-        pickupAddress: newOffer.location,
+        latitude: newOffer.latitude || null,
+        longitude: newOffer.longitude || null,
+        pickupAddress: newOffer.address,
         notes: newOffer.notes,
         plasticBottles: newOffer.plasticBottles,
         glassBottles: newOffer.glassBottles,
