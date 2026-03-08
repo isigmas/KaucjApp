@@ -13,22 +13,45 @@ import { OfferData } from "./create-offer";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import { useCreateOffer } from "@/src/api/useOffer";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
+import { useRouter } from "expo-router";
+import { useLocationStore } from "@/src/state/location";
 
 interface Step3SummaryProps {
   data: OfferData;
+  updateData: (newData: Partial<OfferData>) => void;
 }
 
-export default function Step3Summary({ data }: Step3SummaryProps) {
+export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
   const { mutate: createOffer, isPending } = useCreateOffer();
+  const { clearLocation } = useLocationStore();
+  const router = useRouter();
 
   const handleSubmit = () => {
     console.log("Button pressed");
     createOffer(data, {
       onSuccess: (responseData) => {
         console.log("200: ", responseData);
-        alert("Oferta została opublikowana!");
+
+        updateData({
+          plasticBottles: 10,
+          glassBottles: 0,
+          cans: 0,
+          latitude: null,
+          longitude: null,
+          plasticPrice: 0.2,
+          glassPrice: 0.5,
+          cansPrice: 0.2,
+          address: "",
+          notes: "",
+        });
+
+        clearLocation();
+
+        router.replace("/(tabs)/create/success-screen");
       },
-      onError: (error) => {},
+      onError: (error) => {
+        console.error("Error: ", error);
+      },
     });
   };
 
@@ -128,7 +151,7 @@ export default function Step3Summary({ data }: Step3SummaryProps) {
                   textStyle={styles.totalValueHighlight}
                   spinningAnimationConfig={{
                     duration: 1500,
-                    easing: Easing.out(Easing.exp),
+                    easing: Easing.out(Easing.cubic),
                   }}
                 />
                 <Text style={styles.totalValueHighlight}>zł</Text>

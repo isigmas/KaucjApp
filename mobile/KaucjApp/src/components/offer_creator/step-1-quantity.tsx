@@ -20,6 +20,7 @@ interface RowConfig {
   icon: string;
   quantityKey: keyof OfferData;
   priceKey: keyof OfferData;
+  maxPrice: number;
 }
 
 const CONTAINER_TYPES: RowConfig[] = [
@@ -29,6 +30,7 @@ const CONTAINER_TYPES: RowConfig[] = [
     icon: "🥤",
     quantityKey: "plasticBottles",
     priceKey: "plasticPrice",
+    maxPrice: 0.5,
   },
   {
     id: "glass",
@@ -36,6 +38,7 @@ const CONTAINER_TYPES: RowConfig[] = [
     icon: "🍾",
     quantityKey: "glassBottles",
     priceKey: "glassPrice",
+    maxPrice: 1,
   },
   {
     id: "cans",
@@ -43,6 +46,7 @@ const CONTAINER_TYPES: RowConfig[] = [
     icon: "🥫",
     quantityKey: "cans",
     priceKey: "cansPrice",
+    maxPrice: 0.5,
   },
 ];
 
@@ -170,7 +174,7 @@ export default function Step1Quantity({
                     <Slider
                       style={styles.slider}
                       minimumValue={0}
-                      maximumValue={0.5}
+                      maximumValue={item.maxPrice}
                       step={0.01}
                       value={price}
                       onValueChange={(val) =>
@@ -183,7 +187,7 @@ export default function Step1Quantity({
                     <View style={styles.sliderLabels}>
                       <Text style={styles.sliderLabelText}>Oddaj za darmo</Text>
                       <Text style={styles.sliderLabelText}>
-                        Max kaucja (0.50 zł)
+                        Max kaucja ({item.maxPrice.toFixed(2)} zł)
                       </Text>
                     </View>
                   </View>

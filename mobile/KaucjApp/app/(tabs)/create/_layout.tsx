@@ -24,6 +24,16 @@ export default function HomeLayout() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       />
+
+      <Stack.Screen
+        name="success-screen"
+        options={{
+          headerShown: true,
+          headerLargeTitleEnabled: false,
+          headerTransparent: true,
+          title: "Potwierdzenie",
+        }}
+      />
     </Stack>
   );
 }
