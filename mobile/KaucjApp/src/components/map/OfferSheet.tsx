@@ -202,19 +202,24 @@ export function OfferSheet({ offer, onClose, onReserve, reserving = false, reser
 
         <Text style={styles.sectionTitle}>Butelki</Text>
 
-        {offer.items.map((item, idx) => (
-          <View key={idx} style={styles.itemRow}>
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
-              <Text style={styles.itemQty}>× {item.quantity}</Text>
+        {offer.items.map((item, idx) => {
+          // Obliczamy pełną wartość: cena w kaucjomacie (price) + opłata dla wystawiającego (fee)
+          const itemTotal = (item.price + item.fee) * item.quantity;
+          
+          return (
+            <View key={idx} style={styles.itemRow}>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{bottleName(item.bottle_id)}</Text>
+                <Text style={styles.itemQty}>× {item.quantity}</Text>
+              </View>
+              <Text style={styles.itemPrice}>
+                {itemTotal <= 0
+                  ? "0.00 zł"
+                  : `+${itemTotal.toFixed(2)} zł`}
+              </Text>
             </View>
-            <Text style={styles.itemPrice}>
-              {item.price <= 0
-                ? "0.00 zł"
-                : `+${(item.price * item.quantity).toFixed(2)} zł`}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
 
         <View style={styles.divider} />
 
