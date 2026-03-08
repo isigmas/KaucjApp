@@ -155,7 +155,7 @@ export default function ProfileScreen() {
           style={styles.statsBadge}
         >
           <Ionicons name="leaf" size={16} color={colors.primary.dark} />
-          <Text style={styles.statsText}>Uratowano 1,204 opakowań</Text>
+          <Text style={styles.statsText}>Zwrócono 120 opakowań PET</Text>
         </Animated.View>
       </View>
 
