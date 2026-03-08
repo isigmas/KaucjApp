@@ -95,7 +95,7 @@ public class OfferController {
             } else if (messageStatus.equals("reserver")) {
                 log.info("Offer reserved, Offer ID: " + offer_id + ", User ID: " + user_id);
             } else {
-                log.info("Offer " + messageStatus, ", User ID: " + user_id);
+                log.info("Offer " + messageStatus + ", User ID: " + user_id);
             }
 
         } catch (Exception e) {
