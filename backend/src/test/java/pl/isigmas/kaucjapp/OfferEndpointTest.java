@@ -189,6 +189,105 @@ class OfferEndpointTest {
                 .andExpect(status().isInternalServerError());
     }
 
+    @Test
+    void cannotReserveYourOwnOffer() throws Exception {
+        Long creatorId = createUser("creator_own_offer", "creator_own_offer@example.com");
+        Long collectorId = createUser("collector_own_offer", "collector_own_offer@example.com");
+
+        String createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 1,
+                    "aPrice": 10.0,
+                    "aFee": 1.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/change-offer-status/" + offerId + "/" + creatorId + "/RESERVED"))
+                .andExpect(status().isBadRequest());
+
+        assertThat(offerRepository.findById(offerId).orElseThrow().getCollector()).isNull();
+    }
+
+
+    @Test
+    void cannotAddOfferWithInvalidQuantity() throws Exception {
+        Long creatorId = createUser("creator_invalid_quantity", "creator_invalid_quantity@example.com");
+
+        String createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": -5,
+                    "aPrice": 10.0,
+                    "aFee": 1.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    void cannotAddOfferWithInvalidPrice() throws Exception {
+        Long creatorId = createUser("creator_invalid_price", "creator_invalid_price@example.com");
+
+        String createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 1,
+                    "aPrice": -10.0,
+                    "aFee": 1.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isBadRequest());
+
+        createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 1,
+                    "aPrice": 1.0,
+                    "aFee": -10.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isBadRequest());
+    }
+
+
+
+
     private Long createUser(String username, String email) throws Exception {
         String createUserJson = """
                 {
@@ -214,4 +313,7 @@ class OfferEndpointTest {
                 .orElseThrow();
         return user.getId();
     }
+
+
+
 }
