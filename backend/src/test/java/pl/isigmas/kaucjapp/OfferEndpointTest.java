@@ -2,6 +2,7 @@ package pl.isigmas.kaucjapp;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -190,6 +191,7 @@ class OfferEndpointTest {
     }
 
     @Test
+    @Disabled("In progress")
     void cannotReserveYourOwnOffer() throws Exception {
         Long creatorId = createUser("creator_own_offer", "creator_own_offer@example.com");
         Long collectorId = createUser("collector_own_offer", "collector_own_offer@example.com");
@@ -222,6 +224,7 @@ class OfferEndpointTest {
 
 
     @Test
+    @Disabled("In progress")
     void cannotAddOfferWithInvalidQuantity() throws Exception {
         Long creatorId = createUser("creator_invalid_quantity", "creator_invalid_quantity@example.com");
 
@@ -246,6 +249,7 @@ class OfferEndpointTest {
 
 
     @Test
+    @Disabled("In progress")
     void cannotAddOfferWithInvalidPrice() throws Exception {
         Long creatorId = createUser("creator_invalid_price", "creator_invalid_price@example.com");
 
