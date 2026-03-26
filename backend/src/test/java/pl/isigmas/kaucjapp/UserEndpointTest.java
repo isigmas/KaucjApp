@@ -2,6 +2,10 @@ package pl.isigmas.kaucjapp;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -115,5 +119,132 @@ class UserEndpointTest {
 
         mockMvc.perform(delete("/api/user/999999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void creatingUserWithWrongEmailFormatReturns400() throws Exception {
+        String createUserJson = """
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "to nie jest poprawny email",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """;
+
+        mockMvc.perform(post("/api/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createUserJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void creatingUserWithWrongPhoneNumberFormatReturns400() throws Exception {
+        String createUserJson = """
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "to nie jest poprawny numer telefonu",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """;
+
+        mockMvc.perform(post("/api/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createUserJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest(name = "Should return 400 when: {1}")
+    @MethodSource("provideInvalidUserPayloads")
+    void creatingUserWithInvalidDataReturns400(String invalidJson, String failureReason) throws Exception {
+        
+        mockMvc.perform(post("/api/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    private static Stream<Arguments> provideInvalidUserPayloads() {
+        return Stream.of(
+            Arguments.of("""
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """, "Missing username"),
+
+            Arguments.of("""
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """, "Missing defaultAddress"),
+
+        Arguments.of("""
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLongitude": 21.01
+                }
+                """, "Missing defaultLatitude"),
+
+        Arguments.of("""
+                {
+                    "name": "Anna",
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23                }
+                """, "Invalid defaultLongitude format"),
+        Arguments.of("""
+                {
+                    "surname": "Nowak",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """, "Missing name"),
+
+            Arguments.of("""
+                {
+                    "name": "Anna",
+                    "username": "anowak",
+                    "phoneNumber": "111222333",
+                    "email": "anna@example.com",
+                    "defaultAddress": "ul. Testowa 2",
+                    "defaultLatitude": 52.23,
+                    "defaultLongitude": 21.01
+                }
+                """, "Missing surname")
+
+        );
     }
 }
