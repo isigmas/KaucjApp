@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import(TestcontainersConfiguration.class)
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class OfferEndpointTest {
 
@@ -120,6 +120,73 @@ class OfferEndpointTest {
         mockMvc.perform(get("/api/szosti"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void getReservedOffersWhenNoneReturnsEmptyArray() throws Exception {
+        Long userId = createUser("reserved_empty", "reserved_empty@example.com");
+
+        mockMvc.perform(get("/api/szosti/reserved/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void changeOfferStatusWithInvalidStatusReturns400() throws Exception {
+        Long creatorId = createUser("creator_invalid_status", "creator_invalid_status@example.com");
+        Long collectorId = createUser("collector_invalid_status", "collector_invalid_status@example.com");
+
+        String createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 1,
+                    "aPrice": 10.0,
+                    "aFee": 1.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/change-offer-status/" + offerId + "/" + collectorId + "/NOT_A_STATUS"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void reserveOfferWithNonExistentUserReturns500() throws Exception {
+        Long creatorId = createUser("creator_missing_user", "creator_missing_user@example.com");
+
+        String createOfferJson = """
+                {
+                    "creatorId": %d,
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "aQuantity": 1,
+                    "aPrice": 10.0,
+                    "aFee": 1.0,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test"
+                }
+                """.formatted(creatorId);
+
+        mockMvc.perform(post("/api/offer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/change-offer-status/" + offerId + "/999999/RESERVED"))
+                .andExpect(status().isInternalServerError());
     }
 
     private Long createUser(String username, String email) throws Exception {
