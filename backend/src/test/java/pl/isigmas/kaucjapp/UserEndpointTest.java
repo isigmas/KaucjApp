@@ -106,6 +106,19 @@ class UserEndpointTest {
                 .andExpect(jsonPath("$.number_of_feedbacks").value(1))
                 .andExpect(jsonPath("$.current_avg").value(5.00));
 
+        mockMvc.perform(post("/api/user/" + userId + "/rating")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"score":3}
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/user/" + userId + "/rating"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user_id").value(userId))
+                .andExpect(jsonPath("$.number_of_feedbacks").value(2))
+                .andExpect(jsonPath("$.current_avg").value(4.00));
+
         mockMvc.perform(delete("/api/user/" + userId))
                 .andExpect(status().isOk());
 
