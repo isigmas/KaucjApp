@@ -10,7 +10,7 @@ import pl.isigmas.kaucjapp.service.UserService;
 import pl.isigmas.kaucjapp.service.RatingService;
 import pl.isigmas.kaucjapp.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.DTO.RatingRequestDTO;
-
+import jakarta.validation.Valid;
 @Slf4j
 @RestController
 @RequestMapping("/api")
@@ -21,7 +21,7 @@ public class UserController {
     private final RatingService ratingService;
 
     @PostMapping("/user")
-    public ResponseEntity<Void> create(@RequestBody UserDTO newUser) {
+    public ResponseEntity<Void> create(@Valid @RequestBody UserDTO newUser) {
         try {
             UserDTO createdUser = userService.createUser(newUser);
             log.info("New user created, ID: " + createdUser.getId());
@@ -47,7 +47,7 @@ public class UserController {
 
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<Void> update(@RequestBody UserDTO updatedUser, @PathVariable Long id) {
+    public ResponseEntity<Void> update(@Valid @RequestBody UserDTO updatedUser, @PathVariable Long id) {
         try {
             userService.updateUser(id, updatedUser);
             log.info("User updated, ID: " + id);
