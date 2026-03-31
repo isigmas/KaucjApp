@@ -145,4 +145,16 @@ class SecurityTest {
 
         assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
     }
+
+    @Test
+    @DisplayName("Should block direct access to /error endpoint without token")
+    void shouldBlockDirectAccessToErrorEndpointWithoutToken() {
+        HttpStatusCode status = restClient.get()
+                .uri("/error")
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Bezposredni request na /error powinien byc zablokowany (401)
+        // Tylko wewnetrzne przekierowania (DispatcherType.ERROR) sa dozwolone
+        assertThat(status).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
 }
