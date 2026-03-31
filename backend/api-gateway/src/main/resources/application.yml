@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  threads:
+    virtual:
+      enabled: true
+
+# Konfiguracja routingu gateway
+gateway:
+  routes:
+    - id: kaucjapp-services
+      path: /api/**
+      uri: http://localhost:8081
+
+jwt:
+  secret: "ToJestMojBardzoTajnyKluczKryptograficzny12345!"
