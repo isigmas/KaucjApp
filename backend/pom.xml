@@ -23,6 +23,7 @@
 	</developers>
 	<modules>
 		<module>services</module>
+		<module>api-gateway</module>
 	</modules>
 	<scm>
 		<connection/>
