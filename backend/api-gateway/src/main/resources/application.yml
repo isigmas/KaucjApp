@@ -4,11 +4,12 @@ server:
 spring:
   application:
     name: api-gateway
+  config:
+    import: optional:classpath:application-local.yml
   threads:
     virtual:
       enabled: true
 
-# Konfiguracja routingu gateway
 gateway:
   routes:
     - id: kaucjapp-services
@@ -16,4 +17,4 @@ gateway:
       uri: http://localhost:8081
 
 jwt:
-  secret: "ToJestMojBardzoTajnyKluczKryptograficzny12345!"
+  secret: ${JWT_SECRET}
