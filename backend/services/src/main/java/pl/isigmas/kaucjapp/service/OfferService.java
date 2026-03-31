@@ -221,6 +221,14 @@ public class OfferService {
                 default -> null;
             };
 
+            // Prevent creator from reserving their own offer
+            if (status == OfferStatus.RESERVED
+                    && offer.getCreator() != null
+                    && user != null
+                    && offer.getCreator().getId().equals(user.getId())) {
+                return false;
+            }
+
             if (offer.getInfo() != null) {
                 offer.getInfo().setStatus(status);
                 change = true;

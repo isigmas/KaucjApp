@@ -24,6 +24,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -146,6 +150,12 @@ class OfferEndpointTest {
                     "aQuantity": 1,
                     "aPrice": 10.0,
                     "aFee": 1.0,
+                    "bQuantity": 1,
+                    "bPrice": 10.0,
+                    "bFee": 1.0,
+                    "cQuantity": 1,
+                    "cPrice": 10.0,
+                    "cFee": 1.0,
                     "pickupAddress": "ul. Odbiorcza 1",
                     "pickupInstructions": "Test"
                 }
@@ -156,7 +166,11 @@ class OfferEndpointTest {
                         .content(createOfferJson))
                 .andExpect(status().isCreated());
 
-        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+        Long offerId = offerRepository.findAll().stream()
+        .filter(o -> o.getCreator().getId().equals(creatorId))
+        .findFirst()
+        .orElseThrow()
+        .getId();
 
         mockMvc.perform(post("/api/change-offer-status/" + offerId + "/" + collectorId + "/NOT_A_STATUS"))
                 .andExpect(status().isBadRequest());
@@ -174,6 +188,12 @@ class OfferEndpointTest {
                     "aQuantity": 1,
                     "aPrice": 10.0,
                     "aFee": 1.0,
+                    "bQuantity": 1,
+                    "bPrice": 10.0,
+                    "bFee": 1.0,
+                    "cQuantity": 1,
+                    "cPrice": 10.0,
+                    "cFee": 1.0,
                     "pickupAddress": "ul. Odbiorcza 1",
                     "pickupInstructions": "Test"
                 }
@@ -204,6 +224,12 @@ class OfferEndpointTest {
                     "aQuantity": 1,
                     "aPrice": 10.0,
                     "aFee": 1.0,
+                    "bQuantity": 1,
+                    "bPrice": 10.0,
+                    "bFee": 1.0,
+                    "cQuantity": 1,
+                    "cPrice": 10.0,
+                    "cFee": 1.0,
                     "pickupAddress": "ul. Odbiorcza 1",
                     "pickupInstructions": "Test"
                 }
@@ -214,7 +240,11 @@ class OfferEndpointTest {
                         .content(createOfferJson))
                 .andExpect(status().isCreated());
 
-        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+        Long offerId = offerRepository.findAll().stream()
+        .filter(o -> o.getCreator().getId().equals(creatorId))
+        .findFirst()
+        .orElseThrow()
+        .getId();
 
         mockMvc.perform(post("/api/change-offer-status/" + offerId + "/" + creatorId + "/RESERVED"))
                 .andExpect(status().isBadRequest());
@@ -223,73 +253,47 @@ class OfferEndpointTest {
     }
 
 
-    @Test
-    @Disabled("In progress")
-    void cannotAddOfferWithInvalidQuantity() throws Exception {
-        Long creatorId = createUser("creator_invalid_quantity", "creator_invalid_quantity@example.com");
-
-        String createOfferJson = """
-                {
-                    "creatorId": %d,
-                    "latitude": 52.2297,
-                    "longitude": 21.0122,
-                    "aQuantity": -5,
-                    "aPrice": 10.0,
-                    "aFee": 1.0,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test"
-                }
-                """.formatted(creatorId);
-
+    @ParameterizedTest(name = "Should return 400 when: {1}")
+    @MethodSource("provideInvalidOfferPayloads")
+    void creatingOfferWithInvalidDataReturns400(String invalidJson, String failureReason) throws Exception {
         mockMvc.perform(post("/api/offer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createOfferJson))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
                 .andExpect(status().isBadRequest());
     }
 
+    private static Stream<Arguments> provideInvalidOfferPayloads() {
+        return Stream.of(
+            Arguments.of(createJson("-1", "10.0", "1.0"), "Negative aQuantity"),
+            Arguments.of(createJson("10", "-1.0", "1.0"), "Negative aPrice"),
+            Arguments.of(createJson("10", "10.0", "-1.0"), "Negative aFee"),
 
-    @Test
-    @Disabled("In progress")
-    void cannotAddOfferWithInvalidPrice() throws Exception {
-        Long creatorId = createUser("creator_invalid_price", "creator_invalid_price@example.com");
+            Arguments.of(createJsonB("-1", "10.0", "1.0"), "Negative bQuantity"),
+            Arguments.of(createJsonB("10", "-1.0", "1.0"), "Negative bPrice"),
+            Arguments.of(createJsonB("10", "10.0", "-1.0"), "Negative bFee"),
 
-        String createOfferJson = """
-                {
-                    "creatorId": %d,
-                    "latitude": 52.2297,
-                    "longitude": 21.0122,
-                    "aQuantity": 1,
-                    "aPrice": -10.0,
-                    "aFee": 1.0,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test"
-                }
-                """.formatted(creatorId);
-
-        mockMvc.perform(post("/api/offer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createOfferJson))
-                .andExpect(status().isBadRequest());
-
-        createOfferJson = """
-                {
-                    "creatorId": %d,
-                    "latitude": 52.2297,
-                    "longitude": 21.0122,
-                    "aQuantity": 1,
-                    "aPrice": 1.0,
-                    "aFee": -10.0,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test"
-                }
-                """.formatted(creatorId);
-        mockMvc.perform(post("/api/offer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createOfferJson))
-                .andExpect(status().isBadRequest());
+            Arguments.of(createJsonC("-1", "10.0", "1.0"), "Negative cQuantity"),
+            Arguments.of(createJsonC("10", "-1.0", "1.0"), "Negative cPrice"),
+            Arguments.of(createJsonC("10", "10.0", "-1.0"), "Negative cFee")
+        );
     }
 
-
+    private static String createJson(String q, String p, String f) {
+        return """
+            {"creatorId":1, "aQuantity":%s, "aPrice":%s, "aFee":%s, "pickupAddress":"Test"}
+            """.formatted(q, p, f);
+    }
+    private static String createJsonB(String q, String p, String f) {
+        return """
+            {"creatorId":1, "bQuantity":%s, "bPrice":%s, "bFee":%s, "pickupAddress":"Test"}
+            """.formatted(q, p, f);
+    }
+    private static String createJsonC(String q, String p, String f) {
+        return """
+            {"creatorId":1, "cQuantity":%s, "cPrice":%s, "cFee":%s, "pickupAddress":"Test"}
+            """.formatted(q, p, f);
+    }
+ 
 
 
     private Long createUser(String username, String email) throws Exception {

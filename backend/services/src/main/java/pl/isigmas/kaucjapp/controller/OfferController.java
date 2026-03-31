@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
@@ -30,7 +31,7 @@ public class OfferController {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
 
     @PostMapping("/offer")
-    public ResponseEntity<Void> create(@RequestBody OfferDTO newOffer) {
+    public ResponseEntity<Void> create(@Valid @RequestBody OfferDTO newOffer) {
         Long newId;
         try {
             newId = service.create(newOffer);
@@ -88,7 +89,6 @@ public class OfferController {
                 case "CANCELED" -> "canceled";
                 default -> "";
             };
-
             if (messageStatus.isEmpty()) {
                 log.warn("Invalid status provided: " + new_status);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
