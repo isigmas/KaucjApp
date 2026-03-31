@@ -211,7 +211,6 @@ class OfferEndpointTest {
     }
 
     @Test
-    @Disabled("In progress")
     void cannotReserveYourOwnOffer() throws Exception {
         Long creatorId = createUser("creator_own_offer", "creator_own_offer@example.com");
         Long collectorId = createUser("collector_own_offer", "collector_own_offer@example.com");
