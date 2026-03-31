@@ -51,11 +51,11 @@ class UserEndpointTest {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """;
 
@@ -81,11 +81,11 @@ class UserEndpointTest {
                     "name": "Anna",
                     "surname": "Kowalska",
                     "username": "anna.k",
-                    "phoneNumber": "999888777",
+                    "phone_number": "999888777",
                     "email": "anna.k@example.com",
-                    "defaultAddress": "ul. Zmieniona 3",
-                    "defaultLatitude": 51.10,
-                    "defaultLongitude": 19.20
+                    "default_address": "ul. Zmieniona 3",
+                    "default_latitude": 51.10,
+                    "default_longitude": 19.20
                 }
                 """;
 
@@ -136,18 +136,17 @@ class UserEndpointTest {
     }
 
     @Test
-    @Disabled("In progress")
     void creatingUserWithWrongEmailFormatReturns400() throws Exception {
         String createUserJson = """
                 {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "to nie jest poprawny email",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """;
 
@@ -158,18 +157,17 @@ class UserEndpointTest {
     }
 
     @Test
-    @Disabled("In progress")
     void creatingUserWithWrongPhoneNumberFormatReturns400() throws Exception {
         String createUserJson = """
                 {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "to nie jest poprawny numer telefonu",
+                    "phone_number": "to nie jest poprawny numer telefonu",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """;
 
@@ -181,7 +179,6 @@ class UserEndpointTest {
 
     @ParameterizedTest(name = "Should return 400 when: {1}")
     @MethodSource("provideInvalidUserPayloads")
-    @Disabled("In progress")
     void creatingUserWithInvalidDataReturns400(String invalidJson, String failureReason) throws Exception {
         
         mockMvc.perform(post("/api/user")
@@ -196,11 +193,11 @@ class UserEndpointTest {
                 {
                     "name": "Anna",
                     "surname": "Nowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """, "Missing username"),
 
@@ -209,10 +206,10 @@ class UserEndpointTest {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """, "Missing defaultAddress"),
 
@@ -221,10 +218,10 @@ class UserEndpointTest {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_longitude": 21.01
                 }
                 """, "Missing defaultLatitude"),
 
@@ -233,20 +230,20 @@ class UserEndpointTest {
                     "name": "Anna",
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23                }
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23                }
                 """, "Invalid defaultLongitude format"),
         Arguments.of("""
                 {
                     "surname": "Nowak",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """, "Missing name"),
 
@@ -254,11 +251,11 @@ class UserEndpointTest {
                 {
                     "name": "Anna",
                     "username": "anowak",
-                    "phoneNumber": "111222333",
+                    "phone_number": "111222333",
                     "email": "anna@example.com",
-                    "defaultAddress": "ul. Testowa 2",
-                    "defaultLatitude": 52.23,
-                    "defaultLongitude": 21.01
+                    "default_address": "ul. Testowa 2",
+                    "default_latitude": 52.23,
+                    "default_longitude": 21.01
                 }
                 """, "Missing surname")
 

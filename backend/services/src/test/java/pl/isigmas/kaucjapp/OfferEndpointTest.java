@@ -301,11 +301,11 @@ class OfferEndpointTest {
                     "name": "Test",
                     "surname": "User",
                     "username": "%s",
-                    "phoneNumber": "555444333",
+                    "phone_number": "555444333",
                     "email": "%s",
-                    "defaultAddress": "ul. Testowa 100",
-                    "defaultLatitude": 50.01,
-                    "defaultLongitude": 19.99
+                    "default_address": "ul. Testowa 100",
+                    "default_latitude": 50.01,
+                    "default_longitude": 19.99
                 }
                 """.formatted(username, email);
 
