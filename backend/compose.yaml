@@ -21,7 +21,7 @@ services:
       dockerfile: services/Dockerfile
     image: kaucjapp
     ports:
-      - '8080:8080'
+      - '8081:8081'
     depends_on:
       postgres:
         condition: service_healthy
