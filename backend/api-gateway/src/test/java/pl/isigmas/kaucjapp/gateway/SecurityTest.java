@@ -36,8 +36,6 @@ class SecurityTest {
                     // Ignore all errors (check status code without exception)
                 })
                 .build();
-
-        IO.println("SECRET HERE: " + jwtSecret);
     }
 
     @Test
@@ -121,6 +119,28 @@ class SecurityTest {
         HttpStatusCode status = restClient.get()
                 .uri("/api/test")
                 .header("Authorization", "Bearer " + validToken)
+                .exchange((request, response) -> response.getStatusCode());
+
+        assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("Should allow access to /api/auth/** without token (public endpoint)")
+    void shouldAllowAccessToAuthEndpointWithoutToken() {
+        HttpStatusCode status = restClient.post()
+                .uri("/api/auth/login")
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Endpoint /api/auth/login powinien byc dostepny bez tokenu
+        // Dostaniemy 500 (connection refused) bo downstream nie dziala, ale NIE 401/403
+        assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("Should allow access to /api/auth/register without token")
+    void shouldAllowAccessToRegisterEndpointWithoutToken() {
+        HttpStatusCode status = restClient.post()
+                .uri("/api/auth/register")
                 .exchange((request, response) -> response.getStatusCode());
 
         assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
