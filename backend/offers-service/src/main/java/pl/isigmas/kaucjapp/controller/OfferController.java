@@ -32,7 +32,11 @@ public class OfferController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@RequestBody OfferDTO updatedOffer, @PathVariable Long id) {
+    public ResponseEntity<Void> update(
+            @RequestBody OfferDTO updatedOffer,
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        updatedOffer.setCreatorId(userId);
         service.update(id, updatedOffer);
         log.info("Offer updated, ID: {}", id);
         return ResponseEntity.ok().build();

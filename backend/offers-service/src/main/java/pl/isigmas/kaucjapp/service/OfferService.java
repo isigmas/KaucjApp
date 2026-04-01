@@ -53,6 +53,39 @@ public class OfferService {
         return savedOffer.getId();
     }
 
+    @Transactional
+    public void update(Long id, OfferDTO dto) {
+        Offer offer = offerRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+
+        if (!offer.getCreatorId().equals(dto.getCreatorId())) {
+            throw new EntityNotFoundException("Offer not found");
+        }
+
+        offer.setLatitude(dto.getLatitude());
+        offer.setLongitude(dto.getLongitude());
+        offer.setPickupAddress(dto.getPickupAddress());
+        offer.setPickupInstructions(dto.getPickupInstructions());
+
+        offer.getItems().clear();
+
+        List<OfferItem> items = dto.getItems().stream().map(itemDto -> {
+            BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
+
+            return OfferItem.builder()
+                    .id(new OfferItemId(offer.getId(), type.getId()))
+                    .offer(offer)
+                    .bottleType(type)
+                    .quantity(itemDto.getQuantity())
+                    .unitPrice(itemDto.getUnitPrice())
+                    .build();
+        }).collect(Collectors.toList());
+
+        offer.getItems().addAll(items);
+        offerRepository.save(offer);
+    }
+
     public List<OfferResponseDTO> getAll() {
         return offerRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
@@ -67,6 +100,12 @@ public class OfferService {
 
     public List<OfferResponseDTO> getAllByCreatorId(Long userId) {
         return offerRepository.findByCreatorId(userId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
+        return offerRepository.findByCollectorIdAndStatus(userId, OfferStatus.RESERVED).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }

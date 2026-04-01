@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>pl.isigmas</groupId>
-        <artifactId>offers-service</artifactId>
+        <artifactId>kaucjapp</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>services</artifactId>
+    <artifactId>offers-service</artifactId>
 
     <dependencies>
 		<dependency>
