@@ -21,7 +21,7 @@ To run the API Gateway service locally, follow these steps:
     ```
    ```json
     { // Payload
-      "sub": "tester",
+      "role": "tester",
       "user_id": 1
     }
     ```
@@ -35,11 +35,25 @@ To run the API Gateway service locally, follow these steps:
 
 Use every other endpoint as you would normally, but make sure to change the base URL address to :8080, and include the JWT token generated in the previous step in the Authorization header of your request.
 
-#### Example:
+#### Example of http request to the API Gateway:
 
 ```http request
 GET http://localhost:8080/api/status
 Authorization: Bearer {{Your JWT token}}
+```
+
+Every request passing through the API Gateway will be authorized and enriched with user information such as user ID.
+Target microservices should fully rely on the header provided by the gateway, and not perform any additional authorization checks.
+
+#### Example of reading ID in a microservice:
+
+```java
+@GetMapping("/my-resource")
+public ResponseEntity<?> getMyData(
+    @RequestHeader("X-User-Id") Long userId
+) {
+    // ...
+}
 ```
 
 ---
