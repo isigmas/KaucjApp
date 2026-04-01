@@ -22,7 +22,8 @@
 		<developer/>
 	</developers>
 	<modules>
-		<module>services</module>
+		<module>users-service</module>
+		<module>offers-service</module>
 	</modules>
 	<scm>
 		<connection/>
