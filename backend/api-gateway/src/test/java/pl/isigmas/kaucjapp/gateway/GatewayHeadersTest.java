@@ -1,10 +1,10 @@
 package pl.isigmas.kaucjapp.gateway;
 
+import org.junit.jupiter.api.*;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -167,7 +167,7 @@ class GatewayHeadersTest {
     @Test
     @DisplayName("Should forward X-User-Id header with integer user_id claim")
     void shouldForwardUserIdHeaderWithIntegerClaim() {
-        // Given - Integer user_id (nie Long)
+        // Given - Integer user_id (not Long)
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         String validToken = Jwts.builder()
                 .subject("tester")

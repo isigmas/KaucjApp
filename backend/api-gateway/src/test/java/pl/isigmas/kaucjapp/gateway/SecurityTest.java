@@ -51,8 +51,8 @@ class SecurityTest {
     @Test
     @DisplayName("Should return 401 when invalid token is provided (different secret key)")
     void shouldReturn401WhenInvalidToken() {
-        // Token podpisany innym kluczem niz ten w properties
-        String invalidSecret = "InnyKluczKtoryNieJestPoprawny12345!";
+        // Token sign with a different secret key than the one configured in the application
+        String invalidSecret = "OtherNotValidSecretKey1234567890!";
         SecretKey invalidKey = Keys.hmacShaKeyFor(invalidSecret.getBytes());
 
         String invalidToken = Jwts.builder()
@@ -131,8 +131,7 @@ class SecurityTest {
                 .uri("/api/auth/login")
                 .exchange((request, response) -> response.getStatusCode());
 
-        // Endpoint /api/auth/login powinien byc dostepny bez tokenu
-        // Dostaniemy 500 (connection refused) bo downstream nie dziala, ale NIE 401/403
+        // Endpoint /api/auth/* should be accessible without token, we expect 500 because downstream service is not running, but NOT 401/403
         assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
     }
 
@@ -153,8 +152,7 @@ class SecurityTest {
                 .uri("/error")
                 .exchange((request, response) -> response.getStatusCode());
 
-        // Bezposredni request na /error powinien byc zablokowany (401)
-        // Tylko wewnetrzne przekierowania (DispatcherType.ERROR) sa dozwolone
+        // Direct request to /error should be blocked (401)
         assertThat(status).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }
