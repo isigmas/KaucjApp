@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,6 +14,7 @@ import java.util.List;
 @Table(name = "offers")
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Offer {
 
     @Id
@@ -20,12 +22,14 @@ public class Offer {
     @Column(name = "offer_id")
     private Long id;
 
-    @Column(name = "creator_id", nullable = false)
+    @NotNull
+    @Column(name = "creator_id")
     private Long creatorId;
 
     @Column(name = "collector_id")
     private Long collectorId;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private OfferStatus status = OfferStatus.OPEN;
 
@@ -41,6 +45,10 @@ public class Offer {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime timeCreated;
+
+    @org.hibernate.annotations.UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "completed_at")
     private LocalDateTime timeCompleted;

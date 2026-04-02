@@ -1,0 +1,5 @@
+FROM postgres:latest
+
+ARG SERVICE_NAME
+
+COPY ${SERVICE_NAME}/src/main/resources/init.sql /docker-entrypoint-initdb.d/

@@ -1,3 +1,7 @@
+CREATE TYPE offer_status AS ENUM (
+    'OPEN', 'RESERVED', 'COMPLETED', 'CANCELED'
+    );
+
 CREATE TABLE bottle_types (
                               bottle_id    BIGSERIAL PRIMARY KEY,
                               name         VARCHAR(50) NOT NULL UNIQUE,
@@ -12,8 +16,8 @@ CREATE TABLE offers (
                         offer_id        BIGSERIAL PRIMARY KEY,
                         creator_id      BIGINT NOT NULL,
                         collector_id    BIGINT,
-                        status          VARCHAR(50) NOT NULL DEFAULT 'OPEN',
-                        pickup_address  VARCHAR(255),
+                        status          offer_status NOT NULL DEFAULT 'OPEN',
+                        pickup_address  TEXT,
                         latitude        NUMERIC(9,6),
                         longitude       NUMERIC(9,6),
                         pickup_instructions TEXT,
@@ -29,7 +33,7 @@ CREATE INDEX idx_offers_location ON offers USING GIST (point(longitude, latitude
 CREATE TABLE offer_items (
                              offer_id    BIGINT NOT NULL REFERENCES offers(offer_id) ON DELETE CASCADE,
                              bottle_id   BIGINT NOT NULL REFERENCES bottle_types(bottle_id),
-                             quantity    INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+                             quantity    INTEGER NOT NULL DEFAULT 0 CHECK (quantity > 0),
                              unit_price  NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0),
                              PRIMARY KEY (offer_id, bottle_id)
 );
