@@ -6,32 +6,48 @@ This service serves as the entry point for all client requests. It routes reques
 
 To run the API Gateway service locally, follow these steps:
 
-1. Create **application-local.yml** file based on the provided **application.yml** template. This file will contain your local configuration settings.
+1. Running on localhost 
+
+   Create **application-local.yml** file based on the provided **application.yml** template. This file will contain your local configuration settings.
 
     ```shell
     cd src/main/resources
     cp application-local.example.yml application-local.yml
     ```
-2. Create JWT token for authentication. You can use online tools like [jwt.io](https://www.jwt.io). Example:
-    ```json
-    { // Header
-      "alg": "HS256",
-      "typ": "JWT"
-    }
-    ```
-   ```json
-    { // Payload
-      "sub": "tester",
-      "user_id": 1
-    }
-    ```
-   ```json
-   // Secret
-   {{Secret from your application-local.yml file}}
+   
+2. Running via Docker
+
+   Create **.env** file based on the provided **.env.example** template. This file will contain your local configuration settings (For whole backend, not only this service).
+
+   ```shell
+   cd ..
+   cp .env.example .env
    ```
-   Alternatively, you can generate a JWT token using auth microservice, but for development purposes, using an online tool is quicker.
 
 ## Usage guide
+
+Create JWT token for authentication. You can use online tools like [jwt.io](https://www.jwt.io).
+
+#### Example of JWT token data:
+
+```json
+ { // Header
+   "alg": "HS256",
+   "typ": "JWT"
+ }
+ ```
+```json
+ { // Payload
+   "sub": "tester",
+   "user_id": 1
+ }
+ ```
+```json
+// Secret
+{{JWT Secret}}
+```
+
+Alternatively, you can generate a JWT token using auth microservice, but for development purposes, using an online tool is quicker.
 
 Use every other endpoint as you would normally, but make sure to change the base URL address to :8080, and include the JWT token generated in the previous step in the Authorization header of your request.
 
