@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:classpath:application-local.yml
+  threads:
+    virtual:
+      enabled: true
+
+gateway:
+  routes:
+    - id: kaucjapp-services
+      path: /api/**
+      uri: http://localhost:8081
+
+jwt:
+  secret: ${JWT_SECRET}
