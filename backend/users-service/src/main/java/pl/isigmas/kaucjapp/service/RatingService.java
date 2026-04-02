@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityNotFoundException;
+
 import pl.isigmas.kaucjapp.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.model.Rating;
-import pl.isigmas.kaucjapp.model.User;
 import pl.isigmas.kaucjapp.repository.RatingRepository;
-import pl.isigmas.kaucjapp.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -19,50 +19,45 @@ import java.math.RoundingMode;
 public class RatingService {
 
     private final RatingRepository ratingRepository;
-    private final UserRepository userRepository;
 
     @Transactional
-    public void addRating(Long userId, int score) {
+    public void addRating(Long userId, int score, Long raterId) {
         log.info("Dodawanie oceny {} dla użytkownika ID: {}", score, userId);
 
-        Rating rating = ratingRepository.findById(userId)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika o ID: " + userId));
-                    return Rating.builder()
-                            .userId(userId)
-                            .user(user)
-                            .currentAvg(BigDecimal.ZERO)
-                            .numberOfFeedbacks(0L)
-                            .build();
-                });
+        if (userId.equals(raterId)) {
+            throw new SecurityException("Cannot rate yourself");
+        }
 
-        BigDecimal currentAvg = rating.getCurrentAvg();
-        long oldCount = rating.getNumberOfFeedbacks();
-        long newCount = oldCount + 1;
+        Rating rating = ratingRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+
+        BigDecimal currentAvg = rating.getAvgScore();
+        int oldCount = rating.getFeedbackCount();
+        int newCount = oldCount + 1;
 
         BigDecimal currentTotalSum = currentAvg.multiply(BigDecimal.valueOf(oldCount));
         BigDecimal newTotalSum = currentTotalSum.add(BigDecimal.valueOf(score));
         BigDecimal newAvg = newTotalSum.divide(BigDecimal.valueOf(newCount), 2, RoundingMode.HALF_UP);
 
-        rating.setCurrentAvg(newAvg);
-        rating.setNumberOfFeedbacks(newCount);
+        rating.setAvgScore(newAvg);
+        rating.setFeedbackCount(newCount);
 
         ratingRepository.save(rating);
         log.info("Nowa średnia dla użytkownika {}: {} (liczba ocen: {})", userId, newAvg, newCount);
     }
 
+    @Transactional(readOnly = true)
     public RatingDTO getRatingDTO(Long userId) {
         return ratingRepository.findById(userId)
                 .map(this::mapToDTO)
-                .orElse(null);
+                .orElseThrow(() -> new EntityNotFoundException("Reviews not found for user ID: " + userId));
     }
 
     private RatingDTO mapToDTO(Rating rating) {
-        return RatingDTO.builder()
-                .userId(rating.getUserId())
-                .currentAvg(rating.getCurrentAvg())
-                .numberOfFeedbacks(rating.getNumberOfFeedbacks())
-                .build();
+        RatingDTO dto = new RatingDTO();
+        dto.setUserId(rating.getUserId());
+        dto.setAvgScore(rating.getAvgScore());
+        dto.setFeedbackCount(rating.getFeedbackCount());
+        return dto;
     }
 }

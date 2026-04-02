@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ratings")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,14 +17,14 @@ public class Rating {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "current_avg", precision = 9, scale = 6)
-    private BigDecimal currentAvg;
+    @Column(name = "avg_score", precision = 3, scale = 2)
+    private BigDecimal avgScore=BigDecimal.ZERO;
 
-    @Column(name = "number_of_feedbacks")
-    private Long numberOfFeedbacks;
+    @Column(name = "feedback_count")
+    private Integer feedbackCount=0;
 }

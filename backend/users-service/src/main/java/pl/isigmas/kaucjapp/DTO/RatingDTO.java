@@ -17,9 +17,9 @@ public class RatingDTO {
     @JsonProperty("user_id")
     private Long userId;
 
-    @JsonProperty("current_avg")
-    private BigDecimal currentAvg;
+    @JsonProperty("avg_score")
+    private BigDecimal avgScore;
 
-    @JsonProperty("number_of_feedbacks")
-    private Long numberOfFeedbacks;
+    @JsonProperty("feedback_count")
+    private Integer feedbackCount;
 }
