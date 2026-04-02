@@ -73,4 +73,15 @@ public class OfferController {
     public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.getReservedOffersByUserId(userId));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<OfferResponseDTO>> searchOffersInArea(
+            @RequestParam double swLat,
+            @RequestParam double swLon,
+            @RequestParam double neLat,
+            @RequestParam double neLon) {
+
+        log.info("Searching for offers in Bounding Box: SW[{}, {}] to NE[{}, {}]", swLat, swLon, neLat, neLon);
+        return ResponseEntity.ok(service.getOffersInArea(swLat, swLon, neLat, neLon));
+    }
 }

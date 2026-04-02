@@ -126,6 +126,13 @@ public class OfferService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<OfferResponseDTO> getOffersInArea(double swLat, double swLon, double neLat, double neLon) {
+        return offerRepository.findOpenOffersInBoundingBox(swLat, swLon, neLat, neLon).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
         List<OfferResponseDTO.OfferItemResponseDTO> itemDTOs = offer.getItems().stream()
                 .map(item -> {
