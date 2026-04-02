@@ -13,8 +13,8 @@ RUN chmod +x ./mvnw
 
 ARG SERVICE_NAME
 
-RUN ./mvnw clean package -pl ${SERVICE_NAME} -am -Dmaven.test.skip=true
-
+RUN ./mvnw clean package -pl ${SERVICE_NAME} -am
+#-Dmaven.test.skip=true
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 

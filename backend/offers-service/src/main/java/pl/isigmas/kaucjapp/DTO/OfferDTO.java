@@ -37,7 +37,7 @@ public class OfferDTO {
         @NotNull(message = "ID type is needed")
         private Long bottleId;
 
-        @Min(value = 0, message = "Quantity cannot be lower than 0")
+        @Min(value = 1, message = "Quantity cannot be lower than 0")
         @NotNull(message = "Quantity is needed")
         private Integer quantity;
 
