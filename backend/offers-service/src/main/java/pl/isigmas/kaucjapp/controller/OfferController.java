@@ -25,26 +25,26 @@ public class OfferController {
             @Valid @RequestBody OfferDTO newOffer,
             @RequestHeader("X-User-Id") Long userId) {
 
-        newOffer.setCreatorId(userId);
-        Long newId = service.create(newOffer);
+        Long newId = service.create(userId, newOffer);
         log.info("New offer created with ID: {} by user: {}", newId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(newId);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
-            @RequestBody OfferDTO updatedOffer,
+            @Valid @RequestBody OfferDTO updatedOffer,
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId) {
-        updatedOffer.setCreatorId(userId);
-        service.update(id, updatedOffer);
+        service.update(id, userId, updatedOffer);
         log.info("Offer updated, ID: {}", id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.remove(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        service.remove(id, userId);
         log.info("Offer deleted, ID: {}", id);
         return ResponseEntity.ok().build();
     }
@@ -54,14 +54,7 @@ public class OfferController {
             @PathVariable Long offerId,
             @PathVariable String newStatus,
             @RequestHeader("X-User-Id") Long userId) {
-
-        boolean success = service.changeStatus(offerId, userId, newStatus);
-
-        if (!success) {
-            log.warn("Could not change status of offer {} to {} for user {}", offerId, newStatus, userId);
-            return ResponseEntity.badRequest().build();
-        }
-
+        service.changeStatus(offerId, userId, newStatus);
         log.info("Status of offer {} changed to {} by user {}", offerId, newStatus, userId);
         return ResponseEntity.ok().build();
     }

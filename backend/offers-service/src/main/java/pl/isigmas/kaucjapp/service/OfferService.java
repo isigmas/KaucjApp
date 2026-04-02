@@ -25,9 +25,9 @@ public class OfferService {
     private final BottleTypeRepository bottleTypeRepository;
 
     @Transactional
-    public Long create(OfferDTO dto) {
+    public Long create(Long creatorId, OfferDTO dto) {
         Offer offer = new Offer();
-        offer.setCreatorId(dto.getCreatorId());
+        offer.setCreatorId(creatorId);
         offer.setLatitude(dto.getLatitude());
         offer.setLongitude(dto.getLongitude());
         offer.setPickupAddress(dto.getPickupAddress());
@@ -52,12 +52,16 @@ public class OfferService {
     }
 
     @Transactional
-    public void update(Long id, OfferDTO dto) {
+    public void update(Long id, Long userId, OfferDTO dto) {
         Offer offer = offerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
 
-        if (!offer.getCreatorId().equals(dto.getCreatorId())) {
-            throw new EntityNotFoundException("Offer not found or access denied");
+        if (!offer.getCreatorId().equals(userId)) {
+            throw new SecurityException("Only offer creator can update the offer");
+        }
+
+        if (offer.getStatus() != OfferStatus.OPEN) {
+            throw new IllegalStateException("Only OPEN offers can be updated");
         }
 
         offer.setLatitude(dto.getLatitude());
@@ -153,41 +157,75 @@ public class OfferService {
     }
 
     @Transactional
-    public boolean changeStatus(Long offerId, Long userId, String newStatus) {
-        return offerRepository.findById(offerId).map(offer -> {
-            OfferStatus status;
-            try {
-                status = OfferStatus.valueOf(newStatus.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return false;
+    public void changeStatus(Long offerId, Long userId, String newStatus) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+
+        OfferStatus targetStatus;
+        try {
+            targetStatus = OfferStatus.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid offer status: " + newStatus);
+        }
+
+        OfferStatus currentStatus = offer.getStatus();
+        if (currentStatus == OfferStatus.COMPLETED || currentStatus == OfferStatus.CANCELED) {
+            throw new IllegalStateException("Offer status can no longer be changed");
+        }
+
+        // Basic transition rules (keep minimal + explicit)
+        if (currentStatus == OfferStatus.OPEN && targetStatus == OfferStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot complete an OPEN offer");
+        }
+
+        if (targetStatus == OfferStatus.RESERVED) {
+            if (offer.getCreatorId().equals(userId)) {
+                throw new SecurityException("You cannot reserve your own offer");
             }
-
-            if (status == OfferStatus.RESERVED && offer.getCreatorId().equals(userId)) {
-                log.warn("User {} tried to reserve their own offer {}", userId, offerId);
-                return false;
+            if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
+                throw new IllegalStateException("Offer is already reserved by another user");
             }
+            offer.setCollectorId(userId);
+        }
 
-            offer.setStatus(status);
-
-            if (status == OfferStatus.RESERVED) {
-                offer.setCollectorId(userId);
-            } else if (status == OfferStatus.COMPLETED) {
-                offer.setTimeCompleted(LocalDateTime.now());
-            } else if (status == OfferStatus.OPEN) {
-                offer.setCollectorId(null);
+        if (targetStatus == OfferStatus.OPEN) {
+            if (currentStatus == OfferStatus.RESERVED
+                    && offer.getCollectorId() != null
+                    && !offer.getCollectorId().equals(userId)) {
+                throw new SecurityException("Only current collector can unreserve the offer");
             }
+            offer.setCollectorId(null);
+        }
 
-            offerRepository.save(offer);
-            return true;
-        }).orElse(false);
+        if (targetStatus == OfferStatus.COMPLETED) {
+            if (currentStatus != OfferStatus.RESERVED) {
+                throw new IllegalStateException("Only RESERVED offers can be completed");
+            }
+            if (offer.getCollectorId() == null || !offer.getCollectorId().equals(userId)) {
+                throw new SecurityException("Only current collector can complete the offer");
+            }
+            offer.setTimeCompleted(LocalDateTime.now());
+        }
+
+        if (targetStatus == OfferStatus.CANCELED) {
+            if (!offer.getCreatorId().equals(userId)) {
+                throw new SecurityException("Only offer creator can cancel the offer");
+            }
+        }
+
+        offer.setStatus(targetStatus);
+        offerRepository.save(offer);
     }
 
     @Transactional
-    public boolean remove(Long offerId) {
-        if (offerRepository.existsById(offerId)) {
-            offerRepository.deleteById(offerId);
-            return true;
+    public void remove(Long offerId, Long userId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+
+        if (!offer.getCreatorId().equals(userId)) {
+            throw new SecurityException("Only offer creator can delete the offer");
         }
-        return false;
+
+        offerRepository.delete(offer);
     }
 }

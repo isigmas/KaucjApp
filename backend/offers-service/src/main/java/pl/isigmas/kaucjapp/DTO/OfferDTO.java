@@ -17,9 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class OfferDTO {
 
-    @NotNull(message = "Creator ID cannot be blank")
-    private Long creatorId;
-
     private BigDecimal latitude;
     private BigDecimal longitude;
 

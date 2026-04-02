@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.model.Offer;
 import pl.isigmas.kaucjapp.model.OfferStatus;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
