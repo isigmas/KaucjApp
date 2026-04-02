@@ -15,6 +15,15 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * Security configuration for the API Gateway.
+ *
+ * <p>
+ * This class configures the security filter chains to manage access control across the gateway.
+ * It distinguishes between public endpoints (like authentication) and protected resources
+ * that require a valid JWT token.
+ * </p>
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -23,11 +32,15 @@ public class SecurityConfig {
     private String secret;
 
     /**
-     * Security filter chain dla publicznych endpointow (np. /api/auth/**)
-     * Ten lancuch NIE uzywa OAuth2 Resource Server, wiec nie bedzie zwracal 401
-     * przy bledach downstream service.
-     * 
-     * WAZNE: Musi miec @Order(1) zeby byl sprawdzany przed protected chain.
+     * Configures a high-priority filter chain for public authentication endpoints.
+     *
+     * <p>This chain matches requests starting with {@code /api/auth/} and allows
+     * unrestricted access. It is intentionally placed at a higher priority (Order 1)
+     * to bypass the OAuth2 resource server validation for login and registration flows.</p>
+     *
+     * @param http the {@link HttpSecurity} to configure
+     * @return the configured {@link SecurityFilterChain}
+     * @throws Exception if an error occurs during configuration
      */
     @Bean
     @Order(1)
@@ -46,8 +59,16 @@ public class SecurityConfig {
     }
 
     /**
-     * Security filter chain dla chronionych endpointow
-     * Wymaga JWT token do autoryzacji
+     * Configures the default filter chain for protected resource endpoints.
+     *
+     * <p>This chain acts as an OAuth2 Resource Server, requiring a valid JWT for all
+     * requests. It also allows internal {@link DispatcherType#ERROR} dispatches to
+     * ensure that exception handlers can process errors without being blocked by
+     * authentication requirements.</p>
+     *
+     * @param http the {@link HttpSecurity} to configure
+     * @return the configured {@link SecurityFilterChain}
+     * @throws Exception if an error occurs during configuration
      */
     @Bean
     @Order(2)
@@ -56,8 +77,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Pozwol na wewnetrzne przekierowania bledow (DispatcherType.ERROR)
-                        // ale blokuj bezposrednie requesty na /error z zewnatrz
+                        // Allow internal error dispatches (DispatcherType.ERROR) but block direct requests to /error from outside
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -67,6 +87,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Defines the {@link JwtDecoder} bean for validating incoming tokens.
+     * <p>Uses a symmetric key (HMAC-SHA256) based on the configured application secret.</p>
+     *
+     * @return a configured {@link NimbusJwtDecoder}
+     */
     @Bean
     public JwtDecoder jwtDecoder() {
         SecretKey secretKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
