@@ -2,8 +2,7 @@ package pl.isigmas.kaucjapp.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,14 +11,17 @@ import java.util.List;
 
 @Entity
 @Table(name = "offers")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "items")
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Offer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "offer_id")
+    @Column(name = "offer_id", nullable = false)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull
@@ -53,6 +55,21 @@ public class Offer {
     @Column(name = "completed_at")
     private LocalDateTime timeCompleted;
 
+    @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OfferItem> items = new ArrayList<>();
+
+    public List<OfferItem> getItems() {
+        return List.copyOf(items);
+    }
+
+    public void addItem(OfferItem item) {
+        items.add(item);
+        item.setOffer(this);
+    }
+
+    public void removeItem(OfferItem item) {
+        items.remove(item);
+        item.setOffer(null);
+    }
 }

@@ -1,22 +1,25 @@
 package pl.isigmas.kaucjapp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "offer_items")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@ToString(exclude = {"offer", "bottleType"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OfferItem {
 
     @EmbeddedId
-    private OfferItemId id = new OfferItemId();
+    @EqualsAndHashCode.Include
+    @Setter(AccessLevel.NONE)
+    private OfferItemId id;
 
     @ManyToOne
     @MapsId("offerId")
@@ -28,9 +31,18 @@ public class OfferItem {
     @JoinColumn(name = "bottle_id")
     private BottleType bottleType;
 
+    @NotNull
+    @Min(1)
     @Column(nullable = false)
     private Integer quantity;
 
+    @NotNull
     @Column(name = "unit_price", nullable = false)
     private BigDecimal unitPrice;
+
+    public void setRelations(Offer offer, BottleType bottleType) {
+        this.offer = offer;
+        this.bottleType = bottleType;
+        this.id = new OfferItemId(offer.getId(), bottleType.getId());
+    }
 }

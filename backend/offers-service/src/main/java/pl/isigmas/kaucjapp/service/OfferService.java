@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import jakarta.persistence.EntityNotFoundException;
 import pl.isigmas.kaucjapp.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.DTO.OfferResponseDTO;
@@ -14,7 +13,7 @@ import pl.isigmas.kaucjapp.repository.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,20 +34,19 @@ public class OfferService {
         offer.setPickupInstructions(dto.getPickupInstructions());
         offer.setStatus(OfferStatus.OPEN);
 
-        List<OfferItem> items = dto.getItems().stream().map(itemDto -> {
+        dto.getItems().forEach(itemDto -> {
             BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
                     .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
 
-            return OfferItem.builder()
-                    .id(new OfferItemId(null, type.getId()))
-                    .offer(offer)
-                    .bottleType(type)
-                    .quantity(itemDto.getQuantity())
-                    .unitPrice(itemDto.getUnitPrice())
-                    .build();
-        }).collect(Collectors.toList());
+            OfferItem item = new OfferItem();
+            item.setQuantity(itemDto.getQuantity());
+            item.setUnitPrice(itemDto.getUnitPrice());
 
-        offer.setItems(items);
+            item.setRelations(offer, type);
+
+            offer.addItem(item);
+        });
+
         Offer savedOffer = offerRepository.save(offer);
         return savedOffer.getId();
     }
@@ -59,7 +57,7 @@ public class OfferService {
                 .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
 
         if (!offer.getCreatorId().equals(dto.getCreatorId())) {
-            throw new EntityNotFoundException("Offer not found");
+            throw new EntityNotFoundException("Offer not found or access denied");
         }
 
         offer.setLatitude(dto.getLatitude());
@@ -67,43 +65,57 @@ public class OfferService {
         offer.setPickupAddress(dto.getPickupAddress());
         offer.setPickupInstructions(dto.getPickupInstructions());
 
-        offer.getItems().clear();
+        Map<Long, OfferItem> existingItems = offer.getItems().stream()
+                .collect(Collectors.toMap(
+                        item -> item.getBottleType().getId(),
+                        item -> item
+                ));
 
-        List<OfferItem> items = dto.getItems().stream().map(itemDto -> {
-            BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                    .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
+        dto.getItems().forEach(itemDto -> {
+            OfferItem existingItem = existingItems.remove(itemDto.getBottleId());
 
-            return OfferItem.builder()
-                    .id(new OfferItemId(offer.getId(), type.getId()))
-                    .offer(offer)
-                    .bottleType(type)
-                    .quantity(itemDto.getQuantity())
-                    .unitPrice(itemDto.getUnitPrice())
-                    .build();
-        }).collect(Collectors.toList());
+            if (existingItem != null) {
+                existingItem.setQuantity(itemDto.getQuantity());
+                existingItem.setUnitPrice(itemDto.getUnitPrice());
+            } else {
+                BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
+                        .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
 
-        offer.getItems().addAll(items);
+                OfferItem newItem = new OfferItem();
+                newItem.setQuantity(itemDto.getQuantity());
+                newItem.setUnitPrice(itemDto.getUnitPrice());
+                newItem.setRelations(offer, type);
+
+                offer.addItem(newItem);
+            }
+        });
+        existingItems.values().forEach(offer::removeItem);
+
         offerRepository.save(offer);
     }
 
+    @Transactional(readOnly = true)
     public List<OfferResponseDTO> getAll() {
         return offerRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public OfferResponseDTO getById(Long id) {
         return offerRepository.findById(id)
                 .map(this::mapToResponseDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
     }
 
+    @Transactional(readOnly = true)
     public List<OfferResponseDTO> getAllByCreatorId(Long userId) {
         return offerRepository.findByCreatorId(userId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
         return offerRepository.findByCollectorIdAndStatus(userId, OfferStatus.RESERVED).stream()
                 .map(this::mapToResponseDTO)

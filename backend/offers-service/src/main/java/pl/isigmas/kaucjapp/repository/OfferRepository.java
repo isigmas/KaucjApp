@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.model.Offer;
@@ -12,4 +13,7 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     List<Offer> findByCreatorId(Long creatorId);
 
     List<Offer> findByCollectorIdAndStatus(Long collectorId, OfferStatus status);
+
+    @EntityGraph(attributePaths = {"items"})
+    List<Offer> findAll();
 }
