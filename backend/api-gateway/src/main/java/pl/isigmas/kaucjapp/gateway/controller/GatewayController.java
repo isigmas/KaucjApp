@@ -49,7 +49,7 @@ public class GatewayController {
     /**
      * Intercepts all requests and proxies them to the matching downstream service.
      *
-     * <p>The process follows these steps:
+     * <p>The process follows these steps:</p>
      * <ol>
      * <li>Match the request URI to a configured route.</li>
      * <li>Construct the target URL for the downstream service.</li>
@@ -57,7 +57,6 @@ public class GatewayController {
      * <li>Inject security headers (e.g., {@code X-User-Id}) from the JWT token.</li>
      * <li>Forward the request body and return the downstream response.</li>
      * </ol>
-     * </p>
      *
      * @param request the incoming {@link HttpServletRequest}
      * @param body the raw request body as a byte array (optional)
