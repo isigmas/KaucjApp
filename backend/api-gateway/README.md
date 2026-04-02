@@ -21,7 +21,7 @@ To run the API Gateway service locally, follow these steps:
     ```
    ```json
     { // Payload
-      "role": "tester",
+      "sub": "tester",
       "user_id": 1
     }
     ```
