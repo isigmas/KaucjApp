@@ -1,7 +1,3 @@
-CREATE TYPE offer_status AS ENUM (
-    'OPEN', 'RESERVED', 'COMPLETED', 'CANCELED'
-    );
-
 CREATE TABLE bottle_types (
                               bottle_id    BIGSERIAL PRIMARY KEY,
                               name         VARCHAR(50) NOT NULL UNIQUE,
@@ -16,7 +12,7 @@ CREATE TABLE offers (
                         offer_id        BIGSERIAL PRIMARY KEY,
                         creator_id      BIGINT NOT NULL,
                         collector_id    BIGINT,
-                        status          offer_status NOT NULL DEFAULT 'OPEN',
+                        status          VARCHAR(32) NOT NULL DEFAULT 'OPEN',
                         pickup_address  TEXT,
                         latitude        NUMERIC(9,6),
                         longitude       NUMERIC(9,6),
