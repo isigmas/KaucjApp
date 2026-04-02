@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -40,17 +41,16 @@ public class SecurityConfig {
      *
      * @param http the {@link HttpSecurity} to configure
      * @return the configured {@link SecurityFilterChain}
-     * @throws Exception if an error occurs during configuration
      */
     @Bean
     @Order(1)
-    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) {
         http
                 .securityMatcher(request -> {
                     String path = request.getRequestURI();
                     return path != null && path.startsWith("/api/auth/");
                 })
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().permitAll()
@@ -68,13 +68,12 @@ public class SecurityConfig {
      *
      * @param http the {@link HttpSecurity} to configure
      * @return the configured {@link SecurityFilterChain}
-     * @throws Exception if an error occurs during configuration
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain protectedSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain protectedSecurityFilterChain(HttpSecurity http) {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // Allow internal error dispatches (DispatcherType.ERROR) but block direct requests to /error from outside
