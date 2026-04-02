@@ -17,12 +17,25 @@ import pl.isigmas.kaucjapp.gateway.config.GatewayProperties;
 import java.util.Enumeration;
 import java.util.List;
 
+/**
+ * Main entry point for the API Gateway logic.
+ *
+ * <p>
+ * This controller acts as a dynamic reverse proxy. It intercepts all incoming requests,
+ * matches them against defined routes, and forwards them to the appropriate downstream services.
+ * It also handles security context propagation and header sanitization.
+ * </p>
+ */
 @RestController
 public class GatewayController {
 
     private final RestClient restClient;
     private final GatewayProperties gatewayProperties;
 
+    /**
+     * List of Hop-by-hop headers that should not be forwarded by the proxy.
+     * Defined as per RFC 2616.
+     */
     private static final List<String> HOP_BY_HOP_HEADERS = List.of(
             "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
             "te", "trailers", "transfer-encoding", "upgrade", "host"
@@ -33,39 +46,56 @@ public class GatewayController {
         this.gatewayProperties = gatewayProperties;
     }
 
+    /**
+     * Intercepts all requests and proxies them to the matching downstream service.
+     *
+     * <p>The process follows these steps:
+     * <ol>
+     * <li>Match the request URI to a configured route.</li>
+     * <li>Construct the target URL for the downstream service.</li>
+     * <li>Filter and copy request headers (removing hop-by-hop headers).</li>
+     * <li>Inject security headers (e.g., {@code X-User-Id}) from the JWT token.</li>
+     * <li>Forward the request body and return the downstream response.</li>
+     * </ol>
+     * </p>
+     *
+     * @param request the incoming {@link HttpServletRequest}
+     * @param body the raw request body as a byte array (optional)
+     * @return a {@link ResponseEntity} containing the response from the downstream service
+     */
     @RequestMapping("/**")
     public ResponseEntity<byte[]> proxy(HttpServletRequest request, @RequestBody(required = false) byte[] body) {
         String requestPath = request.getRequestURI();
         String queryString = request.getQueryString();
         
-        // Znajdź pasujący route
+        // Find matching route
         GatewayProperties.Route matchedRoute = findMatchingRoute(requestPath);
         if (matchedRoute == null) {
             return ResponseEntity.notFound().build();
         }
 
-        // Zbuduj docelowy URL
+        // Build target URL
         String targetUrl = buildTargetUrl(matchedRoute, requestPath, queryString);
 
-        // Wykonaj request do downstream service
+        // Perform the request to the downstream service
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
         
         RestClient.RequestBodySpec requestSpec = restClient
                 .method(method)
                 .uri(targetUrl);
 
-        // Przekopiuj nagłówki (bez hop-by-hop)
+        // Copy headers from the original request, excluding hop-by-hop headers
         copyHeaders(request, requestSpec);
         
-        // Dodaj X-User-Id z JWT
+        // Add X-User-Id from JWT
         addUserIdHeader(requestSpec);
 
-        // Dodaj body jeśli istnieje
+        // Add body if it exists
         if (body != null && body.length > 0) {
             requestSpec.body(body);
         }
 
-        // Wykonaj request i zwróć odpowiedź
+        // Perform the request and return the response
         return requestSpec
                 .exchange((req, res) -> {
                     HttpHeaders responseHeaders = new HttpHeaders();
@@ -83,6 +113,13 @@ public class GatewayController {
                 });
     }
 
+    /**
+     * Finds a matching route based on the incoming request path.
+     * Supports prefix matching (e.g., {@code /api/**}) and exact path matching.
+     *
+     * @param requestPath the URI path to match
+     * @return the matching {@link GatewayProperties.Route} or {@code null} if no route is found
+     */
     private GatewayProperties.Route findMatchingRoute(String requestPath) {
         for (GatewayProperties.Route route : gatewayProperties.getRoutes()) {
             String pathPattern = route.getPath();
@@ -99,10 +136,18 @@ public class GatewayController {
         return null;
     }
 
+    /**
+     * Constructs the full target URL for the downstream request.
+     *
+     * @param route the matched route configuration
+     * @param requestPath the original request URI
+     * @param queryString the original query parameters
+     * @return the formatted target URL string
+     */
     private String buildTargetUrl(GatewayProperties.Route route, String requestPath, String queryString) {
         StringBuilder url = new StringBuilder(route.getUri());
         
-        // Usuń trailing slash z URI jeśli istnieje
+        // Delete trailing slash from URI if it exists
         if (url.charAt(url.length() - 1) == '/') {
             url.deleteCharAt(url.length() - 1);
         }
@@ -116,6 +161,13 @@ public class GatewayController {
         return url.toString();
     }
 
+    /**
+     * Copies headers from the incoming request to the proxy request.
+     * Filters out hop-by-hop headers to comply with proxy standards.
+     *
+     * @param request the source {@link HttpServletRequest}
+     * @param requestSpec the target {@link RestClient.RequestBodySpec}
+     */
     private void copyHeaders(HttpServletRequest request, RestClient.RequestBodySpec requestSpec) {
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -129,6 +181,14 @@ public class GatewayController {
         }
     }
 
+    /**
+     * Extracts the {@code user_id} claim from the current {@link JwtAuthenticationToken}
+     * and injects it into the proxy request as an {@code X-User-Id} header.
+     * * <p>This allows downstream services to identify the authenticated user without
+     * re-parsing the full JWT token.</p>
+     *
+     * @param requestSpec the current request specification
+     */
     private void addUserIdHeader(RestClient.RequestBodySpec requestSpec) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
