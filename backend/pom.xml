@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.0.3</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>pl.isigmas</groupId>
 	<artifactId>kaucjapp</artifactId>
@@ -22,7 +22,8 @@
 		<developer/>
 	</developers>
 	<modules>
-		<module>services</module>
+		<module>users-service</module>
+		<module>offers-service</module>
 		<module>api-gateway</module>
 	</modules>
 	<scm>
