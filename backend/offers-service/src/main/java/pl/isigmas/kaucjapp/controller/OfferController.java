@@ -30,6 +30,11 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newId);
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> get200() {
+        return ResponseEntity.ok("Ready");
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
             @Valid @RequestBody OfferDTO updatedOffer,

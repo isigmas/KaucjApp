@@ -1,0 +1,22 @@
+# Environment files
+.env
+
+# Compiled files
+target/
+*/target/
+*/*/target/
+
+# IDE settings
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Verion control
+.git/
+.gitignore
+
+# Logs
+*.log

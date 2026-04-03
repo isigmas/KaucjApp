@@ -1,4 +1,4 @@
-name: Test Docker Build - backend
+name: Docker Build and Test - backend
 
 on:
   push:
@@ -27,25 +27,13 @@ jobs:
 
       - name: Run Spring Boot Tests (including Testcontainers)
         env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           TESTCONTAINERS_RYUK_DISABLED: true
         run: ./mvnw test 
 
-      - name: Build app (docker compose)
-        run: docker compose build
+      - name: Build and launch containers
+        run: docker compose up --build -d --wait
 
-      - name: Launch containers in background
-        run: docker compose up -d
-
-      - name: Verify service
-        run: |
-          sleep 15
-          docker compose logs app
-
-          echo "Checking server status"
-          RESPONSE=$(curl -s http://localhost:8080/api/status)
-          if [ "$RESPONSE" == "Ready!" ]; then
-            echo "Success: Server is ready "
-          else
-            echo "Error: Expecting 'Ready!',  got '$RESPONSE'"
-            exit 1
-          fi
+      - name: Print logs on failure
+        if: failure()
+        run: docker compose logs

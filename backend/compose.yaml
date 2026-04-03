@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   offers-db:
     image: postgres:latest
@@ -33,6 +31,12 @@ services:
     depends_on:
       offers-db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/offer/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   users-db:
     image: postgres:latest
@@ -65,4 +69,30 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
     depends_on:
       users-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/user/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - GATEWAY_ROUTES_0_ID=users
+      - GATEWAY_ROUTES_0_URI=http://users-service:8081
+      - GATEWAY_ROUTES_0_PATH=/api/user/**
+      - GATEWAY_ROUTES_1_ID=offers
+      - GATEWAY_ROUTES_1_URI=http://offers-service:8082
+      - GATEWAY_ROUTES_1_PATH=/api/offer/**
+    depends_on:
+      offers-service:
+        condition: service_healthy
+      users-service:
         condition: service_healthy

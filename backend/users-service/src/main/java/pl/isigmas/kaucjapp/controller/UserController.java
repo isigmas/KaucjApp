@@ -34,6 +34,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> get200() {
+        return ResponseEntity.ok("Ready");
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(
             @PathVariable Long id,

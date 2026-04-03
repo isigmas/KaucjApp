@@ -6,8 +6,7 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-COPY offers-service offers-service
-COPY users-service users-service
+COPY . .
 
 RUN chmod +x ./mvnw
 
@@ -18,6 +17,8 @@ FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 ARG SERVICE_NAME
+
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/${SERVICE_NAME}/target/*.jar app.jar
 
