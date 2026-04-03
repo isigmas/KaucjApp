@@ -25,6 +25,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
     depends_on:
       offers-db:
         condition: service_healthy
@@ -61,6 +62,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
     depends_on:
       users-db:
         condition: service_healthy
