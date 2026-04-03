@@ -5,8 +5,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: offers_db
-    ports:
-      - "5432:5432"
     volumes:
       - ./offers-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -42,8 +40,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: users_db
-    ports:
-      - "5433:5432"
     volumes:
       - ./users-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
