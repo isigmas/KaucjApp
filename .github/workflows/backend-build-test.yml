@@ -1,0 +1,39 @@
+name: Docker Build and Test - backend
+
+on:
+  push:
+    branches: [ "main", "backend" ]
+  pull_request:
+    branches: [ "main", "backend" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Pull source code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Spring Boot Tests (including Testcontainers)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          TESTCONTAINERS_RYUK_DISABLED: true
+        run: ./mvnw test 
+
+      - name: Build and launch containers
+        run: docker compose up --build -d --wait
+
+      - name: Print logs on failure
+        if: failure()
+        run: docker compose logs
