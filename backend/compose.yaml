@@ -18,13 +18,10 @@ services:
   offers-service:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: offers-service/Dockerfile
       args:
         SERVICE_NAME: offers-service
-    ports:
-      - "8082:8082"
     environment:
-      - SERVER_PORT=8082
       - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
@@ -32,7 +29,7 @@ services:
       offers-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/offer/test"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/offer/test"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,13 +54,10 @@ services:
   users-service:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: users-service/Dockerfile
       args:
         SERVICE_NAME: users-service
-    ports:
-      - "8081:8081"
     environment:
-      - SERVER_PORT=8081
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
@@ -71,7 +65,7 @@ services:
       users-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/user/test"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,10 +80,10 @@ services:
     environment:
       - JWT_SECRET=${JWT_SECRET}
       - GATEWAY_ROUTES_0_ID=users
-      - GATEWAY_ROUTES_0_URI=http://users-service:8081
+      - GATEWAY_ROUTES_0_URI=http://users-service:8080
       - GATEWAY_ROUTES_0_PATH=/api/user/**
       - GATEWAY_ROUTES_1_ID=offers
-      - GATEWAY_ROUTES_1_URI=http://offers-service:8082
+      - GATEWAY_ROUTES_1_URI=http://offers-service:8080
       - GATEWAY_ROUTES_1_PATH=/api/offer/**
     depends_on:
       offers-service:

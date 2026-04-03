@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-COPY services services
+COPY users-service users-service
 
-RUN ./mvnw install -DskipTests -pl services -am
+RUN ./mvnw install -DskipTests -pl users-service -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine
@@ -14,7 +14,7 @@ WORKDIR /app
 
 ENV SERVER_PORT=8080
 
-COPY --from=builder /app/services/target/*.jar app.jar
+COPY --from=builder /app/users-service/target/*.jar app.jar
 
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
