@@ -7,30 +7,33 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import Animated, {
-  FadeInDown,
-  Layout,
-  FadeOut,
-  FadeInLeft,
-} from "react-native-reanimated";
+import Animated, { Layout, FadeOut, FadeInLeft } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
-import { Offer, useCompleteOffer, useOffersByID } from "@/src/api/useOffer";
 import { useRouter } from "expo-router";
 
-// --- Mappers ---
-const getBottleInfo = (id: number) => {
-  switch (id) {
-    case 2:
-      return { icon: "", label: "Plastik" };
-    case 3:
-      return { icon: "", label: "Szkło" };
-    case 4:
-      return { icon: "", label: "Puszki" };
-    default:
-      return { icon: "", label: "Inne" };
-  }
-};
+//Need to be replaced
+interface OfferItem {
+  bottle_id: number;
+  fee: number;
+  price: number;
+  quantity: number;
+}
+
+export interface Offer {
+  offer_id: number;
+  address: string;
+  created_at: string;
+  items: OfferItem[];
+  latitude: number;
+  longitude: number;
+  pickup_info: string | null;
+  status: "OPEN" | "COMPLETED"; // Assuming COMPLETED is the finished state
+  user: {
+    user_id: number;
+    username: string;
+  };
+}
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -42,7 +45,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// --- Offer Card Component ---
 const OfferCard = ({
   offer,
   index,
@@ -54,7 +56,6 @@ const OfferCard = ({
 }) => {
   const isOpen = offer.status === "OPEN";
 
-  // Calculate totals
   const totalItems = offer.items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPayout = offer.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -116,11 +117,10 @@ const OfferCard = ({
 
         <View style={styles.itemsRow}>
           {offer.items.map((item, idx) => {
-            const info = getBottleInfo(item.bottle_id);
             return (
               <View key={idx} style={styles.itemPill}>
-                <Text style={styles.itemIcon}>{info.label}</Text>
-                <Text style={styles.itemQuantity}>{item.quantity}x</Text>
+                <Text style={styles.itemIcon}>Plastik</Text>
+                <Text style={styles.itemQuantity}>10x</Text>
               </View>
             );
           })}
@@ -142,7 +142,6 @@ const OfferCard = ({
         </View>
       </View>
 
-      {/* Footer / Actions */}
       {isOpen && (
         <Animated.View exiting={FadeOut} style={styles.cardFooter}>
           <Pressable style={styles.completeButton} onPress={handleComplete}>
@@ -163,8 +162,9 @@ const OfferCard = ({
 
 // --- Main Screen ---
 export default function MyOffers() {
-  const { data: offers, isPending } = useOffersByID("1");
-  const { mutate: completeOffer } = useCompleteOffer();
+  const offers: Offer[] = []; // This will come from an API call,
+  const isPending = false; // state from the API call
+
   const router = useRouter();
 
   if (isPending) return <Text>Loading...</Text>;
@@ -172,14 +172,10 @@ export default function MyOffers() {
 
   const markAsCompleted = (id: number) => {
     console.log("Marking offer as completed, id: ", id);
-    completeOffer(
-      { offerId: id, idUser: "1" },
-      {
-        onSuccess: () => {
-          router.push("/profile/offers/confirmation");
-        },
-      },
-    );
+
+    // API CALL TO MARK OFFER AS COMPLETED GO HERE
+
+    router.push("/profile/offers/confirmation");
   };
 
   return (
