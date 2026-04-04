@@ -11,7 +11,6 @@ import Animated, { Easing, FadeInUp } from "react-native-reanimated";
 import { colors } from "@/src/theme";
 import { OfferData } from "./create-offer";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
-import { useCreateOffer } from "@/src/api/useOffer";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { useLocationStore } from "@/src/state/location";
@@ -22,37 +21,15 @@ interface Step3SummaryProps {
 }
 
 export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
-  const { mutate: createOffer, isPending } = useCreateOffer();
   const { clearLocation } = useLocationStore();
   const router = useRouter();
 
+  const isPending = false; // This will be derived from a mutation state
+
   const handleSubmit = () => {
     console.log("Button pressed");
-    createOffer(data, {
-      onSuccess: (responseData) => {
-        console.log("200: ", responseData);
 
-        updateData({
-          plasticBottles: 10,
-          glassBottles: 0,
-          cans: 0,
-          latitude: null,
-          longitude: null,
-          plasticPrice: 0.2,
-          glassPrice: 0.5,
-          cansPrice: 0.2,
-          address: "",
-          notes: "",
-        });
-
-        clearLocation();
-
-        router.replace("/(tabs)/create/success-screen");
-      },
-      onError: (error) => {
-        console.error("Error: ", error);
-      },
-    });
+    // API call goees here
   };
 
   const totalDepositValue =

@@ -1,7 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/src/api/query-client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-
-const queryClient = new QueryClient();
 
 export default function StackLayout() {
   return (
