@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+//This component helps me see the chosen location in offer creator on the summary step
+
 interface LocationStore {
   pickedLocation: { latitude: number; longitude: number } | null;
   setPickedLocation: (coords: { latitude: number; longitude: number }) => void;
