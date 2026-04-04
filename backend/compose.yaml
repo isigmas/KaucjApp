@@ -69,6 +69,20 @@ services:
       retries: 5
       start_period: 20s
 
+  auth-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - ./auth/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   api-gateway:
     build:
       context: .
