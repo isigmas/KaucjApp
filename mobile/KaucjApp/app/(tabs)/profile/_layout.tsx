@@ -11,14 +11,6 @@ export default function HomeLayout() {
         name="profileSettings/index"
         options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
-      <Stack.Screen
-        name="rewards/index"
-        options={{ headerShown: false, headerLargeTitleEnabled: false }}
-      />
-      <Stack.Screen
-        name="rewards/rewardsHowWork/index"
-        options={{ headerShown: false, headerLargeTitleEnabled: false }}
-      />
 
       <Stack.Screen
         name="offers"
