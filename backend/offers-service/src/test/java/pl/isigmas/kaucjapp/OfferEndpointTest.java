@@ -76,7 +76,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId, bottleBId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -84,7 +84,7 @@ class OfferEndpointTest {
 
         Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
 
-        mockMvc.perform(get("/api/offer/szosti"))
+        mockMvc.perform(get("/api/offer/my").header("X-User-Id", creatorId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].offer_id").value(offerId))
@@ -164,7 +164,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -193,7 +193,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -228,7 +228,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -269,7 +269,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -292,7 +292,7 @@ class OfferEndpointTest {
                 }
                 """.formatted(bottleAId);
 
-        mockMvc.perform(post("/api/offer")
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -308,7 +308,7 @@ class OfferEndpointTest {
                     "longitude": 21.0122,
                 }
                 """;
-    mockMvc.perform(post("/api/offer")
+    mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
@@ -325,7 +325,7 @@ void creatingOfferWithBlankPickupAddressReturns400() throws Exception {
                     "pickupAddress": "",
                 }
                 """;
-    mockMvc.perform(post("/api/offer")
+    mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))

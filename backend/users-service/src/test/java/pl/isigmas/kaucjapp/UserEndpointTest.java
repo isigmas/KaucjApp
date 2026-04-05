@@ -69,7 +69,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1005L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createRatedUserJson))
                 .andExpect(status().isCreated());
@@ -91,7 +92,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1006L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createRaterJson))
                 .andExpect(status().isCreated());
@@ -180,7 +182,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1005L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());
@@ -212,7 +215,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1005L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());
@@ -228,7 +232,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1006L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(raterJson))
                 .andExpect(status().isCreated());
@@ -270,7 +275,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                .header("X-User-Id",1005L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createUserJson))
                 .andExpect(status().isBadRequest());
@@ -289,7 +295,8 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                .header("X-User-Id",1005L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createUserJson))
                 .andExpect(status().isBadRequest());
@@ -299,7 +306,8 @@ class UserEndpointTest {
     @MethodSource("provideInvalidUserPayloads")
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
 
-        mockMvc.perform(post("/api/user")
+        mockMvc.perform(post("/api/user/user")
+                .header("X-User-Id",1005L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
                 .andExpect(status().isBadRequest());
