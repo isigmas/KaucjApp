@@ -6,12 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.isigmas.kaucjapp.DTO.CreateUserDTO;
-import pl.isigmas.kaucjapp.DTO.UserDTO;
+import pl.isigmas.kaucjapp.DTO.*;
 import pl.isigmas.kaucjapp.service.UserService;
 import pl.isigmas.kaucjapp.service.RatingService;
-import pl.isigmas.kaucjapp.DTO.RatingDTO;
-import pl.isigmas.kaucjapp.DTO.RatingRequestDTO;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -29,6 +28,14 @@ public class UserController {
         UserDTO createdUser = userService.createUser(authId,newUser);
         log.info("New user created, ID: {}", createdUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser.getId());
+    }
+
+    @GetMapping("/me/addresses")
+    public ResponseEntity<List<UserAddressDTO>> getMyAddresses(
+            @RequestHeader("X-User-Id") Long myUserId) {
+
+        log.info("Fetching addresses for user: {}", myUserId);
+        return ResponseEntity.ok(userService.getUserAddresses(myUserId));
     }
 
     @GetMapping("/{id}")
@@ -89,4 +96,6 @@ public class UserController {
         log.info("User {} added rating {} for user ID: {}", raterId, ratingRequest.getScore(), id);
         return ResponseEntity.ok().build();
     }
+
+
 }

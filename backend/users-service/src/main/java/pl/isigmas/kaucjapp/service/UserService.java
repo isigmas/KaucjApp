@@ -126,4 +126,9 @@ public class UserService {
                 .addresses(addressDTOs)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<UserAddressDTO> getUserAddresses(Long myUserId) {
+        return getUserById(myUserId).getAddresses();
+    }
 }

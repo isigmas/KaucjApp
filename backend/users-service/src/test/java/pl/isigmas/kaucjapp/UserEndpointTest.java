@@ -302,6 +302,44 @@ class UserEndpointTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void gettingMyAddressesReturns200() throws Exception {
+        String createUserJson = """
+                {
+                    "username": "anowak",
+                    "firstName": "Anna",
+                    "lastName": "Nowak",
+                    "phone": "123456789",
+                    "email": "anna@example.com",
+                    "addresses": [
+                        {
+                    "addressLabel": "home",
+                    "address": "ul. Testowa 2",
+                    "latitude": 52.23,
+                    "longitude": 21.01,
+                    "default": true
+                        },
+                    {
+                    "addressLabel": "work",
+                    "address": "ul. Testowa 3",
+                    "latitude": 52.24,
+                    "longitude": 21.03,
+                    "default": false
+                        }
+                    ]
+                }
+               """;
+
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-User-Id",1005L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserJson))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/user/me/addresses")
+                .header("X-User-Id",1005L)).andExpect(status().isOk());
+    }
+
     @ParameterizedTest(name = "Should return 400 when: {1}")
     @MethodSource("provideInvalidUserPayloads")
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
