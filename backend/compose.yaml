@@ -95,6 +95,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - JWT_SECRET=${JWT_SECRET}
+      - PASSWORD_SALT=${PASSWORD_SALT}
       - USER_SERVICE_URL=http://users-service:8080
     depends_on:
       auth-db:
