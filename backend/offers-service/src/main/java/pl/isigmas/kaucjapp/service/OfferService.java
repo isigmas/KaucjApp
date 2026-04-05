@@ -2,6 +2,9 @@ package pl.isigmas.kaucjapp.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,9 +26,11 @@ public class OfferService {
 
     private final OfferRepository offerRepository;
     private final BottleTypeRepository bottleTypeRepository;
+    private final GeoValidationService geoValidationService;
 
     @Transactional
     public Long create(Long creatorId, OfferDTO dto) {
+        validateLocation(dto.getLatitude(),dto.getLongitude());
         Offer offer = new Offer();
         offer.setCreatorId(creatorId);
         offer.setLatitude(dto.getLatitude());
@@ -33,6 +38,7 @@ public class OfferService {
         offer.setPickupAddress(dto.getPickupAddress());
         offer.setPickupInstructions(dto.getPickupInstructions());
         offer.setStatus(OfferStatus.OPEN);
+
 
         dto.getItems().forEach(itemDto -> {
             BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
@@ -53,6 +59,7 @@ public class OfferService {
 
     @Transactional
     public void update(Long id, Long userId, OfferDTO dto) {
+        validateLocation(dto.getLatitude(),dto.getLongitude());
         Offer offer = offerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
 
@@ -180,7 +187,6 @@ public class OfferService {
             throw new IllegalStateException("Offer status can no longer be changed");
         }
 
-        // Basic transition rules (keep minimal + explicit)
         if (currentStatus == OfferStatus.OPEN && targetStatus == OfferStatus.COMPLETED) {
             throw new IllegalStateException("Cannot complete an OPEN offer");
         }
@@ -235,4 +241,15 @@ public class OfferService {
 
         offerRepository.delete(offer);
     }
+
+    private void validateLocation(BigDecimal lat, BigDecimal lon) {
+        double latD = lat.doubleValue();
+        double lonD = lon.doubleValue();
+
+        if (!geoValidationService.isInPoland(latD, lonD)) {
+            throw new IllegalArgumentException("Offer can only be created in Poland");
+        }
+    }
+
+
 }

@@ -93,6 +93,8 @@ class OfferEndpointTest {
 
         String updateOfferJson = """
                 {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
                     "pickupAddress": "ul. Zmieniona 10",
                     "pickupInstructions": "Odbior po 18:00",
                     "items": [
@@ -220,6 +222,8 @@ class OfferEndpointTest {
 
         String createOfferJson = """
                 {
+                "latitude": 52.2297,
+                "longitude": 21.0122,
                   "pickupAddress": "ul. Odbiorcza 1",
                   "pickupInstructions": "Test",
                   "items": [
@@ -238,6 +242,8 @@ class OfferEndpointTest {
 
         String updateOfferJson = """
                 {
+                "latitude": 52.2497,
+                "longitude": 21.0122,
                   "pickupAddress": "ul. Zmieniona 10",
                   "pickupInstructions": "Odbior po 18:00",
                   "items": [
@@ -315,21 +321,38 @@ class OfferEndpointTest {
                 .andExpect(status().isBadRequest());
 }
 
-@Test
-void creatingOfferWithBlankPickupAddressReturns400() throws Exception {
-    Long creatorId = 11000L;
-    String createOfferJson = """
-                {
-                    "latitude": 52.2297,
-                    "longitude": 21.0122,
-                    "pickupAddress": "",
-                }
-                """;
-    mockMvc.perform(post("/api/offer/offer")
+    @Test
+    void creatingOfferWithBlankPickupAddressReturns400() throws Exception {
+        Long creatorId = 11000L;
+        String createOfferJson = """
+                    {
+                        "latitude": 52.2297,
+                        "longitude": 21.0122,
+                        "pickupAddress": "",
+                    }
+                    """;
+        mockMvc.perform(post("/api/offer/offer")
+                            .header("X-User-Id", creatorId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createOfferJson))
+                    .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void creatingOfferOutsideOfPolandReturns400() throws Exception {
+        Long creatorId = 11000L;
+        String createOfferJson = """
+                    {
+                        "latitude": 55.2297,
+                        "longitude": 24.0122,
+                        "pickupAddress": "",
+                    }
+                    """;
+        mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
                 .andExpect(status().isBadRequest());
-}
+    }
 
 }
