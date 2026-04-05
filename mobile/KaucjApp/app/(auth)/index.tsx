@@ -1,5 +1,5 @@
-import SignInScreen from "@/src/components/auth/sign-in-screen";
+import { Redirect } from "expo-router";
 
-export default function SignIn() {
-  return <SignInScreen />;
+export default function Index() {
+  return <Redirect href="/(auth)/sign-in" />;
 }
