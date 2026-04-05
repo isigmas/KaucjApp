@@ -20,7 +20,7 @@ public class OfferController {
 
     private final OfferService service;
 
-    @PostMapping
+    @PostMapping("/offer")
     public ResponseEntity<Long> create(
             @Valid @RequestBody OfferDTO newOffer,
             @RequestHeader("X-User-Id") Long userId) {

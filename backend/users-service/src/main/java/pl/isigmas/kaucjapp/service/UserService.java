@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
 
+import pl.isigmas.kaucjapp.DTO.CreateUserDTO;
 import pl.isigmas.kaucjapp.DTO.UserAddressDTO;
 import pl.isigmas.kaucjapp.DTO.UserDTO;
 import pl.isigmas.kaucjapp.model.Rating;
@@ -32,8 +33,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO createUser(UserDTO userDTO) {
+    public UserDTO createUser(long id, CreateUserDTO userDTO) {
         User user = new User();
+        user.setId(id);
         user.setUsername(userDTO.getUsername());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.isigmas.kaucjapp.DTO.CreateUserDTO;
 import pl.isigmas.kaucjapp.DTO.UserDTO;
 import pl.isigmas.kaucjapp.service.UserService;
 import pl.isigmas.kaucjapp.service.RatingService;
@@ -21,9 +22,11 @@ public class UserController {
     private final UserService userService;
     private final RatingService ratingService;
 
-    @PostMapping
-    public ResponseEntity<Long> create(@Valid @RequestBody UserDTO newUser) {
-        UserDTO createdUser = userService.createUser(newUser);
+    @PostMapping("/user")
+    public ResponseEntity<Long> create(
+            @RequestHeader("X-User-Id") Long authId,
+            @Valid @RequestBody CreateUserDTO newUser) {
+        UserDTO createdUser = userService.createUser(authId,newUser);
         log.info("New user created, ID: {}", createdUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser.getId());
     }
