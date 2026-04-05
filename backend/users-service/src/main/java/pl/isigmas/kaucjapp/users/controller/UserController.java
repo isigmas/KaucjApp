@@ -39,9 +39,9 @@ public class UserController {
     public ResponseEntity<Long> create(
             @RequestHeader("X-User-Id") Long authId,
             @Valid @RequestBody CreateUserDTO newUser) {
-        UserDTO createdUser= userService.createUser(authId,newUser);
-        log.info("New user created, ID: {}", createdUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser.getId());
+        userService.createUser(authId,newUser);
+        log.info("New user created, ID: {}", authId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authId);
     }
 
     @GetMapping("/me/addresses")
@@ -88,7 +88,7 @@ public class UserController {
     @PutMapping("/me")
     @Operation(
             summary = "Update user profile",
-            description = "Updates profile and replaces addresses. Path id must match X-User-Id (only the owner may update).")
+            description = "Updates profile and replaces addresses for the user in X-User-Id (only that user may update their profile).")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Profile updated."),
             @ApiResponse(responseCode = "400", description = "Validation error or missing X-User-Id."),
@@ -107,7 +107,7 @@ public class UserController {
     @DeleteMapping("/me")
     @Operation(
             summary = "Delete user account",
-            description = "Deletes the user. Path id must match X-User-Id.")
+            description = "Deletes the user identified by X-User-Id.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User deleted."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id header."),
@@ -140,7 +140,7 @@ public class UserController {
             summary = "Submit rating for user",
             description = "Adds a score (validated body) for the rated user. X-User-Id identifies the rater; cannot rate yourself.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Rating recorded."),
+            @ApiResponse(responseCode = "204", description = "Rating recorded."),
             @ApiResponse(responseCode = "400", description = "Invalid score or request body."),
             @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
             @ApiResponse(responseCode = "403", description = "Rater is not allowed (e.g. self-rating)."),
@@ -153,7 +153,7 @@ public class UserController {
 
         ratingService.addRating(id, ratingRequest.getScore(), raterId);
         log.info("User {} added rating {} for user ID: {}", raterId, ratingRequest.getScore(), id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 

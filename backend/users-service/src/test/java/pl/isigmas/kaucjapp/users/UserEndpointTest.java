@@ -120,7 +120,7 @@ class UserEndpointTest {
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
 
-        mockMvc.perform(put("/api/user/" + ratedUserId)
+        mockMvc.perform(put("/api/user/me")
                         .header("X-User-Id", ratedUserId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateUserJson))
@@ -130,7 +130,7 @@ class UserEndpointTest {
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":5}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/" + ratedUserId + "/rating"))
                 .andExpect(status().isOk())
@@ -142,7 +142,7 @@ class UserEndpointTest {
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":3}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/" + ratedUserId + "/rating"))
                 .andExpect(status().isOk())
@@ -150,7 +150,7 @@ class UserEndpointTest {
                 .andExpect(jsonPath("$.feedback_count").value(2))
                 .andExpect(jsonPath("$.avg_score").value(4.00));
 
-        mockMvc.perform(delete("/api/user/" + ratedUserId)
+        mockMvc.perform(delete("/api/user/me")
                         .header("X-User-Id", ratedUserId))
                 .andExpect(status().isOk());
 
@@ -163,7 +163,7 @@ class UserEndpointTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("not_found"));
 
-        mockMvc.perform(delete("/api/user/999999")
+        mockMvc.perform(delete("/api/user/me")
                         .header("X-User-Id", 999999L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("not_found"));

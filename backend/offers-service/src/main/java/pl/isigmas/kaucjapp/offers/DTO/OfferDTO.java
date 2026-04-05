@@ -17,7 +17,10 @@ import java.util.List;
 @AllArgsConstructor
 public class OfferDTO {
 
+    @NotNull(message = "Latitude is required")
     private BigDecimal latitude;
+
+    @NotNull(message = "Longitude is required")
     private BigDecimal longitude;
 
     @NotBlank(message = "Pickup address is needed")
@@ -37,7 +40,7 @@ public class OfferDTO {
         @NotNull(message = "ID type is needed")
         private Long bottleId;
 
-        @Min(value = 1, message = "Quantity cannot be lower than 0")
+        @Min(value = 1, message = "Quantity must be at least 1")
         @NotNull(message = "Quantity is needed")
         private Integer quantity;
 

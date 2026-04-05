@@ -98,8 +98,6 @@ public class OfferService {
             }
         });
         existingItems.values().forEach(offer::removeItem);
-
-        offerRepository.save(offer);
     }
 
     @Transactional(readOnly = true)
@@ -107,13 +105,6 @@ public class OfferService {
         return offerRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public OfferResponseDTO getById(Long id) {
-        return offerRepository.findById(id)
-                .map(this::mapToResponseDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
     }
 
     @Transactional(readOnly = true)
@@ -224,7 +215,6 @@ public class OfferService {
         }
 
         offer.setStatus(targetStatus);
-        offerRepository.save(offer);
     }
 
     @Transactional

@@ -1,7 +1,6 @@
 package pl.isigmas.kaucjapp.users.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,12 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
         return userRepository.findById(id)
@@ -33,7 +32,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO createUser(long id, CreateUserDTO userDTO) {
+    public void createUser(long id, CreateUserDTO userDTO) {
         User user = new User();
         user.setId(id);
         user.setUsername(userDTO.getUsername());
@@ -60,12 +59,11 @@ public class UserService {
         initialRating.setFeedbackCount(0);
         user.setRating(initialRating);
 
-        User savedUser = userRepository.save(user);
-        return mapToDTO(savedUser);
+        userRepository.save(user);
     }
 
     @Transactional
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
+    public void updateUser(Long id, UserDTO userDTO) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
 
@@ -91,30 +89,19 @@ public class UserService {
                 existingUser.addAddress(address);
             });
         }
-
-        User updatedUser = userRepository.save(existingUser);
-        return mapToDTO(updatedUser);
     }
 
     @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("User not found with ID: " + id);
-        }
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+        userRepository.delete(user);
     }
 
-
     private UserDTO mapToDTO(User user) {
-        List<UserAddressDTO> addressDTOs = user.getAddresses().stream().map(addr -> {
-            UserAddressDTO dto = new UserAddressDTO();
-            dto.setAddressLabel(addr.getAddressLabel());
-            dto.setAddress(addr.getAddress());
-            dto.setLatitude(addr.getLatitude());
-            dto.setLongitude(addr.getLongitude());
-            dto.setDefault(addr.isDefault());
-            return dto;
-        }).collect(Collectors.toList());
+        List<UserAddressDTO> addressDTOs = user.getAddresses().stream()
+                .map(this::mapAddressToDTO)
+                .collect(Collectors.toList());
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -127,8 +114,22 @@ public class UserService {
                 .build();
     }
 
+    private UserAddressDTO mapAddressToDTO(UserAddress addr) {
+        UserAddressDTO dto = new UserAddressDTO();
+        dto.setAddressLabel(addr.getAddressLabel());
+        dto.setAddress(addr.getAddress());
+        dto.setLatitude(addr.getLatitude());
+        dto.setLongitude(addr.getLongitude());
+        dto.setDefault(addr.isDefault());
+        return dto;
+    }
+
     @Transactional(readOnly = true)
     public List<UserAddressDTO> getUserAddresses(Long myUserId) {
-        return getUserById(myUserId).getAddresses();
+        User user = userRepository.findById(myUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + myUserId));
+        return user.getAddresses().stream()
+                .map(this::mapAddressToDTO)
+                .collect(Collectors.toList());
     }
 }

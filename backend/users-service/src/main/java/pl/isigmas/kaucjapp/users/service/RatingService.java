@@ -42,8 +42,7 @@ public class RatingService {
         rating.setAvgScore(newAvg);
         rating.setFeedbackCount(newCount);
 
-        ratingRepository.save(rating);
-        log.info("Nowa średnia dla użytkownika {}: {} (liczba ocen: {})", userId, newAvg, newCount);
+        log.info("New avg for user {}: {} (feedback count: {})", userId, newAvg, newCount);
     }
 
     @Transactional(readOnly = true)
