@@ -121,6 +121,9 @@ services:
       - GATEWAY_ROUTES_1_ID=offers
       - GATEWAY_ROUTES_1_URI=http://offers-service:8080
       - GATEWAY_ROUTES_1_PATH=/api/offer/**
+      - GATEWAY_ROUTES_2_ID=auth
+      - GATEWAY_ROUTES_2_URI=http://auth-service:8080
+      - GATEWAY_ROUTES_2_PATH=/api/auth/**
     depends_on:
       offers-service:
         condition: service_healthy
