@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 
 @Component
-@FeignClient(name = "user-client", url = "${USER_SERVICE_URL}")
+@FeignClient(name = "users-service", url = "${USER_SERVICE_URL}")
 public interface UserClient {
 
     @PostMapping("/api/user/user")
