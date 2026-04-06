@@ -12,6 +12,6 @@ import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 @FeignClient(name = "user-client", url = "${USER_SERVICE_URL}")
 public interface UserClient {
 
-    @PostMapping("/api/user")
-    ResponseEntity<Long> create(@Valid @RequestBody UsersServiceUser user);
+    @PostMapping("/api/user/user")
+    ResponseEntity<Void> create(@Valid @RequestBody UsersServiceUser user);
 }
