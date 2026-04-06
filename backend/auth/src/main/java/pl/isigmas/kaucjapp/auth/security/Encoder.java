@@ -28,6 +28,7 @@ public class Encoder {
 
     public boolean verifyPassword(String rawPassword, String hashedPassword) {
         checkPassword(rawPassword);
+        checkPassword(hashedPassword);
 
         String passwordWithSalt = withSalt(rawPassword);
         return passwordEncoder.matches(passwordWithSalt, hashedPassword);
