@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.auth.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import lombok.Data;
 public class UsersServiceUser {
 
     @JsonProperty("user_id")
+    @NotNull(message = "Id cannot be blank")
     private Long id;
 
     @NotBlank(message = "Username cannot be blank")
