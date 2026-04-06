@@ -13,7 +13,7 @@ CREATE TABLE accounts
 
 CREATE TABLE refresh_tokens (
     token_id BIGSERIAL PRIMARY KEY,
-    account_id BIGINT NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+    account_id BIGSERIAL NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL UNIQUE,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
