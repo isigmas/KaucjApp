@@ -19,8 +19,6 @@ services:
       dockerfile: offers-service/Dockerfile
       args:
         SERVICE_NAME: offers-service
-    ports:
-      - "8082:8080" # TO DO: Remove this one
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
@@ -56,8 +54,6 @@ services:
       dockerfile: users-service/Dockerfile
       args:
         SERVICE_NAME: users-service
-    ports:
-      - "8081:8080" # TO DO: Remove this one
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
@@ -77,8 +73,6 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    ports:
-      - '8080:8080'
     environment:
       - JWT_SECRET=${JWT_SECRET}
       - GATEWAY_ROUTES_0_ID=users
