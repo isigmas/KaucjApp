@@ -29,19 +29,17 @@ public class UserController {
     @PostMapping("/user")
     @Operation(
             summary = "Create user profile",
-            description = "Creates a user record with the id from the X-User-Id header (typically set by the API gateway after identity is established). "
-                    + "Request body must not include a user id.")
+            description = "Creates a user with primary key from JSON field user_id (e.g. returned by auth service before API gateway session). "
+                    + "Does not use X-User-Id, so registration can call this service directly.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Profile created; response body is the user id."),
-            @ApiResponse(responseCode = "400", description = "Invalid payload or missing X-User-Id header."),
+            @ApiResponse(responseCode = "201", description = "Profile created."),
+            @ApiResponse(responseCode = "400", description = "Invalid payload (e.g. missing user_id)."),
             @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream).")
     })
-    public ResponseEntity<Long> create(
-            @RequestHeader("X-User-Id") Long authId,
-            @Valid @RequestBody CreateUserDTO newUser) {
-        userService.createUser(authId,newUser);
-        log.info("New user created, ID: {}", authId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(authId);
+    public ResponseEntity<Void> create(@Valid @RequestBody CreateUserDTO newUser) {
+        userService.createUser(newUser.getId(), newUser);
+        log.info("New user created, ID: {}", newUser.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/me/addresses")

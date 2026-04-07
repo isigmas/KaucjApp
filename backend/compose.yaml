@@ -73,6 +73,8 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
+    ports:
+      - '8080:8080'
     environment:
       - JWT_SECRET=${JWT_SECRET}
       - GATEWAY_ROUTES_0_ID=users
