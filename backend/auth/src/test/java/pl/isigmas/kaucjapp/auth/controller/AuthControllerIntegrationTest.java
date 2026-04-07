@@ -573,15 +573,15 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("Logout with expired token should succeed")
-        void shouldSucceedWithExpiredToken() throws Exception {
+        @DisplayName("Logout with expired token should not succeed")
+        void shouldNotSucceedWithExpiredToken() throws Exception {
             // given
             Account account = createTestAccount();
             String tokenValue = "expired-token";
             RefreshToken token = new RefreshToken();
             token.setAccount(account);
             token.setToken(tokenValue);
-            token.setExpirationDate(new Date(System.currentTimeMillis() - 1000000)); // expired
+            token.setExpirationDate(new Date(System.currentTimeMillis() - 1000000));
             token.setRevoked(false);
             refreshTokenRepository.save(token);
 
@@ -589,7 +589,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(tokenValue))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isBadRequest());
         }
     }
 }
