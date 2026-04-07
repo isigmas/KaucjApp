@@ -11,6 +11,7 @@ import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
+import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
@@ -56,6 +57,9 @@ public class AuthService {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
+        if (refreshToken.getExpirationDate().before(new Date())) {
+            throw new ExpiredTokenException(refreshToken);
+        }
         refreshToken.setRevoked(true);
     }
 
