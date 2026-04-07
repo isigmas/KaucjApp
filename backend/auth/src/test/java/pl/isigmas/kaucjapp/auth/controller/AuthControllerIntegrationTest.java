@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.auth.controller;
 
+import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -297,7 +298,9 @@ class AuthControllerIntegrationTest {
         @DisplayName("Should login successfully with username")
         void shouldLoginSuccessfullyWithUsername() throws Exception {
             // given
-            createTestAccount();
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
@@ -315,7 +318,9 @@ class AuthControllerIntegrationTest {
         @DisplayName("Should login successfully with email")
         void shouldLoginSuccessfullyWithEmail() throws Exception {
             // given
-            createTestAccount();
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existing@example.com");
@@ -334,6 +339,8 @@ class AuthControllerIntegrationTest {
         void shouldCreateRefreshTokenInDatabase() throws Exception {
             // given
             Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
