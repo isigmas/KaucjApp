@@ -122,7 +122,7 @@ public class GatewayController {
     private GatewayProperties.Route findMatchingRoute(String requestPath) {
         for (GatewayProperties.Route route : gatewayProperties.getRoutes()) {
             String pathPattern = route.getPath();
-            // Obsługa wzorca /api/** -> /api/
+            // Pattern /api/** -> /api/
             if (pathPattern.endsWith("/**")) {
                 String prefix = pathPattern.substring(0, pathPattern.length() - 2);
                 if (requestPath.startsWith(prefix)) {

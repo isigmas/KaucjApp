@@ -25,6 +25,7 @@
 		<module>users-service</module>
 		<module>offers-service</module>
 		<module>api-gateway</module>
+		<module>auth</module>
 	</modules>
 	<scm>
 		<connection/>
