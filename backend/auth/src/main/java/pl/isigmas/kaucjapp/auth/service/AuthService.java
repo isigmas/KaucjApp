@@ -9,6 +9,8 @@ import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
+import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
+import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
@@ -63,6 +65,11 @@ public class AuthService {
         String identifier = loginCredentials.getIdentifier();
         Account account = accountRepository.findByUsernameOrEmail(identifier, identifier)
                 .orElseThrow(InvalidCredentialsException::new);
+
+        AccountStatus accountStatus = account.getStatus();
+        if (accountStatus != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(accountStatus);
+        }
 
         if (!encoder.verifyPassword(loginCredentials.getPassword(), account.getPasswordHash())) {
             throw new InvalidCredentialsException();
