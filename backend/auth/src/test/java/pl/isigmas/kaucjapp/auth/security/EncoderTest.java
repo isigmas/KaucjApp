@@ -207,29 +207,16 @@ class EncoderTest {
         }
 
         @Test
-        @DisplayName("Verify empty password")
-        void shouldHandleEmptyPassword() {
+        @DisplayName("Throws exception against empty hash")
+        void shouldThrowExceptionAgainstEmptyHash() {
             // given
-            when(passwordEncoder.matches(TEST_SALT, "hash")).thenReturn(false);
+            String emptyPasswordHash = "";
 
-            // when
-            boolean result = encoder.verifyPassword("", "hash");
-
-            // then
-            assertFalse(result);
-        }
-
-        @Test
-        @DisplayName("Verify against empty hash")
-        void shouldHandleEmptyHash() {
-            // given
-            when(passwordEncoder.matches(anyString(), eq(""))).thenReturn(false);
-
-            // when
-            boolean result = encoder.verifyPassword("password", "");
-
-            // then
-            assertFalse(result);
+            // when and then
+            assertThrows(InvalidCredentialsException.class, () -> {
+                encoder.verifyPassword("password", emptyPasswordHash);
+            });
+            verifyNoInteractions(passwordEncoder);
         }
 
         @Test
