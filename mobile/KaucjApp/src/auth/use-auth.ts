@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "./auth-store";
+import { useAuthStore, User } from "./auth-store";
 import { apiClient } from "@/src/api/api-client";
 import { SignInValues, SignUpValues } from "@/src/types";
 import { da } from "zod/v4/locales";
@@ -15,11 +15,59 @@ export const useAuth = () => {
 
   const signIn = useMutation({
     mutationFn: async (credentials: SignInValues) => {
-      const { data } = await apiClient.post("/auth/login", credentials);
+      const payload = {
+        identifier: credentials.email,
+        password: credentials.password,
+      };
+
+      const loginRes = await apiClient.post(
+        "/auth/login",
+        JSON.stringify(payload, null, 2),
+      );
+
+      let refreshToken = null;
+
+      if (loginRes.status === 200) {
+        const res = await apiClient.post("/auth/refresh", loginRes.data, {
+          headers: {
+            "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
+          },
+        });
+        console.log("Token refresh:", res.data);
+
+        refreshToken = res.data;
+      }
+      console.log("JWT:", loginRes.data);
+
+      const user: User = {
+        id: "1",
+        email: credentials.email,
+        name: "Aska",
+      };
+
+      const data = {
+        accessToken: loginRes.data,
+        refreshToken: refreshToken,
+        user: user,
+      };
+
       return data; // { user, accessToken, refreshToken }
     },
     onSuccess: async (data) => {
       await setAuth(data.user, data.accessToken, data.refreshToken);
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      // 1. Extract the specific error message sent by your backend
+      const backendMessage = error.response?.data?.message;
+
+      // 2. Provide a fallback message just in case
+      const fallbackMessage = "An unexpected error occurred during sign in.";
+
+      // 3. Determine the final message to show the user
+      const errorMessage = backendMessage || fallbackMessage;
+
+      // 4. Log for debugging and show to the user
+      console.error("Sign-in failed:", errorMessage);
     },
   });
 

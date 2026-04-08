@@ -1,4 +1,8 @@
-import axios, { AxiosError } from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 const API_URL = "http://192.168.100.7:8080/api";
 
@@ -26,6 +30,68 @@ apiClient.interceptors.response.use(
 
     // Reject the promise so React Query's onError gets triggered
     return Promise.reject(error);
+  },
+);
+
+// ==========================================
+// 1. REQUEST INTERCEPTOR (Logs Outgoing)
+// ==========================================
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Grouping the logs keeps the console clean. You click to expand it.
+    console.groupCollapsed(
+      `🚀 [Request] ${config.method?.toUpperCase()} ${config.url}`,
+    );
+    console.log("Full URL:", `${config.baseURL}${config.url}`);
+    console.log("Headers:", config.headers);
+    if (config.data) console.log("Payload:", config.data);
+    if (config.params) console.log("Params:", config.params);
+    console.groupEnd();
+
+    return config; // You must return the config to let the request proceed
+  },
+  (error) => {
+    console.error("🚨 [Request Error] Failed to send request:", error);
+    return Promise.reject(error);
+  },
+);
+
+// ==========================================
+// 2. RESPONSE INTERCEPTOR (Logs Incoming)
+// ==========================================
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Log successful responses (2xx status codes)
+    console.groupCollapsed(
+      `✅ [Response] ${response.config.method?.toUpperCase()} ${response.config.url}`,
+    );
+    console.log("Status:", response.status);
+    console.log("Data:", response.data);
+    console.groupEnd();
+
+    return response; // Return the response to pass it down to React Query
+  },
+  (error: AxiosError) => {
+    // Log failed responses (4xx, 5xx, or network errors)
+    console.groupCollapsed(
+      `❌ [Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+    );
+    console.error("Status:", error.response?.status || "Network/Timeout");
+    console.error("Error Message:", error.message);
+    if (error.response?.data) {
+      console.error("Backend Error Data:", error.response.data);
+    }
+    console.groupEnd();
+
+    // -- Your Global Error Handling Logic Goes Here --
+    if (error.code === "ECONNABORTED" || error.message === "Network Error") {
+      console.error("Global Catch: Network or Timeout issue.");
+    }
+    if (error.response?.status === 401) {
+      console.error("Global Catch: Unauthorized (e.g., Token expired).");
+    }
+
+    return Promise.reject(error); // Reject so React Query's `onError` fires
   },
 );
 
