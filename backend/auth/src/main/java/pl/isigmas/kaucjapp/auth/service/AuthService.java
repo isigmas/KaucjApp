@@ -9,11 +9,9 @@ import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
+import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
-import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
-import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
-import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
-import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
+import pl.isigmas.kaucjapp.auth.exception.*;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
@@ -24,6 +22,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private final JwtService jwtService;
 
     private final AccountRepository accountRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -89,5 +89,31 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         return generatedToken;
+    }
+
+    @Transactional
+    public String generateJWT(String refreshTokenStr) {
+
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
+                .orElseThrow(TokenNotFoundException::new);
+
+        if (refreshToken.isRevoked()) {
+            throw new RevokedTokenException();
+        }
+
+        if (refreshToken.getExpirationDate().before(new Date())) {
+            throw new ExpiredTokenException(refreshToken);
+        }
+
+        Account account = refreshToken.getAccount();
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(account.getStatus());
+        }
+
+        Long userId = account.getId();
+        AccountRole role = account.getRole();
+
+        return jwtService.generateAccessToken(userId.toString(), role.toString());
     }
 }
