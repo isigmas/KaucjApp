@@ -1,32 +1,107 @@
 services:
-  postgres:
-    build:
-      context: .
-      dockerfile: services/Dockerfile.db
+  offers-db:
+    image: postgres:latest
     environment:
-      - POSTGRES_DB=kaucjappdb
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_USER=myuser
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: offers_db
+    volumes:
+      - ./offers-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myuser -d kaucjappdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  services:
+  offers-service:
     build:
       context: .
-      dockerfile: services/Dockerfile
+      dockerfile: offers-service/Dockerfile
+      args:
+        SERVICE_NAME: offers-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kaucjappdb
-      - SPRING_DATASOURCE_USERNAME=myuser
-      - SPRING_DATASOURCE_PASSWORD=secret
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
     depends_on:
-      postgres:
+      offers-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/status"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/offer/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  users-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: users_db
+    volumes:
+      - ./users-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users-service:
+    build:
+      context: .
+      dockerfile: users-service/Dockerfile
+      args:
+        SERVICE_NAME: users-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+    depends_on:
+      users-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  auth-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: auth_db
+    volumes:
+      - ./auth/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - JWT_SECRET=${JWT_SECRET}
+      - PASSWORD_SALT=${PASSWORD_SALT}
+      - USER_SERVICE_URL=http://users-service:8080
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/auth/status"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,9 +115,19 @@ services:
       - '8080:8080'
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - GATEWAY_ROUTES_0_ID=services
-      - GATEWAY_ROUTES_0_URI=http://services:8080
-      - GATEWAY_ROUTES_0_PATH=/api/**
+      - GATEWAY_ROUTES_0_ID=users
+      - GATEWAY_ROUTES_0_URI=http://users-service:8080
+      - GATEWAY_ROUTES_0_PATH=/api/user/**
+      - GATEWAY_ROUTES_1_ID=offers
+      - GATEWAY_ROUTES_1_URI=http://offers-service:8080
+      - GATEWAY_ROUTES_1_PATH=/api/offer/**
+      - GATEWAY_ROUTES_2_ID=auth
+      - GATEWAY_ROUTES_2_URI=http://auth-service:8080
+      - GATEWAY_ROUTES_2_PATH=/api/auth/**
     depends_on:
-      services:
+      offers-service:
+        condition: service_healthy
+      users-service:
+        condition: service_healthy
+      auth-service:
         condition: service_healthy

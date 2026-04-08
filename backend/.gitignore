@@ -32,4 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### MacOS ###
 .DS_Store
+
+### Docker ###
+compose.override.yaml

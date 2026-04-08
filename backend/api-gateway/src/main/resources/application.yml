@@ -12,9 +12,15 @@ spring:
 
 gateway:
   routes:
-    - id: kaucjapp-services
-      path: /api/**
+    - id: users-services
+      path: /api/users/**
       uri: http://localhost:8081
+    - id: offers-service
+      path: /api/offers/**
+      uri: http://localhost:8082
+    - id: auth-service
+      path: /api/auth/**
+      uri: http://localhost:8083
 
 jwt:
   secret: ${JWT_SECRET}
