@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api-client";
 
-export const useGetData = () => {
+export const useGetOffers = () => {
   return useQuery({
-    queryKey: ["data"],
+    queryKey: ["offers"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/endpoint");
+      const { data } = await apiClient.get("/offer/test");
       return data;
     },
   });

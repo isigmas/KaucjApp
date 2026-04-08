@@ -20,25 +20,24 @@ export const useAuth = () => {
         password: credentials.password,
       };
 
+      // ----LOGIN----
       const loginRes = await apiClient.post(
         "/auth/login",
         JSON.stringify(payload, null, 2),
       );
+      const refreshToken = loginRes.data;
+      console.log("refreshToken :", refreshToken);
 
-      let refreshToken = null;
+      // ----REFRESH----
+      const refreshRes = await apiClient.post("/auth/refresh", refreshToken, {
+        headers: {
+          "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
+        },
+      });
+      const accessToken = refreshRes.data;
+      console.log("accessToken :", accessToken);
 
-      if (loginRes.status === 200) {
-        const res = await apiClient.post("/auth/refresh", loginRes.data, {
-          headers: {
-            "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
-          },
-        });
-        console.log("Token refresh:", res.data);
-
-        refreshToken = res.data;
-      }
-      console.log("JWT:", loginRes.data);
-
+      // ----USER INFO (mock)----
       const user: User = {
         id: "1",
         email: credentials.email,
@@ -46,7 +45,7 @@ export const useAuth = () => {
       };
 
       const data = {
-        accessToken: loginRes.data,
+        accessToken: accessToken,
         refreshToken: refreshToken,
         user: user,
       };
