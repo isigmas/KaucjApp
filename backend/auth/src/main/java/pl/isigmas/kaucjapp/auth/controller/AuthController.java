@@ -49,4 +49,12 @@ public class AuthController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refresh(@RequestBody String token) {
+        String newToken = service.generateJWT(token);
+        log.info("Refresh successful");
+
+        return ResponseEntity.ok(newToken);
+    }
 }
