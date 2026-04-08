@@ -18,6 +18,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/src/auth/use-auth";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -109,6 +110,8 @@ const ProfileMenuItem = ({
 };
 
 export default function ProfileScreen() {
+  const { signOut } = useAuth();
+
   const userRating = 4.8;
   const reviewCount = 24;
 
@@ -204,7 +207,7 @@ export default function ProfileScreen() {
           title="Wyloguj się"
           isDestructive={true}
           delay={900}
-          onPress={() => console.log("Wyloguj")}
+          onPress={() => signOut()}
         />
       </View>
     </ScrollView>

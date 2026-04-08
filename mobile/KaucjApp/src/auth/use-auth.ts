@@ -4,6 +4,7 @@ import { apiClient } from "@/src/api/api-client";
 import { SignInValues, SignUpValues } from "@/src/types";
 import { da } from "zod/v4/locales";
 import { AxiosError } from "axios";
+import { tokenStorage } from "./secure-storage";
 
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
@@ -110,7 +111,13 @@ export const useAuth = () => {
 
   const signOut = useMutation({
     mutationFn: async () => {
-      await apiClient.post("/auth/logout");
+      const refreshToken = await tokenStorage.getRefreshToken();
+
+      await apiClient.post("/auth/logout", refreshToken, {
+        headers: {
+          "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
+        },
+      });
     },
     onSettled: async () => {
       // Force cleanup locally regardless of backend success/failure
