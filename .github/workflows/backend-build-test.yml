@@ -32,6 +32,11 @@ jobs:
         run: ./mvnw test 
 
       - name: Build and launch containers
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PASSWORD_SALT: ${{ secrets.PASSWORD_SALT }}
         run: docker compose up --build -d --wait
 
       - name: Print logs on failure
