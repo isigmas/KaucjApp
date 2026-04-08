@@ -16,8 +16,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { colors, rounded, spacing } from "@/src/theme";
 import { signUpSchema, SignUpValues } from "@/src/types";
+import { useAuth } from "@/src/auth/use-auth";
 
 export default function SignUpScreen() {
+  const { signUp, isSigningUp, signUpError } = useAuth();
   const isLoading = false;
 
   const {
@@ -26,10 +28,18 @@ export default function SignUpScreen() {
     formState: { errors },
   } = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      userName: "",
+      phoneNumber: "",
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data: SignUpValues) => {
+    signUp(data);
     Keyboard.dismiss();
   };
 
@@ -51,11 +61,11 @@ export default function SignUpScreen() {
             <View>
               <Controller
                 control={control}
-                name="name"
+                name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, errors.name && styles.inputError]}
-                    placeholder="Imię i nazwisko"
+                    style={[styles.input, errors.email && styles.inputError]}
+                    placeholder="Email"
                     placeholderTextColor={colors.text.muted}
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -66,31 +76,111 @@ export default function SignUpScreen() {
                   />
                 )}
               />
-              {errors.name && (
-                <Text style={styles.validationText}>{errors.name.message}</Text>
+              {errors.email && (
+                <Text style={styles.validationText}>
+                  {errors.email.message}
+                </Text>
               )}
             </View>
             <View>
               <Controller
                 control={control}
-                name="email"
+                name="firstName"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="Adres email"
+                    style={[
+                      styles.input,
+                      errors.firstName && styles.inputError,
+                    ]}
+                    placeholder="Imię"
                     placeholderTextColor={colors.text.muted}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    keyboardType="email-address"
+                    keyboardType="default"
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
                 )}
               />
-              {errors.email && (
+              {errors.firstName && (
                 <Text style={styles.validationText}>
-                  {errors.email.message}
+                  {errors.firstName.message}
+                </Text>
+              )}
+            </View>
+            <View>
+              <Controller
+                control={control}
+                name="lastName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.lastName && styles.inputError]}
+                    placeholder="Nazwisko"
+                    placeholderTextColor={colors.text.muted}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    keyboardType="default"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                )}
+              />
+              {errors.lastName && (
+                <Text style={styles.validationText}>
+                  {errors.lastName.message}
+                </Text>
+              )}
+            </View>
+            <View>
+              <Controller
+                control={control}
+                name="userName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.userName && styles.inputError]}
+                    placeholder="Nazwa użytkownika"
+                    placeholderTextColor={colors.text.muted}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    keyboardType="default"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                )}
+              />
+              {errors.userName && (
+                <Text style={styles.validationText}>
+                  {errors.userName.message}
+                </Text>
+              )}
+            </View>
+            <View>
+              <Controller
+                control={control}
+                name="phoneNumber"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.phoneNumber && styles.inputError,
+                    ]}
+                    placeholder="Numer telefonu"
+                    placeholderTextColor={colors.text.muted}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    keyboardType="numeric"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                )}
+              />
+              {errors.phoneNumber && (
+                <Text style={styles.validationText}>
+                  {errors.phoneNumber.message}
                 </Text>
               )}
             </View>
