@@ -11,6 +11,7 @@ import Animated, { Layout, FadeOut, FadeInLeft } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
+import { useMyOffers } from "@/src/api/hooks/use-offer";
 
 //Need to be replaced
 interface OfferItem {
@@ -162,13 +163,15 @@ const OfferCard = ({
 
 // --- Main Screen ---
 export default function MyOffers() {
-  const offers: Offer[] = []; // This will come from an API call,
+  const { data: offersData } = useMyOffers();
   const isPending = false; // state from the API call
 
   const router = useRouter();
 
   if (isPending) return <Text>Loading...</Text>;
-  if (!offers) return <Text>Error</Text>;
+  if (!offersData) return <Text>Error</Text>;
+
+  const offers = offersData as Offer[];
 
   const markAsCompleted = (id: number) => {
     console.log("Marking offer as completed, id: ", id);

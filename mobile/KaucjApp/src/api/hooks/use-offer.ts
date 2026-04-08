@@ -40,6 +40,33 @@ export const useCreateOffer = () => {
     },
     onSuccess: () => {
       console.log("Offer created successfully, invalidating offers query.");
+      queryClient.invalidateQueries({ queryKey: ["offers", "myOffers"] });
+    },
+  });
+};
+
+export const useMyOffers = () => {
+  return useQuery({
+    queryKey: ["myOffers"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/offer/my");
+      console.log("My offers data:", JSON.stringify(data, null, 2));
+      const mappedOffers = data.map((rawOffer: any) => ({
+        offer_id: rawOffer.offer_id,
+        address: rawOffer.pickup_address,
+        created_at: rawOffer.created_at,
+        items: rawOffer.items, // Assuming OfferItem matches this shape
+        latitude: rawOffer.latitude,
+        longitude: rawOffer.longitude,
+        pickup_info: rawOffer.pickup_instructions || null,
+        status: rawOffer.status as "OPEN" | "COMPLETED",
+        user: {
+          user_id: rawOffer.creator_id,
+          // ⚠️ Backend does not provide 'username'. Using a fallback until API is updated.
+          username: "Unknown User",
+        },
+      }));
+      return mappedOffers;
     },
   });
 };
