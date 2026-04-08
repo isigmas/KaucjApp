@@ -38,7 +38,7 @@ Create JWT token for authentication. You can use online tools like [jwt.io](http
  ```
 ```json
  { // Payload
-   "sub": "tester",
+   "role": "tester",
    "user_id": 1
  }
  ```
