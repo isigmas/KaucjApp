@@ -41,18 +41,6 @@ public class UserService {
         user.setEmail(userDTO.getEmail());
         user.setPhone(userDTO.getPhone());
 
-        if (userDTO.getAddresses() != null) {
-            userDTO.getAddresses().forEach(addrDto -> {
-                UserAddress address = new UserAddress();
-                address.setAddressLabel(addrDto.getAddressLabel());
-                address.setAddress(addrDto.getAddress());
-                address.setLatitude(addrDto.getLatitude());
-                address.setLongitude(addrDto.getLongitude());
-                address.setDefault(addrDto.isDefault());
-
-                user.addAddress(address);
-            });
-        }
 
         Rating initialRating = new Rating();
         initialRating.setAvgScore(BigDecimal.ZERO);

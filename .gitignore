@@ -2,3 +2,4 @@
 .idea/
 .vscode/
 .env
+compose.override.yaml
