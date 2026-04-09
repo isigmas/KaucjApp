@@ -1,5 +1,5 @@
 CREATE TABLE retail_networks(
-                                retail_network_id SERIAL PRIMARY KEY,
+                                retail_network_id BIGSERIAL PRIMARY KEY,
                                 name VARCHAR(100) NOT NULL UNIQUE,
                                 is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
@@ -7,7 +7,7 @@ CREATE TABLE retail_networks(
 
 CREATE TABLE deposit_machines(
                                 deposit_machine_id BIGSERIAL PRIMARY KEY,
-                                retail_network_id INT NOT NULL REFERENCES retail_networks(retail_network_id),
+                                retail_network_id BIGINT NOT NULL REFERENCES retail_networks(retail_network_id),
                                 status VARCHAR(32) NOT NULL DEFAULT 'AVAILABLE',
                                 address TEXT,
                                 latitude NUMERIC(9,6),
