@@ -1,0 +1,16 @@
+package pl.isigmas.kaucjapp.deposit.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.stereotype.Repository;
+import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
+
+import java.util.List;
+
+@Repository
+public interface DepositMachineRepository extends JpaRepository<DepositMachine, Long> {
+
+    @Override
+    @EntityGraph(attributePaths = {"retailNetwork", "openingHours"})
+    List<DepositMachine> findAll();
+}
