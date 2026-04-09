@@ -12,7 +12,6 @@ import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepositMachineService {
@@ -38,7 +37,7 @@ public class DepositMachineService {
         return DepositMachineResponseDTO.builder()
                 .id(depositMachine.getId())
                 .networkName(depositMachine.getRetailNetwork() != null ? depositMachine.getRetailNetwork().getName() : null)
-                .status(depositMachine.getStatus() != null ? depositMachine.getStatus().name() : null)
+                .status(depositMachine.getStatus())
                 .address(depositMachine.getAddress())
                 .latitude(depositMachine.getLatitude())
                 .longitude(depositMachine.getLongitude())

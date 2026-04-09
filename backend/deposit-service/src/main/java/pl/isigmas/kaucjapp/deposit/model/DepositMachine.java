@@ -53,7 +53,7 @@ public class DepositMachine {
         item.setDepositMachine(this);
     }
 
-    public void removeItem(OpeningHourRecord item) {
+    public void removeOpeningHour(OpeningHourRecord item) {
         openingHours.remove(item);
         item.setDepositMachine(null);
     }

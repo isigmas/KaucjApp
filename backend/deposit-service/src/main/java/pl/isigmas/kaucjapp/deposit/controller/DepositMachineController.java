@@ -18,8 +18,8 @@ public class DepositMachineController {
     private final DepositMachineService depositMachineService;
 
     @GetMapping("/machines")
-    public ResponseEntity<List<DepositMachineResponseDTO>> getMockedMachines() {
-        List<DepositMachineResponseDTO> machines = depositMachineService.getMockedMachines();
+    public ResponseEntity<List<DepositMachineResponseDTO>> getAllMachines() {
+        List<DepositMachineResponseDTO> machines = depositMachineService.getAll();
         return ResponseEntity.ok(machines);
     }
 }
