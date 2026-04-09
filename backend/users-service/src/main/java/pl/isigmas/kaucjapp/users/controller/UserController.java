@@ -34,16 +34,16 @@ public class UserController {
     @Operation(
             summary = "Create user profile",
             description = "Creates a user with primary key from JSON field user_id. "
-                    + "Requires header X-Internal-Secret-Token matching service IT_SECRET (e.g. auth-service calling user creation). "
+                    + "Requires header X-Internal-Secret matching service IT_SECRET (e.g. auth-service calling user creation). "
                     + "Does not use X-User-Id.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Profile created."),
             @ApiResponse(responseCode = "400", description = "Invalid payload (e.g. missing user_id)."),
             @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "X-Internal-Secret-Token missing or wrong.")
+            @ApiResponse(responseCode = "403", description = "X-Internal-Secret missing or wrong.")
     })
     public ResponseEntity<Void> create(
-            @RequestHeader("X-Internal-Secret-Token") String secret,
+            @RequestHeader("X-Internal-Secret") String secret,
             @Valid @RequestBody CreateUserDTO newUser) {
 
         if (!secretKey.equals(secret)) {

@@ -41,6 +41,10 @@ public class GatewayController {
             "te", "trailers", "transfer-encoding", "upgrade", "host"
     );
 
+    private static final List<String> BLOCKED_HEADERS = List.of(
+            "x-internal-secret"
+    );
+
     public GatewayController(RestClient.Builder restClientBuilder, GatewayProperties gatewayProperties) {
         this.restClient = restClientBuilder.build();
         this.gatewayProperties = gatewayProperties;
@@ -162,7 +166,7 @@ public class GatewayController {
 
     /**
      * Copies headers from the incoming request to the proxy request.
-     * Filters out hop-by-hop headers to comply with proxy standards.
+     * Filters out hop-by-hop and blocked internal headers.
      *
      * @param request the source {@link HttpServletRequest}
      * @param requestSpec the target {@link RestClient.RequestBodySpec}
@@ -171,7 +175,9 @@ public class GatewayController {
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
-            if (!HOP_BY_HOP_HEADERS.contains(headerName.toLowerCase())) {
+            String normalizedHeaderName = headerName.toLowerCase();
+            if (!HOP_BY_HOP_HEADERS.contains(normalizedHeaderName)
+                    && !BLOCKED_HEADERS.contains(normalizedHeaderName)) {
                 Enumeration<String> headerValues = request.getHeaders(headerName);
                 while (headerValues.hasMoreElements()) {
                     requestSpec.header(headerName, headerValues.nextElement());
