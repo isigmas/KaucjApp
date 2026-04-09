@@ -2,6 +2,7 @@ import React, { forwardRef, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Offer } from "@/src/types";
+import OfferDetails from "./offer-details";
 
 interface OfferSheetProps {
   offer: Offer | null;
@@ -22,7 +23,7 @@ const OfferSheet = forwardRef<BottomSheet, OfferSheetProps>(
         backgroundStyle={styles.sheetBackground}
       >
         <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-          <Text>Offer Details</Text>
+          {offer ? <OfferDetails offer={offer} /> : null}
         </BottomSheetScrollView>
       </BottomSheet>
     );
