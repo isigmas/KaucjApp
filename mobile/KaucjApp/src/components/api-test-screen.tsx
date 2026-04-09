@@ -6,6 +6,7 @@ import { useGetOffers } from "../api/hooks/use-offer";
 export default function ApiTestScreen() {
   const { user } = useAuth();
   const { data: offers } = useGetOffers();
+  console.log("Offers:", JSON.stringify(offers, null, 2));
 
   if (!user) {
     return (

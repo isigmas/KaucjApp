@@ -61,7 +61,7 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized - Token Refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.warn(
-        `[Auth] 401 Unauthorized detected for ${originalRequest.url}. Triggering recovery flow.`,
+        `[Auth] 401 Unauthorized detected for ${originalRequest.url}. Triggering refresh flow.`,
       );
 
       // If already refreshing, queue this request until the refresh is done
@@ -99,7 +99,6 @@ apiClient.interceptors.response.use(
         );
 
         const newAccessToken = data;
-        const newRefreshToken = refreshToken; // Keep the same refresh token
 
         console.log(
           `[Auth Refresh] Token swap successful! Updating storage and memory.`,
@@ -108,7 +107,7 @@ apiClient.interceptors.response.use(
         // Update tokens in cache and memory
         await useAuthStore
           .getState()
-          .updateTokens(newAccessToken, newRefreshToken);
+          .updateTokens(newAccessToken, refreshToken);
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);

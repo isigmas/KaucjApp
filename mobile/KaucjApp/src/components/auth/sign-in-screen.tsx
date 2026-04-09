@@ -36,7 +36,7 @@ export default function SignInScreen() {
     try {
       await signIn(data);
     } catch (error) {
-      console.log("Logowanie nie powiodło się", error);
+      console.log("[frontend] Logowanie nie powiodło się", error);
     }
   };
 

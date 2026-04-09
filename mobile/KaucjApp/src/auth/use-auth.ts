@@ -57,16 +57,10 @@ export const useAuth = () => {
       await setAuth(data.user, data.accessToken, data.refreshToken);
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      // 1. Extract the specific error message sent by your backend
-      const backendMessage = error.response?.data?.message;
+      const errorMessage =
+        error.response?.data?.message ||
+        "An unexpected error occurred during sign in.";
 
-      // 2. Provide a fallback message just in case
-      const fallbackMessage = "An unexpected error occurred during sign in.";
-
-      // 3. Determine the final message to show the user
-      const errorMessage = backendMessage || fallbackMessage;
-
-      // 4. Log for debugging and show to the user
       console.error("Sign-in failed:", errorMessage);
     },
   });
