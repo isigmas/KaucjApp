@@ -33,12 +33,14 @@ public class UserController {
     @PostMapping("/user")
     @Operation(
             summary = "Create user profile",
-            description = "Creates a user with primary key from JSON field user_id (e.g. returned by auth service before API gateway session). "
-                    + "Does not use X-User-Id, so registration can call this service directly.")
+            description = "Creates a user with primary key from JSON field user_id. "
+                    + "Requires header X-Internal-Secret-Token matching service IT_SECRET (e.g. auth-service calling user creation). "
+                    + "Does not use X-User-Id.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Profile created."),
             @ApiResponse(responseCode = "400", description = "Invalid payload (e.g. missing user_id)."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream).")
+            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
+            @ApiResponse(responseCode = "403", description = "X-Internal-Secret-Token missing or wrong.")
     })
     public ResponseEntity<Void> create(
             @RequestHeader("X-Internal-Secret-Token") String secret,
