@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.deposit.DTO;
 import lombok.Builder;
 import lombok.Getter;
 import java.math.BigDecimal;
+import java.util.List;
 
 
 @Getter
@@ -15,5 +16,5 @@ public class DepositMachineResponseDTO {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-
+    private List<OpeningHourDTO> openingHours;
 }
