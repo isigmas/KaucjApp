@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
@@ -31,6 +32,9 @@ public class AuthService {
     private final Encoder encoder;
     private final UserClient userClient;
 
+    @Value("${IT_SECRET}")
+    private String itSecret;
+
     @Transactional
     public void create(User newUser) {
 
@@ -49,7 +53,7 @@ public class AuthService {
         newUsersServiceUser.setFirstName(newUser.getFirstName());
         newUsersServiceUser.setLastName(newUser.getLastName());
 
-        userClient.create(newUsersServiceUser);
+        userClient.create(newUsersServiceUser, itSecret);
     }
 
     @Transactional
