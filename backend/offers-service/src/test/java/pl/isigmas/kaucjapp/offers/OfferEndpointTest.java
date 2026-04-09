@@ -11,7 +11,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import pl.isigmas.kaucjapp.offers.model.BottleType;
 import pl.isigmas.kaucjapp.offers.repository.OfferRepository;
 import pl.isigmas.kaucjapp.offers.repository.BottleTypeRepository;
 
@@ -41,21 +40,17 @@ class OfferEndpointTest {
     @Autowired
     private OfferRepository offerRepository;
 
-    private Long bottleAId;
-    private Long bottleBId;
+    private Long plasticBottleId;
+    private Long canBottleId;
 
     @BeforeEach
     void setUp() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         offerRepository.deleteAll();
-        bottleTypeRepository.deleteAll();
 
-        BottleType a = new BottleType(null, "A", java.math.BigDecimal.valueOf(1.00));
-        BottleType b = new BottleType(null, "B", java.math.BigDecimal.valueOf(0.50));
-
-        bottleAId = bottleTypeRepository.save(a).getId();
-        bottleBId = bottleTypeRepository.save(b).getId();
+        plasticBottleId = bottleTypeRepository.findByName("plastic").orElseThrow().getId();
+        canBottleId = bottleTypeRepository.findByName("can").orElseThrow().getId();
     }
 
     @Test
@@ -74,7 +69,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 5,  "unitPrice": 0.30 }
                     ]
                 }
-                """.formatted(bottleAId, bottleBId);
+                """.formatted(plasticBottleId, canBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
@@ -89,7 +84,14 @@ class OfferEndpointTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].offer_id").value(offerId))
                 .andExpect(jsonPath("$[0].creator_id").value(creatorId))
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+                .andExpect(jsonPath("$[0].status").value("OPEN"))
+                .andExpect(jsonPath("$[0].plastic_quantity").value(10))
+                .andExpect(jsonPath("$[0].can_quantity").value(5))
+                .andExpect(jsonPath("$[0].total_quantity").value(15))
+                .andExpect(jsonPath("$[0].plastic_price").value(0.50))
+                .andExpect(jsonPath("$[0].can_price").value(0.30))
+                .andExpect(jsonPath("$[0].total_prize").value(6.50))
+                .andExpect(jsonPath("$[0].total_income").value(1.00));
 
         String updateOfferJson = """
                 {
@@ -102,7 +104,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 3, "unitPrice": 0.25 }
                     ]
                 }
-                """.formatted(bottleAId, bottleBId);
+                """.formatted(plasticBottleId, canBottleId);
 
         mockMvc.perform(put("/api/offer/" + offerId)
                         .header("X-User-Id", creatorId)
@@ -164,7 +166,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
                     ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
@@ -193,7 +195,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
                     ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
@@ -230,7 +232,7 @@ class OfferEndpointTest {
                     { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
                   ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
@@ -250,7 +252,7 @@ class OfferEndpointTest {
                     { "bottleId": %d, "quantity": 2, "unitPrice": 0.20 }
                   ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(put("/api/offer/" + offerId)
                         .header("X-User-Id", someoneElseId)
@@ -273,7 +275,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 0, "unitPrice": 0.10 }
                     ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
@@ -296,7 +298,7 @@ class OfferEndpointTest {
                       { "bottleId": %d, "quantity": 1, "unitPrice": -1.00 }
                     ]
                 }
-                """.formatted(bottleAId);
+                """.formatted(plasticBottleId);
 
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)

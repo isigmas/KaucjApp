@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OfferService {
 
+    private static final String PLASTIC_TYPE = "plastic";
+    private static final String CAN_TYPE = "can";
+
     private final OfferRepository offerRepository;
     private final BottleTypeRepository bottleTypeRepository;
     private final GeoValidationService geoValidationService;
@@ -129,20 +132,33 @@ public class OfferService {
     }
 
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
-        List<OfferResponseDTO.OfferItemResponseDTO> itemDTOs = offer.getItems().stream()
-                .map(item -> {
-                    BigDecimal statutoryFee = item.getBottleType().getDepositFee();
-                    BigDecimal frontendFee = statutoryFee.subtract(item.getUnitPrice());
+        int plasticQty = 0;
+        int canQty = 0;
+        BigDecimal plasticPrice = null;
+        BigDecimal canPrice = null;
+        BigDecimal totalPrize = BigDecimal.ZERO;
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        int totalQty = 0;
 
-                    return OfferResponseDTO.OfferItemResponseDTO.builder()
-                            .bottleId(item.getBottleType().getId())
-                            .name(item.getBottleType().getName())
-                            .quantity(item.getQuantity())
-                            .unitPrice(item.getUnitPrice())
-                            .depositFee(frontendFee)
-                            .build();
-                })
-                .collect(Collectors.toList());
+        for (OfferItem item : offer.getItems()) {
+            String typeName = item.getBottleType().getName();
+            int q = item.getQuantity();
+            BigDecimal unit = item.getUnitPrice();
+            BigDecimal statutory = item.getBottleType().getDepositFee();
+            BigDecimal margin = statutory.subtract(unit);
+
+            totalQty += q;
+            totalPrize = totalPrize.add(unit.multiply(BigDecimal.valueOf(q)));
+            totalIncome = totalIncome.add(margin.multiply(BigDecimal.valueOf(q)));
+
+            if (PLASTIC_TYPE.equalsIgnoreCase(typeName)) {
+                plasticQty = q;
+                plasticPrice = unit;
+            } else if (CAN_TYPE.equalsIgnoreCase(typeName)) {
+                canQty = q;
+                canPrice = unit;
+            }
+        }
 
         return OfferResponseDTO.builder()
                 .offerId(offer.getId())
@@ -154,7 +170,13 @@ public class OfferService {
                 .pickupAddress(offer.getPickupAddress())
                 .pickupInstructions(offer.getPickupInstructions())
                 .createdAt(offer.getTimeCreated())
-                .items(itemDTOs)
+                .plasticQuantity(plasticQty)
+                .canQuantity(canQty)
+                .totalQuantity(totalQty)
+                .totalPrize(totalPrize)
+                .totalIncome(totalIncome)
+                .plasticPrice(plasticPrice)
+                .canPrice(canPrice)
                 .build();
     }
 
