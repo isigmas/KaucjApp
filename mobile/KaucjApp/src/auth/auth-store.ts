@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { tokenStorage } from "./secure-storage";
+import { apiClient } from "../api/api-client";
 
 export interface User {
   id: string;
@@ -51,7 +52,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await tokenStorage.getAccessToken();
       if (token) {
-        // decode JWT or fetch user info
         set({
           user: {
             id: "1",

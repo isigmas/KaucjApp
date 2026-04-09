@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef } from "react";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import MapView from "react-native-maps";
 
@@ -7,16 +7,14 @@ import { Offer } from "@/src/types";
 import { OfferMarker } from "./offer-marker";
 import { useUserLocation } from "./use-user-location";
 
-export default function MapScreen() {
-  // Data ingestion separated entirely from UI logic
+interface MapScreenProps {
+  onMarkerPress: (offer: Offer) => void;
+}
+
+export default function MapScreen({ onMarkerPress }: MapScreenProps) {
   const { data: offers, isLoading: isOffersLoading, isError } = useMyOffers();
   const { initialRegion, isLocationLoading } = useUserLocation();
-
   const mapRef = useRef<MapView>(null);
-
-  const handleMarkerPress = useCallback((offer: Offer) => {
-    console.log("Pressed offer:", offer.offer_id, offer.pickup_address);
-  }, []);
 
   if (isLocationLoading || isOffersLoading) {
     return (
@@ -56,7 +54,7 @@ export default function MapScreen() {
             <OfferMarker
               key={`offer-${offer.offer_id}`}
               offer={offer}
-              onPress={handleMarkerPress}
+              onPress={onMarkerPress}
             />
           ))}
         </MapView>
