@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,9 @@ public class UserController {
     private final UserService userService;
     private final RatingService ratingService;
 
+    @Value("${IT_SECRET}")
+    private String secretKey;
+
     @PostMapping("/user")
     @Operation(
             summary = "Create user profile",
@@ -36,7 +40,13 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid payload (e.g. missing user_id)."),
             @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream).")
     })
-    public ResponseEntity<Void> create(@Valid @RequestBody CreateUserDTO newUser) {
+    public ResponseEntity<Void> create(
+            @RequestHeader("X-Internal-Secret-Token") String secret,
+            @Valid @RequestBody CreateUserDTO newUser) {
+
+        if (!secretKey.equals(secret)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         userService.createUser(newUser.getId(), newUser);
         log.info("New user created, ID: {}", newUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
