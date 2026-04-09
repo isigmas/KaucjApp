@@ -64,7 +64,7 @@ class UserEndpointTest {
 
     private ResultActions postCreateUser(String jsonBody) throws Exception {
         return mockMvc.perform(post("/api/user/user")
-                .header("X-Internal-Secret-Token", TEST_INTERNAL_SECRET)
+                .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonBody));
     }
@@ -348,7 +348,7 @@ class UserEndpointTest {
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
 
         mockMvc.perform(post("/api/user/user")
-                .header("X-Internal-Secret-Token", TEST_INTERNAL_SECRET)
+                .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
                 .andExpect(status().isBadRequest());
