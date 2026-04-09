@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,31 +10,12 @@ import {
 import Animated, { Layout, FadeOut, FadeInLeft } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
-import { useRouter } from "expo-router";
-import { useMyOffers } from "@/src/api/hooks/use-offer";
-
-//Need to be replaced
-interface OfferItem {
-  bottle_id: number;
-  fee: number;
-  price: number;
-  quantity: number;
-}
-
-export interface Offer {
-  offer_id: number;
-  address: string;
-  created_at: string;
-  items: OfferItem[];
-  latitude: number;
-  longitude: number;
-  pickup_info: string | null;
-  status: "OPEN" | "COMPLETED"; // Assuming COMPLETED is the finished state
-  user: {
-    user_id: number;
-    username: string;
-  };
-}
+import {
+  getErrorMessage,
+  type OfferDTO,
+  useCancelOffer,
+  useMyOffers,
+} from "@/src/api/hooks/use-offer";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -49,30 +30,39 @@ const formatDate = (dateString: string) => {
 const OfferCard = ({
   offer,
   index,
-  onComplete,
+  onCancel,
+  isCancelling,
 }: {
-  offer: Offer;
+  offer: OfferDTO;
   index: number;
-  onComplete: (id: number) => void;
+  onCancel: (offer: OfferDTO) => void;
+  isCancelling: boolean;
 }) => {
-  const isOpen = offer.status === "OPEN";
+  const canCancel = offer.status === "OPEN" || offer.status === "RESERVED";
+  const statusLabel: Record<OfferDTO["status"], string> = {
+    OPEN: "Aktywna",
+    RESERVED: "Zarezerwowana",
+    COMPLETED: "Zakończona",
+    CANCELED: "Anulowana",
+  };
+  const isInactive = offer.status === "COMPLETED" || offer.status === "CANCELED";
 
   const totalItems = offer.items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPayout = offer.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.unit_price * item.quantity,
     0,
   );
 
-  const handleComplete = () => {
+  const handleCancel = () => {
     Alert.alert(
       "Potwierdzenie",
-      "Czy na pewno chcesz oznaczyć tę ofertę jako zakończoną? Oznacza to, że kurier odebrał już opakowania.",
+      "Czy na pewno chcesz anulować tę ofertę?",
       [
         { text: "Anuluj", style: "cancel" },
         {
-          text: "Zakończ",
+          text: "Anuluj ofertę",
           style: "destructive",
-          onPress: () => onComplete(offer.offer_id),
+          onPress: () => onCancel(offer),
         },
       ],
     );
@@ -86,20 +76,20 @@ const OfferCard = ({
         .stiffness(500)
         .mass(2.5)}
       layout={Layout.springify()}
-      style={[styles.card, !isOpen && styles.cardCompleted]}
+      style={[styles.card, isInactive && styles.cardCompleted]}
     >
       {/* Header */}
       <View style={styles.cardHeader}>
         <View
-          style={[styles.statusBadge, !isOpen && styles.statusBadgeCompleted]}
+          style={[styles.statusBadge, isInactive && styles.statusBadgeCompleted]}
         >
           <View
-            style={[styles.statusDot, !isOpen && styles.statusDotCompleted]}
+            style={[styles.statusDot, isInactive && styles.statusDotCompleted]}
           />
           <Text
-            style={[styles.statusText, !isOpen && styles.statusTextCompleted]}
+            style={[styles.statusText, isInactive && styles.statusTextCompleted]}
           >
-            {isOpen ? "Aktywna" : "Zakończona"}
+            {statusLabel[offer.status]}
           </Text>
         </View>
         <Text style={styles.dateText}>{formatDate(offer.created_at)}</Text>
@@ -113,15 +103,15 @@ const OfferCard = ({
             size={18}
             color={colors.text.secondary}
           />
-          <Text style={styles.addressText}>{offer.address}</Text>
+          <Text style={styles.addressText}>{offer.pickup_address}</Text>
         </View>
 
         <View style={styles.itemsRow}>
-          {offer.items.map((item, idx) => {
+          {offer.items.map((item) => {
             return (
-              <View key={idx} style={styles.itemPill}>
-                <Text style={styles.itemIcon}>Plastik</Text>
-                <Text style={styles.itemQuantity}>10x</Text>
+              <View key={`${offer.offer_id}-${item.bottle_id}`} style={styles.itemPill}>
+                <Text style={styles.itemIcon}>{item.bottle_name}</Text>
+                <Text style={styles.itemQuantity}>{item.quantity}x</Text>
               </View>
             );
           })}
@@ -143,17 +133,25 @@ const OfferCard = ({
         </View>
       </View>
 
-      {isOpen && (
+      {canCancel && (
         <Animated.View exiting={FadeOut} style={styles.cardFooter}>
-          <Pressable style={styles.completeButton} onPress={handleComplete}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color={colors.text.white}
-            />
-            <Text style={styles.completeButtonText}>
-              Oznacz jako zakończoną
-            </Text>
+          <Pressable
+            style={[styles.completeButton, isCancelling && styles.completeButtonDisabled]}
+            onPress={handleCancel}
+            disabled={isCancelling}
+          >
+            {isCancelling ? (
+              <Text style={styles.completeButtonText}>Anulowanie...</Text>
+            ) : (
+              <>
+                <Ionicons
+                  name="close-circle-outline"
+                  size={20}
+                  color={colors.text.white}
+                />
+                <Text style={styles.completeButtonText}>Anuluj ofertę</Text>
+              </>
+            )}
           </Pressable>
         </Animated.View>
       )}
@@ -163,23 +161,23 @@ const OfferCard = ({
 
 // --- Main Screen ---
 export default function MyOffers() {
-  const { data: offersData } = useMyOffers();
-  const isPending = false; // state from the API call
-
-  const router = useRouter();
+  const { data: offers = [], isPending, isError, error } = useMyOffers();
+  const cancelOfferMutation = useCancelOffer();
 
   if (isPending) return <Text>Loading...</Text>;
-  if (!offersData) return <Text>Error</Text>;
+  if (isError) return <Text>{getErrorMessage(error)}</Text>;
 
-  const offers = offersData as Offer[];
-
-  const markAsCompleted = (id: number) => {
-    console.log("Marking offer as completed, id: ", id);
-
-    // API CALL TO MARK OFFER AS COMPLETED GO HERE
-
-    router.push("/profile/offers/confirmation");
+  const markAsCanceled = async (offer: OfferDTO) => {
+    try {
+      await cancelOfferMutation.mutateAsync(offer.offer_id);
+    } catch {
+      // Error rendered below from mutation state.
+    }
   };
+
+  const mutationError = cancelOfferMutation.error
+    ? getErrorMessage(cancelOfferMutation.error)
+    : null;
 
   return (
     <ScrollView
@@ -189,12 +187,19 @@ export default function MyOffers() {
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.listContainer}>
+        {mutationError ? (
+          <Text style={styles.errorBanner}>{mutationError}</Text>
+        ) : null}
         {offers.map((offer, index) => (
           <OfferCard
             key={offer.offer_id}
             offer={offer}
             index={index}
-            onComplete={markAsCompleted}
+            onCancel={markAsCanceled}
+            isCancelling={
+              cancelOfferMutation.isPending &&
+              cancelOfferMutation.variables === offer.offer_id
+            }
           />
         ))}
       </View>
@@ -386,10 +391,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     gap: 8,
   },
+  completeButtonDisabled: {
+    opacity: 0.7,
+  },
   completeButtonText: {
     color: colors.text.white,
     fontSize: 15,
     fontWeight: "700",
+  },
+  errorBanner: {
+    color: colors.status.error,
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 4,
   },
   emptyState: {
     alignItems: "center",
