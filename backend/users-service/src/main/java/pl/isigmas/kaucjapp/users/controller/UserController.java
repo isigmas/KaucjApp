@@ -84,6 +84,14 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getMe(
+            @RequestHeader("X-User-Id") Long myUserId
+    ) {
+        log.info("Fetching user with ID: {}",myUserId);
+        return ResponseEntity.ok(userService.getUserById(myUserId));
+    }
+
     @GetMapping("/test")
     @Operation(
             summary = "User service test",
