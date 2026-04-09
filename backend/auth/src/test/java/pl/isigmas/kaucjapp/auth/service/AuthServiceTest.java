@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,11 @@ class AuthServiceTest {
 
     @InjectMocks
     private AuthService authService;
+
+    @BeforeEach
+    void setUpAuthServiceSecret() {
+        ReflectionTestUtils.setField(authService, "itSecret", "test-it-secret");
+    }
 
     @Nested
     @DisplayName("create() - User Registration Tests")
@@ -84,7 +91,7 @@ class AuthServiceTest {
 
             // then
             verify(accountRepository).save(any(Account.class));
-            verify(userClient).create(any(UsersServiceUser.class));
+            verify(userClient).create(any(UsersServiceUser.class), eq("test-it-secret"));
         }
 
         @Test
@@ -129,7 +136,7 @@ class AuthServiceTest {
 
             // then
             ArgumentCaptor<UsersServiceUser> userCaptor = ArgumentCaptor.forClass(UsersServiceUser.class);
-            verify(userClient).create(userCaptor.capture());
+            verify(userClient).create(userCaptor.capture(), eq("test-it-secret"));
 
             UsersServiceUser capturedUser = userCaptor.getValue();
             assertEquals(42L, capturedUser.getId());

@@ -55,6 +55,7 @@ services:
       args:
         SERVICE_NAME: users-service
     environment:
+      - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -91,6 +92,7 @@ services:
         SERVICE_NAME: auth-service
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
+      - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
