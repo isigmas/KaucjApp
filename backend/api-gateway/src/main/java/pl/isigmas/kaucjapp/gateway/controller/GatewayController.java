@@ -38,7 +38,7 @@ public class GatewayController {
      */
     private static final List<String> HOP_BY_HOP_HEADERS = List.of(
             "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
-            "te", "trailers", "transfer-encoding", "upgrade", "host"
+            "te", "trailers", "transfer-encoding", "upgrade", "host", "content-length"
     );
 
     private static final List<String> BLOCKED_HEADERS = List.of(
