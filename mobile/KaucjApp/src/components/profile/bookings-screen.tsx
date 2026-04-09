@@ -78,7 +78,7 @@ export default function BookingsScreen() {
   const completionError = completeOfferMutation.error
     ? getErrorMessage(completeOfferMutation.error)
     : null;
-  const queryError = error && offers.length === 0 ? getErrorMessage(error) : null;
+  const queryError = error ? getErrorMessage(error) : null;
   const resolvedError = completionError || queryError;
 
   const renderItem = ({ item }: { item: OfferDTO }) => {
@@ -110,8 +110,8 @@ export default function BookingsScreen() {
         ) : null}
 
         <View style={styles.itemsList}>
-          {item.items.map((row, idx) => (
-            <View key={`${item.offer_id}-${idx}`} style={styles.itemRow}>
+          {item.items.map((row) => (
+            <View key={`${item.offer_id}-${row.bottle_id}`} style={styles.itemRow}>
               <Package size={14} color={colors.text.secondary} />
               <Text style={styles.itemText}>
                 {row.bottle_name} × {row.quantity}

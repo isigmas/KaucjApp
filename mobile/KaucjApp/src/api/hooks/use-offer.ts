@@ -32,6 +32,8 @@ export interface RatingRequestDTO {
 interface ApiErrorDTO {
   error?: string;
   message?: string;
+  detail?: string;
+  errors?: string[] | Record<string, string | string[]>;
   status?: number;
 }
 
@@ -59,7 +61,21 @@ export function getErrorMessage(error: unknown): string {
   const fallback = "Wystąpił błąd. Spróbuj ponownie.";
   if (!error) return fallback;
   const axiosError = error as AxiosError<ApiErrorDTO>;
-  return axiosError.response?.data?.message || axiosError.message || fallback;
+  const data = axiosError.response?.data;
+  if (data?.message) return data.message;
+  if (data?.error) return data.error;
+  if (data?.detail) return data.detail;
+
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    return data.errors.join(", ");
+  }
+  if (data?.errors && typeof data.errors === "object") {
+    const firstValue = Object.values(data.errors)[0];
+    if (Array.isArray(firstValue) && firstValue.length > 0) return firstValue[0];
+    if (typeof firstValue === "string") return firstValue;
+  }
+
+  return axiosError.message || fallback;
 }
 
 export const useGetOffers = () =>

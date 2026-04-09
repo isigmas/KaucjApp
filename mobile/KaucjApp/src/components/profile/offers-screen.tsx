@@ -107,9 +107,9 @@ const OfferCard = ({
         </View>
 
         <View style={styles.itemsRow}>
-          {offer.items.map((item, idx) => {
+          {offer.items.map((item) => {
             return (
-              <View key={idx} style={styles.itemPill}>
+              <View key={`${offer.offer_id}-${item.bottle_id}`} style={styles.itemPill}>
                 <Text style={styles.itemIcon}>{item.bottle_name}</Text>
                 <Text style={styles.itemQuantity}>{item.quantity}x</Text>
               </View>
