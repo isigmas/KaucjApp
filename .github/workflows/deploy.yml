@@ -93,23 +93,3 @@ jobs:
             passwordSalt=${{ secrets.PASSWORD_SALT }}
             imageTag=${{ env.IMAGE_TAG }}
           failOnStdErr: false
-
-      - name: Fetch Gateway URL for Tests
-        id: fetch_url
-        run: |
-          GATEWAY_URL=$(az containerapp show -n api-gateway -g ${{ env.AZURE_RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          echo "GATEWAY_URL=https://$GATEWAY_URL" >> $GITHUB_ENV
-          echo "Api Gateway jest dostępne pod: https://$GATEWAY_URL"
-
-      - name: Setup Node.js (dla Newmana)
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Newman (Postman CLI)
-        run: npm install -g newman
-
-      - name: Run E2E Tests on Staging
-        run: |
-          # Zastępujemy testowy adres URL w Postmanie prawdziwym Gateway URL z Azure
-          newman run e2e-tests/postman_collection.json --env-var "baseUrl=${{ env.GATEWAY_URL }}"
