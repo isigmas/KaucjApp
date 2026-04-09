@@ -33,6 +33,7 @@ import java.util.Date;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -48,7 +49,7 @@ class AuthControllerIntegrationTest {
         @Primary
         public UserClient userClient() {
             UserClient mock = Mockito.mock(UserClient.class);
-            when(mock.create(any())).thenReturn(ResponseEntity.status(201).build());
+            when(mock.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
             return mock;
         }
     }
@@ -81,7 +82,7 @@ class AuthControllerIntegrationTest {
         
         // Reset mock to default behavior
         Mockito.reset(userClient);
-        when(userClient.create(any())).thenReturn(ResponseEntity.status(201).build());
+        when(userClient.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
     }
 
     @Nested
@@ -268,7 +269,7 @@ class AuthControllerIntegrationTest {
         void shouldRollbackWhenUserClientFails() {
             // given
             User user = createValidUser();
-            when(userClient.create(any())).thenThrow(new RuntimeException("User service unavailable"));
+            when(userClient.create(any(), anyString())).thenThrow(new RuntimeException("User service unavailable"));
 
             // when and then
             assertThrows(ServletException.class, () ->
