@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -11,304 +11,267 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MapPin, Package, CheckCircle, Star } from "lucide-react-native";
-import { useFocusEffect } from "expo-router";
 import { colors } from "@/src/theme";
-
-// TODO: replace with real auth user id once auth is implemented
-const CURRENT_USER_ID = 1;
-
-const BOTTLE_NAMES: Record<number, string> = {
-  1: "Butelka szklana 0,5 L",
-  2: "Butelka PET 1,5 L",
-  3: "Butelka szklana 0,33 L",
-  4: "Puszka aluminiowa",
-};
-
-function bottleName(pterodaktyl: number): string {
-  return BOTTLE_NAMES[pterodaktyl] ?? `Butelka #${pterodaktyl}`;
-}
+import {
+  getErrorMessage,
+  type OfferDTO,
+  useCompleteOffer,
+  useRateUser,
+  useReservedOffers,
+} from "@/src/api/hooks/use-offer";
 
 export default function BookingsScreen() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <Text>
-        Wszysto tutaj musi być napisane od nowa zgodnie z React Query do
-        pobierania danych - niech to pochodzi z folderu /api/hooks.
-      </Text>
-      <Text>
-        Trzeba tez ustalić spójne typy danych z backendem w folderze /types
-      </Text>
-    </View>
+  const insets = useSafeAreaInsets();
+  const [ratingModal, setRatingModal] = useState<{ creatorId: number } | null>(
+    null,
+  );
+  const [ratingScore, setRatingScore] = useState(5);
+
+  const {
+    data: offers = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useReservedOffers();
+  const completeOfferMutation = useCompleteOffer();
+  const rateUserMutation = useRateUser();
+
+  const totalEarnings = useMemo(
+    () =>
+      offers.reduce(
+        (sum, offer) =>
+          sum +
+          offer.items.reduce(
+            (itemSum, item) => itemSum + item.unit_price * item.quantity,
+            0,
+          ),
+        0,
+      ),
+    [offers],
   );
 
-  //   const insets = useSafeAreaInsets();
+  const handleComplete = async (offer: OfferDTO) => {
+    try {
+      await completeOfferMutation.mutateAsync(offer.offer_id);
+      setRatingScore(5);
+      setRatingModal({ creatorId: offer.creator_id });
+    } catch {
+      // Mutation error is handled from completeOfferMutation.error
+    }
+  };
 
-  //   const [offers, setOffers] = useState<Offer[]>([]);
-  //   const [loading, setLoading] = useState(true);
-  //   const [refreshing, setRefreshing] = useState(false);
-  //   const [error, setError] = useState<string | null>(null);
-  //   const [completingId, setCompletingId] = useState<number | null>(null);
-  //   const [ratingModal, setRatingModal] = useState<{
-  //     offerId: number;
-  //     creatorId: number;
-  //   } | null>(null);
-  //   const [ratingScore, setRatingScore] = useState(5);
-  //   const [submittingRating, setSubmittingRating] = useState(false);
+  const handleSubmitRating = async () => {
+    if (!ratingModal) return;
+    try {
+      await rateUserMutation.mutateAsync({
+        userId: ratingModal.creatorId,
+        payload: { score: ratingScore },
+      });
+    } catch {
+      // Rating is optional, do not block flow.
+    } finally {
+      setRatingModal(null);
+    }
+  };
 
-  //   const loadOffers = useCallback(async () => {
-  //     setError(null);
-  //     try {
-  //       const data = await fetchReservedOffers(CURRENT_USER_ID);
-  //       setOffers(data);
-  //     } catch (makaron: any) {
-  //       setError(makaron.message ?? "Nie udało się pobrać rezerwacji.");
-  //     }
-  //   }, []);
+  const completionError = completeOfferMutation.error
+    ? getErrorMessage(completeOfferMutation.error)
+    : null;
+  const queryError = error && offers.length === 0 ? getErrorMessage(error) : null;
+  const resolvedError = completionError || queryError;
 
-  //   useFocusEffect(
-  //     useCallback(() => {
-  //       setLoading(true);
-  //       loadOffers().finally(() => setLoading(false));
-  //     }, [loadOffers]),
-  //   );
+  const renderItem = ({ item }: { item: OfferDTO }) => {
+    const earnings = item.items.reduce(
+      (sum, row) => sum + row.unit_price * row.quantity,
+      0,
+    );
+    const totalQty = item.items.reduce((sum, row) => sum + row.quantity, 0);
+    const isCompleting =
+      completeOfferMutation.isPending &&
+      completeOfferMutation.variables === item.offer_id;
 
-  //   const onRefresh = useCallback(async () => {
-  //     setRefreshing(true);
-  //     await loadOffers();
-  //     setRefreshing(false);
-  //   }, [loadOffers]);
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.addressRow}>
+            <MapPin size={16} color={colors.primary.base} />
+            <Text style={styles.address} numberOfLines={2}>
+              {item.pickup_address}
+            </Text>
+          </View>
+          <Text style={styles.earnings}>+{earnings.toFixed(2)} zł</Text>
+        </View>
 
-  //   const handleComplete = useCallback(
-  //     async (offerId: number, creatorId: number) => {
-  //       setCompletingId(offerId);
-  //       try {
-  //         await completeOffer(offerId, CURRENT_USER_ID);
-  //         setOffers((prev) => prev.filter((o) => o.offer_id !== offerId));
-  //         setRatingScore(5);
-  //         setRatingModal({ offerId, creatorId });
-  //       } catch (makaron: any) {
-  //         setError(makaron.message ?? "Nie udało się potwierdzić odbioru.");
-  //       } finally {
-  //         setCompletingId(null);
-  //       }
-  //     },
-  //     [],
-  //   );
+        {item.pickup_instructions ? (
+          <Text style={styles.pickupInfo} numberOfLines={2}>
+            {item.pickup_instructions}
+          </Text>
+        ) : null}
 
-  //   const handleSubmitRating = useCallback(async () => {
-  //     if (!ratingModal) return;
-  //     setSubmittingRating(true);
-  //     try {
-  //       await postRating(ratingModal.creatorId, ratingScore);
-  //     } catch (makaron: any) {
-  //       // silently ignore — rating is optional
-  //     } finally {
-  //       setSubmittingRating(false);
-  //       setRatingModal(null);
-  //     }
-  //   }, [ratingModal, ratingScore]);
+        <View style={styles.itemsList}>
+          {item.items.map((row, idx) => (
+            <View key={`${item.offer_id}-${idx}`} style={styles.itemRow}>
+              <Package size={14} color={colors.text.secondary} />
+              <Text style={styles.itemText}>
+                {row.bottle_name} × {row.quantity}
+              </Text>
+              <Text style={styles.itemPrice}>
+                +{(row.unit_price * row.quantity).toFixed(2)} zł
+              </Text>
+            </View>
+          ))}
+        </View>
 
-  //   const totalEarnings = offers.reduce(
-  //     (sum: number, o: Offer) =>
-  //       sum +
-  //       o.items.reduce((s: number, i: BottleItem) => s + i.price * i.quantity, 0),
-  //     0,
-  //   );
+        <View style={styles.cardFooter}>
+          <Text style={styles.totalQty}>{totalQty} szt.</Text>
+          <Text style={styles.creatorLabel}>wystawiający ID: {item.creator_id}</Text>
+        </View>
 
-  //   const renderItem = ({ item }: { item: Offer }) => {
-  //     const earnings = item.items.reduce(
-  //       (s: number, i: BottleItem) => s + i.price * i.quantity,
-  //       0,
-  //     );
-  //     const totalQty = item.items.reduce(
-  //       (s: number, i: BottleItem) => s + i.quantity,
-  //       0,
-  //     );
-  //     const isCompleting = completingId === item.offer_id;
+        <Pressable
+          style={({ pressed }) => [
+            styles.completeButton,
+            pressed && styles.completeButtonPressed,
+            isCompleting && styles.completeButtonDisabled,
+          ]}
+          onPress={() => handleComplete(item)}
+          disabled={isCompleting}
+        >
+          {isCompleting ? (
+            <ActivityIndicator size="small" color={colors.text.white} />
+          ) : (
+            <>
+              <CheckCircle size={18} color={colors.text.white} />
+              <Text style={styles.completeButtonText}>Potwierdź odbiór</Text>
+            </>
+          )}
+        </Pressable>
+      </View>
+    );
+  };
 
-  //     return (
-  //       <View style={styles.card}>
-  //         <View style={styles.cardHeader}>
-  //           <View style={styles.addressRow}>
-  //             <MapPin size={16} color={colors.primary.base} />
-  //             <Text style={styles.address} numberOfLines={2}>
-  //               {item.address}
-  //             </Text>
-  //           </View>
-  //           <Text style={styles.earnings}>+{earnings.toFixed(2)} zł</Text>
-  //         </View>
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary.base} />
+      </View>
+    );
+  }
 
-  //         {item.pickup_info ? (
-  //           <Text style={styles.pickupInfo} numberOfLines={2}>
-  //             {item.pickup_info}
-  //           </Text>
-  //         ) : null}
+  return (
+    <View style={styles.container}>
+      <Modal
+        visible={ratingModal !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRatingModal(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Jak było?</Text>
+            <Text style={styles.modalSubtitle}>Oceń wystawiającego ofertę</Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((score) => (
+                <Pressable
+                  key={score}
+                  onPress={() => setRatingScore(score)}
+                  style={styles.starButton}
+                >
+                  <Star
+                    size={36}
+                    color={colors.status.warning}
+                    fill={score <= ratingScore ? colors.status.warning : "transparent"}
+                  />
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.skipButton}
+                onPress={() => setRatingModal(null)}
+              >
+                <Text style={styles.skipText}>Pomiń</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.rateButton,
+                  rateUserMutation.isPending && styles.rateButtonDisabled,
+                ]}
+                onPress={handleSubmitRating}
+                disabled={rateUserMutation.isPending}
+              >
+                {rateUserMutation.isPending ? (
+                  <ActivityIndicator size="small" color={colors.text.white} />
+                ) : (
+                  <Text style={styles.rateText}>Oceń</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
-  //         <View style={styles.itemsList}>
-  //           {item.items.map((bi: BottleItem, idx: number) => (
-  //             <View key={idx} style={styles.itemRow}>
-  //               <Package size={14} color={colors.text.secondary} />
-  //               <Text style={styles.itemText}>
-  //                 {bottleName(bi.bottle_id)} × {bi.quantity}
-  //               </Text>
-  //               <Text style={styles.itemPrice}>
-  //                 +{(bi.price * bi.quantity).toFixed(2)} zł
-  //               </Text>
-  //             </View>
-  //           ))}
-  //         </View>
+      {offers.length > 0 && (
+        <View style={styles.summaryBar}>
+          <Text style={styles.summaryText}>
+            {offers.length}{" "}
+            {offers.length === 1
+              ? "rezerwacja"
+              : offers.length < 5
+                ? "rezerwacje"
+                : "rezerwacji"}
+          </Text>
+          <Text style={styles.summaryEarnings}>
+            Zarobisz: {totalEarnings.toFixed(2)} zł
+          </Text>
+        </View>
+      )}
 
-  //         <View style={styles.cardFooter}>
-  //           <Text style={styles.totalQty}>{totalQty} szt.</Text>
-  //           <Text style={styles.creatorLabel}>od {item.user.username}</Text>
-  //         </View>
+      {resolvedError && offers.length > 0 ? (
+        <View style={styles.inlineErrorBar}>
+          <Text style={styles.inlineErrorText}>{resolvedError}</Text>
+        </View>
+      ) : null}
 
-  //         <Pressable
-  //           style={({ pressed }) => [
-  //             styles.completeButton,
-  //             pressed && styles.completeButtonPressed,
-  //             isCompleting && styles.completeButtonDisabled,
-  //           ]}
-  //           onPress={() => handleComplete(item.offer_id, item.user.user_id)}
-  //           disabled={isCompleting}
-  //         >
-  //           {isCompleting ? (
-  //             <ActivityIndicator size="small" color={colors.text.white} />
-  //           ) : (
-  //             <>
-  //               <CheckCircle size={18} color={colors.text.white} />
-  //               <Text style={styles.completeButtonText}>Potwierdź odbiór</Text>
-  //             </>
-  //           )}
-  //         </Pressable>
-  //       </View>
-  //     );
-  //   };
-
-  //   return (
-  //     <View style={styles.container}>
-  //       <Modal
-  //         visible={ratingModal !== null}
-  //         transparent
-  //         animationType="fade"
-  //         onRequestClose={() => setRatingModal(null)}
-  //       >
-  //         <View style={styles.modalOverlay}>
-  //           <View style={styles.modalCard}>
-  //             <Text style={styles.modalTitle}>Jak było?</Text>
-  //             <Text style={styles.modalSubtitle}>Oceń wystawiającego ofertę</Text>
-  //             <View style={styles.starsRow}>
-  //               {[1, 2, 3, 4, 5].map((s) => (
-  //                 <Pressable
-  //                   key={s}
-  //                   onPress={() => setRatingScore(s)}
-  //                   style={styles.starButton}
-  //                 >
-  //                   <Star
-  //                     size={36}
-  //                     color={colors.status.warning}
-  //                     fill={
-  //                       s <= ratingScore ? colors.status.warning : "transparent"
-  //                     }
-  //                   />
-  //                 </Pressable>
-  //               ))}
-  //             </View>
-  //             <View style={styles.modalActions}>
-  //               <Pressable
-  //                 style={styles.skipButton}
-  //                 onPress={() => setRatingModal(null)}
-  //               >
-  //                 <Text style={styles.skipText}>Pomiń</Text>
-  //               </Pressable>
-  //               <Pressable
-  //                 style={[
-  //                   styles.rateButton,
-  //                   submittingRating && styles.rateButtonDisabled,
-  //                 ]}
-  //                 onPress={handleSubmitRating}
-  //                 disabled={submittingRating}
-  //               >
-  //                 {submittingRating ? (
-  //                   <ActivityIndicator size="small" color={colors.text.white} />
-  //                 ) : (
-  //                   <Text style={styles.rateText}>Oceń</Text>
-  //                 )}
-  //               </Pressable>
-  //             </View>
-  //           </View>
-  //         </View>
-  //       </Modal>
-
-  //       {offers.length > 0 && (
-  //         <View style={styles.summaryBar}>
-  //           <Text style={styles.summaryText}>
-  //             {offers.length}{" "}
-  //             {offers.length === 1
-  //               ? "rezerwacja"
-  //               : offers.length < 5
-  //                 ? "rezerwacje"
-  //                 : "rezerwacji"}
-  //           </Text>
-  //           <Text style={styles.summaryEarnings}>
-  //             Zarobisz: {totalEarnings.toFixed(2)} zł
-  //           </Text>
-  //         </View>
-  //       )}
-
-  //       {loading ? (
-  //         <View style={styles.center}>
-  //           <ActivityIndicator size="large" color={colors.primary.base} />
-  //         </View>
-  //       ) : error && offers.length === 0 ? (
-  //         <View style={styles.center}>
-  //           <Text style={styles.errorText}>{error}</Text>
-  //           <Pressable
-  //             onPress={() => {
-  //               setLoading(true);
-  //               loadOffers().finally(() => setLoading(false));
-  //             }}
-  //             style={styles.retryButton}
-  //           >
-  //             <Text style={styles.retryText}>Spróbuj ponownie</Text>
-  //           </Pressable>
-  //         </View>
-  //       ) : offers.length === 0 ? (
-  //         <View style={styles.center}>
-  //           <Package size={48} color={colors.text.muted} />
-  //           <Text style={styles.emptyTitle}>Brak rezerwacji</Text>
-  //           <Text style={styles.emptySubtitle}>
-  //             Zarezerwowane oferty pojawią się tutaj
-  //           </Text>
-  //         </View>
-  //       ) : (
-  //         <FlatList
-  //           data={offers}
-  //           keyExtractor={(item) => String(item.offer_id)}
-  //           renderItem={renderItem}
-  //           contentContainerStyle={[
-  //             styles.list,
-  //             { paddingBottom: insets.bottom + 20 },
-  //           ]}
-  //           refreshControl={
-  //             <RefreshControl
-  //               refreshing={refreshing}
-  //               onRefresh={onRefresh}
-  //               tintColor={colors.primary.base}
-  //               colors={[colors.primary.base]}
-  //             />
-  //           }
-  //         />
-  //       )}
-  //     </View>
-  //   );
+      {resolvedError && offers.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{resolvedError}</Text>
+          <Pressable
+            onPress={() => {
+              completeOfferMutation.reset();
+              void refetch();
+            }}
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryText}>Spróbuj ponownie</Text>
+          </Pressable>
+        </View>
+      ) : offers.length === 0 ? (
+        <View style={styles.center}>
+          <Package size={48} color={colors.text.muted} />
+          <Text style={styles.emptyTitle}>Brak rezerwacji</Text>
+          <Text style={styles.emptySubtitle}>
+            Zarezerwowane oferty pojawią się tutaj
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={offers}
+          keyExtractor={(item) => String(item.offer_id)}
+          renderItem={renderItem}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 20 }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching}
+              onRefresh={() => void refetch()}
+              tintColor={colors.primary.base}
+              colors={[colors.primary.base]}
+            />
+          }
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -333,6 +296,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: colors.primary.dark,
+  },
+  inlineErrorBar: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  inlineErrorText: {
+    color: colors.status.error,
+    fontSize: 13,
+    fontWeight: "500",
   },
   list: {
     padding: 16,
