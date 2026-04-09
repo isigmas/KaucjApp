@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -28,8 +30,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class UserEndpointTest {
+
+    /** Must match IT_SECRET in application-test.properties */
+    private static final String TEST_INTERNAL_SECRET = "test-internal-token";
 
     private static final String VALID_ADDRESS_BLOCK = """
             "addresses": [
@@ -56,53 +62,54 @@ class UserEndpointTest {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
+    private ResultActions postCreateUser(String jsonBody) throws Exception {
+        return mockMvc.perform(post("/api/user/user")
+                .header("X-Internal-Secret-Token", TEST_INTERNAL_SECRET)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody));
+    }
+
     @Test
     void userCrudAndRatingFlowWorks() throws Exception {
         String createRatedUserJson = """
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "firstName": "Anna",
                     "lastName": "Nowak",
                     "phone": "111222333",
-                    "email": "anna@example.com",
-                    %s
+                    "email": "anna@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1005L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRatedUserJson))
-                .andExpect(status().isCreated());
+        postCreateUser(createRatedUserJson).andExpect(status().isCreated());
 
         User ratedUser = userRepository.findAll().stream()
                 .filter(it -> "anowak".equals(it.getUsername()))
                 .findFirst()
                 .orElseThrow();
         Long ratedUserId = ratedUser.getId();
+        assertThat(ratedUserId).isEqualTo(1005L);
 
         String createRaterJson = """
                 {
+                    "user_id": 1006,
                     "username": "bkowal",
                     "firstName": "Bartek",
                     "lastName": "Kowal",
                     "phone": "222333444",
-                    "email": "bartek@example.com",
-                    %s
+                    "email": "bartek@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1006L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRaterJson))
-                .andExpect(status().isCreated());
+        postCreateUser(createRaterJson).andExpect(status().isCreated());
 
         Long raterId = userRepository.findAll().stream()
                 .filter(it -> "bkowal".equals(it.getUsername()))
                 .findFirst()
                 .orElseThrow()
                 .getId();
+        assertThat(raterId).isEqualTo(1006L);
 
         mockMvc.perform(get("/api/user/" + ratedUserId))
                 .andExpect(status().isOk())
@@ -173,20 +180,16 @@ class UserEndpointTest {
     void cannotRateYourselfReturns403() throws Exception {
         String json = """
                 {
+                    "user_id": 1005,
                     "username": "solo",
                     "firstName": "Solo",
                     "lastName": "User",
                     "phone": "333444555",
-                    "email": "solo@example.com",
-                    %s
+                    "email": "solo@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1005L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated());
+        postCreateUser(json).andExpect(status().isCreated());
 
         Long userId = userRepository.findAll().stream()
                 .filter(u -> "solo".equals(u.getUsername()))
@@ -204,39 +207,31 @@ class UserEndpointTest {
 
     @Test
     void ratingWithInvalidScoreReturns400() throws Exception {
-        String json = """
+        String ratedJson = """
                 {
+                    "user_id": 1005,
                     "username": "rated",
                     "firstName": "R",
                     "lastName": "ated",
                     "phone": "444555666",
-                    "email": "rated@example.com",
-                    %s
+                    "email": "rated@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1005L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated());
+        postCreateUser(ratedJson).andExpect(status().isCreated());
 
         String raterJson = """
                 {
+                    "user_id": 1006,
                     "username": "rater",
                     "firstName": "Ra",
                     "lastName": "ter",
                     "phone": "555666777",
-                    "email": "rater@example.com",
-                    %s
+                    "email": "rater@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1006L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(raterJson))
-                .andExpect(status().isCreated());
+        postCreateUser(raterJson).andExpect(status().isCreated());
 
         Long ratedId = userRepository.findAll().stream()
                 .filter(u -> "rated".equals(u.getUsername()))
@@ -266,45 +261,50 @@ class UserEndpointTest {
     void creatingUserWithWrongEmailFormatReturns400() throws Exception {
         String createUserJson = """
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "firstName": "Anna",
                     "lastName": "Nowak",
                     "phone": "111222333",
-                    "email": "to nie jest poprawny email",
-                    %s
+                    "email": "to nie jest poprawny email"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                .header("X-User-Id",1005L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createUserJson))
-                .andExpect(status().isBadRequest());
+        postCreateUser(createUserJson).andExpect(status().isBadRequest());
     }
 
     @Test
     void creatingUserWithWrongPhoneNumberFormatReturns400() throws Exception {
         String createUserJson = """
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "firstName": "Anna",
                     "lastName": "Nowak",
                     "phone": "letters",
-                    "email": "anna@example.com",
-                    %s
+                    "email": "anna@example.com"
                 }
-                """.formatted(VALID_ADDRESS_BLOCK);
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                .header("X-User-Id",1005L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createUserJson))
-                .andExpect(status().isBadRequest());
+        postCreateUser(createUserJson).andExpect(status().isBadRequest());
     }
 
     @Test
     void gettingMyAddressesReturns200() throws Exception {
         String createUserJson = """
+                {
+                    "user_id": 1005,
+                    "username": "anowak",
+                    "firstName": "Anna",
+                    "lastName": "Nowak",
+                    "phone": "123456789",
+                    "email": "anna@example.com"
+                }
+                """;
+
+        postCreateUser(createUserJson).andExpect(status().isCreated());
+
+        String updateUserJson = """
                 {
                     "username": "anowak",
                     "firstName": "Anna",
@@ -313,31 +313,34 @@ class UserEndpointTest {
                     "email": "anna@example.com",
                     "addresses": [
                         {
-                    "addressLabel": "home",
-                    "address": "ul. Testowa 2",
-                    "latitude": 52.23,
-                    "longitude": 21.01,
-                    "default": true
+                            "addressLabel": "home",
+                            "address": "ul. Testowa 2",
+                            "latitude": 52.23,
+                            "longitude": 21.01,
+                            "default": true
                         },
-                    {
-                    "addressLabel": "work",
-                    "address": "ul. Testowa 3",
-                    "latitude": 52.24,
-                    "longitude": 21.03,
-                    "default": false
+                        {
+                            "addressLabel": "work",
+                            "address": "ul. Testowa 3",
+                            "latitude": 52.24,
+                            "longitude": 21.03,
+                            "default": false
                         }
                     ]
                 }
-               """;
+                """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .header("X-User-Id",1005L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createUserJson))
-                .andExpect(status().isCreated());
+        mockMvc.perform(put("/api/user/me")
+                .header("X-User-Id", 1005L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updateUserJson))
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/user/me/addresses")
-                .header("X-User-Id",1005L)).andExpect(status().isOk());
+                .header("X-User-Id", 1005L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].addressLabel").value("home"))
+                .andExpect(jsonPath("$[1].addressLabel").value("work"));
     }
 
     @ParameterizedTest(name = "Should return 400 when: {1}")
@@ -345,7 +348,7 @@ class UserEndpointTest {
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
 
         mockMvc.perform(post("/api/user/user")
-                .header("X-User-Id",1005L)
+                .header("X-Internal-Secret-Token", TEST_INTERNAL_SECRET)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
                 .andExpect(status().isBadRequest());
@@ -358,43 +361,46 @@ class UserEndpointTest {
                     "firstName": "Anna",
                     "lastName": "Nowak",
                     "phone": "111222333",
-                    "email": "anna@example.com",
-                    "addresses": []
+                    "email": "anna@example.com"
+                }
+                """, "Missing user_id"),
+
+            Arguments.of("""
+                {
+                    "user_id": 1005,
+                    "lastName": "Nowak",
+                    "phone": "111222333",
+                    "email": "anna@example.com"
                 }
                 """, "Missing username"),
 
             Arguments.of("""
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "lastName": "Nowak",
                     "phone": "111222333",
-                    "email": "anna@example.com",
-                    "addresses": []
+                    "email": "anna@example.com"
                 }
                 """, "Missing first name"),
 
             Arguments.of("""
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "firstName": "Anna",
                     "phone": "111222333",
-                    "email": "anna@example.com",
-                    "addresses": []
+                    "email": "anna@example.com"
                 }
                 """, "Missing last name"),
 
             Arguments.of("""
                 {
+                    "user_id": 1005,
                     "username": "anowak",
                     "firstName": "Anna",
                     "lastName": "Nowak",
-                    "email": "anna@example.com",
-                    "addresses": [{
-                        "address": "ul. Test",
-                        "latitude": 52.23,
-                        "longitude": 21.01,
-                        "default": true
-                    }]
+                    "email": "anna@example.com"
                 }
                 """, "Missing phone")
         );
