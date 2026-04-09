@@ -1,5 +1,5 @@
 import { Offer } from "@/src/types";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Marker } from "react-native-maps";
 import { colors } from "@/src/theme";
@@ -11,37 +11,40 @@ interface OfferMarkerProps {
 
 export const OfferMarker = React.memo(
   ({ offer, onPress }: OfferMarkerProps) => {
+    const [isTracking, setIsTracking] = useState(true);
+
     const { totalQuantity, totalPrice } = useMemo(() => {
       return offer.items.reduce(
         (acc, item) => {
           acc.totalQuantity += item.quantity;
-
-          const itemTotal =
+          acc.totalPrice +=
             (item.unit_price + item.deposit_fee) * item.quantity;
-          acc.totalPrice += itemTotal;
           return acc;
         },
         { totalQuantity: 0, totalPrice: 0 },
       );
     }, [offer.items]);
 
+    const handleLayout = useCallback(() => {
+      if (isTracking) {
+        setIsTracking(false);
+      }
+    }, [isTracking]);
+
     return (
       <Marker
         coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}
         onPress={() => onPress(offer)}
-        tracksViewChanges={false}
+        tracksViewChanges={isTracking}
+        icon={undefined}
       >
-        <View style={styles.markerContainer}>
+        <View style={styles.markerContainer} onLayout={handleLayout}>
           <View style={styles.bubble}>
-            <Text style={styles.bubbleText}>
-              {totalQuantity} • {totalPrice.toFixed(2)}zł
+            <Text style={styles.bubbleText} numberOfLines={1}>
+              📦 {totalQuantity} • 💰 ${totalPrice.toFixed(2)}
             </Text>
           </View>
-
-          {/*  Pointer  */}
           <View style={styles.triangle} />
-
-          {/*   Dot */}
           <View style={styles.markerCore} />
         </View>
       </Marker>
