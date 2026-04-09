@@ -1,40 +1,48 @@
 package pl.isigmas.kaucjapp.deposit.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.OpeningHourDTO;
+import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
+import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class DepositMachineService {
 
-    public List<DepositMachineResponseDTO> getMockedMachines() {
-        return List.of(
-                DepositMachineResponseDTO.builder()
-                        .id(1L)
-                        .networkName("Biedronka")
-                        .status("AVAILABLE")
-                        .address("ul. Przykładowa 1, Kraków")
-                        .latitude(new BigDecimal("50.064650"))
-                        .longitude(new BigDecimal("19.944980"))
-                        .build(),
-                DepositMachineResponseDTO.builder()
-                        .id(2L)
-                        .networkName("Lidl")
-                        .status("FULL")
-                        .address("ul. Testowa 2, Kraków")
-                        .latitude(new BigDecimal("50.061430"))
-                        .longitude(new BigDecimal("19.936580"))
-                        .build(),
-                DepositMachineResponseDTO.builder()
-                        .id(3L)
-                        .networkName("Zabka")
-                        .status("OUT_OF_ORDER")
-                        .address("ul. Wymyślona 3, Kraków")
-                        .latitude(new BigDecimal("50.057390"))
-                        .longitude(new BigDecimal("19.946120"))
-                        .build()
-        );
+    private final DepositMachineRepository depositMachineRepository;
+
+    @Transactional(readOnly = true)
+    public List<DepositMachineResponseDTO> getAll() {
+        return depositMachineRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private DepositMachineResponseDTO mapToResponseDTO(DepositMachine depositMachine) {
+        List<OpeningHourDTO> openingHourDTOs = depositMachine.getItems().stream()
+                .map(hourRecord -> OpeningHourDTO.builder()
+                        .dayOfWeek(hourRecord.getDayOfWeek())
+                        .openTime(hourRecord.getOpenTime())
+                        .closeTime(hourRecord.getCloseTime())
+                        .build())
+                .collect(Collectors.toList());
+
+        return DepositMachineResponseDTO.builder()
+                .id(depositMachine.getId())
+                .networkName(depositMachine.getRetailNetwork() != null ? depositMachine.getRetailNetwork().getName() : null)
+                .status(depositMachine.getStatus() != null ? depositMachine.getStatus().name() : null)
+                .address(depositMachine.getAddress())
+                .latitude(depositMachine.getLatitude())
+                .longitude(depositMachine.getLongitude())
+                .openingHours(openingHourDTOs)
+                .build();
     }
 }

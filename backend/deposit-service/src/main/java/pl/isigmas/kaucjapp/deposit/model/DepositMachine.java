@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "deposit_machines")
@@ -42,4 +43,19 @@ public class DepositMachine {
 
     @OneToMany(mappedBy = "depositMachine", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<OpeningHourRecord> openingHours = new java.util.ArrayList<>();
+
+    public List<OpeningHourRecord> getItems() {
+        return List.copyOf(openingHours);
+    }
+
+    public void addOpeningHour(OpeningHourRecord item) {
+        openingHours.add(item);
+        item.setDepositMachine(this);
+    }
+
+    public void removeItem(OpeningHourRecord item) {
+        openingHours.remove(item);
+        item.setDepositMachine(null);
+    }
+
 }
