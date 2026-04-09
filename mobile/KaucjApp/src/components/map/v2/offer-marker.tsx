@@ -1,6 +1,6 @@
 import { Offer } from "@/src/types";
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useMemo } from "react";
+import { StyleSheet, View, Text } from "react-native";
 import { Marker } from "react-native-maps";
 import { colors } from "@/src/theme";
 
@@ -11,6 +11,20 @@ interface OfferMarkerProps {
 
 export const OfferMarker = React.memo(
   ({ offer, onPress }: OfferMarkerProps) => {
+    const { totalQuantity, totalPrice } = useMemo(() => {
+      return offer.items.reduce(
+        (acc, item) => {
+          acc.totalQuantity += item.quantity;
+
+          const itemTotal =
+            (item.unit_price + item.deposit_fee) * item.quantity;
+          acc.totalPrice += itemTotal;
+          return acc;
+        },
+        { totalQuantity: 0, totalPrice: 0 },
+      );
+    }, [offer.items]);
+
     return (
       <Marker
         coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}
@@ -18,6 +32,16 @@ export const OfferMarker = React.memo(
         tracksViewChanges={false}
       >
         <View style={styles.markerContainer}>
+          <View style={styles.bubble}>
+            <Text style={styles.bubbleText}>
+              {totalQuantity} • {totalPrice.toFixed(2)}zł
+            </Text>
+          </View>
+
+          {/*  Pointer  */}
+          <View style={styles.triangle} />
+
+          {/*   Dot */}
           <View style={styles.markerCore} />
         </View>
       </Marker>
@@ -27,7 +51,8 @@ export const OfferMarker = React.memo(
     return (
       prevProps.offer.status === nextProps.offer.status &&
       prevProps.offer.latitude === nextProps.offer.latitude &&
-      prevProps.offer.longitude === nextProps.offer.longitude
+      prevProps.offer.longitude === nextProps.offer.longitude &&
+      prevProps.offer.items === nextProps.offer.items
     );
   },
 );
@@ -36,13 +61,48 @@ const styles = StyleSheet.create({
   markerContainer: {
     alignItems: "center",
     justifyContent: "center",
-    width: 30,
-    height: 30,
+    zIndex: 1, // Ensure the marker is above the map layer
+  },
+  bubble: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary.base,
+    // Shadows for iOS
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    // Elevation for Android
+    elevation: 4,
+  },
+  bubbleText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#333333",
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: "transparent",
+    borderStyle: "solid",
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderBottomWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: colors.primary.base,
+    transform: [{ rotate: "180deg" }],
+    marginBottom: 2, // Tiny gap before the core dot
   },
   markerCore: {
     width: 12,
     height: 12,
     borderRadius: 6,
     backgroundColor: colors.primary.base,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
 });
