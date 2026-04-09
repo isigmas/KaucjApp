@@ -23,6 +23,9 @@ param jwtSecret string
 @description('Sól do haseł w serwisie Auth')
 param passwordSalt string
 
+@description('Tag obrazu Docker do wdrożenia')
+param imageTag string = 'latest'
+
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
   name: acrName
 }
@@ -84,7 +87,7 @@ resource offersApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [{
         name: 'offers-service'
-        image: '${acr.properties.loginServer}/offers-service:latest'
+        image: '${acr.properties.loginServer}/offers-service:${imageTag}'
         env: [
           { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${pgServer.properties.fullyQualifiedDomainName}:5432/offers_db?sslmode=require' }
           { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
@@ -120,7 +123,7 @@ resource usersApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [{
         name: 'users-service'
-        image: '${acr.properties.loginServer}/users-service:latest'
+        image: '${acr.properties.loginServer}/users-service:${imageTag}'
         env: [
           { name: 'IT_SECRET', secretRef: 'it-secret' }
           { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${pgServer.properties.fullyQualifiedDomainName}:5432/users_db?sslmode=require' }
@@ -159,7 +162,7 @@ resource authApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [{
         name: 'auth-service'
-        image: '${acr.properties.loginServer}/auth-service:latest'
+        image: '${acr.properties.loginServer}/auth-service:${imageTag}'
         env: [
           { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${pgServer.properties.fullyQualifiedDomainName}:5432/auth_db?sslmode=require' }
           { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
@@ -198,7 +201,7 @@ resource apiGateway 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [{
         name: 'api-gateway'
-        image: '${acr.properties.loginServer}/api-gateway:latest'
+        image: '${acr.properties.loginServer}/api-gateway:${imageTag}'
         env: [
           { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
 
