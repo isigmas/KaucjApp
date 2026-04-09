@@ -1,8 +1,4 @@
-import axios, {
-  AxiosError,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
 
@@ -14,30 +10,8 @@ export const apiClient = axios.create({
   timeout: 5000,
 });
 
-// Add a response interceptor for global error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    // Check if the error is a timeout or network error
-    if (error.code === "ECONNABORTED" || error.message === "Network Error") {
-      console.error("Global API Error: Network or Timeout issue.");
-      // You could trigger a global toast notification here
-    }
-
-    // Check for global authentication errors (e.g., token expired)
-    if (error.response?.status === 401) {
-      console.error("Unauthorized: Redirecting to login...");
-      // Handle global logout logic here
-    }
-
-    // Reject the promise so React Query's onError gets triggered
-    return Promise.reject(error);
-  },
-);
-
-//Injecting the Access Token
-apiClient.interceptors.request.use(async (config) => {
-  // directly from Zustand's memory for  speed
+// Injecting the Access Token
+apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
 
@@ -57,7 +31,6 @@ let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (reason?: any) => void;
 }> = [];
-
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
@@ -66,35 +39,32 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-//token refresh logic - if we get 401, we try to refresh the token and repeat the original request
+// Response Interceptor
 apiClient.interceptors.response.use(
-  (response) => response, //200
-  async (error) => {
-    const originalRequest = error.config;
+  (response) => response, // 200 OK
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
+    if (error.code === "ECONNABORTED" || error.message === "Network Error") {
+      console.error("[API Error] Global Network or Timeout issue.");
+      return Promise.reject(error);
+    }
 
     if (error.response) {
-      // The server answered  with an error code
       console.error(
         `[API Error] ${error.response.status} - ${originalRequest?.url}`,
       );
-    } else if (error.request) {
-      // The request was sent , no response was received
-      console.error(
-        `[API Error] Network/Timeout - ${error.message} - ${originalRequest?.url}`,
-      );
-      throw new Error(
-        "Network error or server is unreachable. Please check your connection.",
-      );
     } else {
-      // Something broke before the request could even be sent
       console.error(`[API Error] Client Setup Error - ${error.message}`);
     }
 
-    // If 401 and we haven't already retried
+    // Handle 401 Unauthorized - Token Refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.warn(
         `[Auth] 401 Unauthorized detected for ${originalRequest.url}. Triggering recovery flow.`,
       );
+
+      // If already refreshing, queue this request until the refresh is done
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -111,21 +81,30 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = await tokenStorage.getRefreshToken();
-        if (!refreshToken) throw new Error("No refresh token");
+        if (!refreshToken)
+          throw new Error("No refresh token available in storage.");
 
         console.log(
           `[Auth Refresh] Attempting to swap Refresh Token for new Access Token...`,
         );
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        });
 
-        const newAccessToken = data.accessToken;
-        const newRefreshToken = data.refreshToken || refreshToken;
+        const { data } = await axios.post(
+          `${API_URL}/auth/refresh`,
+          refreshToken,
+          {
+            headers: {
+              "Content-Type": "text/plain",
+            },
+          },
+        );
+
+        const newAccessToken = data;
+        const newRefreshToken = refreshToken; // Keep the same refresh token
 
         console.log(
           `[Auth Refresh] Token swap successful! Updating storage and memory.`,
         );
+
         // Update tokens in cache and memory
         await useAuthStore
           .getState()
@@ -134,16 +113,21 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
 
+        // Retry the original request with the new token
         return apiClient(originalRequest);
       } catch (refreshError) {
+        console.error(
+          "[Auth Refresh] Refresh failed. Purging auth state and redirecting to login.",
+        );
         processQueue(refreshError, null);
-        await useAuthStore.getState().purgeAuth(); // Kick user out
+        await useAuthStore.getState().purgeAuth(); // Kick user out to trigger RootLayout redirect
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
+    // 4. Reject any other errors so React Query's onError gets triggered
     return Promise.reject(error);
   },
 );
