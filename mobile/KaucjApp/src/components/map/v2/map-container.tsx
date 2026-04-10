@@ -12,7 +12,7 @@ export default function MapContainer() {
 
   const handleMarkerPress = useCallback((offer: Offer) => {
     setSelectedOffer(offer);
-    bottomSheetRef.current?.snapToIndex(1);
+    bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
   const handleSheetChange = useCallback((index: number) => {
@@ -23,10 +23,11 @@ export default function MapContainer() {
 
   return (
     <View style={styles.container}>
-      {/* The Map */}
-      <MapScreen onMarkerPress={handleMarkerPress} />
+      <MapScreen
+        selectedOffer={selectedOffer}
+        onMarkerPress={handleMarkerPress}
+      />
 
-      {/* The Bottom Sheet */}
       <OfferSheet
         ref={bottomSheetRef}
         offer={selectedOffer}

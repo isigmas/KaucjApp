@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import MapView from "react-native-maps";
 
@@ -8,13 +8,37 @@ import { OfferMarker } from "./offer-marker";
 import { useUserLocation } from "./use-user-location";
 
 interface MapScreenProps {
+  selectedOffer: Offer | null;
   onMarkerPress: (offer: Offer) => void;
 }
 
-export default function MapScreen({ onMarkerPress }: MapScreenProps) {
+export default function MapScreen({
+  selectedOffer,
+  onMarkerPress,
+}: MapScreenProps) {
   const { data: offers, isLoading: isOffersLoading, isError } = useMyOffers();
   const { initialRegion, isLocationLoading } = useUserLocation();
   const mapRef = useRef<MapView>(null);
+
+  // move the map when a offer is selected
+  useEffect(() => {
+    if (selectedOffer && mapRef.current) {
+      const LATITUDE_DELTA = 0.01;
+      const LONGITUDE_DELTA = 0.01;
+
+      const offsetLatitude = selectedOffer.latitude - LATITUDE_DELTA * 0.25;
+
+      mapRef.current.animateToRegion(
+        {
+          latitude: offsetLatitude,
+          longitude: selectedOffer.longitude,
+          latitudeDelta: LATITUDE_DELTA,
+          longitudeDelta: LONGITUDE_DELTA,
+        },
+        500,
+      );
+    }
+  }, [selectedOffer]);
 
   if (isLocationLoading || isOffersLoading) {
     return (

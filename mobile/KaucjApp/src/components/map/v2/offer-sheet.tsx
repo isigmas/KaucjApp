@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Offer } from "@/src/types";
 import OfferDetails from "./offer-details";
+import { rounded } from "@/src/theme";
 
 interface OfferSheetProps {
   offer: Offer | null;
@@ -23,7 +24,13 @@ const OfferSheet = forwardRef<BottomSheet, OfferSheetProps>(
         backgroundStyle={styles.sheetBackground}
       >
         <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-          {offer ? <OfferDetails offer={offer} /> : null}
+          {offer ? (
+            <OfferDetails offer={offer} />
+          ) : (
+            <Text style={{ textAlign: "center", marginTop: 20 }}>
+              Wystąpił błąd podczas ładowania szczegółów oferty.
+            </Text>
+          )}
         </BottomSheetScrollView>
       </BottomSheet>
     );
@@ -35,7 +42,7 @@ export default OfferSheet;
 const styles = StyleSheet.create({
   sheetBackground: {
     backgroundColor: "#ffffff",
-    borderRadius: 24,
+    borderRadius: rounded.apple,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
