@@ -24,18 +24,6 @@ const getStatusColor = (status: OfferStatus) => {
 };
 
 export default function OfferDetails({ offer }: OfferDetailsProps) {
-  // Calculate total quantity and price dynamically
-  const totals = useMemo(() => {
-    return offer.items.reduce(
-      (acc, item) => {
-        acc.quantity += item.quantity;
-        acc.price += (item.unit_price + item.deposit_fee) * item.quantity;
-        return acc;
-      },
-      { quantity: 0, price: 0 },
-    );
-  }, [offer.items]);
-
   return (
     <View style={styles.container}>
       {/* Header: ID & Status */}
@@ -74,41 +62,29 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
       {/* Items List */}
       <Text style={styles.sectionTitle}>Przedmioty</Text>
       <View style={styles.card}>
-        {offer.items.map((item, index) => {
-          const itemTotal =
-            (item.unit_price + item.deposit_fee) * item.quantity;
-          return (
-            <View
-              key={`item-${item.bottle_id}-${index}`}
-              style={[
-                styles.itemRow,
-                index !== offer.items.length - 1 && styles.borderBottom,
-              ]}
-            >
-              <View style={styles.itemInfo}>
-                <Text style={styles.primaryText}>{item.bottle_name}</Text>
-                <Text style={styles.secondaryText}>
-                  Ilość: {item.quantity} • Kaucja: $
-                  {item.deposit_fee.toFixed(2)}
-                </Text>
-              </View>
-              <Text style={styles.itemPrice}>${itemTotal.toFixed(2)}</Text>
-            </View>
-          );
-        })}
+        <View style={[styles.itemRow]}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.primaryText}>Butelki plastikowe</Text>
+            <Text style={styles.secondaryText}>
+              Ilość: {offer.plastic_quantity} • Kaucja: $
+              {offer.plastic_price.toFixed(2)}
+            </Text>
+          </View>
+          <Text style={styles.itemPrice}>
+            ${(offer.plastic_price * offer.plastic_quantity).toFixed(2)}
+          </Text>
+        </View>
       </View>
 
       {/* Summary Footer */}
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Łączna liczba butelek</Text>
-          <Text style={styles.summaryValue}>{totals.quantity}</Text>
+          <Text style={styles.summaryValue}>{offer.total_quantity}</Text>
         </View>
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.summaryLabelTotal}>Całkowita wartość</Text>
-          <Text style={styles.summaryValueTotal}>
-            ${totals.price.toFixed(2)}
-          </Text>
+          <Text style={styles.summaryValueTotal}>${offer.total_prize}</Text>
         </View>
       </View>
     </View>

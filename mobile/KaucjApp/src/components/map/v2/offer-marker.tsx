@@ -13,18 +13,6 @@ export const OfferMarker = React.memo(
   ({ offer, onPress }: OfferMarkerProps) => {
     const [isTracking, setIsTracking] = useState(true);
 
-    const { totalQuantity, totalPrice } = useMemo(() => {
-      return offer.items.reduce(
-        (acc, item) => {
-          acc.totalQuantity += item.quantity;
-          acc.totalPrice +=
-            (item.unit_price + item.deposit_fee) * item.quantity;
-          return acc;
-        },
-        { totalQuantity: 0, totalPrice: 0 },
-      );
-    }, [offer.items]);
-
     const handleLayout = useCallback(() => {
       if (isTracking) {
         setIsTracking(false);
@@ -41,7 +29,8 @@ export const OfferMarker = React.memo(
         <View style={styles.markerContainer} onLayout={handleLayout}>
           <View style={styles.bubble}>
             <Text style={styles.bubbleText} numberOfLines={1}>
-              📦 {totalQuantity} • 💰 ${totalPrice.toFixed(2)}
+              {offer.total_quantity} sztuk •{" "}
+              {offer.total_prize.toLocaleString("pl-PL")}zł
             </Text>
           </View>
           <View style={styles.triangle} />
@@ -55,7 +44,8 @@ export const OfferMarker = React.memo(
       prevProps.offer.status === nextProps.offer.status &&
       prevProps.offer.latitude === nextProps.offer.latitude &&
       prevProps.offer.longitude === nextProps.offer.longitude &&
-      prevProps.offer.items === nextProps.offer.items
+      prevProps.offer.total_quantity === nextProps.offer.total_quantity &&
+      prevProps.offer.total_prize === nextProps.offer.total_prize
     );
   },
 );

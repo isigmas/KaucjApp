@@ -39,6 +39,8 @@ export const useMyOffers = () => {
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my");
 
+      console.log("Fetched my offers:", JSON.stringify(data, null, 2));
+
       return data;
     },
   });

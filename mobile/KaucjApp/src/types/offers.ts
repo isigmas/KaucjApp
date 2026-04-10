@@ -5,25 +5,30 @@ export enum OfferStatus {
   CANCELED = "CANCELED",
 }
 
-export interface OfferItem {
-  bottle_id: number;
-  bottle_name: string;
-  quantity: number;
-  unit_price: number;
-  deposit_fee: number;
-}
-
 export interface Offer {
   offer_id: number;
   creator_id: number;
-  collector_id: number | null;
+  collector_id: number;
+
   status: OfferStatus;
   latitude: number;
   longitude: number;
+
   pickup_address: string;
-  pickup_instructions?: string | null;
+  pickup_instructions: string;
+
   created_at: string;
-  items: OfferItem[];
+
+  plastic_quantity: number;
+  can_quantity: number;
+  total_quantity: number;
+
+  total_prize: number;
+
+  total_income: number;
+
+  plastic_price: number;
+  can_price: number;
 }
 
 //the payloads to the backend when creating or updating an offer
