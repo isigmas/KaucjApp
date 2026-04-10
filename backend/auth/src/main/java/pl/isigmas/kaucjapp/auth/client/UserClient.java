@@ -14,5 +14,5 @@ public interface UserClient {
     @PostMapping("/api/user/user")
     ResponseEntity<Void> create(
             @Valid @RequestBody UsersServiceUser user,
-            @RequestHeader("X-User-Secret") String userSecret);
+            @RequestHeader("X-Internal-Secret") String internalSecret);
 }
