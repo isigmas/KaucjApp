@@ -3,9 +3,9 @@ package pl.isigmas.kaucjapp.offers.DTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -33,23 +33,26 @@ public class OfferResponseDTO {
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
-    private List<OfferItemResponseDTO> items;
+    @JsonProperty("plastic_quantity")
+    private int plasticQuantity;
 
-    @Data
-    @Builder
-    public static class OfferItemResponseDTO {
-        @JsonProperty("bottle_id")
-        private Long bottleId;
+    @JsonProperty("can_quantity")
+    private int canQuantity;
 
-        @JsonProperty("bottle_name")
-        private String name;
+    @JsonProperty("total_quantity")
+    private int totalQuantity;
 
-        private Integer quantity;
+    /** Total payout to the person handing in bottles (deposit returner), per-bottle reward × quantity. */
+    @JsonProperty("total_prize")
+    private BigDecimal totalPrize;
 
-        @JsonProperty("unit_price")
-        private BigDecimal unitPrice;
+    /** Total margin for the collector (statutory deposit − unit price per bottle) × quantity. */
+    @JsonProperty("total_income")
+    private BigDecimal totalIncome;
 
-        @JsonProperty("deposit_fee")
-        private BigDecimal depositFee;
-    }
+    @JsonProperty("plastic_price")
+    private BigDecimal plasticPrice;
+
+    @JsonProperty("can_price")
+    private BigDecimal canPrice;
 }

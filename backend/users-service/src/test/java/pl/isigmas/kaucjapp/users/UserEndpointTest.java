@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -28,8 +30,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class UserEndpointTest {
+
+    /** Must match IT_SECRET in application-test.properties */
+    private static final String TEST_INTERNAL_SECRET = "test-internal-token";
 
     private static final String VALID_ADDRESS_BLOCK = """
             "addresses": [
@@ -56,6 +62,13 @@ class UserEndpointTest {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
+    private ResultActions postCreateUser(String jsonBody) throws Exception {
+        return mockMvc.perform(post("/api/user/user")
+                .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody));
+    }
+
     @Test
     void userCrudAndRatingFlowWorks() throws Exception {
         String createRatedUserJson = """
@@ -69,10 +82,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRatedUserJson))
-                .andExpect(status().isCreated());
+        postCreateUser(createRatedUserJson).andExpect(status().isCreated());
 
         User ratedUser = userRepository.findAll().stream()
                 .filter(it -> "anowak".equals(it.getUsername()))
@@ -92,10 +102,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRaterJson))
-                .andExpect(status().isCreated());
+        postCreateUser(createRaterJson).andExpect(status().isCreated());
 
         Long raterId = userRepository.findAll().stream()
                 .filter(it -> "bkowal".equals(it.getUsername()))
@@ -182,10 +189,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated());
+        postCreateUser(json).andExpect(status().isCreated());
 
         Long userId = userRepository.findAll().stream()
                 .filter(u -> "solo".equals(u.getUsername()))
@@ -214,10 +218,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(ratedJson))
-                .andExpect(status().isCreated());
+        postCreateUser(ratedJson).andExpect(status().isCreated());
 
         String raterJson = """
                 {
@@ -230,10 +231,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(raterJson))
-                .andExpect(status().isCreated());
+        postCreateUser(raterJson).andExpect(status().isCreated());
 
         Long ratedId = userRepository.findAll().stream()
                 .filter(u -> "rated".equals(u.getUsername()))
@@ -272,10 +270,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createUserJson))
-                .andExpect(status().isBadRequest());
+        postCreateUser(createUserJson).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -291,10 +286,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createUserJson))
-                .andExpect(status().isBadRequest());
+        postCreateUser(createUserJson).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -310,10 +302,7 @@ class UserEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/user/user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createUserJson))
-                .andExpect(status().isCreated());
+        postCreateUser(createUserJson).andExpect(status().isCreated());
 
         String updateUserJson = """
                 {
@@ -359,6 +348,7 @@ class UserEndpointTest {
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
 
         mockMvc.perform(post("/api/user/user")
+                .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
                 .andExpect(status().isBadRequest());

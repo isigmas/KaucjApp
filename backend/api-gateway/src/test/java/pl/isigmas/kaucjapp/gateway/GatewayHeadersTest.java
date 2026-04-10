@@ -165,6 +165,33 @@ class GatewayHeadersTest {
     }
 
     @Test
+    @DisplayName("Should not forward X-Internal-Secret header to downstream service")
+    void shouldNotForwardInternalSecretHeader() {
+        // Given
+        Long expectedUserId = 321L;
+        String validToken = createValidToken(expectedUserId);
+
+        stubFor(get(urlEqualTo("/api/test"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("OK")));
+
+        // When
+        HttpStatusCode status = restClient.get()
+                .uri("/api/test")
+                .header("Authorization", "Bearer " + validToken)
+                .header("X-Internal-Secret", "super-secret-value")
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Then
+        assertThat(status).isEqualTo(HttpStatus.OK);
+
+        verify(getRequestedFor(urlEqualTo("/api/test"))
+                .withoutHeader("X-Internal-Secret")
+                .withHeader("X-User-Id", equalTo(String.valueOf(expectedUserId))));
+    }
+
+    @Test
     @DisplayName("Should forward X-User-Id header with integer user_id claim")
     void shouldForwardUserIdHeaderWithIntegerClaim() {
         // Given - Integer user_id (not Long)
