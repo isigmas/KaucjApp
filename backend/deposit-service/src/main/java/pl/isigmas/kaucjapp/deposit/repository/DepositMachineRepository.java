@@ -13,4 +13,5 @@ public interface DepositMachineRepository extends JpaRepository<DepositMachine, 
     @Override
     @EntityGraph(attributePaths = {"retailNetwork", "openingHours"})
     List<DepositMachine> findAll();
+
 }
