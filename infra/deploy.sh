@@ -1,3 +1,9 @@
+#!/bin/bash
+
+set -a
+source .env
+set +a
+
 az deployment group create \
   --resource-group "$AZURE_RESOURCE_GROUP" \
   --template-file main.bicep \
