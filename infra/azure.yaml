@@ -28,3 +28,9 @@ services:
     host: containerapp
     docker:
       path: users-service/Dockerfile
+  deposit-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: deposit-service/Dockerfile

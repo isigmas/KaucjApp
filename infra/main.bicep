@@ -30,6 +30,7 @@ param apiGatewayImageName string = ''
 param authServiceImageName string = ''
 param offersServiceImageName string = ''
 param usersServiceImageName string = ''
+param depositServiceImageName string = ''
 
 var helloWorldImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
@@ -64,6 +65,7 @@ module db 'modules/db.bicep' = {
       'offers_db'
       'users_db'
       'auth_db'
+      'deposit_db'
     ]
   }
 }
@@ -146,6 +148,29 @@ module authApp 'modules/app.bicep' = {
   }
 }
 
+module depositApp 'modules/app.bicep' = {
+  name: 'deposit-service-deployment'
+  params: {
+    appName: 'deposit-service'
+    azdServiceName: 'deposit-service'
+    location: location
+    environmentId: acaEnv.outputs.id
+    containerImage: !empty(depositServiceImageName) ? depositServiceImageName : helloWorldImage
+    acrServer: acr.properties.loginServer
+    acrUsername: acr.name
+    acrPassword: acr.listCredentials().passwords[0].value
+    appSecrets: [
+      { name: 'db-password', value: dbPassword }
+    ]
+    envVars: [
+      { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/deposit_db?sslmode=require' }
+      { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
+      { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+    ]
+  }
+}
+
 module apiGateway 'modules/app.bicep' = {
   name: 'api-gateway-deployment'
   params: {
@@ -175,6 +200,10 @@ module apiGateway 'modules/app.bicep' = {
       { name: 'GATEWAY_ROUTES_2_ID', value: 'auth' }
       { name: 'GATEWAY_ROUTES_2_PATH', value: '/api/auth/**' }
       { name: 'GATEWAY_ROUTES_2_URI', value: 'http://${authApp.outputs.fqdn}' }
+
+      { name: 'GATEWAY_ROUTES_3_ID', value: 'deposit' }
+      { name: 'GATEWAY_ROUTES_3_PATH', value: '/api/deposit/**' }
+      { name: 'GATEWAY_ROUTES_3_URI', value: 'http://${depositApp.outputs.fqdn}' }
     ]
   }
 }
