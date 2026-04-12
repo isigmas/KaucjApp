@@ -26,7 +26,8 @@
 		<module>offers-service</module>
 		<module>api-gateway</module>
 		<module>auth</module>
-	</modules>
+        <module>deposit-service</module>
+    </modules>
 	<scm>
 		<connection/>
 		<developerConnection/>
