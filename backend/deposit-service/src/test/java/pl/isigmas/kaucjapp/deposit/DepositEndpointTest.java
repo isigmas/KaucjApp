@@ -121,7 +121,9 @@ class DepositEndpointTest {
             }
             """;
 
-        mockMvc.perform(put("/api/deposit/machine/1")
+        Long id = depositMachineRepository.findAll().getFirst().getId();
+
+        mockMvc.perform(put("/api/deposit/machine/"+id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateDepositJSON))
                 .andExpect(status().isOk());
@@ -134,7 +136,101 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
-                .andExpect(jsonPath("$[0].openingHours").isArray());
+                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
+
+        mockMvc.perform(delete("/api/deposit/machine/1"))
+                .andExpect(status().isOk());
+
+        assertThat(depositMachineRepository.findAll().isEmpty());
     }
+
+
+    @Test
+    void updatingSpecificDaysWorks() throws Exception{
+        String createDepositMachineJSON = """
+                {
+                   "networkName": "Zabka",
+                   "status": "AVAILABLE",
+                   "address": "ul. Wawelska 15, 31-000 Kraków",
+                   "latitude": 50.052000,
+                   "longitude": 19.936000,
+                   "openingHours": [
+                     {
+                       "dayOfWeek": 1,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 2,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 3,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 4,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 5,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 6,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 7,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     }
+                   ]
+                 }
+                """;
+
+        mockMvc.perform(post("/api/deposit/machine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createDepositMachineJSON))
+                .andExpect(status().isCreated());
+
+        Long id = depositMachineRepository.findAll().getFirst().getId();
+
+
+        String updateMachineHoursJSON = """
+                {
+                    "openingHours": [
+                     {
+                       "dayOfWeek": 1,
+                       "openTime": "07:00:00",
+                       "closeTime": "21:00:00"
+                     }
+                   ]
+                }
+                """;
+
+        mockMvc.perform(put("/api/deposit/machine/"+id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateMachineHoursJSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/deposit/machines"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].openingHours[0].dayOfWeek").value(1))
+                .andExpect(jsonPath("$[0].openingHours[0].openTime").value("07:00:00"))
+                .andExpect(jsonPath("$[0].openingHours[0].closeTime").value("21:00:00"))
+                .andExpect(jsonPath("$[0].openingHours[1].openTime").value("06:00:00"))
+                .andExpect(jsonPath("$[0].openingHours[1].closeTime").value("23:00:00"))
+                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
+
+
+    }
+
+
 
 }

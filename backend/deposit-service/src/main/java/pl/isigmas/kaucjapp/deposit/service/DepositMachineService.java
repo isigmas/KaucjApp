@@ -60,19 +60,14 @@ public class DepositMachineService {
         depositMachine.setLongitude(depositMachineResponseDTO.getLongitude());
         depositMachine.setAddress(depositMachineResponseDTO.getAddress());
 
-        List<OpeningHourRecord> openingHourRecords = new ArrayList<>();
-
         for(var day : depositMachineResponseDTO.getOpeningHours()){
             OpeningHourRecord record = new OpeningHourRecord();
-            record.setDepositMachine(depositMachine);
             record.setOpenTime(day.getOpenTime());
             record.setCloseTime(day.getCloseTime());
             record.setDayOfWeek(day.getDayOfWeek());
 
             depositMachine.addOpeningHour(record);
         }
-
-        depositMachine.setOpeningHours(openingHourRecords);
 
         depositMachineRepository.save(depositMachine);
     }
