@@ -12,29 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useMyOffers } from "@/src/api/hooks/use-offer";
-
-//Need to be replaced
-interface OfferItem {
-  bottle_id: number;
-  fee: number;
-  price: number;
-  quantity: number;
-}
-
-export interface Offer {
-  offer_id: number;
-  address: string;
-  created_at: string;
-  items: OfferItem[];
-  latitude: number;
-  longitude: number;
-  pickup_info: string | null;
-  status: "OPEN" | "COMPLETED"; // Assuming COMPLETED is the finished state
-  user: {
-    user_id: number;
-    username: string;
-  };
-}
+import { Offer } from "@/src/types";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -56,12 +34,6 @@ const OfferCard = ({
   onComplete: (id: number) => void;
 }) => {
   const isOpen = offer.status === "OPEN";
-
-  const totalItems = offer.items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPayout = offer.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
 
   const handleComplete = () => {
     Alert.alert(
@@ -113,31 +85,35 @@ const OfferCard = ({
             size={18}
             color={colors.text.secondary}
           />
-          <Text style={styles.addressText}>{offer.address}</Text>
+          <Text style={styles.addressText}>{offer.pickup_address}</Text>
         </View>
 
         <View style={styles.itemsRow}>
-          {offer.items.map((item, idx) => {
-            return (
-              <View key={idx} style={styles.itemPill}>
-                <Text style={styles.itemIcon}>Plastik</Text>
-                <Text style={styles.itemQuantity}>10x</Text>
-              </View>
-            );
-          })}
+          {offer.plastic_quantity > 0 && (
+            <View key="plastic" style={styles.itemPill}>
+              <Text style={styles.itemIcon}>Plastiki</Text>
+              <Text style={styles.itemQuantity}>{offer.plastic_quantity}x</Text>
+            </View>
+          )}
+          {offer.can_quantity > 0 && (
+            <View key="cans" style={styles.itemPill}>
+              <Text style={styles.itemIcon}>Puszki</Text>
+              <Text style={styles.itemQuantity}>{offer.can_quantity}x</Text>
+            </View>
+          )}
         </View>
 
         {/* Financial Summary */}
         <View style={styles.summaryBox}>
           <View style={styles.summaryColumn}>
             <Text style={styles.summaryLabel}>Ilość</Text>
-            <Text style={styles.summaryValue}>{totalItems} szt.</Text>
+            <Text style={styles.summaryValue}>{offer.total_quantity} szt.</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryColumn}>
             <Text style={styles.summaryLabel}>Otrzymasz</Text>
             <Text style={styles.summaryValueHighlight}>
-              {totalPayout.toFixed(2)} zł
+              {offer.total_prize.toFixed(2)} zł
             </Text>
           </View>
         </View>
@@ -163,15 +139,13 @@ const OfferCard = ({
 
 // --- Main Screen ---
 export default function MyOffers() {
-  const { data: offersData } = useMyOffers();
+  const { data: offers } = useMyOffers();
   const isPending = false; // state from the API call
 
   const router = useRouter();
 
   if (isPending) return <Text>Loading...</Text>;
-  if (!offersData) return <Text>Error</Text>;
-
-  const offers = offersData as Offer[];
+  if (!offers) return <Text>Error</Text>;
 
   const markAsCompleted = (id: number) => {
     console.log("Marking offer as completed, id: ", id);

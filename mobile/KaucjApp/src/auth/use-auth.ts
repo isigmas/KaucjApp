@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, User } from "./auth-store";
 import { apiClient } from "@/src/api/api-client";
 import { SignInValues, SignUpValues } from "@/src/types";
-import { da } from "zod/v4/locales";
 import { AxiosError } from "axios";
 import { tokenStorage } from "./secure-storage";
 
@@ -32,9 +31,10 @@ export const useAuth = () => {
       // ----REFRESH----
       const refreshRes = await apiClient.post("/auth/refresh", refreshToken, {
         headers: {
-          "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
+          "Content-Type": "text/plain", // it's a raw string
         },
       });
+
       const accessToken = refreshRes.data;
       console.log("accessToken :", accessToken);
 
@@ -83,23 +83,16 @@ export const useAuth = () => {
     },
 
     onSuccess: async (data) => {
-      // Handle successful sign up (e.g., save tokens, redirect)
       // await setAuth(data.user, data.accessToken, data.refreshToken);
       console.log("Sign-up successful:", data);
     },
 
     onError: (error: AxiosError<{ message?: string }>) => {
-      // 1. Extract the specific error message sent by your backend
-      const backendMessage = error.response?.data?.message;
+      const errorMessage =
+        error.response?.data?.message ||
+        "An unexpected error occurred during sign in.";
 
-      // 2. Provide a fallback message just in case
-      const fallbackMessage = "An unexpected error occurred during sign up.";
-
-      // 3. Determine the final message to show the user
-      const errorMessage = backendMessage || fallbackMessage;
-
-      // 4. Log for debugging and show to the user
-      console.error("Sign-up failed:", errorMessage);
+      console.error("Sign-in failed:", errorMessage);
     },
   });
 
@@ -109,7 +102,7 @@ export const useAuth = () => {
 
       await apiClient.post("/auth/logout", refreshToken, {
         headers: {
-          "Content-Type": "text/plain", // Crucial: Tells backend it's a raw string
+          "Content-Type": "text/plain", // it's a raw string
         },
       });
     },

@@ -5,40 +5,47 @@ import MapView from "react-native-maps";
 import { useMyOffers } from "@/src/api/hooks/use-offer";
 import { Offer } from "@/src/types";
 import { OfferMarker } from "./offer-marker";
+import { MachineMarker } from "./machine-marker"; // We'll create this next
 import { useUserLocation } from "./use-user-location";
+import { depositMachines, DepositMachine } from "../../../constants";
+import { SelectedMapItem } from "./map-container";
 
 interface MapScreenProps {
-  selectedOffer: Offer | null;
-  onMarkerPress: (offer: Offer) => void;
+  selectedItem: SelectedMapItem | null;
+  onOfferPress: (offer: Offer) => void;
+  onMachinePress: (machine: DepositMachine) => void;
 }
 
 export default function MapScreen({
-  selectedOffer,
-  onMarkerPress,
+  selectedItem,
+  onOfferPress,
+  onMachinePress,
 }: MapScreenProps) {
   const { data: offers, isLoading: isOffersLoading, isError } = useMyOffers();
   const { initialRegion, isLocationLoading } = useUserLocation();
   const mapRef = useRef<MapView>(null);
 
-  // move the map when a offer is selected
+  // move the map when any item is selected
   useEffect(() => {
-    if (selectedOffer && mapRef.current) {
+    if (selectedItem && mapRef.current) {
       const LATITUDE_DELTA = 0.01;
       const LONGITUDE_DELTA = 0.01;
 
-      const offsetLatitude = selectedOffer.latitude - LATITUDE_DELTA * 0.25;
+      // Extract coordinates from either Offer or DepositMachine
+      const { latitude, longitude } = selectedItem.data;
+      const offsetLatitude = latitude - LATITUDE_DELTA * 0.25;
 
       mapRef.current.animateToRegion(
         {
           latitude: offsetLatitude,
-          longitude: selectedOffer.longitude,
+          longitude: longitude,
           latitudeDelta: LATITUDE_DELTA,
           longitudeDelta: LONGITUDE_DELTA,
         },
         500,
       );
     }
-  }, [selectedOffer]);
+  }, [selectedItem]);
 
   if (isLocationLoading || isOffersLoading) {
     return (
@@ -47,17 +54,7 @@ export default function MapScreen({
         <Text style={styles.loadingText}>
           {isLocationLoading
             ? "Ładowanie lokalizacji..."
-            : "Ładowanie ofert..."}
-        </Text>
-      </View>
-    );
-  }
-
-  if (isError || !offers) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>
-          Failed to load offers onto the map.
+            : "Ładowanie danych..."}
         </Text>
       </View>
     );
@@ -74,11 +71,21 @@ export default function MapScreen({
           showsMyLocationButton
           moveOnMarkerPress={false}
         >
-          {offers.map((offer) => (
+          {/* Render Offers */}
+          {offers?.map((offer) => (
             <OfferMarker
               key={`offer-${offer.offer_id}`}
               offer={offer}
-              onPress={onMarkerPress}
+              onPress={onOfferPress}
+            />
+          ))}
+
+          {/* Render Deposit Machines */}
+          {depositMachines.map((machine) => (
+            <MachineMarker
+              key={`machine-${machine.id}`}
+              machine={machine}
+              onPress={onMachinePress}
             />
           ))}
         </MapView>
@@ -86,6 +93,8 @@ export default function MapScreen({
     </View>
   );
 }
+
+// ... keep your existing styles
 
 const styles = StyleSheet.create({
   container: {

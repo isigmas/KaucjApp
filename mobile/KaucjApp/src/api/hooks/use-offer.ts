@@ -16,19 +16,21 @@ export const useCreateOffer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (offerData: Offer) => {
+    mutationFn: async (offerData: any) => {
       console.log(
         "Creating offer with data:",
         JSON.stringify(offerData, null, 2),
       );
       const { data } = await apiClient.post("/offer/offer", offerData);
 
-      console.log("Offer creation data:", JSON.stringify(data, null, 2));
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       console.log("Offer created successfully, invalidating offers query.");
-      queryClient.invalidateQueries({ queryKey: ["offers", "myOffers"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["offers"] }),
+        queryClient.invalidateQueries({ queryKey: ["myOffers"] }),
+      ]);
     },
   });
 };
@@ -38,8 +40,6 @@ export const useMyOffers = () => {
     queryKey: ["myOffers"],
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my");
-
-      console.log("Fetched my offers:", JSON.stringify(data, null, 2));
 
       return data;
     },

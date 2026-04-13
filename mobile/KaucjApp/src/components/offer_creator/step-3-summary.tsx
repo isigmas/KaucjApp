@@ -45,7 +45,7 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
     console.log("Button pressed");
 
     // API call goees here
-    const payload: Offer = {
+    const payload = {
       latitude: data.latitude!,
       longitude: data.longitude!,
       pickupAddress: data.address,
@@ -57,14 +57,21 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
           unitPrice: data.plasticPrice,
         },
         {
-          bottleId: 2, // Assuming 2 for glass bottles
-          quantity: data.glassBottles,
-          unitPrice: data.glassPrice,
+          bottleId: 2, // Assuming 2 for cans
+          quantity: data.cans,
+          unitPrice: data.cansPrice,
         },
       ],
     };
 
-    createOffer(payload);
+    createOffer(payload, {
+      onSuccess: () => {
+        router.replace(`/(app)/(tabs)/create/success-screen`);
+      },
+      onError: (error) => {
+        console.error("Failed to create offer:", error);
+      },
+    });
   };
 
   const totalDepositValue =

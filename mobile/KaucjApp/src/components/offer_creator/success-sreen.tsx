@@ -15,7 +15,7 @@ export default function OfferSuccessScreen() {
   const router = useRouter();
 
   const handleGoHome = () => {
-    router.replace("/");
+    router.replace("/(app)/(tabs)/home"); // Replace with the actual path to your home screen
   };
 
   return (

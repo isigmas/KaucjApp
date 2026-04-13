@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Offer, OfferStatus } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 
@@ -7,7 +7,6 @@ interface OfferDetailsProps {
   offer: Offer;
 }
 
-// Helper to determine badge color based on status
 const getStatusColor = (status: OfferStatus) => {
   switch (status) {
     case OfferStatus.OPEN:
@@ -26,10 +25,9 @@ const getStatusColor = (status: OfferStatus) => {
 export default function OfferDetails({ offer }: OfferDetailsProps) {
   return (
     <View style={styles.container}>
-      {/* Header: ID & Status */}
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.offerId}>Oferta #{offer.offer_id}</Text>
+          <Text style={styles.offerId}>Szczegóły oferty</Text>
           <Text style={styles.dateText}>
             {new Date(offer.created_at).toLocaleDateString()}
           </Text>
@@ -66,12 +64,23 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
           <View style={styles.itemInfo}>
             <Text style={styles.primaryText}>Butelki plastikowe</Text>
             <Text style={styles.secondaryText}>
-              Ilość: {offer.plastic_quantity} • Kaucja: $
-              {offer.plastic_price.toFixed(2)}
+              Ilość: {offer.plastic_quantity} • cena:{" "}
+              {offer.plastic_price.toFixed(2)}zł
             </Text>
           </View>
           <Text style={styles.itemPrice}>
-            ${(offer.plastic_price * offer.plastic_quantity).toFixed(2)}
+            {(offer.plastic_price * offer.plastic_quantity).toFixed(2)} zł
+          </Text>
+        </View>
+        <View style={[styles.itemRow]}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.primaryText}>Puszki</Text>
+            <Text style={styles.secondaryText}>
+              Ilość: {offer.can_quantity} • cena: {offer.can_price.toFixed(2)}zł
+            </Text>
+          </View>
+          <Text style={styles.itemPrice}>
+            {(offer.can_price * offer.can_quantity).toFixed(2)} zł
           </Text>
         </View>
       </View>
@@ -84,9 +93,46 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
         </View>
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.summaryLabelTotal}>Całkowita wartość</Text>
-          <Text style={styles.summaryValueTotal}>${offer.total_prize}</Text>
+          <Text style={styles.summaryValueTotal}>
+            {offer.total_prize.toFixed(2)} zł
+          </Text>
+        </View>
+        <View style={[styles.summaryRow]}>
+          <Text style={styles.summaryLabelTotal}>Całkowity zysk</Text>
+          <Text style={styles.summaryValueTotal}>
+            {offer.total_income.toFixed(2)} zł
+          </Text>
         </View>
       </View>
+
+      <Pressable
+        style={({ pressed }) => [
+          {
+            backgroundColor: pressed
+              ? colors.primary.dark
+              : colors.primary.base,
+          },
+          {
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.md,
+            borderRadius: rounded.xl,
+            alignSelf: "center",
+            marginTop: spacing.lg,
+            width: "100%",
+            textAlign: "center",
+            alignItems: "center",
+          },
+        ]}
+        onPress={() => {
+          // Handle booking  the offer
+        }}
+      >
+        <Text
+          style={{ color: colors.text.white, fontWeight: "600", fontSize: 20 }}
+        >
+          Zarezerwuj
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -133,7 +179,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.background.card,
-    borderRadius: rounded.md,
+    borderRadius: rounded.xl,
     padding: spacing.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
@@ -189,7 +235,7 @@ const styles = StyleSheet.create({
   // Summary
   summaryCard: {
     backgroundColor: colors.primary.light,
-    borderRadius: rounded.md,
+    borderRadius: rounded.xl,
     padding: spacing.md,
     marginTop: spacing.xs,
   },
@@ -197,7 +243,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   totalRow: {
     marginTop: spacing.xs,

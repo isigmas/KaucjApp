@@ -2,35 +2,48 @@ import React, { useState, useRef, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Offer } from "@/src/types";
+import { DepositMachine } from "../../../constants";
 
 import MapScreen from "./map-screen";
-import OfferSheet from "./offer-sheet";
+import DetailsSheet from "./details-sheet";
+
+export type SelectedMapItem =
+  | { type: "offer"; data: Offer }
+  | { type: "machine"; data: DepositMachine };
 
 export default function MapContainer() {
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SelectedMapItem | null>(
+    null,
+  );
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const handleMarkerPress = useCallback((offer: Offer) => {
-    setSelectedOffer(offer);
+  const handleOfferPress = useCallback((offer: Offer) => {
+    setSelectedItem({ type: "offer", data: offer });
+    bottomSheetRef.current?.snapToIndex(0);
+  }, []);
+
+  const handleMachinePress = useCallback((machine: DepositMachine) => {
+    setSelectedItem({ type: "machine", data: machine });
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
   const handleSheetChange = useCallback((index: number) => {
     if (index === -1) {
-      setSelectedOffer(null);
+      setSelectedItem(null);
     }
   }, []);
 
   return (
     <View style={styles.container}>
       <MapScreen
-        selectedOffer={selectedOffer}
-        onMarkerPress={handleMarkerPress}
+        selectedItem={selectedItem}
+        onOfferPress={handleOfferPress}
+        onMachinePress={handleMachinePress}
       />
 
-      <OfferSheet
+      <DetailsSheet
         ref={bottomSheetRef}
-        offer={selectedOffer}
+        selectedItem={selectedItem}
         onChange={handleSheetChange}
       />
     </View>
@@ -38,7 +51,5 @@ export default function MapContainer() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 });

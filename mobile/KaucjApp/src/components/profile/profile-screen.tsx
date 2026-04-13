@@ -1,4 +1,4 @@
-import React from "react";
+import React, { use } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
+import { useUserDetails } from "@/src/api/hooks/use-user";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -111,6 +112,7 @@ const ProfileMenuItem = ({
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
+  const { data: user } = useUserDetails();
 
   const userRating = 4.8;
   const reviewCount = 24;
@@ -130,7 +132,7 @@ export default function ProfileScreen() {
           entering={FadeInDown.delay(100).springify()}
           style={styles.userName}
         >
-          Jan Kowalski
+          {user?.firstName + " " + user?.lastName || "Jan Kowalski"}
         </Animated.Text>
 
         <Animated.View
