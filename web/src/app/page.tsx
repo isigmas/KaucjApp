@@ -1,9 +1,5 @@
-import Image from "next/image";
+import HomeScreen from "@/components/home-screen";
 
 export default function Home() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-    </div>
-  );
+  return <HomeScreen />;
 }
