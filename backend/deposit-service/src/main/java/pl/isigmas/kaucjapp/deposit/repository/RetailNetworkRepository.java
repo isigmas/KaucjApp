@@ -7,5 +7,5 @@ import pl.isigmas.kaucjapp.deposit.model.RetailNetwork;
 @Repository
 public interface RetailNetworkRepository extends JpaRepository<RetailNetwork, Long> {
 
-    RetailNetwork findBy(String name);
+    RetailNetwork findByName(String name);
 }

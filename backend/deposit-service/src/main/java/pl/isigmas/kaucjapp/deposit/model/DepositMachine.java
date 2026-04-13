@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Table(name = "deposit_machines")
@@ -56,6 +57,12 @@ public class DepositMachine {
     public void removeOpeningHour(OpeningHourRecord item) {
         openingHours.remove(item);
         item.setDepositMachine(null);
+    }
+
+    public Optional<OpeningHourRecord> getHourByDay(Integer dayOfWeek) {
+        return openingHours.stream()
+                .filter(hour -> hour.getDayOfWeek().equals(dayOfWeek))
+                .findFirst();
     }
 
 }

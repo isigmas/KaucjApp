@@ -32,9 +32,9 @@ public class DepositMachineController {
         return ResponseEntity.ok(machines);
     }
 
-    @PostMapping("machine/add")
+    @PostMapping("machine")
     public ResponseEntity<Void> addNewMachine(
-        DepositMachineResponseDTO depositMachineResponseDTO
+            @RequestBody DepositMachineResponseDTO depositMachineResponseDTO
     ){
         depositMachineService.addNewMachine(depositMachineResponseDTO);
         return ResponseEntity.ok().build();
@@ -42,10 +42,18 @@ public class DepositMachineController {
 
     @PutMapping("machine/{id}")
     public ResponseEntity<Void> update(
-            @Valid @RequestBody UpdateMachineDTO updateMachineDTO,
+            @RequestBody UpdateMachineDTO updateMachineDTO,
             @PathVariable Long id
     ){
-        depositMachineService.updateMachine(updateMachineDTO);
+        depositMachineService.updateMachine(id ,updateMachineDTO);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("machine/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id
+    ){
+        depositMachineService.delete(id);
         return ResponseEntity.ok().build();
     }
 }
