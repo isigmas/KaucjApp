@@ -10,7 +10,8 @@ import java.util.List;
 
 @Getter
 @Builder
-public class DepositMachineResponseDTO {
+public class UpdateMachineDTO {
+
     private String networkName;
     private DepositMachineStatus status;
     private String address;
