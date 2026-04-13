@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import pl.isigmas.kaucjapp.deposit.model.DepositMachineStatus;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
@@ -102,6 +103,38 @@ class DepositEndpointTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createDepositMachineJSON))
                 .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/deposit/machines"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].networkName").value("Zabka"))
+                .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
+                .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
+                .andExpect(jsonPath("$[0].latitude").value(50.052000))
+                .andExpect(jsonPath("$[0].longitude").value(19.936000))
+                .andExpect(jsonPath("$[0].openingHours").isArray());
+
+        String updateDepositJSON = """
+            {
+            "status": "OUT_OF_ORDER",
+            "networkName": "Biedronka"
+            }
+            """;
+
+        mockMvc.perform(put("/api/deposit/machine/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateDepositJSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/deposit/machines"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].networkName").value("Biedronka"))
+                .andExpect(jsonPath("$[0].status").value("OUT_OF_ORDER"))
+                .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
+                .andExpect(jsonPath("$[0].latitude").value(50.052000))
+                .andExpect(jsonPath("$[0].longitude").value(19.936000))
+                .andExpect(jsonPath("$[0].openingHours").isArray());
     }
 
 }
