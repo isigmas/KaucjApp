@@ -51,7 +51,7 @@ class DepositEndpointTest {
     }
 
     @Test
-    void offerCrudAndStatusFlowWorks() throws Exception {
+    void depositCrudAndStatusFlowWorks() throws Exception {
         String createDepositMachineJSON = """
                 {
                    "networkName": "Zabka",
@@ -112,18 +112,18 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
-                .andExpect(jsonPath("$[0].openingHours").isArray());
+                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
 
         String updateDepositJSON = """
-            {
-            "status": "OUT_OF_ORDER",
-            "networkName": "Biedronka"
-            }
-            """;
+                {
+                "status": "OUT_OF_ORDER",
+                "networkName": "Biedronka"
+                }
+                """;
 
         Long id = depositMachineRepository.findAll().getFirst().getId();
 
-        mockMvc.perform(put("/api/deposit/machine/"+id)
+        mockMvc.perform(put("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateDepositJSON))
                 .andExpect(status().isOk());
@@ -138,7 +138,7 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
                 .andExpect(jsonPath("$[0].openingHours.length()").value(7));
 
-        mockMvc.perform(delete("/api/deposit/machine/1"))
+        mockMvc.perform(delete("/api/deposit/machine/"+id))
                 .andExpect(status().isOk());
 
         assertThat(depositMachineRepository.findAll().isEmpty());
@@ -146,7 +146,7 @@ class DepositEndpointTest {
 
 
     @Test
-    void updatingSpecificDaysWorks() throws Exception{
+    void updatingSpecificDaysWorks() throws Exception {
         String createDepositMachineJSON = """
                 {
                    "networkName": "Zabka",
@@ -214,7 +214,7 @@ class DepositEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/deposit/machine/"+id)
+        mockMvc.perform(put("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateMachineHoursJSON))
                 .andExpect(status().isOk());
@@ -232,5 +232,139 @@ class DepositEndpointTest {
     }
 
 
+    @Test
+    void machinesSearchInAreaWorks() throws Exception {
+        String createDepositMachineJSON_1 = """
+                {
+                   "networkName": "Zabka",
+                   "status": "AVAILABLE",
+                   "address": "ul. Wawelska 15, 31-000 Kraków",
+                   "latitude": 50.052000,
+                   "longitude": 19.936000,
+                   "openingHours": [
+                     {
+                       "dayOfWeek": 1,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 2,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 3,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 4,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 5,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 6,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 7,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     }
+                   ]
+                 }
+                """;
 
+        mockMvc.perform(post("/api/deposit/machine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createDepositMachineJSON_1))
+                .andExpect(status().isCreated());
+
+        String createDepositMachineJSON_2 = """
+                {
+                   "networkName": "Biedronka",
+                   "status": "AVAILABLE",
+                   "address": "ul. Wawelska 15, 31-000 Kraków",
+                   "latitude": 100.052000,
+                   "longitude": 100.936000,
+                   "openingHours": [
+                     {
+                       "dayOfWeek": 1,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 2,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 3,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 4,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 5,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 6,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     },
+                     {
+                       "dayOfWeek": 7,
+                       "openTime": "06:00:00",
+                       "closeTime": "23:00:00"
+                     }
+                   ]
+                 }
+                """;
+
+        mockMvc.perform(post("/api/deposit/machine")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createDepositMachineJSON_2))
+                .andExpect(status().isCreated());
+
+
+        String swLat = "50.000000";
+        String swLon = "19.000000";
+        String neLat = "51.000000";
+        String neLon = "20.000000";
+
+        mockMvc.perform(get("/api/deposit/search")
+                        .param("swLat", swLat)
+                        .param("swLon", swLon)
+                        .param("neLat", neLat)
+                        .param("neLon", neLon))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].networkName").value("Zabka"))
+                .andExpect(jsonPath("$[0].latitude").value(50.052000))
+                .andExpect(jsonPath("$[0].longitude").value(19.936000));
+
+        neLat = "150.000000";
+        mockMvc.perform(get("/api/deposit/search")
+                        .param("swLat", swLat)
+                        .param("swLon", swLon)
+                        .param("neLat", neLat)
+                        .param("neLon", neLon))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(1));
+
+    }
 }

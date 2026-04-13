@@ -17,8 +17,7 @@ public interface DepositMachineRepository extends JpaRepository<DepositMachine, 
     List<DepositMachine> findAll();
 
     @Query(value = "SELECT * FROM deposit_machines " +
-            "WHERE status = 'OPEN' " +
-            "AND point(longitude, latitude) <@ box(point(:swLon, :swLat), point(:neLon, :neLat))",
+            "WHERE point(longitude, latitude) <@ box(point(:swLon, :swLat), point(:neLon, :neLat))",
             nativeQuery = true)
     List<DepositMachine> findOpenOffersInBoundingBox(
             @Param("swLat") double swLat,
