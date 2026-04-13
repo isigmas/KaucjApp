@@ -237,6 +237,7 @@ class DepositEndpointTest {
         String createDepositMachineJSON_1 = """
                 {
                    "networkName": "Zabka",
+                   "status": "AVAILABLE",
                    "address": "ul. Wawelska 15, 31-000 Kraków",
                    "latitude": 50.052000,
                    "longitude": 19.936000,
@@ -288,9 +289,10 @@ class DepositEndpointTest {
         String createDepositMachineJSON_2 = """
                 {
                    "networkName": "Biedronka",
+                   "status": "AVAILABLE",
                    "address": "ul. Wawelska 15, 31-000 Kraków",
-                   "latitude": 100.052000,
-                   "longitude": 100.936000,
+                   "latitude": 54.352000,
+                   "longitude": 18.646000,
                    "openingHours": [
                      {
                        "dayOfWeek": 1,
@@ -353,10 +355,10 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].networkName").value("Zabka"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000));
-        swLat = "99.000000";
-        swLon = "99.000000";
-        neLat = "101.000000";
-        neLon = "101.000000";
+        swLat = "54.000000";
+        swLon = "18.000000";
+        neLat = "55.000000";
+        neLon = "19.000000";
         mockMvc.perform(get("/api/deposit/search")
                         .param("swLat", swLat)
                         .param("swLon", swLon)
@@ -364,7 +366,10 @@ class DepositEndpointTest {
                         .param("neLon", neLon))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].networkName").value("Biedronka"))
+                .andExpect(jsonPath("$[0].latitude").value(54.352000))
+                .andExpect(jsonPath("$[0].longitude").value(18.646000));
 
     }
 }

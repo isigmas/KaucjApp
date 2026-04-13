@@ -1,8 +1,12 @@
 package pl.isigmas.kaucjapp.deposit.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
@@ -13,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/deposit")
 @RequiredArgsConstructor
+@Validated
 public class DepositMachineController {
 
     private final DepositMachineService depositMachineService;
@@ -22,7 +27,6 @@ public class DepositMachineController {
         return ResponseEntity.ok("Ready");
     }
 
-
     @GetMapping("/machines")
     public ResponseEntity<List<DepositMachineResponseDTO>> getAllMachines() {
         List<DepositMachineResponseDTO> machines = depositMachineService.getAll();
@@ -31,34 +35,34 @@ public class DepositMachineController {
 
     @GetMapping("/search")
     public ResponseEntity<List<DepositMachineResponseDTO>> searchDepositMachinesInArea(
-            @RequestParam double swLat,
-            @RequestParam double swLon,
-            @RequestParam double neLat,
-            @RequestParam double neLon) {
+            @RequestParam @DecimalMin(value = "-90.0", inclusive = true) @DecimalMax(value = "90.0", inclusive = true) double swLat,
+            @RequestParam @DecimalMin(value = "-180.0", inclusive = true) @DecimalMax(value = "180.0", inclusive = true) double swLon,
+            @RequestParam @DecimalMin(value = "-90.0", inclusive = true) @DecimalMax(value = "90.0", inclusive = true) double neLat,
+            @RequestParam @DecimalMin(value = "-180.0", inclusive = true) @DecimalMax(value = "180.0", inclusive = true) double neLon) {
         return ResponseEntity.ok(depositMachineService.getDepositMachinesInArea(swLat, swLon, neLat, neLon));
     }
 
     @PostMapping("/machine")
     public ResponseEntity<Void> addNewMachine(
-            @RequestBody DepositMachineResponseDTO depositMachineResponseDTO
-    ){
+            @Valid @RequestBody DepositMachineResponseDTO depositMachineResponseDTO
+    ) {
         depositMachineService.addNewMachine(depositMachineResponseDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("machine/{id}")
     public ResponseEntity<Void> update(
-            @RequestBody UpdateMachineDTO updateMachineDTO,
+            @Valid @RequestBody UpdateMachineDTO updateMachineDTO,
             @PathVariable Long id
-    ){
-        depositMachineService.updateMachine(id ,updateMachineDTO);
+    ) {
+        depositMachineService.updateMachine(id, updateMachineDTO);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("machine/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id
-    ){
+    ) {
         depositMachineService.delete(id);
         return ResponseEntity.ok().build();
     }

@@ -32,7 +32,10 @@ public class DepositMachine {
     @Enumerated(EnumType.STRING)
     private DepositMachineStatus status = DepositMachineStatus.AVAILABLE;
 
+    @Column(precision = 9, scale = 6)
     private BigDecimal latitude;
+
+    @Column(precision = 9, scale = 6)
     private BigDecimal longitude;
 
     @Column(name = "address")
@@ -56,7 +59,6 @@ public class DepositMachine {
 
     public void removeOpeningHour(OpeningHourRecord item) {
         openingHours.remove(item);
-        item.setDepositMachine(null);
     }
 
     public Optional<OpeningHourRecord> getHourByDay(Integer dayOfWeek) {

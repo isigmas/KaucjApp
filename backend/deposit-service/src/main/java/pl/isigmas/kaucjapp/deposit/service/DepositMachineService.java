@@ -12,7 +12,7 @@ import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,14 +53,16 @@ public class DepositMachineService {
     @Transactional
     public void addNewMachine(DepositMachineResponseDTO depositMachineResponseDTO) {
         var depositMachine = new DepositMachine();
-        var retail = retailNetworkRepository.findByName(depositMachineResponseDTO.getNetworkName());
+        var retail = retailNetworkRepository.findByName(depositMachineResponseDTO.getNetworkName())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Retail network not found: " + depositMachineResponseDTO.getNetworkName()));
 
         depositMachine.setRetailNetwork(retail);
         depositMachine.setLatitude(depositMachineResponseDTO.getLatitude());
         depositMachine.setLongitude(depositMachineResponseDTO.getLongitude());
         depositMachine.setAddress(depositMachineResponseDTO.getAddress());
 
-        for(var day : depositMachineResponseDTO.getOpeningHours()){
+        for (var day : depositMachineResponseDTO.getOpeningHours()) {
             OpeningHourRecord record = new OpeningHourRecord();
             record.setOpenTime(day.getOpenTime());
             record.setCloseTime(day.getCloseTime());
@@ -73,20 +75,32 @@ public class DepositMachineService {
     }
 
     @Transactional
-    public void updateMachine(Long id,UpdateMachineDTO dto) {
-        DepositMachine depositMachine = depositMachineRepository.findById(id)
+    public void updateMachine(Long id, UpdateMachineDTO dto) {
+        DepositMachine depositMachine = depositMachineRepository.findWithOpeningHoursById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Machine with such id not found"));
 
-        if(dto.getNetworkName() != null){
-            var retail = retailNetworkRepository.findByName(dto.getNetworkName());
+        if (dto.getNetworkName() != null) {
+            if (dto.getNetworkName().isBlank()) {
+                throw new IllegalArgumentException("networkName must not be blank when provided");
+            }
+            var retail = retailNetworkRepository.findByName(dto.getNetworkName())
+                    .orElseThrow(() -> new EntityNotFoundException("Retail network not found: " + dto.getNetworkName()));
 
             depositMachine.setRetailNetwork(retail);
         }
 
-        if (dto.getStatus() != null) depositMachine.setStatus(dto.getStatus());
-        if (dto.getAddress() != null) depositMachine.setAddress(dto.getAddress());
-        if (dto.getLatitude() != null) depositMachine.setLatitude(dto.getLatitude());
-        if (dto.getLongitude() != null) depositMachine.setLongitude(dto.getLongitude());
+        if (dto.getStatus() != null) {
+            depositMachine.setStatus(dto.getStatus());
+        }
+        if (dto.getAddress() != null) {
+            depositMachine.setAddress(dto.getAddress());
+        }
+        if (dto.getLatitude() != null) {
+            depositMachine.setLatitude(dto.getLatitude());
+        }
+        if (dto.getLongitude() != null) {
+            depositMachine.setLongitude(dto.getLongitude());
+        }
 
         if (dto.getOpeningHours() != null) {
             for (OpeningHourDTO hourDto : dto.getOpeningHours()) {
@@ -106,10 +120,9 @@ public class DepositMachineService {
                 }
             }
         }
-
     }
 
-
+    @Transactional
     public void delete(Long id) {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Machine with such id not found"));
@@ -119,7 +132,11 @@ public class DepositMachineService {
 
     @Transactional(readOnly = true)
     public List<DepositMachineResponseDTO> getDepositMachinesInArea(double swLat, double swLon, double neLat, double neLon) {
-        return depositMachineRepository.findOpenOffersInBoundingBox(swLat, swLon, neLat, neLon).stream()
+        List<Long> ids = depositMachineRepository.findIdsInBoundingBox(swLat, swLon, neLat, neLon);
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return depositMachineRepository.findAllByIdInWithAssociations(ids).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
