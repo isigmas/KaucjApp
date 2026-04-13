@@ -117,4 +117,10 @@ public class DepositMachineService {
         depositMachineRepository.delete(depositMachine);
     }
 
+    @Transactional(readOnly = true)
+    public List<DepositMachineResponseDTO> getDepositMachinesInArea(double swLat, double swLon, double neLat, double neLon) {
+        return depositMachineRepository.findOpenOffersInBoundingBox(swLat, swLon, neLat, neLon).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 }

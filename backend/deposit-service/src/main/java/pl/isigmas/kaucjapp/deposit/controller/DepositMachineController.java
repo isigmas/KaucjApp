@@ -1,9 +1,5 @@
 package pl.isigmas.kaucjapp.deposit.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +27,15 @@ public class DepositMachineController {
     public ResponseEntity<List<DepositMachineResponseDTO>> getAllMachines() {
         List<DepositMachineResponseDTO> machines = depositMachineService.getAll();
         return ResponseEntity.ok(machines);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<DepositMachineResponseDTO>> searchDepositMachinesInArea(
+            @RequestParam double swLat,
+            @RequestParam double swLon,
+            @RequestParam double neLat,
+            @RequestParam double neLon) {
+        return ResponseEntity.ok(depositMachineService.getDepositMachinesInArea(swLat, swLon, neLat, neLon));
     }
 
     @PostMapping("/machine")
