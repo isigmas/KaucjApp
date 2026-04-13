@@ -57,4 +57,12 @@ public class AuthController {
 
         return ResponseEntity.ok(newToken);
     }
+
+    @GetMapping("/activate/{token}")
+    public ResponseEntity<Void> activate(@PathVariable String token) {
+        service.activate(token);
+        log.info("Activate successful");
+
+        return ResponseEntity.ok().build();
+    }
 }
