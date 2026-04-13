@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
@@ -32,12 +33,12 @@ public class DepositMachineController {
         return ResponseEntity.ok(machines);
     }
 
-    @PostMapping("machine")
+    @PostMapping("/machine")
     public ResponseEntity<Void> addNewMachine(
             @RequestBody DepositMachineResponseDTO depositMachineResponseDTO
     ){
         depositMachineService.addNewMachine(depositMachineResponseDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("machine/{id}")
