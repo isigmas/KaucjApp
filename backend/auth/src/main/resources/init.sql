@@ -24,7 +24,7 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE activation_tokens (
     token_id    BIGSERIAL PRIMARY KEY,
     account_id  BIGSERIAL NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
-    token       VARCHAR(255) NOT NULL UNIQUE,
+    token_hash  VARCHAR(255) NOT NULL UNIQUE,
     expires_at  TIMESTAMP NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
     is_used     BOOLEAN NOT NULL DEFAULT FALSE
