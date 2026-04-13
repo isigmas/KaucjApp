@@ -116,7 +116,7 @@ public class AuthService {
         account.setStatus(AccountStatus.ACTIVE);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public String generateJWT(String refreshTokenStr) {
 
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
