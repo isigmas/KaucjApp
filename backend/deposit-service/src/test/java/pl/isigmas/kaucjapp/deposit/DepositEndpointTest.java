@@ -237,7 +237,6 @@ class DepositEndpointTest {
         String createDepositMachineJSON_1 = """
                 {
                    "networkName": "Zabka",
-                   "status": "AVAILABLE",
                    "address": "ul. Wawelska 15, 31-000 Kraków",
                    "latitude": 50.052000,
                    "longitude": 19.936000,
@@ -289,7 +288,6 @@ class DepositEndpointTest {
         String createDepositMachineJSON_2 = """
                 {
                    "networkName": "Biedronka",
-                   "status": "AVAILABLE",
                    "address": "ul. Wawelska 15, 31-000 Kraków",
                    "latitude": 100.052000,
                    "longitude": 100.936000,
@@ -355,8 +353,10 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].networkName").value("Zabka"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000));
-
-        neLat = "150.000000";
+        swLat = "99.000000";
+        swLon = "99.000000";
+        neLat = "101.000000";
+        neLon = "101.000000";
         mockMvc.perform(get("/api/deposit/search")
                         .param("swLat", swLat)
                         .param("swLon", swLon)
