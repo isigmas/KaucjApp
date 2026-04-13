@@ -9,11 +9,13 @@ import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
+import pl.isigmas.kaucjapp.auth.entity.ActivationToken;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.*;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
+import pl.isigmas.kaucjapp.auth.repository.ActivationTokenRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
@@ -28,6 +30,7 @@ public class AuthService {
 
     private final AccountRepository accountRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ActivationTokenRepository activationTokenRepository;
 
     private final Encoder encoder;
     private final UserClient userClient;
@@ -93,6 +96,24 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         return generatedToken;
+    }
+
+    @Transactional
+    public void activate(String token) {
+
+        ActivationToken activationToken = activationTokenRepository.findByToken(token)
+                .orElseThrow(TokenNotFoundException::new);
+
+        if (activationToken.getExpirationDate().before(new Date())) {
+            throw new ExpiredTokenException(activationToken);
+        }
+
+        if (activationToken.isUsed()) {
+            throw new UsedTokenException();
+        }
+
+        Account account = activationToken.getAccount();
+        account.setStatus(AccountStatus.ACTIVE);
     }
 
     @Transactional
