@@ -19,6 +19,8 @@ import pl.isigmas.kaucjapp.auth.repository.ActivationTokenRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class AuthService {
 
     private final JwtService jwtService;
+    private final TokenService tokenService;
 
     private final AccountRepository accountRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -57,6 +60,17 @@ public class AuthService {
         newUsersServiceUser.setLastName(newUser.getLastName());
 
         userClient.create(newUsersServiceUser, itSecret);
+
+        String token = tokenService.generateBase64();
+        ActivationToken activationToken = ActivationToken.builder()
+                .account(createdAccount)
+                .token(encoder.hashToken(token))
+                .expirationDate(Instant.now().plus(Duration.ofDays(1)))
+                .build();
+
+        activationTokenRepository.save(activationToken);
+
+        // TODO: Send email with activation link
     }
 
     @Transactional
@@ -101,19 +115,21 @@ public class AuthService {
     @Transactional
     public void activate(String token) {
 
-        ActivationToken activationToken = activationTokenRepository.findByToken(token)
+        ActivationToken activationToken = activationTokenRepository.findByToken(encoder.hashToken(token))
                 .orElseThrow(TokenNotFoundException::new);
-
-        if (activationToken.getExpirationDate().before(new Date())) {
-            throw new ExpiredTokenException(activationToken);
-        }
 
         if (activationToken.isUsed()) {
             throw new UsedTokenException();
         }
 
+        if (activationToken.getExpirationDate().isBefore(Instant.now())) {
+            throw new ExpiredTokenException(activationToken);
+        }
+
         Account account = activationToken.getAccount();
         account.setStatus(AccountStatus.ACTIVE);
+
+        activationToken.setUsed(true);
     }
 
     @Transactional(readOnly = true)

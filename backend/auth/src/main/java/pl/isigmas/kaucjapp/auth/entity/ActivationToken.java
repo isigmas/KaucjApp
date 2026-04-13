@@ -3,19 +3,20 @@ package pl.isigmas.kaucjapp.auth.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Entity
 @Table(name = "activation_tokens")
 @Getter
 @Setter
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class ActivationToken {
 
     @Id
@@ -31,15 +32,15 @@ public class ActivationToken {
 
     @NotNull
     @Size(max = 255)
-    @Column(name = "token", nullable = false, unique = true)
+    @Column(name = "token_hash", nullable = false, unique = true)
     private String token;
 
     @NotNull
     @Column(name = "expires_at",  nullable = false)
-    private Date expirationDate;
+    private Instant expirationDate;
 
     @Column(name = "created_at")
-    private Date creationDate = new Date();
+    private Instant creationDate = Instant.now();
 
     @NotNull
     @Column(name = "is_used", nullable = false)
