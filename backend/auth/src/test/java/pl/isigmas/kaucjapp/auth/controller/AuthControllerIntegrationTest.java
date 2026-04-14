@@ -6,10 +6,8 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.ServletException;
@@ -39,20 +37,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@Import({TestcontainersConfiguration.class, AuthControllerIntegrationTest.TestConfig.class})
+@Import({TestcontainersConfiguration.class})
 @DisplayName("AuthController Integration Tests")
 class AuthControllerIntegrationTest {
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        @Primary
-        public UserClient userClient() {
-            UserClient mock = Mockito.mock(UserClient.class);
-            when(mock.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
-            return mock;
-        }
-    }
 
     private MockMvc mockMvc;
 
@@ -71,8 +58,11 @@ class AuthControllerIntegrationTest {
     @Autowired
     private Encoder encoder;
 
-    @Autowired
+    @MockitoBean
     private UserClient userClient;
+
+    @MockitoBean
+    private pl.isigmas.kaucjapp.auth.client.NotificationClient notificationClient;
 
     @BeforeEach
     void setUp() {
@@ -83,6 +73,9 @@ class AuthControllerIntegrationTest {
         // Reset mock to default behavior
         Mockito.reset(userClient);
         when(userClient.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
+
+        Mockito.reset(notificationClient);
+        when(notificationClient.sendWelcomeEmail(any())).thenReturn(ResponseEntity.ok().build());
     }
 
     @Nested
