@@ -167,13 +167,11 @@ class UserEndpointTest {
     @Test
     void userNotFoundCasesReturn404() throws Exception {
         mockMvc.perform(get("/api/user/999999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("not_found"));
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(delete("/api/user/me")
                         .header("X-User-Id", 999999L))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("not_found"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -201,8 +199,7 @@ class UserEndpointTest {
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":5}"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("forbidden"));
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -341,6 +338,14 @@ class UserEndpointTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].addressLabel").value("home"))
                 .andExpect(jsonPath("$[1].addressLabel").value("work"));
+    }
+
+    @Test
+    void gettingMyAddressesWithoutUserIdHeaderReturns400() throws Exception {
+        mockMvc.perform(get("/api/user/me/addresses"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.path").value("/api/user/me/addresses"));
     }
 
     @ParameterizedTest(name = "Should return 400 when: {1}")

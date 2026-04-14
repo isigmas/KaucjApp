@@ -100,7 +100,7 @@ class OfferEndpointTest {
                     "pickupAddress": "ul. Zmieniona 10",
                     "pickupInstructions": "Odbior po 18:00",
                     "items": [
-                      { "bottleId": %d, "quantity": 8, "unitPrice": 0.60 },
+                      { "bottleId": %d, "quantity": 8, "unitPrice": 0.50 },
                       { "bottleId": %d, "quantity": 3, "unitPrice": 0.25 }
                     ]
                 }
@@ -313,7 +313,7 @@ class OfferEndpointTest {
         String createOfferJson = """
                 {
                     "latitude": 52.2297,
-                    "longitude": 21.0122,
+                    "longitude": 21.0122
                 }
                 """;
     mockMvc.perform(post("/api/offer/offer")
@@ -331,12 +331,15 @@ class OfferEndpointTest {
                         "latitude": 52.2297,
                         "longitude": 21.0122,
                         "pickupAddress": "",
+                        "items": [
+                            { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                            ]
                     }
                     """;
         mockMvc.perform(post("/api/offer/offer")
                             .header("X-User-Id", creatorId)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(createOfferJson))
+                            .content(createOfferJson.formatted(plasticBottleId)))
                     .andExpect(status().isBadRequest());
     }
 
@@ -347,14 +350,165 @@ class OfferEndpointTest {
                     {
                         "latitude": 55.2297,
                         "longitude": 24.0122,
-                        "pickupAddress": "",
+                        "pickupAddress": "ul. Daleko 1",
+                        "items": [
+                            { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                            ]
                     }
                     """;
         mockMvc.perform(post("/api/offer/offer")
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createOfferJson))
+                        .content(createOfferJson.formatted(plasticBottleId)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatingOfferWhenStatusIsNotOpenReturns409() throws Exception {
+        Long creatorId = 12001L;
+        Long collectorId = 12002L;
+
+        String createOfferJson = """
+                {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test",
+                    "items": [
+                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                    ]
+                }
+                """.formatted(plasticBottleId);
+
+        mockMvc.perform(post("/api/offer/offer")
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/RESERVED")
+                        .header("X-User-Id", collectorId))
+                .andExpect(status().isOk());
+
+        String updateOfferJson = """
+                {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "pickupAddress": "ul. Zmieniona 10",
+                    "pickupInstructions": "Odbior po 18:00",
+                    "items": [
+                      { "bottleId": %d, "quantity": 2, "unitPrice": 0.20 }
+                    ]
+                }
+                """.formatted(plasticBottleId);
+
+        mockMvc.perform(put("/api/offer/" + offerId)
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateOfferJson))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void changingStatusFromOpenDirectlyToCompletedReturns409() throws Exception {
+        Long creatorId = 13001L;
+        Long collectorId = 13002L;
+
+        String createOfferJson = """
+                {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test",
+                    "items": [
+                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                    ]
+                }
+                """.formatted(plasticBottleId);
+
+        mockMvc.perform(post("/api/offer/offer")
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/COMPLETED")
+                        .header("X-User-Id", collectorId))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void reservingOfferAlreadyReservedBySomeoneElseReturns409() throws Exception {
+        Long creatorId = 14001L;
+        Long firstCollectorId = 14002L;
+        Long secondCollectorId = 14003L;
+
+        String createOfferJson = """
+                {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test",
+                    "items": [
+                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                    ]
+                }
+                """.formatted(plasticBottleId);
+
+        mockMvc.perform(post("/api/offer/offer")
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/RESERVED")
+                        .header("X-User-Id", firstCollectorId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/RESERVED")
+                        .header("X-User-Id", secondCollectorId))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void completingOfferByNonCollectorReturns403() throws Exception {
+        Long creatorId = 15001L;
+        Long collectorId = 15002L;
+        Long someoneElseId = 15003L;
+
+        String createOfferJson = """
+                {
+                    "latitude": 52.2297,
+                    "longitude": 21.0122,
+                    "pickupAddress": "ul. Odbiorcza 1",
+                    "pickupInstructions": "Test",
+                    "items": [
+                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                    ]
+                }
+                """.formatted(plasticBottleId);
+
+        mockMvc.perform(post("/api/offer/offer")
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createOfferJson))
+                .andExpect(status().isCreated());
+
+        Long offerId = offerRepository.findAll().stream().findFirst().orElseThrow().getId();
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/RESERVED")
+                        .header("X-User-Id", collectorId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/offer/" + offerId + "/status/COMPLETED")
+                        .header("X-User-Id", someoneElseId))
+                .andExpect(status().isForbidden());
     }
 
 }

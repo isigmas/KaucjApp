@@ -4,19 +4,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.auth.client.NotificationClient;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
+import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
+import pl.isigmas.kaucjapp.auth.entity.ActivationToken;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.*;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
+import pl.isigmas.kaucjapp.auth.repository.ActivationTokenRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -25,12 +31,16 @@ import java.util.UUID;
 public class AuthService {
 
     private final JwtService jwtService;
+    private final TokenService tokenService;
 
     private final AccountRepository accountRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ActivationTokenRepository activationTokenRepository;
+
+    private final UserClient userClient;
+    private final NotificationClient notificationClient;
 
     private final Encoder encoder;
-    private final UserClient userClient;
 
     @Value("${IT_SECRET}")
     private String itSecret;
@@ -54,6 +64,22 @@ public class AuthService {
         newUsersServiceUser.setLastName(newUser.getLastName());
 
         userClient.create(newUsersServiceUser, itSecret);
+
+        String token = tokenService.generateBase64();
+        ActivationToken activationToken = ActivationToken.builder()
+                .account(createdAccount)
+                .token(encoder.hashToken(token))
+                .expirationDate(Instant.now().plus(Duration.ofDays(1)))
+                .build();
+
+        activationTokenRepository.save(activationToken);
+
+        MailRequest mailRequest = MailRequest.builder()
+                .emailTo(newUser.getEmail())
+                .message(token)
+                .build();
+        
+        notificationClient.sendWelcomeEmail(mailRequest);
     }
 
     @Transactional
@@ -96,6 +122,26 @@ public class AuthService {
     }
 
     @Transactional
+    public void activate(String token) {
+
+        ActivationToken activationToken = activationTokenRepository.findByToken(encoder.hashToken(token))
+                .orElseThrow(TokenNotFoundException::new);
+
+        if (activationToken.isUsed()) {
+            throw new UsedTokenException();
+        }
+
+        if (activationToken.getExpirationDate().isBefore(Instant.now())) {
+            throw new ExpiredTokenException(activationToken);
+        }
+
+        Account account = activationToken.getAccount();
+        account.setStatus(AccountStatus.ACTIVE);
+
+        activationToken.setUsed(true);
+    }
+
+    @Transactional(readOnly = true)
     public String generateJWT(String refreshTokenStr) {
 
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
