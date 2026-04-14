@@ -10,6 +10,12 @@ param acrName string
 @description('Database Administrator User')
 param dbUser string = 'postgres_admin'
 
+@description('API Gateway public URL')
+param baseUrl string
+
+@description('Email address used for sending notifications')
+param mailUsername string
+
 @secure()
 @description('Database password')
 param dbPassword string
@@ -26,11 +32,16 @@ param jwtSecret string
 @description('Password Salt')
 param passwordSalt string
 
+@secure()
+@description('Email password')
+param mailPassword string
+
 param apiGatewayImageName string = ''
 param authServiceImageName string = ''
 param offersServiceImageName string = ''
 param usersServiceImageName string = ''
 param depositServiceImageName string = ''
+param notificationServiceImageName string = ''
 
 var helloWorldImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
@@ -167,6 +178,28 @@ module depositApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+    ]
+  }
+}
+
+module notificationApp 'modules/app.bicep' = {
+  name: 'notification-service-deployment'
+  params: {
+    appName: 'notification-service'
+    azdServiceName: 'notification-service'
+    location: location
+    environmentId: acaEnv.outputs.id
+    containerImage: !empty(notificationServiceImageName) ? notificationServiceImageName : helloWorldImage
+    acrServer: acr.properties.loginServer
+    acrUsername: acr.name
+    acrPassword: acr.listCredentials().passwords[0].value
+    appSecrets: [
+      { name: 'mail-password', value: mailPassword }
+    ]
+    envVars: [
+      { name: 'BASE_URL', value: baseUrl }
+      { name: 'MAIL_USERNAME', value: mailUsername }
+      { name: 'MAIL_PASSWORD', secretRef: 'mail-password' }
     ]
   }
 }

@@ -22,6 +22,15 @@
     },
     "passwordSalt": {
       "value": "${PASSWORD_SALT}"
+    },
+    "baseUrl": {
+      "value": "${BASE_URL}"
+    },
+    "mailUsername": {
+      "value": "${MAIL_USERNAME}"
+    },
+    "mailPassword": {
+      "value": "${MAIL_PASSWORD}"
     }
   }
 }
