@@ -343,6 +343,16 @@ class UserEndpointTest {
                 .andExpect(jsonPath("$[1].addressLabel").value("work"));
     }
 
+    @Test
+    void gettingMyAddressesWithoutUserIdHeaderReturns400() throws Exception {
+        mockMvc.perform(get("/api/user/me/addresses"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.path").value("/api/user/me/addresses"));
+    }
+
     @ParameterizedTest(name = "Should return 400 when: {1}")
     @MethodSource("provideInvalidUserPayloads")
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
