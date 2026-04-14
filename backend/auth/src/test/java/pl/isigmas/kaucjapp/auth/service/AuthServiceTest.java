@@ -20,8 +20,10 @@ import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
+import pl.isigmas.kaucjapp.auth.repository.ActivationTokenRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
+import pl.isigmas.kaucjapp.auth.client.NotificationClient;
 
 import java.util.Date;
 import java.util.Optional;
@@ -47,6 +49,15 @@ class AuthServiceTest {
 
     @Mock
     private UserClient userClient;
+
+    @Mock
+    private TokenService tokenService;
+
+    @Mock
+    private ActivationTokenRepository activationTokenRepository;
+
+    @Mock
+    private NotificationClient notificationClient;
 
     @InjectMocks
     private AuthService authService;
@@ -85,6 +96,7 @@ class AuthServiceTest {
 
             when(encoder.hashPassword(validUser.getPassword())).thenReturn("hashedPassword");
             when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+            when(tokenService.generateBase64()).thenReturn("dummy-token");
 
             // when
             authService.create(validUser);
@@ -106,6 +118,7 @@ class AuthServiceTest {
 
             when(encoder.hashPassword(validUser.getPassword())).thenReturn("secureHash");
             when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+            when(tokenService.generateBase64()).thenReturn("dummy-token");
 
             // when
             authService.create(validUser);
@@ -130,6 +143,7 @@ class AuthServiceTest {
 
             when(encoder.hashPassword(anyString())).thenReturn("hash");
             when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+            when(tokenService.generateBase64()).thenReturn("dummy-token");
 
             // when
             authService.create(validUser);
@@ -159,6 +173,7 @@ class AuthServiceTest {
             
             when(encoder.hashPassword(plainPassword)).thenReturn("$2a$12$hashedValue");
             when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+            when(tokenService.generateBase64()).thenReturn("dummy-token");
 
             // when
             authService.create(validUser);
