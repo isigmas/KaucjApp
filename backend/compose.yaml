@@ -99,6 +99,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PASSWORD_SALT=${PASSWORD_SALT}
       - USER_SERVICE_URL=http://users-service:8080
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8080
     depends_on:
       auth-db:
         condition: service_healthy
