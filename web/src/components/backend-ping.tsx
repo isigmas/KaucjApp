@@ -79,7 +79,6 @@ export default function BackendPing() {
             <p className="text-gray-500 text-sm mt-1">GET /api/auth/status</p>
           </div>
 
-          {/* The Timer */}
           <div className="text-3xl font-mono font-semibold text-blue-600 bg-blue-50 py-3 rounded-xl border border-blue-100">
             {formatTime(elapsedSeconds)}
           </div>

@@ -58,7 +58,6 @@ export function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Field */}
         <div>
           <label
             htmlFor="email"
@@ -91,7 +90,6 @@ export function LoginForm() {
           )}
         </div>
 
-        {/* Password Field */}
         <div>
           <label
             htmlFor="password"

@@ -99,7 +99,7 @@ export function Sidebar() {
             ) : (
               <LogOut className="w-5 h-5" />
             )}
-            {isSigningOut ? "Signing out..." : "Sign Out"}
+            {isSigningOut ? "Wylogowywanie..." : "Wyloguj się"}
           </button>
         </div>
       </div>
