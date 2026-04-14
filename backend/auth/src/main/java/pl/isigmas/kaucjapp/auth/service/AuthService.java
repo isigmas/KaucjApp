@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.auth.client.NotificationClient;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
+import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
@@ -35,8 +37,10 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ActivationTokenRepository activationTokenRepository;
 
-    private final Encoder encoder;
     private final UserClient userClient;
+    private final NotificationClient notificationClient;
+
+    private final Encoder encoder;
 
     @Value("${IT_SECRET}")
     private String itSecret;
@@ -70,7 +74,12 @@ public class AuthService {
 
         activationTokenRepository.save(activationToken);
 
-        // TODO: Send email with activation link
+        MailRequest mailRequest = MailRequest.builder()
+                .emailTo(newUser.getEmail())
+                .message(token)
+                .build();
+        
+        notificationClient.sendWelcomeEmail(mailRequest);
     }
 
     @Transactional
