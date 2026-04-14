@@ -5,8 +5,7 @@ import {
   clearTokens,
 } from "./session";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://192.168.100.7:8080/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 interface FetchOptions extends RequestInit {
   headers?: Record<string, string>;
@@ -27,12 +26,32 @@ export async function apiClient<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
+  const method = options.method || "GET";
+
+  // ---- REQUEST LOGGING ----
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`\n[API REQUEST] ${method} ${endpoint}`);
+    console.log(
+      `Token:`,
+      accessToken ? `Bearer ${accessToken.substring(0, 25)}...` : "None",
+    );
+
+    if (options.body) {
+      try {
+        const parsedBody = JSON.parse(options.body as string);
+        console.log(`Body:`, JSON.stringify(parsedBody, null, 2));
+      } catch {
+        console.log(`Body:`, options.body);
+      }
+    }
+  }
+
   let response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
 
-  // Handle 401 Expiration & Token Refresh Flow
+  // ---- Handle 401 Expiration & Token Refresh Flow ----
   if (response.status === 401) {
     console.warn(
-      `[API] 401 Unauthorized on ${endpoint}. Attempting token refresh...`,
+      `⚠️ [API] 401 Unauthorized on ${endpoint}. Attempting token refresh...`,
     );
 
     const refreshToken = await getRefreshToken();
@@ -56,8 +75,12 @@ export async function apiClient<T>(
       // Update cookies with the new token
       await setTokens(newAccessToken, refreshToken);
 
-      //retry
       headers["Authorization"] = `Bearer ${newAccessToken}`;
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`🔄 [API RETRY] ${method} ${endpoint} (with new token)`);
+      }
+
       response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
     } catch (refreshError) {
       console.error("[API] Refresh failed. Purging session.");
@@ -68,10 +91,30 @@ export async function apiClient<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`❌ [API ERROR] ${response.status} ${endpoint}`, errorData);
+    }
     throw new Error(errorData?.message || `API Error: ${response.status}`);
   }
 
-  // Handle empty responses
+  // ---- RESPONSE LOGGING ----
   const text = await response.text();
-  return text ? JSON.parse(text) : ({} as T);
+  let responseData: any;
+  // response  is either JSON or plan text
+  try {
+    responseData = text ? JSON.parse(text) : ({} as T);
+  } catch (e) {
+    responseData = text as unknown as T;
+  }
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[API RESPONSE] ${response.status} ${endpoint}`);
+    console.log(
+      `Data:`,
+      typeof responseData === "object"
+        ? JSON.stringify(responseData, null, 2)
+        : responseData,
+    );
+  }
+
+  return responseData;
 }
