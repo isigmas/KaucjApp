@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
 
 import pl.isigmas.kaucjapp.users.DTO.RatingDTO;
+import pl.isigmas.kaucjapp.users.exception.RatingNotFoundException;
+import pl.isigmas.kaucjapp.users.exception.SelfRatingForbiddenException;
+import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.repository.RatingRepository;
 
@@ -25,11 +27,11 @@ public class RatingService {
         log.info("Dodawanie oceny {} dla użytkownika ID: {}", score, userId);
 
         if (userId.equals(raterId)) {
-            throw new SecurityException("Cannot rate yourself");
+            throw new SelfRatingForbiddenException();
         }
 
         Rating rating = ratingRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         BigDecimal currentAvg = rating.getAvgScore();
         int oldCount = rating.getFeedbackCount();
@@ -49,7 +51,7 @@ public class RatingService {
     public RatingDTO getRatingDTO(Long userId) {
         return ratingRepository.findById(userId)
                 .map(this::mapToDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Reviews not found for user ID: " + userId));
+                .orElseThrow(() -> new RatingNotFoundException(userId));
     }
 
     private RatingDTO mapToDTO(Rating rating) {
