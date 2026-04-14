@@ -27,6 +27,7 @@
 		<module>api-gateway</module>
 		<module>auth</module>
         <module>deposit-service</module>
+        <module>notification-service</module>
     </modules>
 	<scm>
 		<connection/>
