@@ -29,8 +29,6 @@ public class RestExceptionHandler {
         HttpStatus status = ex.getStatus();
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
                 .errorCode(ex.getErrorCode())
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -42,8 +40,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleNotFound(EntityNotFoundException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
                 .errorCode("DB_NOT_FOUND")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -55,8 +51,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("BAD_REQUEST")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -68,8 +62,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("MALFORMED_JSON")
                 .message("Invalid JSON or incompatible field types")
                 .path(request.getRequestURI())
@@ -89,8 +81,6 @@ public class RestExceptionHandler {
 
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("VALIDATION_ERR")
                 .message("Validation failed")
                 .path(request.getRequestURI())
@@ -111,8 +101,6 @@ public class RestExceptionHandler {
 
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("VALIDATION_ERR")
                 .message("Validation failed")
                 .path(request.getRequestURI())
@@ -129,8 +117,6 @@ public class RestExceptionHandler {
 
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("VALIDATION_ERR")
                 .message(message.isEmpty() ? "Validation failed" : message)
                 .path(request.getRequestURI())
@@ -142,8 +128,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleMissingInput(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("BAD_REQUEST")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -155,8 +139,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleForbidden(SecurityException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.FORBIDDEN.value())
-                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
                 .errorCode("SECURITY_FORBIDDEN")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -168,8 +150,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleConflict(IllegalStateException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error(HttpStatus.CONFLICT.getReasonPhrase())
                 .errorCode("STATE_CONFLICT")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -181,8 +161,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error(HttpStatus.CONFLICT.getReasonPhrase())
                 .errorCode("USER_005")
                 .message("User already exists")
                 .path(request.getRequestURI())
@@ -194,8 +172,6 @@ public class RestExceptionHandler {
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                 .errorCode("INTERNAL_ERR")
                 .message("Unexpected server error")
                 .path(request.getRequestURI())

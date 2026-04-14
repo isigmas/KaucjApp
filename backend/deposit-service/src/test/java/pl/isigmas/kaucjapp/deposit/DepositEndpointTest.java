@@ -380,7 +380,6 @@ class DepositEndpointTest {
         mockMvc.perform(delete("/api/deposit/machine/" + missingId))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.errorCode").value("DEP_001"))
                 .andExpect(jsonPath("$.path").value("/api/deposit/machine/" + missingId));
     }
@@ -404,7 +403,6 @@ class DepositEndpointTest {
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERR"))
                 .andExpect(jsonPath("$.validationErrors").exists())
                 .andExpect(jsonPath("$.validationErrors.networkName").exists())
@@ -431,7 +429,6 @@ class DepositEndpointTest {
                         .content(jsonWithUnknownNetwork))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.errorCode").value("DEP_002"))
                 .andExpect(jsonPath("$.path").value("/api/deposit/machine"));
     }
@@ -444,7 +441,6 @@ class DepositEndpointTest {
                         .param("neLon", "20.000000"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.path").value("/api/deposit/search"));
     }
