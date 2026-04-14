@@ -168,12 +168,12 @@ class UserEndpointTest {
     void userNotFoundCasesReturn404() throws Exception {
         mockMvc.perform(get("/api/user/999999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("not_found"));
+                .andExpect(jsonPath("$.error").value("Not Found"));
 
         mockMvc.perform(delete("/api/user/me")
                         .header("X-User-Id", 999999L))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("not_found"));
+                .andExpect(jsonPath("$.error").value("Not Found"));
     }
 
     @Test
@@ -202,7 +202,7 @@ class UserEndpointTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":5}"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("forbidden"));
+                .andExpect(jsonPath("$.error").value("Forbidden"));
     }
 
     @Test

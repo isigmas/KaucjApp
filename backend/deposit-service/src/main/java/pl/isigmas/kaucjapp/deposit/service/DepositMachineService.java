@@ -1,12 +1,14 @@
 package pl.isigmas.kaucjapp.deposit.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.OpeningHourDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
+import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
+import pl.isigmas.kaucjapp.deposit.exception.DepositValidationException;
+import pl.isigmas.kaucjapp.deposit.exception.RetailNetworkNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
 import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
@@ -54,8 +56,7 @@ public class DepositMachineService {
     public void addNewMachine(DepositMachineResponseDTO depositMachineResponseDTO) {
         var depositMachine = new DepositMachine();
         var retail = retailNetworkRepository.findByName(depositMachineResponseDTO.getNetworkName())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Retail network not found: " + depositMachineResponseDTO.getNetworkName()));
+                .orElseThrow(() -> new RetailNetworkNotFoundException(depositMachineResponseDTO.getNetworkName()));
 
         depositMachine.setRetailNetwork(retail);
         depositMachine.setLatitude(depositMachineResponseDTO.getLatitude());
@@ -77,14 +78,14 @@ public class DepositMachineService {
     @Transactional
     public void updateMachine(Long id, UpdateMachineDTO dto) {
         DepositMachine depositMachine = depositMachineRepository.findWithOpeningHoursById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Machine with such id not found"));
+                .orElseThrow(() -> new DepositMachineNotFoundException(id));
 
         if (dto.getNetworkName() != null) {
             if (dto.getNetworkName().isBlank()) {
-                throw new IllegalArgumentException("networkName must not be blank when provided");
+                throw new DepositValidationException("networkName must not be blank when provided");
             }
             var retail = retailNetworkRepository.findByName(dto.getNetworkName())
-                    .orElseThrow(() -> new EntityNotFoundException("Retail network not found: " + dto.getNetworkName()));
+                    .orElseThrow(() -> new RetailNetworkNotFoundException(dto.getNetworkName()));
 
             depositMachine.setRetailNetwork(retail);
         }
@@ -125,7 +126,7 @@ public class DepositMachineService {
     @Transactional
     public void delete(Long id) {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Machine with such id not found"));
+                .orElseThrow(() -> new DepositMachineNotFoundException(id));
 
         depositMachineRepository.delete(depositMachine);
     }
