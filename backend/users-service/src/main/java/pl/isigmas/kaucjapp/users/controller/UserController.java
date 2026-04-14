@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.users.DTO.*;
+import pl.isigmas.kaucjapp.users.exception.InvalidInternalSecretException;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
@@ -47,7 +48,7 @@ public class UserController {
             @Valid @RequestBody CreateUserDTO newUser) {
 
         if (!secretKey.equals(secret)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            throw new InvalidInternalSecretException();
         }
         userService.createUser(newUser.getId(), newUser);
         log.info("New user created, ID: {}", newUser.getId());

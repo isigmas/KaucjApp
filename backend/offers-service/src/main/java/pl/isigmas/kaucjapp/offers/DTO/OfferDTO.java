@@ -1,11 +1,7 @@
 package pl.isigmas.kaucjapp.offers.DTO;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,6 +41,7 @@ public class OfferDTO {
         private Integer quantity;
 
         @DecimalMin(value = "0.0", message = "Unit price cannot be lower than 0")
+        @DecimalMax(value = "0.5", message = "Unit price cannot be higher than 0.5")
         @NotNull(message = "Unit price is needed")
         private BigDecimal unitPrice;
     }

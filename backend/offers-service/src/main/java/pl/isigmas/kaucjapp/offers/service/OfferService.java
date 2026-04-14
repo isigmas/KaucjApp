@@ -1,12 +1,16 @@
 package pl.isigmas.kaucjapp.offers.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
 import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
+import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
+import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
+import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
+import pl.isigmas.kaucjapp.offers.exception.OfferValidationException;
 import pl.isigmas.kaucjapp.offers.model.*;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
@@ -30,7 +34,7 @@ public class OfferService {
 
     @Transactional
     public Long create(Long creatorId, OfferDTO dto) {
-        validateLocation(dto.getLatitude(),dto.getLongitude());
+        validateLocation(dto.getLatitude(), dto.getLongitude());
         Offer offer = new Offer();
         offer.setCreatorId(creatorId);
         offer.setLatitude(dto.getLatitude());
@@ -42,7 +46,7 @@ public class OfferService {
 
         dto.getItems().forEach(itemDto -> {
             BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                    .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
+                    .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
 
             OfferItem item = new OfferItem();
             item.setQuantity(itemDto.getQuantity());
@@ -59,9 +63,9 @@ public class OfferService {
 
     @Transactional
     public void update(Long id, Long userId, OfferDTO dto) {
-        validateLocation(dto.getLatitude(),dto.getLongitude());
+        validateLocation(dto.getLatitude(), dto.getLongitude());
         Offer offer = offerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+                .orElseThrow(() -> new OfferNotFoundException(id));
 
         if (!offer.getCreatorId().equals(userId)) {
             throw new SecurityException("Only offer creator can update the offer");
@@ -90,7 +94,7 @@ public class OfferService {
                 existingItem.setUnitPrice(itemDto.getUnitPrice());
             } else {
                 BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                        .orElseThrow(() -> new EntityNotFoundException("Bottle type not found"));
+                        .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
 
                 OfferItem newItem = new OfferItem();
                 newItem.setQuantity(itemDto.getQuantity());
@@ -183,13 +187,13 @@ public class OfferService {
     @Transactional
     public void changeStatus(Long offerId, Long userId, String newStatus) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
 
         OfferStatus targetStatus;
         try {
             targetStatus = OfferStatus.valueOf(newStatus.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid offer status: " + newStatus);
+            throw new OfferValidationException("Invalid offer status: " + newStatus);
         }
 
         OfferStatus currentStatus = offer.getStatus();
@@ -206,7 +210,7 @@ public class OfferService {
                 throw new SecurityException("You cannot reserve your own offer");
             }
             if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
-                throw new IllegalStateException("Offer is already reserved by another user");
+                throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
             offer.setCollectorId(userId);
         }
@@ -242,7 +246,7 @@ public class OfferService {
     @Transactional
     public void remove(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new EntityNotFoundException("Offer not found"));
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
 
         if (!offer.getCreatorId().equals(userId)) {
             throw new SecurityException("Only offer creator can delete the offer");
@@ -256,7 +260,7 @@ public class OfferService {
         double lonD = lon.doubleValue();
 
         if (!geoValidationService.isInPoland(latD, lonD)) {
-            throw new IllegalArgumentException("Offer can only be created in Poland");
+            throw new OfferValidationException("Offer can only be created in Poland");
         }
     }
 
