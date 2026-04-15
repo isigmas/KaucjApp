@@ -11,7 +11,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import pl.isigmas.kaucjapp.deposit.model.DepositMachineStatus;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
@@ -351,6 +350,7 @@ class DepositEndpointTest {
                         .param("neLon", neLon))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].networkName").value("Zabka"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
@@ -366,6 +366,7 @@ class DepositEndpointTest {
                         .param("neLon", neLon))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value(2L))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].networkName").value("Biedronka"))
                 .andExpect(jsonPath("$[0].latitude").value(54.352000))

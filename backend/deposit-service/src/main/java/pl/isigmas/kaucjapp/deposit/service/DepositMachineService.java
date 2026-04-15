@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.deposit.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.OpeningHourDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
@@ -43,6 +44,7 @@ public class DepositMachineService {
                 .collect(Collectors.toList());
 
         return DepositMachineResponseDTO.builder()
+                .id(depositMachine.getId())
                 .networkName(depositMachine.getRetailNetwork() != null ? depositMachine.getRetailNetwork().getName() : null)
                 .status(depositMachine.getStatus())
                 .address(depositMachine.getAddress())
@@ -53,17 +55,17 @@ public class DepositMachineService {
     }
 
     @Transactional
-    public void addNewMachine(DepositMachineResponseDTO depositMachineResponseDTO) {
+    public void addNewMachine(DepositMachineRequestDTO depositMachineRequestDTO) {
         var depositMachine = new DepositMachine();
-        var retail = retailNetworkRepository.findByName(depositMachineResponseDTO.getNetworkName())
-                .orElseThrow(() -> new RetailNetworkNotFoundException(depositMachineResponseDTO.getNetworkName()));
+        var retail = retailNetworkRepository.findByName(depositMachineRequestDTO.getNetworkName())
+                .orElseThrow(() -> new RetailNetworkNotFoundException(depositMachineRequestDTO.getNetworkName()));
 
         depositMachine.setRetailNetwork(retail);
-        depositMachine.setLatitude(depositMachineResponseDTO.getLatitude());
-        depositMachine.setLongitude(depositMachineResponseDTO.getLongitude());
-        depositMachine.setAddress(depositMachineResponseDTO.getAddress());
+        depositMachine.setLatitude(depositMachineRequestDTO.getLatitude());
+        depositMachine.setLongitude(depositMachineRequestDTO.getLongitude());
+        depositMachine.setAddress(depositMachineRequestDTO.getAddress());
 
-        for (var day : depositMachineResponseDTO.getOpeningHours()) {
+        for (var day : depositMachineRequestDTO.getOpeningHours()) {
             OpeningHourRecord record = new OpeningHourRecord();
             record.setOpenTime(day.getOpenTime());
             record.setCloseTime(day.getCloseTime());

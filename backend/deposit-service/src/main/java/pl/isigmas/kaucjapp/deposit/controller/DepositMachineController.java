@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
@@ -44,9 +45,9 @@ public class DepositMachineController {
 
     @PostMapping("/machine")
     public ResponseEntity<Void> addNewMachine(
-            @Valid @RequestBody DepositMachineResponseDTO depositMachineResponseDTO
+            @Valid @RequestBody DepositMachineRequestDTO depositMachineRequestDTO
     ) {
-        depositMachineService.addNewMachine(depositMachineResponseDTO);
+        depositMachineService.addNewMachine(depositMachineRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

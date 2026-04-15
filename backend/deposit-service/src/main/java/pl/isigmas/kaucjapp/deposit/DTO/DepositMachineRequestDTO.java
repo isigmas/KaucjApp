@@ -20,10 +20,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DepositMachineResponseDTO {
-
-    @NotBlank
-    private Long id;
+public class DepositMachineRequestDTO {
 
     @NotBlank
     private String networkName;
