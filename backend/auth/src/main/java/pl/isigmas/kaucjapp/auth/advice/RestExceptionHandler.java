@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -155,6 +156,16 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
+        if (!isAccountUsernameOrEmailUniqueViolation(ex)) {
+            ApiError error = ApiError.builder()
+                    .timestamp(LocalDateTime.now())
+                    .errorCode("INTERNAL_ERR")
+                    .message("Unexpected server error")
+                    .path(request.getRequestURI())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
                 .errorCode("AU_007")
@@ -173,5 +184,21 @@ public class RestExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    private static boolean isAccountUsernameOrEmailUniqueViolation(DataIntegrityViolationException ex) {
+        Throwable mostSpecific = NestedExceptionUtils.getMostSpecificCause(ex);
+        String message = mostSpecific == null ? null : mostSpecific.getMessage();
+        if (message == null) {
+            return false;
+        }
+        String m = message.toLowerCase();
+
+        boolean looksLikeUniqueViolation = m.contains("duplicate key") || m.contains("unique constraint") || m.contains("23505");
+        if (!looksLikeUniqueViolation) {
+            return false;
+        }
+
+        return (m.contains("accounts") || m.contains("account")) && (m.contains("username") || m.contains("email"));
     }
 }
