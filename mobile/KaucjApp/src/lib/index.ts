@@ -24,6 +24,7 @@ export const getMachineStatusConfig = (status: DepositMachineStatus) => {
 };
 
 export const getDayName = (dayOfWeek: number) => {
+  if (dayOfWeek < 1 || dayOfWeek > 7) return "Nieznany dzień";
   return [
     "Poniedziałek",
     "Wtorek",

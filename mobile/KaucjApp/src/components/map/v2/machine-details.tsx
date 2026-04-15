@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
-import { DepositMachine } from "@/src/types";
+import { DepositMachine, OpeningHour } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 import { formatHour, getDayName, getMachineStatusConfig } from "@/src/lib";
 
@@ -12,12 +12,6 @@ export default function MachineDetails({ machine }: MachineDetailsProps) {
   const { color: statusColor, label: statusLabel } = getMachineStatusConfig(
     machine.status,
   );
-
-  const todaysOpeningHours = useMemo(() => {
-    let dayOfWeek = new Date().getDay();
-    dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
-    return machine.openingHours.find((days) => days.dayOfWeek === dayOfWeek);
-  }, [machine.id]);
 
   return (
     <View style={styles.container}>
@@ -33,17 +27,12 @@ export default function MachineDetails({ machine }: MachineDetailsProps) {
           <Text style={[styles.statusText]}>{statusLabel}</Text>
         </View>
       </View>
+
       {/* Location Card */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Lokalizacja</Text>
         <Text style={styles.primaryText}>{machine.address}</Text>
-        {todaysOpeningHours && (
-          <>
-            //Display a component that actually checks the current day and time
-            and displays the relevant information eg. [GREEN COLOR] OPEN until 20:00 or
-            [RED COLOR] CLOSED until 08:00
-          </>
-        )}
+        <CurrentOpeningStatus openingHours={machine.openingHours} />
       </View>
 
       {/* Hours Card */}
@@ -77,6 +66,92 @@ export default function MachineDetails({ machine }: MachineDetailsProps) {
     </View>
   );
 }
+
+const CurrentOpeningStatus = ({
+  openingHours,
+}: {
+  openingHours: OpeningHour[];
+}) => {
+  const [status, setStatus] = useState<{
+    isOpen: boolean;
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const checkStatus = () => {
+      if (!openingHours || openingHours.length === 0) return;
+
+      const now = new Date();
+      let currentDayOfWeek = now.getDay();
+      currentDayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
+
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+
+      const today = openingHours.find((h) => h.dayOfWeek === currentDayOfWeek);
+
+      // seee if it's currently open
+      if (
+        today &&
+        currentTime >= today.openTime &&
+        currentTime < today.closeTime
+      ) {
+        setStatus({
+          isOpen: true,
+          text: `Otwarte do ${formatHour(today.closeTime)}`,
+        });
+        return;
+      }
+
+      // If closed, find the next available opening time
+      let nextOpenTime = "";
+      let nextDayOfWeek = "";
+      if (today && currentTime < today.openTime) {
+        nextOpenTime = today.openTime;
+        nextDayOfWeek = getDayName(today.dayOfWeek);
+      } else {
+        for (let i = 1; i <= 7; i++) {
+          const nextDay = ((currentDayOfWeek + i - 1) % 7) + 1;
+          const nextDayData = openingHours.find((h) => h.dayOfWeek === nextDay);
+          if (nextDayData) {
+            nextOpenTime = nextDayData.openTime;
+            nextDayOfWeek = getDayName(nextDayData.dayOfWeek);
+            break;
+          }
+        }
+      }
+
+      setStatus({
+        isOpen: false,
+        text: nextOpenTime
+          ? `Zamknięte do ${formatHour(nextOpenTime)} (${nextDayOfWeek})`
+          : "Obecnie zamknięte",
+      });
+    };
+
+    checkStatus();
+    // Update the status every minute
+    const interval = setInterval(checkStatus, 60000);
+    return () => clearInterval(interval);
+  }, [openingHours]);
+
+  if (!status) return null;
+
+  return (
+    <Text
+      style={[
+        styles.dynamicStatusText,
+        {
+          color: status.isOpen ? colors.status.success : colors.status.error,
+        },
+      ]}
+    >
+      {status.text}
+    </Text>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -138,6 +213,11 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontWeight: "500",
   },
+  dynamicStatusText: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginTop: spacing.xs,
+  },
   secondaryText: {
     fontSize: 14,
     color: colors.text.secondary,
@@ -147,12 +227,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: spacing.xs,
   },
   openIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.status.success,
+    backgroundColor: colors.status?.success || "#10b981",
   },
   warningCard: {
     backgroundColor: colors.background.main,
@@ -166,7 +247,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     lineHeight: 20,
   },
-  // New style added for the image
   machineImage: {
     width: "100%",
     height: 200,
