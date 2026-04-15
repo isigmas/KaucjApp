@@ -104,7 +104,7 @@ public class UserController {
         return ResponseEntity.ok("Ready");
     }
 
-    @PutMapping("/me")
+    @PatchMapping("/me")
     @Operation(
             summary = "Update user profile",
             description = "Updates profile and replaces addresses for the user in X-User-Id (only that user may update their profile).")
@@ -115,10 +115,10 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found.")
     })
     public ResponseEntity<Void> update(
-            @Valid @RequestBody UserDTO updatedUser,
+            @Valid @RequestBody UpdateUserDTO updateUserDTO,
             @RequestHeader("X-User-Id") Long loggedInUserId) {
 
-        userService.updateUser(loggedInUserId, updatedUser);
+        userService.updateUser(loggedInUserId, updateUserDTO);
         log.info("User updated, ID: {}", loggedInUserId);
         return ResponseEntity.ok().build();
     }
