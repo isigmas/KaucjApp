@@ -1,14 +1,21 @@
 import React, { useRef, useEffect } from "react";
-import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  Pressable,
+} from "react-native";
 import MapView from "react-native-maps";
 
-import { useMyOffers } from "@/src/api/hooks/use-offer";
 import { Offer } from "@/src/types";
 import { OfferMarker } from "./offer-marker";
-import { MachineMarker } from "./machine-marker"; // We'll create this next
+import { MachineMarker } from "./machine-marker";
 import { useUserLocation } from "./use-user-location";
 import { depositMachines, DepositMachine } from "../../../constants";
 import { SelectedMapItem } from "./map-container";
+import { useAllOffers } from "@/src/api/hooks/use-offer";
+import { colors } from "@/src/theme";
 
 interface MapScreenProps {
   selectedItem: SelectedMapItem | null;
@@ -21,11 +28,19 @@ export default function MapScreen({
   onOfferPress,
   onMachinePress,
 }: MapScreenProps) {
-  const { data: offers, isLoading: isOffersLoading, isError } = useMyOffers();
+  const {
+    data: offers,
+    isLoading: isOffersLoading,
+    isError: isOffersError,
+    error,
+    refetch,
+    isRefetching,
+  } = useAllOffers();
+
   const { initialRegion, isLocationLoading } = useUserLocation();
   const mapRef = useRef<MapView>(null);
 
-  // move the map when any item is selected
+  // move the map when any item is selected to place it above  the bottom sheet
   useEffect(() => {
     if (selectedItem && mapRef.current) {
       const LATITUDE_DELTA = 0.01;
@@ -47,7 +62,7 @@ export default function MapScreen({
     }
   }, [selectedItem]);
 
-  if (isLocationLoading || isOffersLoading) {
+  if (isLocationLoading || isOffersLoading || isRefetching) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4CAF50" />
@@ -58,6 +73,14 @@ export default function MapScreen({
         </Text>
       </View>
     );
+  }
+  if (isOffersError) {
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "An unexpected error occurred.";
+
+    return <MapErrorView message={errorMessage} onRetry={refetch} />;
   }
 
   return (
@@ -94,7 +117,25 @@ export default function MapScreen({
   );
 }
 
-// ... keep your existing styles
+function MapErrorView({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <View style={styles.centeredContainer}>
+      <Text style={styles.errorTitle}>
+        Oops! Coś poszło nie tak podczas ładowania ofert.
+      </Text>
+      <Text style={styles.errorText}>{message}</Text>
+      <Pressable style={styles.retryButton} onPress={onRetry}>
+        <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -116,5 +157,33 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     color: "#666",
+  },
+
+  // styles for error view
+  centeredContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#F2F2F7",
+  },
+  errorTitle: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FF3B30",
+    marginBottom: 4,
+  },
+  retryButton: {
+    backgroundColor: colors.primary.base,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 32,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: "#FFF",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
