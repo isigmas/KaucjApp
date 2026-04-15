@@ -5,6 +5,6 @@ import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 
 public class AccountNotActiveException extends AuthBaseException {
     public AccountNotActiveException(AccountStatus status) {
-        super("Account status: " + status, "AU_004", HttpStatus.BAD_REQUEST);
+        super("Account status: " + status, "AU_004", HttpStatus.FORBIDDEN);
     }
 }

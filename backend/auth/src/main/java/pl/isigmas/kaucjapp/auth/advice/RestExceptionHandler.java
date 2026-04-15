@@ -166,9 +166,6 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
-        if (ex instanceof RuntimeException re) {
-            throw re;
-        }
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
                 .errorCode("INTERNAL_ERR")

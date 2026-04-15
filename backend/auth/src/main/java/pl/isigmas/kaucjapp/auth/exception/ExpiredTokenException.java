@@ -6,10 +6,10 @@ import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 
 public class ExpiredTokenException extends AuthBaseException {
     public ExpiredTokenException(RefreshToken token) {
-        super("Token expired at: " + token.getExpirationDate(), "AU_003", HttpStatus.BAD_REQUEST);
+        super("Token expired at: " + token.getExpirationDate(), "AU_003", HttpStatus.UNAUTHORIZED);
     }
 
     public ExpiredTokenException(ActivationToken token) {
-        super("Token expired at: " + token.getExpirationDate(), "AU_003", HttpStatus.BAD_REQUEST);
+        super("Token expired at: " + token.getExpirationDate(), "AU_003", HttpStatus.UNAUTHORIZED);
     }
 }

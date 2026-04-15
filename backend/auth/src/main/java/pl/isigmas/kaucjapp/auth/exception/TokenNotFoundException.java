@@ -4,6 +4,6 @@ import org.springframework.http.HttpStatus;
 
 public class TokenNotFoundException extends AuthBaseException {
     public TokenNotFoundException() {
-        super("Token not found", "AU_002", HttpStatus.BAD_REQUEST);
+        super("Token not found", "AU_002", HttpStatus.NOT_FOUND);
     }
 }
