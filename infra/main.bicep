@@ -155,6 +155,7 @@ module authApp 'modules/app.bicep' = {
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
       { name: 'PASSWORD_SALT', secretRef: 'password-salt' }
       { name: 'USER_SERVICE_URL', value: 'http://${usersApp.outputs.fqdn}' }
+      { name: 'NOTIFICATION_SERVICE_URL', value: 'http://${notificationApp.outputs.fqdn}' }
     ]
   }
 }
