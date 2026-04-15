@@ -4,14 +4,6 @@ import { apiClient } from "../api-client";
 
 export type OfferStatus = "OPEN" | "RESERVED" | "COMPLETED" | "CANCELED";
 
-export interface OfferItemDTO {
-  bottle_id: number;
-  bottle_name: string;
-  quantity: number;
-  unit_price: number;
-  deposit_fee: number;
-}
-
 export interface OfferDTO {
   offer_id: number;
   creator_id: number;
@@ -22,7 +14,13 @@ export interface OfferDTO {
   pickup_address: string;
   pickup_instructions: string | null;
   created_at: string;
-  items: OfferItemDTO[];
+  plastic_quantity: number;
+  can_quantity: number;
+  total_quantity: number;
+  total_prize: number;
+  total_income: number;
+  plastic_price: number | null;
+  can_price: number | null;
 }
 
 export interface RatingRequestDTO {

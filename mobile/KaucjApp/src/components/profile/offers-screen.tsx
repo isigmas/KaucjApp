@@ -47,11 +47,8 @@ const OfferCard = ({
   };
   const isInactive = offer.status === "COMPLETED" || offer.status === "CANCELED";
 
-  const totalItems = offer.items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPayout = offer.items.reduce(
-    (sum, item) => sum + item.unit_price * item.quantity,
-    0,
-  );
+  const totalItems = offer.total_quantity;
+  const totalPayout = offer.total_prize;
 
   const handleCancel = () => {
     Alert.alert(
@@ -107,14 +104,18 @@ const OfferCard = ({
         </View>
 
         <View style={styles.itemsRow}>
-          {offer.items.map((item) => {
-            return (
-              <View key={`${offer.offer_id}-${item.bottle_id}`} style={styles.itemPill}>
-                <Text style={styles.itemIcon}>{item.bottle_name}</Text>
-                <Text style={styles.itemQuantity}>{item.quantity}x</Text>
-              </View>
-            );
-          })}
+          {offer.plastic_quantity > 0 ? (
+            <View key={`${offer.offer_id}-plastic`} style={styles.itemPill}>
+              <Text style={styles.itemIcon}>Plastik</Text>
+              <Text style={styles.itemQuantity}>{offer.plastic_quantity}x</Text>
+            </View>
+          ) : null}
+          {offer.can_quantity > 0 ? (
+            <View key={`${offer.offer_id}-can`} style={styles.itemPill}>
+              <Text style={styles.itemIcon}>Puszki</Text>
+              <Text style={styles.itemQuantity}>{offer.can_quantity}x</Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Financial Summary */}

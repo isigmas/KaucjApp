@@ -38,16 +38,7 @@ export default function BookingsScreen() {
   const rateUserMutation = useRateUser();
 
   const totalEarnings = useMemo(
-    () =>
-      offers.reduce(
-        (sum, offer) =>
-          sum +
-          offer.items.reduce(
-            (itemSum, item) => itemSum + item.unit_price * item.quantity,
-            0,
-          ),
-        0,
-      ),
+    () => offers.reduce((sum, offer) => sum + offer.total_income, 0),
     [offers],
   );
 
@@ -82,11 +73,8 @@ export default function BookingsScreen() {
   const resolvedError = completionError || queryError;
 
   const renderItem = ({ item }: { item: OfferDTO }) => {
-    const earnings = item.items.reduce(
-      (sum, row) => sum + row.unit_price * row.quantity,
-      0,
-    );
-    const totalQty = item.items.reduce((sum, row) => sum + row.quantity, 0);
+    const earnings = item.total_income;
+    const totalQty = item.total_quantity;
     const isCompleting =
       completeOfferMutation.isPending &&
       completeOfferMutation.variables === item.offer_id;
@@ -110,17 +98,26 @@ export default function BookingsScreen() {
         ) : null}
 
         <View style={styles.itemsList}>
-          {item.items.map((row) => (
-            <View key={`${item.offer_id}-${row.bottle_id}`} style={styles.itemRow}>
+          {item.plastic_quantity > 0 ? (
+            <View key={`${item.offer_id}-plastic`} style={styles.itemRow}>
               <Package size={14} color={colors.text.secondary} />
               <Text style={styles.itemText}>
-                {row.bottle_name} × {row.quantity}
+                Plastik × {item.plastic_quantity}
               </Text>
               <Text style={styles.itemPrice}>
-                +{(row.unit_price * row.quantity).toFixed(2)} zł
+                +{(item.plastic_price ?? 0).toFixed(2)} zł / szt.
               </Text>
             </View>
-          ))}
+          ) : null}
+          {item.can_quantity > 0 ? (
+            <View key={`${item.offer_id}-can`} style={styles.itemRow}>
+              <Package size={14} color={colors.text.secondary} />
+              <Text style={styles.itemText}>Puszki × {item.can_quantity}</Text>
+              <Text style={styles.itemPrice}>
+                +{(item.can_price ?? 0).toFixed(2)} zł / szt.
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.cardFooter}>
