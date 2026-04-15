@@ -20,20 +20,42 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/offer")
 @RequiredArgsConstructor
-@Tag(name = "Offers", description = "Deposit-bottle offers: create, update, search, and lifecycle. Creator identity comes from X-User-Id where noted.")
+@Tag(
+        name = "Offers",
+        description = "Deposit-bottle offers: create, full replace update, search (OPEN only in bbox), and status lifecycle. "
+                + "Mutating endpoints use header X-User-Id as the acting user (trusted from gateway in this service). "
+                + "Errors return ApiError: errorCode, message, path, optional validationErrors.")
 public class OfferController {
 
     private final OfferService service;
 
+
+
+        @GetMapping("/test")
+    @Operation(
+            summary = "Offers controller smoke test",
+            description = "Returns plain text if this controller is mapped. Prefer GET /api/status for service health.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Body: \"Ready\".")
+    })
+    public ResponseEntity<String> get200() {
+        return ResponseEntity.ok("Ready");
+    }
+
+
+
     @PostMapping("/offer")
     @Operation(
             summary = "Create new offer",
-            description = "Creates an offer for the user in X-User-Id. Body must not include creator id; items reference bottle type ids.")
+            description = "Creates an OPEN offer for the user in X-User-Id. Body: OfferDTO — lat/lon must fall inside Poland (OFFER_003 otherwise); "
+                    + "pickupAddress required; items non-empty with bottleId, quantity ≥ 1, unitPrice in [0, 0.5]. "
+                    + "Creator id is taken from the header, not from JSON.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Offer created; body is the new offer id."),
-            @ApiResponse(responseCode = "400", description = "Validation error or missing X-User-Id."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "404", description = "Referenced bottle type not found.")
+            @ApiResponse(responseCode = "201", description = "Offer created; response body is the new offer id (Long)."),
+            @ApiResponse(responseCode = "400", description = "VALIDATION_ERR / MALFORMED_JSON / BAD_REQUEST (e.g. missing X-User-Id); OFFER_003 if location outside Poland."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream; not emitted by this service)."),
+            @ApiResponse(responseCode = "404", description = "BOTTLE_001 — referenced bottle type id does not exist."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<Long> create(
             @Valid @RequestBody OfferDTO newOffer,
@@ -44,28 +66,24 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newId);
     }
 
-    @GetMapping("/test")
-    @Operation(
-            summary = "Offers service test",
-            description = "Lightweight check that this controller is mapped under /api/offer/test.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Plain text readiness hint.")
-    })
-    public ResponseEntity<String> get200() {
-        return ResponseEntity.ok("Ready");
-    }
+
+
+
 
     @PutMapping("/{id}")
     @Operation(
-            summary = "Update existing offer",
-            description = "Replaces offer fields and line items. Only the creator (X-User-Id) may update; offer must be OPEN.")
+            summary = "Replace offer (full update)",
+            description = "Full replace of location, pickup fields, and items. Items in the body define the new set: "
+                    + "existing bottle types are updated; new bottle ids add rows; omitted bottle types are removed. "
+                    + "Only the creator (X-User-Id) may call this; offer must be OPEN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Offer updated."),
-            @ApiResponse(responseCode = "400", description = "Validation error or missing header."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the offer creator."),
-            @ApiResponse(responseCode = "404", description = "Offer or bottle type not found."),
-            @ApiResponse(responseCode = "409", description = "Illegal state (e.g. offer not OPEN).")
+            @ApiResponse(responseCode = "200", description = "Offer updated; empty body."),
+            @ApiResponse(responseCode = "400", description = "VALIDATION_ERR / MALFORMED_JSON / BAD_REQUEST; OFFER_003 if location outside Poland."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream)."),
+            @ApiResponse(responseCode = "403", description = "SECURITY_FORBIDDEN — caller is not the offer creator."),
+            @ApiResponse(responseCode = "404", description = "OFFER_001 — offer not found; BOTTLE_001 — unknown bottle type in items."),
+            @ApiResponse(responseCode = "409", description = "STATE_CONFLICT — e.g. offer is not OPEN."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<Void> update(
             @Valid @RequestBody OfferDTO updatedOffer,
@@ -76,16 +94,20 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
+
+
+
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Delete offer by id",
-            description = "Deletes the offer if X-User-Id matches the creator.")
+            description = "Hard-deletes the offer when X-User-Id matches creator_id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Offer deleted."),
-            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "Caller is not the creator."),
-            @ApiResponse(responseCode = "404", description = "Offer not found.")
+            @ApiResponse(responseCode = "200", description = "Offer deleted; empty body (not 204)."),
+            @ApiResponse(responseCode = "400", description = "BAD_REQUEST — e.g. missing X-User-Id."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream)."),
+            @ApiResponse(responseCode = "403", description = "SECURITY_FORBIDDEN — caller is not the creator."),
+            @ApiResponse(responseCode = "404", description = "OFFER_001 — offer not found."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
@@ -95,17 +117,23 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
+
+
     @PostMapping("/{offerId}/status/{newStatus}")
     @Operation(
             summary = "Change offer status",
-            description = "Transitions offer state (e.g. RESERVED, COMPLETED). Rules depend on current state and caller; X-User-Id identifies the acting user.")
+            description = "Path newStatus: case-insensitive enum name (e.g. OPEN, RESERVED, COMPLETED, CANCELED). "
+                    + "Rules: RESERVED — collector cannot be the creator; OPEN — unreserve (collector or flow rules); "
+                    + "COMPLETED — only RESERVED and only by current collector; CANCELED — only creator. "
+                    + "COMPLETED and CANCELED are terminal for further transitions (STATE_CONFLICT).")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Status updated."),
-            @ApiResponse(responseCode = "400", description = "Unknown status value or bad request."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "Action not allowed for this user."),
-            @ApiResponse(responseCode = "404", description = "Offer not found."),
-            @ApiResponse(responseCode = "409", description = "Illegal transition for current state.")
+            @ApiResponse(responseCode = "200", description = "Status updated; empty body."),
+            @ApiResponse(responseCode = "400", description = "OFFER_003 — invalid status string; other BAD_REQUEST where applicable."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream)."),
+            @ApiResponse(responseCode = "403", description = "SECURITY_FORBIDDEN — role/state forbids action (e.g. reserve own offer, wrong collector)."),
+            @ApiResponse(responseCode = "404", description = "OFFER_001 — offer not found."),
+            @ApiResponse(responseCode = "409", description = "STATE_CONFLICT — illegal transition; OFFER_005/OFFER_006 — already reserved by another user."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<Void> changeStatus(
             @PathVariable Long offerId,
@@ -116,50 +144,66 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
+
+
+
     @GetMapping("/szosti")
     @Operation(
             summary = "List all offers",
-            description = "Returns every offer with items and metadata. Public within the service; protect at gateway if needed.")
+            description = "Returns every offer in the database (all statuses), mapped to OfferResponseDTO with aggregated plastic/can quantities and totals. "
+                    + "No auth header; restrict at gateway if needed.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Array of offers.")
+            @ApiResponse(responseCode = "200", description = "List of OfferResponseDTO (may be empty)."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
+
+
     @GetMapping("/my")
     @Operation(
             summary = "List my created offers",
-            description = "Offers where creator_id equals X-User-Id.")
+            description = "Offers where creator_id equals X-User-Id (any status).")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Array of offers (may be empty)."),
-            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream).")
+            @ApiResponse(responseCode = "200", description = "List of OfferResponseDTO (may be empty)."),
+            @ApiResponse(responseCode = "400", description = "BAD_REQUEST — missing X-User-Id."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream)."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyOffers(@RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.getAllByCreatorId(userId));
     }
 
+
+
+
     @GetMapping("/my/reserved")
     @Operation(
             summary = "List my reserved offers",
-            description = "Offers RESERVED by the user in X-User-Id (collector).")
+            description = "Offers in status RESERVED where collector_id equals X-User-Id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Array of offers (may be empty)."),
-            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream).")
+            @ApiResponse(responseCode = "200", description = "List of OfferResponseDTO (may be empty)."),
+            @ApiResponse(responseCode = "400", description = "BAD_REQUEST — missing X-User-Id."),
+            @ApiResponse(responseCode = "401", description = "Not authenticated (only if enforced upstream)."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.getReservedOffersByUserId(userId));
     }
 
+    
+
     @GetMapping("/search")
     @Operation(
-            summary = "Search offers in bbox",
-            description = "Bounding box: southwest (swLat, swLon) and northeast (neLat, neLon) corners. No auth header required unless the gateway adds one.")
+            summary = "Search OPEN offers in bounding box",
+            description = "Query: southwest corner (swLat, swLon) and northeast corner (neLat, neLon). "
+                    + "Returns only offers with status OPEN whose coordinates lie inside the box. "
+                    + "No auth header required unless the gateway injects one.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Matching offers."),
-            @ApiResponse(responseCode = "400", description = "Invalid query parameters.")
+            @ApiResponse(responseCode = "200", description = "List of OfferResponseDTO (may be empty)."),
+            @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> searchOffersInArea(
             @RequestParam double swLat,

@@ -11,15 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
-@Tag(name = "Health", description = "Service liveness for offers-service.")
+@Tag(
+        name = "Health",
+        description = "Liveness/readiness for offers-service (no business auth on /api/status).")
 public class BaseController {
 
     @GetMapping("/status")
     @Operation(
             summary = "Readiness probe",
-            description = "Returns a static message when the application is up. No auth headers required.")
+            description = "Returns plain text when the JVM and web stack are up. No headers required; use from orchestrator or load balancer.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Service is reachable.")
+            @ApiResponse(responseCode = "200", description = "Body: \"Ready!\".")
     })
     public ResponseEntity<String> hello() {
         return ResponseEntity.ok("Ready!");

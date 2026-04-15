@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
+import pl.isigmas.kaucjapp.users.DTO.UpdateUserDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserAddressDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserDTO;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
@@ -51,29 +52,22 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(Long id, UserDTO userDTO) {
+    public void updateUser(Long id, UpdateUserDTO dto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        existingUser.setFirstName(userDTO.getFirstName());
-        existingUser.setLastName(userDTO.getLastName());
-        existingUser.setUsername(userDTO.getUsername());
-        existingUser.setPhone(userDTO.getPhone());
-        existingUser.setEmail(userDTO.getEmail());
-
-        List<UserAddress> currentAddresses = new ArrayList<>(existingUser.getAddresses());
-        currentAddresses.forEach(existingUser::removeAddress);
-        userRepository.flush();
-
-        if (userDTO.getAddresses() != null) {
-            userDTO.getAddresses().forEach(addrDto -> {
+        if (dto.getFirstName() != null) existingUser.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) existingUser.setLastName(dto.getLastName());
+        if (dto.getAddresses() != null) {
+            new ArrayList<>(existingUser.getAddresses()).forEach(existingUser::removeAddress);
+            userRepository.flush();
+            dto.getAddresses().forEach(addrDto -> {
                 UserAddress address = new UserAddress();
                 address.setAddressLabel(addrDto.getAddressLabel());
                 address.setAddress(addrDto.getAddress());
                 address.setLatitude(addrDto.getLatitude());
                 address.setLongitude(addrDto.getLongitude());
                 address.setDefault(addrDto.isDefault());
-
                 existingUser.addAddress(address);
             });
         }
