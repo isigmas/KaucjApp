@@ -1,7 +1,8 @@
+import { getMachineStatusConfig } from "@/src/lib";
+import { DepositMachine } from "@/src/types";
 import React, { useState, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Marker } from "react-native-maps";
-import { DepositMachine } from "../../../constants";
 
 interface MachineMarkerProps {
   machine: DepositMachine;
@@ -16,20 +17,7 @@ export const MachineMarker = React.memo(
       if (isTracking) setIsTracking(false);
     }, [isTracking]);
 
-    const getMarkerConfig = () => {
-      switch (machine.status) {
-        case "AVAILABLE":
-          return { color: "#2196F3", shadow: "rgba(33, 150, 243, 0.4)" }; // Blue
-        case "FULL":
-          return { color: "#FF9800", shadow: "rgba(255, 152, 0, 0.4)" }; // Orange
-        case "OUT_OF_ORDER":
-          return { color: "#F44336", shadow: "rgba(244, 67, 54, 0.4)" }; // Red
-        default:
-          return { color: "#9E9E9E", shadow: "rgba(158, 158, 158, 0.4)" }; // Grey
-      }
-    };
-
-    const config = getMarkerConfig();
+    const config = getMachineStatusConfig(machine.status);
 
     return (
       <Marker

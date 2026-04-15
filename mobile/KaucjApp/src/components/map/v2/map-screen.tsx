@@ -8,14 +8,14 @@ import {
 } from "react-native";
 import MapView from "react-native-maps";
 
-import { Offer } from "@/src/types";
+import { Offer, DepositMachine } from "@/src/types";
 import { OfferMarker } from "./offer-marker";
 import { MachineMarker } from "./machine-marker";
 import { useUserLocation } from "./use-user-location";
-import { depositMachines, DepositMachine } from "../../../constants";
 import { SelectedMapItem } from "./map-container";
 import { useAllOffers } from "@/src/api/hooks/use-offer";
 import { colors } from "@/src/theme";
+import { useAllMachines } from "@/src/api/hooks/use-machines";
 
 interface MapScreenProps {
   selectedItem: SelectedMapItem | null;
@@ -32,10 +32,19 @@ export default function MapScreen({
     data: offers,
     isLoading: isOffersLoading,
     isError: isOffersError,
-    error,
-    refetch,
-    isRefetching,
+    error: OfrersError,
+    refetch: refetchOffers,
+    isRefetching: isRefetchingOffers,
   } = useAllOffers();
+
+  const {
+    data: depositMachines,
+    isLoading: isMachinesLoading,
+    isError: isMachinesError,
+    error: machinesError,
+    refetch: refetchMachines,
+    isRefetching: isMachinesRefetching,
+  } = useAllMachines();
 
   const { initialRegion, isLocationLoading } = useUserLocation();
   const mapRef = useRef<MapView>(null);
@@ -62,7 +71,13 @@ export default function MapScreen({
     }
   }, [selectedItem]);
 
-  if (isLocationLoading || isOffersLoading || isRefetching) {
+  if (
+    isLocationLoading ||
+    isOffersLoading ||
+    isRefetchingOffers ||
+    isMachinesLoading ||
+    isMachinesRefetching
+  ) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4CAF50" />
@@ -76,11 +91,19 @@ export default function MapScreen({
   }
   if (isOffersError) {
     const errorMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "An unexpected error occurred.";
+      OfrersError?.response?.data?.message ||
+      OfrersError?.message ||
+      "An unexpected error occurred while loading offers.";
 
-    return <MapErrorView message={errorMessage} onRetry={refetch} />;
+    return <MapErrorView message={errorMessage} onRetry={refetchOffers} />;
+  }
+  if (isMachinesError) {
+    const errorMessage =
+      machinesError?.response?.data?.message ||
+      machinesError?.message ||
+      "An unexpected error occurred while loading machines.";
+
+    return <MapErrorView message={errorMessage} onRetry={refetchMachines} />;
   }
 
   return (
@@ -102,9 +125,8 @@ export default function MapScreen({
               onPress={onOfferPress}
             />
           ))}
-
           {/* Render Deposit Machines */}
-          {depositMachines.map((machine) => (
+          {depositMachines?.map((machine) => (
             <MachineMarker
               key={`machine-${machine.id}`}
               machine={machine}

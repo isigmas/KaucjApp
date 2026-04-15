@@ -1,39 +1,22 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
-import { DepositMachine, mockOpeningHours } from "../../../constants";
+import { DepositMachine } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
+import { formatHour, getDayName, getMachineStatusConfig } from "@/src/lib";
 
 interface MachineDetailsProps {
   machine: DepositMachine;
 }
 
-const getStatusConfig = (status: DepositMachine["status"]) => {
-  switch (status) {
-    case "AVAILABLE":
-      return { label: "Dostępny", color: "#2196F3", bgColor: "#E3F2FD" };
-    case "FULL":
-      return { label: "Przepełniony", color: "#FF9800", bgColor: "#FFF3E0" };
-    case "OUT_OF_ORDER":
-      return { label: "Awaria", color: "#F44336", bgColor: "#FFEBEE" };
-    default:
-      return {
-        label: "Nieznany",
-        color: colors.text.muted,
-        bgColor: colors.background.main,
-      };
-  }
-};
-
 export default function MachineDetails({ machine }: MachineDetailsProps) {
-  const statusConfig = getStatusConfig(machine.status);
+  const { color: statusColor, label: statusLabel } = getMachineStatusConfig(
+    machine.status,
+  );
 
-  const todaysHours = useMemo(() => {
+  const todaysOpeningHours = useMemo(() => {
     let dayOfWeek = new Date().getDay();
     dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
-
-    return mockOpeningHours.find(
-      (h) => h.depositMachineId === machine.id && h.dayOfWeek === dayOfWeek,
-    );
+    return machine.openingHours.find((days) => days.dayOfWeek === dayOfWeek);
   }, [machine.id]);
 
   return (
@@ -42,44 +25,42 @@ export default function MachineDetails({ machine }: MachineDetailsProps) {
       <View style={styles.headerRow}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Kaucjomat</Text>
-          <Text style={styles.subtitle}>Sieć handlowa: Biedronka</Text>
-        </View>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: statusConfig.bgColor },
-          ]}
-        >
-          <Text style={[styles.statusText, { color: statusConfig.color }]}>
-            {statusConfig.label}
+          <Text style={styles.subtitle}>
+            Sieć handlowa: {machine.networkName}
           </Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+          <Text style={[styles.statusText]}>{statusLabel}</Text>
         </View>
       </View>
       {/* Location Card */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Lokalizacja</Text>
         <Text style={styles.primaryText}>{machine.address}</Text>
-      </View>
-      {/* Hours Card */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Godziny otwarcia (Dzisiaj)</Text>
-        {todaysHours ? (
-          <View style={styles.hoursRow}>
-            <Text style={styles.primaryText}>
-              {todaysHours.openTime.slice(0, 5)} -{" "}
-              {todaysHours.closeTime.slice(0, 5)}
-            </Text>
-            <View style={styles.openIndicator} />
-          </View>
-        ) : (
-          <Text style={styles.secondaryText}>Zamknięte lub brak danych</Text>
+        {todaysOpeningHours && (
+          <>
+            //Display a component that actually checks the current day and time
+            and displays the relevant information eg. [GREEN COLOR] OPEN until 20:00 or
+            [RED COLOR] CLOSED until 08:00
+          </>
         )}
       </View>
 
+      {/* Hours Card */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Godziny otwarcia</Text>
+        {machine.openingHours.map((day) => (
+          <View key={day.dayOfWeek} style={styles.hoursRow}>
+            <Text style={styles.primaryText}>{getDayName(day.dayOfWeek)}</Text>
+            <Text style={styles.primaryText}>
+              {formatHour(day.openTime)} - {formatHour(day.closeTime)}
+            </Text>
+          </View>
+        ))}
+      </View>
+
       {machine.status !== "AVAILABLE" && (
-        <View
-          style={[styles.warningCard, { borderLeftColor: statusConfig.color }]}
-        >
+        <View style={[styles.warningCard, { borderLeftColor: statusColor }]}>
           <Text style={styles.warningText}>
             {machine.status === "FULL"
               ? "Ten kaucjomat jest obecnie pełny. Proszę wybrać inny punkt w okolicy."
@@ -130,6 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     textTransform: "uppercase",
+    color: "#fff",
   },
   sectionTitle: {
     fontSize: 14,
@@ -137,6 +119,11 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginBottom: spacing.sm,
     textTransform: "uppercase",
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.status.border,
+    marginVertical: spacing.sm,
   },
   card: {
     backgroundColor: colors.background.card,

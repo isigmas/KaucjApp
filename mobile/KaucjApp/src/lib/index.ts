@@ -1,0 +1,41 @@
+import { DepositMachineStatus } from "@/src/types";
+
+export const getMachineStatusConfig = (status: DepositMachineStatus) => {
+  switch (status) {
+    case "AVAILABLE":
+      return {
+        color: "#2d8d33",
+        shadow: "rgba(33, 150, 243, 0.4)",
+        label: "Dostępny",
+      };
+    case "FULL":
+      return {
+        color: "#FF9800",
+        shadow: "rgba(255, 152, 0, 0.4)",
+        label: "Przepełniony",
+      };
+    case "OUT_OF_ORDER":
+      return {
+        color: "#F44336",
+        shadow: "rgba(244, 67, 54, 0.4)",
+        label: "Awaria",
+      };
+  }
+};
+
+export const getDayName = (dayOfWeek: number) => {
+  return [
+    "Poniedziałek",
+    "Wtorek",
+    "Środa",
+    "Czwartek",
+    "Piątek",
+    "Sobota",
+    "Niedziela",
+  ][dayOfWeek - 1];
+};
+
+export const formatHour = (time: string) => {
+  const [hour, minute] = time.split(":");
+  return `${hour}:${minute}`;
+};

@@ -1,8 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { Offer } from "@/src/types";
-import { DepositMachine } from "../../../constants";
+import { Offer, DepositMachine } from "@/src/types";
 
 import MapScreen from "./map-screen";
 import DetailsSheet from "./details-sheet";
