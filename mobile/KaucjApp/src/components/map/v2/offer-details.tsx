@@ -1,8 +1,16 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Offer } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 import { getOfferStatusColor } from "@/src/lib";
+import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
 
 interface OfferDetailsProps {
   offer: Offer;
@@ -101,44 +109,81 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
         </View>
       </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          {
-            backgroundColor: pressed
-              ? colors.primary.dark
-              : colors.primary.base,
-          },
-          {
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.md,
-            borderRadius: rounded.xl,
-            alignSelf: "center",
-            marginTop: spacing.lg,
-            width: "100%",
-            textAlign: "center",
-            alignItems: "center",
-          },
-        ]}
-        onPress={() => {
-          // Handle booking  the offer
-        }}
-      >
-        <Text
-          style={{ color: colors.text.white, fontWeight: "600", fontSize: 20 }}
-        >
-          Zarezerwuj
-        </Text>
-      </Pressable>
+      <ReserveButton offerId={offer.offer_id} />
     </View>
   );
 }
+
+interface ReserveButtonProps {
+  offerId: number;
+  onSuccessCallback?: () => void;
+}
+
+export const ReserveButton: React.FC<ReserveButtonProps> = ({
+  offerId,
+  onSuccessCallback,
+}) => {
+  const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
+
+  const handleReserve = () => {
+    if (isPending) return;
+
+    changeOfferStatus(
+      { offerId, newStatus: "RESERVED" },
+      {
+        onSuccess: () => {
+          Alert.alert("Sukces", "Oferta została pomyślnie zarezerwowana!");
+          if (onSuccessCallback) onSuccessCallback();
+        },
+        onError: (error) => {
+          const errorMessage =
+            error.response?.data?.message ||
+            "Nie udało się zarezerwować oferty.";
+          Alert.alert("Błąd", errorMessage);
+        },
+      },
+    );
+  };
+
+  return (
+    <Pressable
+      onPress={handleReserve}
+      disabled={isPending}
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? colors.primary.dark : colors.primary.base,
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          borderRadius: rounded.xl,
+          alignSelf: "center",
+          marginTop: spacing.lg,
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+          gap: spacing.sm,
+          opacity: isPending ? 0.7 : 1,
+        },
+      ]}
+    >
+      {isPending && (
+        <ActivityIndicator color={colors.text.white} size="small" />
+      )}
+
+      <Text
+        style={{ color: colors.text.white, fontWeight: "600", fontSize: 20 }}
+      >
+        {isPending ? "Rezerwowanie..." : "Zarezerwuj"}
+      </Text>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 100,
   },
-  // Header section
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -182,7 +227,6 @@ const styles = StyleSheet.create({
     borderColor: colors.status.border,
   },
 
-  // Typography
   primaryText: {
     fontSize: 16,
     color: colors.text.primary,
@@ -194,7 +238,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Instructions
   instructionBox: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
@@ -208,7 +251,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // Items List
   itemRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -228,7 +270,6 @@ const styles = StyleSheet.create({
     color: colors.primary.dark,
   },
 
-  // Summary
   summaryCard: {
     backgroundColor: colors.primary.light,
     borderRadius: rounded.xl,
