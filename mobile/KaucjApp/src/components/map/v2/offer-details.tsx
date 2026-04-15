@@ -1,26 +1,12 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Offer, OfferStatus } from "@/src/types";
+import { Offer } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
+import { getOfferStatusColor } from "@/src/lib";
 
 interface OfferDetailsProps {
   offer: Offer;
 }
-
-const getStatusColor = (status: OfferStatus) => {
-  switch (status) {
-    case OfferStatus.OPEN:
-      return colors.primary.base;
-    case OfferStatus.RESERVED:
-      return colors.accent.base;
-    case OfferStatus.COMPLETED:
-      return colors.status.success;
-    case OfferStatus.CANCELED:
-      return colors.status.error;
-    default:
-      return colors.text.muted;
-  }
-};
 
 export default function OfferDetails({ offer }: OfferDetailsProps) {
   return (
@@ -35,10 +21,48 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: getStatusColor(offer.status) },
+            { backgroundColor: getOfferStatusColor(offer.status) },
           ]}
         >
           <Text style={styles.statusText}>{offer.status}</Text>
+        </View>
+      </View>
+
+      {/* Items List */}
+      <View style={styles.card}>
+        <View style={[styles.itemRow]}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.primaryText}>Butelki plastikowe</Text>
+            <Text style={styles.secondaryText}>
+              Ilość: {offer.plastic_quantity} •{" "}
+              {offer.plastic_price
+                ? `cena: ${offer.plastic_price.toFixed(2)}zł`
+                : "Brak podanej ceny"}
+            </Text>
+          </View>
+          <Text style={styles.itemPrice}>
+            {offer.plastic_price
+              ? (offer.plastic_price * offer.plastic_quantity).toFixed(2)
+              : 0}{" "}
+            zł
+          </Text>
+        </View>
+        <View style={[styles.itemRow]}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.primaryText}>Puszki</Text>
+            <Text style={styles.secondaryText}>
+              Ilość: {offer.can_quantity} •{" "}
+              {offer.can_price
+                ? `cena: ${offer.can_price.toFixed(2)}zł`
+                : "Brak podanej ceny"}
+            </Text>
+          </View>
+          <Text style={styles.itemPrice}>
+            {offer.can_price
+              ? (offer.can_price * offer.can_quantity).toFixed(2)
+              : 0}{" "}
+            zł
+          </Text>
         </View>
       </View>
 
@@ -55,34 +79,6 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
             </Text>
           </View>
         )}
-      </View>
-
-      {/* Items List */}
-      <Text style={styles.sectionTitle}>Przedmioty</Text>
-      <View style={styles.card}>
-        <View style={[styles.itemRow]}>
-          <View style={styles.itemInfo}>
-            <Text style={styles.primaryText}>Butelki plastikowe</Text>
-            <Text style={styles.secondaryText}>
-              Ilość: {offer.plastic_quantity} • cena:{" "}
-              {offer.plastic_price.toFixed(2)}zł
-            </Text>
-          </View>
-          <Text style={styles.itemPrice}>
-            {(offer.plastic_price * offer.plastic_quantity).toFixed(2)} zł
-          </Text>
-        </View>
-        <View style={[styles.itemRow]}>
-          <View style={styles.itemInfo}>
-            <Text style={styles.primaryText}>Puszki</Text>
-            <Text style={styles.secondaryText}>
-              Ilość: {offer.can_quantity} • cena: {offer.can_price.toFixed(2)}zł
-            </Text>
-          </View>
-          <Text style={styles.itemPrice}>
-            {(offer.can_price * offer.can_quantity).toFixed(2)} zł
-          </Text>
-        </View>
       </View>
 
       {/* Summary Footer */}
@@ -140,6 +136,7 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom: 100,
   },
   // Header section
   headerRow: {
@@ -175,7 +172,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text.primary,
     marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
   },
   card: {
     backgroundColor: colors.background.card,

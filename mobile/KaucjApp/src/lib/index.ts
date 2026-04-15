@@ -1,4 +1,5 @@
-import { DepositMachineStatus } from "@/src/types";
+import { DepositMachineStatus, OfferStatus } from "@/src/types";
+import { colors } from "../theme";
 
 export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   switch (status) {
@@ -20,6 +21,19 @@ export const getMachineStatusConfig = (status: DepositMachineStatus) => {
         shadow: "rgba(244, 67, 54, 0.4)",
         label: "Awaria",
       };
+  }
+};
+
+export const getOfferStatusColor = (status: OfferStatus) => {
+  switch (status) {
+    case "OPEN":
+      return colors.primary.base;
+    case "RESERVED":
+      return colors.accent.base;
+    case "COMPLETED":
+      return colors.status.success;
+    case "CANCELLED":
+      return colors.status.error;
   }
 };
 
