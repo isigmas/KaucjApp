@@ -265,10 +265,11 @@ class AuthControllerIntegrationTest {
             when(userClient.create(any(), anyString())).thenThrow(new RuntimeException("User service unavailable"));
 
             // when and then
-            assertThrows(ServletException.class, () ->
+            assertDoesNotThrow(() ->
                     mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(user))));
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(user)))
+                            .andExpect(status().isInternalServerError()));
 
             assertFalse(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent(),
                     "BUG: Account should not be created when UserClient fails");
@@ -361,7 +362,9 @@ class AuthControllerIntegrationTest {
         @DisplayName("Should reject wrong password")
         void shouldRejectWrongPassword() throws Exception {
             // given
-            createTestAccount();
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
@@ -371,7 +374,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -386,7 +389,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -467,7 +470,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -484,7 +487,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -536,7 +539,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("nonexistent-token"))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNotFound());
         }
 
         @Test
@@ -583,7 +586,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(tokenValue))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }
