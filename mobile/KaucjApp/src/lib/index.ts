@@ -32,7 +32,7 @@ export const getOfferStatusColor = (status: OfferStatus) => {
       return colors.accent.base;
     case "COMPLETED":
       return colors.status.success;
-    case "CANCELLED":
+    case "CANCELED":
       return colors.status.error;
   }
 };
