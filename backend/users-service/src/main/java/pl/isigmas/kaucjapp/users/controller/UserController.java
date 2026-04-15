@@ -22,7 +22,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
-@Tag(name = "Users", description = "User profiles, addresses, and ratings. Trusted caller must send X-User-Id where noted.")
+@Tag(
+        name = "Users",
+        description = "Profiles, addresses, and ratings. "
+                + "Endpoints under /me and /me/addresses require header X-User-Id (identity is trusted from the gateway or caller in this service). "
+                + "Internal creation uses POST /user with X-Internal-Secret. "
+                + "Errors use ApiError: errorCode, message, path, optional validationErrors.")
 public class UserController {
 
     private final UserService userService;
@@ -31,17 +36,20 @@ public class UserController {
     @Value("${IT_SECRET}")
     private String secretKey;
 
+
+
     @PostMapping("/user")
     @Operation(
-            summary = "Create user profile",
-            description = "Creates a user with primary key from JSON field user_id. "
-                    + "Requires header X-Internal-Secret matching service IT_SECRET (e.g. auth-service calling user creation). "
-                    + "Does not use X-User-Id.")
+            summary = "Create user profile (internal)",
+            description = "Creates a user row with primary key from JSON field `user_id`. "
+                    + "Requires header `X-Internal-Secret` equal to this service's `IT_SECRET` (e.g. auth-service after account creation). "
+                    + "Does not use `X-User-Id`. Body: CreateUserDTO (username, firstName, lastName, phone, email). "
+                    + "Initial rating aggregate is created automatically.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Profile created."),
-            @ApiResponse(responseCode = "400", description = "Invalid payload (e.g. missing user_id)."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "X-Internal-Secret missing or wrong.")
+            @ApiResponse(responseCode = "400", description = "Validation error (VALIDATION_ERR / MALFORMED_JSON)."),
+            @ApiResponse(responseCode = "403", description = "Invalid or missing X-Internal-Secret (USER_003)."),
+            @ApiResponse(responseCode = "409", description = "Duplicate user constraint, e.g. email (USER_005).")
     })
     public ResponseEntity<Void> create(
             @RequestHeader("X-Internal-Secret") String secret,
@@ -55,15 +63,19 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+
+
+
+
     @GetMapping("/me/addresses")
     @Operation(
             summary = "List my addresses",
-            description = "Returns all addresses for the user identified by the X-User-Id header.")
+            description = "Returns all saved addresses for the user id from header `X-User-Id`. "
+                    + "Coordinates in each item are validated on write (latitude -90..90, longitude -180..180).")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of addresses (may be empty)."),
-            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id header."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "404", description = "User not found for the given id.")
+            @ApiResponse(responseCode = "200", description = "JSON array of UserAddressDTO (may be empty)."),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id (BAD_REQUEST)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<List<UserAddressDTO>> getMyAddresses(
             @RequestHeader("X-User-Id") Long myUserId) {
@@ -72,26 +84,43 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserAddresses(myUserId));
     }
 
+
+
+
     @GetMapping("/{id}")
     @Operation(
             summary = "Get user by id",
-            description = "Returns the full user profile including addresses.")
+            description = "Returns UserDTO: user_id, username, names, phone, email, and nested addresses.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found."),
-            @ApiResponse(responseCode = "404", description = "No user with this id.")
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         log.info("Fetching user with ID: {}", id);
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+
+
+
     @GetMapping("/me")
+    @Operation(
+            summary = "Get my profile",
+            description = "Same as GET /{id} but the id is taken from header `X-User-Id`.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "UserDTO for the caller."),
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id (BAD_REQUEST)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
     public ResponseEntity<UserDTO> getMe(
             @RequestHeader("X-User-Id") Long myUserId
     ) {
         log.info("Fetching user with ID: {}",myUserId);
         return ResponseEntity.ok(userService.getUserById(myUserId));
     }
+
+
+
 
     @GetMapping("/test")
     @Operation(
@@ -104,15 +133,23 @@ public class UserController {
         return ResponseEntity.ok("Ready");
     }
 
+
+
+
     @PatchMapping("/me")
     @Operation(
-            summary = "Update user profile",
-            description = "Updates profile and replaces addresses for the user in X-User-Id (only that user may update their profile).")
+            summary = "Partially update my profile",
+            description = "Patch body: UpdateUserDTO. All fields are optional (omit or null = leave unchanged). "
+                    + "`firstName` / `lastName`: when sent, must be 1–100 characters. "
+                    + "`addresses`: when omitted or null, existing addresses are not changed; when sent (including `[]`), "
+                    + "the list replaces all addresses (full replace). "
+                    + "Username, email, and phone cannot be updated via this API (not present on UpdateUserDTO). "
+                    + "Each address: latitude ∈ [-90, 90], longitude ∈ [-180, 180], address length limits per UserAddressDTO.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Profile updated."),
-            @ApiResponse(responseCode = "400", description = "Validation error or missing X-User-Id."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "404", description = "User not found.")
+            @ApiResponse(responseCode = "400", description = "Validation (VALIDATION_ERR, field details in validationErrors), "
+                    + "malformed JSON (MALFORMED_JSON), or DB range/length mapped to client error."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<Void> update(
             @Valid @RequestBody UpdateUserDTO updateUserDTO,
@@ -123,15 +160,16 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+
     @DeleteMapping("/me")
     @Operation(
-            summary = "Delete user account",
-            description = "Deletes the user identified by X-User-Id.")
+            summary = "Delete my account",
+            description = "Deletes the user (and dependent data per JPA cascade) for id from `X-User-Id`.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User deleted."),
-            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id header."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "404", description = "User not found.")
+            @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id (BAD_REQUEST)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<Void> delete(
             @RequestHeader("X-User-Id") Long loggedInUserId) {
@@ -141,29 +179,35 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+
+
     @GetMapping("/{id}/rating")
     @Operation(
             summary = "Get user rating",
-            description = "Returns average score and feedback count for the user.")
+            description = "Returns RatingDTO: user_id, avg_score, feedback_count for the given user id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Rating summary returned."),
-            @ApiResponse(responseCode = "404", description = "User or rating aggregate not found.")
+            @ApiResponse(responseCode = "200", description = "Rating summary."),
+            @ApiResponse(responseCode = "404", description = "Rating aggregate not found (USER_002).")
     })
     public ResponseEntity<RatingDTO> getUserRating(@PathVariable Long id) {
         log.info("Fetching rating for user ID: {}", id);
         return ResponseEntity.ok(ratingService.getRatingDTO(id));
     }
 
+
+    
+
     @PostMapping("/{id}/rating")
     @Operation(
             summary = "Submit rating for user",
-            description = "Adds a score (validated body) for the rated user. X-User-Id identifies the rater; cannot rate yourself.")
+            description = "Body: integer score between 1 and 5 (RatingRequestDTO). "
+                    + "Path `id` is the rated user; header `X-User-Id` is the rater. Self-rating is rejected.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Rating recorded."),
-            @ApiResponse(responseCode = "400", description = "Invalid score or request body."),
-            @ApiResponse(responseCode = "401", description = "Not authenticated (if enforced upstream)."),
-            @ApiResponse(responseCode = "403", description = "Rater is not allowed (e.g. self-rating)."),
-            @ApiResponse(responseCode = "404", description = "Rated user not found.")
+            @ApiResponse(responseCode = "204", description = "Rating recorded; running average updated."),
+            @ApiResponse(responseCode = "400", description = "Invalid score or body (VALIDATION_ERR)."),
+            @ApiResponse(responseCode = "403", description = "Cannot rate yourself (USER_004)."),
+            @ApiResponse(responseCode = "404", description = "Rated user / rating row not found (USER_001).")
     })
     public ResponseEntity<Void> addRating(
             @PathVariable Long id,
