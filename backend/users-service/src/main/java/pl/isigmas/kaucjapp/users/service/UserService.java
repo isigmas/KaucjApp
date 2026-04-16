@@ -114,4 +114,11 @@ public class UserService {
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<UserDTO> getAll() {
+        return userRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
 }

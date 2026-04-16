@@ -18,6 +18,7 @@ CREATE TABLE deposit_machines(
 CREATE TABLE opening_hours (
                                opening_hours_id BIGSERIAL PRIMARY KEY,
                                deposit_machine_id BIGINT NOT NULL REFERENCES deposit_machines(deposit_machine_id) ON DELETE CASCADE ,
+                               is_closed BOOLEAN NOT NULL DEFAULT false,
                                day_of_week INT NOT NULL, -- 1=monday, 7==sunday
                                open_time TIME NOT NULL,
                                close_time TIME NOT NULL,
