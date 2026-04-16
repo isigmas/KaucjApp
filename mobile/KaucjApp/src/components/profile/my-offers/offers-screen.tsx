@@ -1,149 +1,40 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Alert,
-} from "react-native";
-import Animated, { Layout, FadeOut, FadeInLeft } from "react-native-reanimated";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
-import { useMyOffers } from "@/src/api/hooks/use-offer";
-import { Offer } from "@/src/types";
-import { formatDate } from "@/src/lib";
+import { useChangeOfferStatus, useMyOffers } from "@/src/api/hooks/use-offer";
+import OfferCard from "./my-offer-card";
 
-const OfferCard = ({
-  offer,
-  index,
-  onComplete,
-}: {
-  offer: Offer;
-  index: number;
-  onComplete: (id: number) => void;
-}) => {
-  const isOpen = offer.status === "OPEN";
-
-  const handleComplete = () => {
-    Alert.alert(
-      "Potwierdzenie",
-      "Czy na pewno chcesz oznaczyć tę ofertę jako zakończoną? Oznacza to, że kurier odebrał już opakowania.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Zakończ",
-          style: "destructive",
-          onPress: () => onComplete(offer.offer_id),
-        },
-      ],
-    );
-  };
-
-  return (
-    <Animated.View
-      entering={FadeInLeft.delay(index * 150)
-        .springify()
-        .damping(50)
-        .stiffness(500)
-        .mass(2.5)}
-      layout={Layout.springify()}
-      style={[styles.card, !isOpen && styles.cardCompleted]}
-    >
-      {/* Header */}
-      <View style={styles.cardHeader}>
-        <View
-          style={[styles.statusBadge, !isOpen && styles.statusBadgeCompleted]}
-        >
-          <View
-            style={[styles.statusDot, !isOpen && styles.statusDotCompleted]}
-          />
-          <Text
-            style={[styles.statusText, !isOpen && styles.statusTextCompleted]}
-          >
-            {isOpen ? "Aktywna" : "Zakończona"}
-          </Text>
-        </View>
-        <Text style={styles.dateText}>{formatDate(offer.created_at)}</Text>
-      </View>
-
-      {/* Body */}
-      <View style={styles.cardBody}>
-        <View style={styles.locationRow}>
-          <Ionicons
-            name="location-outline"
-            size={18}
-            color={colors.text.secondary}
-          />
-          <Text style={styles.addressText}>{offer.pickup_address}</Text>
-        </View>
-
-        <View style={styles.itemsRow}>
-          {offer.plastic_quantity > 0 && (
-            <View key="plastic" style={styles.itemPill}>
-              <Text style={styles.itemIcon}>Plastiki</Text>
-              <Text style={styles.itemQuantity}>{offer.plastic_quantity}x</Text>
-            </View>
-          )}
-          {offer.can_quantity > 0 && (
-            <View key="cans" style={styles.itemPill}>
-              <Text style={styles.itemIcon}>Puszki</Text>
-              <Text style={styles.itemQuantity}>{offer.can_quantity}x</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Financial Summary */}
-        <View style={styles.summaryBox}>
-          <View style={styles.summaryColumn}>
-            <Text style={styles.summaryLabel}>Ilość</Text>
-            <Text style={styles.summaryValue}>{offer.total_quantity} szt.</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryColumn}>
-            <Text style={styles.summaryLabel}>Otrzymasz</Text>
-            <Text style={styles.summaryValueHighlight}>
-              {offer.total_prize.toFixed(2)} zł
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {isOpen && (
-        <Animated.View exiting={FadeOut} style={styles.cardFooter}>
-          <Pressable style={styles.completeButton} onPress={handleComplete}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color={colors.text.white}
-            />
-            <Text style={styles.completeButtonText}>
-              Oznacz jako zakończoną
-            </Text>
-          </Pressable>
-        </Animated.View>
-      )}
-    </Animated.View>
-  );
-};
-
-// --- Main Screen ---
 export default function MyOffers() {
-  const { data: offers } = useMyOffers();
-  const isPending = false; // state from the API call
+  const { data: offers, isPending: isOfferPending } = useMyOffers();
+  const { mutate: changeOfferStatus, isPending: isChangeStatusPending } =
+    useChangeOfferStatus();
+
+  const isPending = isOfferPending || isChangeStatusPending;
 
   const router = useRouter();
 
   if (isPending) return <Text>Loading...</Text>;
   if (!offers) return <Text>Error</Text>;
 
-  const markAsCompleted = (id: number) => {
-    console.log("Marking offer as completed, id: ", id);
+  const markAsCompleted = (offerId: number) => {
+    console.log("Marking offer as completed, id: ", offerId);
 
-    // API CALL TO MARK OFFER AS COMPLETED GO HERE
-
-    router.push("/profile/offers/confirmation");
+    changeOfferStatus(
+      { offerId, newStatus: "COMPLETED" },
+      {
+        onSuccess: () => {
+          router.push("/profile/offers/confirmation");
+        },
+        onError: (error) => {
+          const errorMessage =
+            error.response?.data?.message || "Nie udało się zakończyć oferty.";
+          Alert.alert("Błąd", errorMessage);
+        },
+      },
+    );
   };
 
   return (
