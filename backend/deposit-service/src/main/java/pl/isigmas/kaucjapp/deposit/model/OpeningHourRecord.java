@@ -24,6 +24,9 @@ public class OpeningHourRecord {
     @JoinColumn(name = "deposit_machine_id",nullable = false)
     private DepositMachine depositMachine;
 
+    @Column(name = "is_closed", nullable = false)
+    private Boolean isClosed = false;
+
     @Column(name = "day_of_week", nullable = false)
     private Integer dayOfWeek;
 

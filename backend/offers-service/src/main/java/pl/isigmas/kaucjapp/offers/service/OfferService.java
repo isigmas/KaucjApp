@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
+import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
@@ -62,8 +63,7 @@ public class OfferService {
     }
 
     @Transactional
-    public void update(Long id, Long userId, OfferDTO dto) {
-        validateLocation(dto.getLatitude(), dto.getLongitude());
+    public void update(Long id, Long userId, UpdateOfferDTO dto) {
         Offer offer = offerRepository.findById(id)
                 .orElseThrow(() -> new OfferNotFoundException(id));
 
@@ -75,36 +75,50 @@ public class OfferService {
             throw new IllegalStateException("Only OPEN offers can be updated");
         }
 
-        offer.setLatitude(dto.getLatitude());
-        offer.setLongitude(dto.getLongitude());
-        offer.setPickupAddress(dto.getPickupAddress());
-        offer.setPickupInstructions(dto.getPickupInstructions());
+        BigDecimal updatedLatitude = dto.getLatitude() != null ? dto.getLatitude() : offer.getLatitude();
+        BigDecimal updatedLongitude = dto.getLongitude() != null ? dto.getLongitude() : offer.getLongitude();
+        validateLocation(updatedLatitude, updatedLongitude);
 
-        Map<Long, OfferItem> existingItems = offer.getItems().stream()
-                .collect(Collectors.toMap(
-                        item -> item.getBottleType().getId(),
-                        item -> item
-                ));
+        if (dto.getLongitude() != null) {
+            offer.setLongitude(dto.getLongitude());
+        }
+        if (dto.getLatitude() != null) {
+            offer.setLatitude(dto.getLatitude());
+        }
+        if (dto.getPickupAddress() != null) {
+            offer.setPickupAddress(dto.getPickupAddress());
+        }
+        if (dto.getPickupInstructions() != null) {
+            offer.setPickupInstructions(dto.getPickupInstructions());
+        }
 
-        dto.getItems().forEach(itemDto -> {
-            OfferItem existingItem = existingItems.remove(itemDto.getBottleId());
+        if (dto.getItems() != null) {
+            Map<Long, OfferItem> existingItems = offer.getItems().stream()
+                    .collect(Collectors.toMap(
+                            item -> item.getBottleType().getId(),
+                            item -> item
+                    ));
 
-            if (existingItem != null) {
-                existingItem.setQuantity(itemDto.getQuantity());
-                existingItem.setUnitPrice(itemDto.getUnitPrice());
-            } else {
-                BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                        .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
+            dto.getItems().forEach(itemDto -> {
+                OfferItem existingItem = existingItems.remove(itemDto.getBottleId());
 
-                OfferItem newItem = new OfferItem();
-                newItem.setQuantity(itemDto.getQuantity());
-                newItem.setUnitPrice(itemDto.getUnitPrice());
-                newItem.setRelations(offer, type);
+                if (existingItem != null) {
+                    existingItem.setQuantity(itemDto.getQuantity());
+                    existingItem.setUnitPrice(itemDto.getUnitPrice());
+                } else {
+                    BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
+                            .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
 
-                offer.addItem(newItem);
-            }
-        });
-        existingItems.values().forEach(offer::removeItem);
+                    OfferItem newItem = new OfferItem();
+                    newItem.setQuantity(itemDto.getQuantity());
+                    newItem.setUnitPrice(itemDto.getUnitPrice());
+                    newItem.setRelations(offer, type);
+
+                    offer.addItem(newItem);
+                }
+            });
+            existingItems.values().forEach(offer::removeItem);
+        }
     }
 
     @Transactional(readOnly = true)

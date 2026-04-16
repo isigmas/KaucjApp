@@ -34,7 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class UserEndpointTest {
 
-    /** Must match IT_SECRET in application-test.properties */
+    /**
+     * Must match IT_SECRET in application-test.properties
+     */
     private static final String TEST_INTERNAL_SECRET = "test-internal-token";
 
     private static final String VALID_ADDRESS_BLOCK = """
@@ -320,13 +322,13 @@ class UserEndpointTest {
                 """;
 
         mockMvc.perform(patch("/api/user/me")
-                .header("X-User-Id", 1005L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateUserJson))
+                        .header("X-User-Id", 1005L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateUserJson))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/user/me/addresses")
-                .header("X-User-Id", 1005L))
+                        .header("X-User-Id", 1005L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].addressLabel").value("home"))
                 .andExpect(jsonPath("$[1].addressLabel").value("work"));
@@ -489,61 +491,94 @@ class UserEndpointTest {
     void creatingUserWithInvalidDataReturns400(String invalidJson, @SuppressWarnings("unused") String failureReason) throws Exception {
 
         mockMvc.perform(post("/api/user/user")
-                .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
+                        .header("X-Internal-Secret", TEST_INTERNAL_SECRET)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
                 .andExpect(status().isBadRequest());
     }
 
     private static Stream<Arguments> provideInvalidUserPayloads() {
         return Stream.of(
-            Arguments.of("""
-                {
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
-                    "phone": "111222333",
-                    "email": "anna@example.com"
-                }
-                """, "Missing user_id"),
+                Arguments.of("""
+                        {
+                            "firstName": "Anna",
+                            "lastName": "Nowak",
+                            "phone": "111222333",
+                            "email": "anna@example.com"
+                        }
+                        """, "Missing user_id"),
 
-            Arguments.of("""
-                {
-                    "user_id": 1005,
-                    "lastName": "Nowak",
-                    "phone": "111222333",
-                    "email": "anna@example.com"
-                }
-                """, "Missing username"),
+                Arguments.of("""
+                        {
+                            "user_id": 1005,
+                            "lastName": "Nowak",
+                            "phone": "111222333",
+                            "email": "anna@example.com"
+                        }
+                        """, "Missing username"),
 
-            Arguments.of("""
-                {
-                    "user_id": 1005,
-                    "username": "anowak",
-                    "lastName": "Nowak",
-                    "phone": "111222333",
-                    "email": "anna@example.com"
-                }
-                """, "Missing first name"),
+                Arguments.of("""
+                        {
+                            "user_id": 1005,
+                            "username": "anowak",
+                            "lastName": "Nowak",
+                            "phone": "111222333",
+                            "email": "anna@example.com"
+                        }
+                        """, "Missing first name"),
 
-            Arguments.of("""
-                {
-                    "user_id": 1005,
-                    "username": "anowak",
-                    "firstName": "Anna",
-                    "phone": "111222333",
-                    "email": "anna@example.com"
-                }
-                """, "Missing last name"),
+                Arguments.of("""
+                        {
+                            "user_id": 1005,
+                            "username": "anowak",
+                            "firstName": "Anna",
+                            "phone": "111222333",
+                            "email": "anna@example.com"
+                        }
+                        """, "Missing last name"),
 
-            Arguments.of("""
-                {
-                    "user_id": 1005,
-                    "username": "anowak",
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
-                    "email": "anna@example.com"
-                }
-                """, "Missing phone")
+                Arguments.of("""
+                        {
+                            "user_id": 1005,
+                            "username": "anowak",
+                            "firstName": "Anna",
+                            "lastName": "Nowak",
+                            "email": "anna@example.com"
+                        }
+                        """, "Missing phone")
         );
+    }
+
+    @Test
+    void gettingAllUsersWorks() throws Exception {
+
+        var usersCount = userRepository.count();
+        String createUserJson1 = """
+                {
+                    "user_id": 1005,
+                    "username": "anowak",
+                    "firstName": "Anna",
+                    "lastName": "Nowak",
+                    "phone": "123456789",
+                    "email": "anna@example.com"
+                }
+                """;
+        String createUserJson2 = """
+                {
+                    "user_id": 1006,
+                    "username": "stasiekk",
+                    "firstName": "Stas",
+                    "lastName": "Nowak",
+                    "phone": "123456799",
+                    "email": "stac@example.com"
+                }
+                """;
+
+        postCreateUser(createUserJson1);
+        postCreateUser(createUserJson2);
+
+        mockMvc.perform(get("/api/user/admin/users"))
+                .andExpect(jsonPath("$.length()").value(usersCount+2))
+                .andExpect(status().isOk());
     }
 }

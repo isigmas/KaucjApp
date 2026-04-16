@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
+import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
 import pl.isigmas.kaucjapp.offers.service.OfferService;
 
 import java.util.List;
@@ -70,12 +71,12 @@ public class OfferController {
 
 
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(
-            summary = "Replace offer (full update)",
-            description = "Full replace of location, pickup fields, and items. Items in the body define the new set: "
-                    + "existing bottle types are updated; new bottle ids add rows; omitted bottle types are removed. "
-                    + "Only the creator (X-User-Id) may call this; offer must be OPEN.")
+            summary = "Partially update offer",
+            description = "Partial update of an OPEN offer. Any omitted field keeps its current value. "
+                    + "If `items` is present, it replaces the item set using the provided list: existing bottle types are updated, "
+                    + "new bottle ids add rows, and omitted bottle types are removed. Only the creator (X-User-Id) may call this.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Offer updated; empty body."),
             @ApiResponse(responseCode = "400", description = "VALIDATION_ERR / MALFORMED_JSON / BAD_REQUEST; OFFER_003 if location outside Poland."),
@@ -86,7 +87,7 @@ public class OfferController {
             @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<Void> update(
-            @Valid @RequestBody OfferDTO updatedOffer,
+            @Valid @RequestBody UpdateOfferDTO updatedOffer,
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId) {
         service.update(id, userId, updatedOffer);

@@ -17,6 +17,7 @@ import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @RestController
@@ -64,6 +65,15 @@ public class UserController {
     }
 
 
+    @GetMapping("/admin/users")
+    @Operation(
+            summary = "List all users",
+            description = "Returns all users located in db"
+    )
+    public ResponseEntity<List<UserDTO>> getAllUsers(){
+        log.info("Getting all users");
+        return ResponseEntity.ok(userService.getAll());
+    };
 
 
 
