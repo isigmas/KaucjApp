@@ -13,16 +13,7 @@ import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useMyOffers } from "@/src/api/hooks/use-offer";
 import { Offer } from "@/src/types";
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("pl-PL", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+import { formatDate } from "@/src/lib";
 
 const OfferCard = ({
   offer,

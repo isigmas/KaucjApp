@@ -1,10 +1,11 @@
 import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
+import { formatDate } from "@/src/lib";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 
 export default function ReservedOfferCard({ offer }: { offer: Offer }) {
-  const formattedDate = new Date(offer.created_at).toLocaleDateString();
+  const formattedDate = formatDate(offer.created_at);
   const formattedPrice = `${offer.total_prize.toFixed(2)} PLN`;
   const formattedQuantity = `${offer.total_quantity} szt.`;
 

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Offer } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
-import { getOfferStatusColor } from "@/src/lib";
+import { formatDate, getOfferStatusColor } from "@/src/lib";
 import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
 
 interface OfferDetailsProps {
@@ -22,9 +22,7 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.offerId}>Szczegóły oferty</Text>
-          <Text style={styles.dateText}>
-            {new Date(offer.created_at).toLocaleDateString()}
-          </Text>
+          <Text style={styles.dateText}>{formatDate(offer.created_at)}</Text>
         </View>
         <View
           style={[

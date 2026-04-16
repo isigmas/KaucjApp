@@ -50,6 +50,16 @@ export const getDayName = (dayOfWeek: number) => {
   ][dayOfWeek - 1];
 };
 
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 export const formatHour = (time: string) => {
   const [hour, minute] = time.split(":");
   return `${hour}:${minute}`;
