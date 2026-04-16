@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 
@@ -42,13 +40,11 @@ public class Account {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "role", columnDefinition = "account_role", nullable = false)
+    @Column(name = "role", nullable = false)
     private AccountRole role = AccountRole.USER;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", columnDefinition = "account_status", nullable = false)
+    @Column(name = "status", nullable = false)
     private AccountStatus status = AccountStatus.INACTIVE;
 }
