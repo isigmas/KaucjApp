@@ -3,9 +3,7 @@ package pl.isigmas.kaucjapp.auth.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
@@ -15,7 +13,10 @@ import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 @Table(name = "accounts")
 @Getter
 @Setter
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
     @Id
@@ -33,7 +34,6 @@ public class Account {
     @Column(name = "email", unique = true, nullable = false)
     @Size(max = 255)
     private String email;
-
 
     @NotNull
     @Column(name = "password_hash", nullable = false)
