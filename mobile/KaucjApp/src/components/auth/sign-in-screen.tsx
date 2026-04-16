@@ -16,9 +16,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { colors, rounded, spacing } from "@/src/theme";
 import { signInSchema, SignInValues } from "@/src/types";
+import { useAuth } from "@/src/auth/use-auth";
 
 export default function SignInScreen() {
-  const isLoading = false;
+  const { signIn, isSigningIn, signInError } = useAuth();
 
   const {
     control,
@@ -31,6 +32,12 @@ export default function SignInScreen() {
 
   const onSubmit = async (data: SignInValues) => {
     Keyboard.dismiss();
+
+    try {
+      await signIn(data);
+    } catch (error) {
+      console.log("[frontend] Logowanie nie powiodło się", error);
+    }
   };
 
   return (
@@ -48,6 +55,14 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.formContainer}>
+            {signInError && (
+              <Text
+                style={{ color: "red", textAlign: "center", marginBottom: 10 }}
+              >
+                {signInError.message ||
+                  "Nie można się zalogować. Sprawdź dane."}
+              </Text>
+            )}
             <View>
               <Controller
                 control={control}
@@ -101,9 +116,9 @@ export default function SignInScreen() {
               style={styles.primaryButton}
               onPress={handleSubmit(onSubmit)}
               activeOpacity={0.8}
-              disabled={isLoading}
+              disabled={isSigningIn}
             >
-              {isLoading ? (
+              {isSigningIn ? (
                 <ActivityIndicator color={colors.text.white} />
               ) : (
                 <Text style={styles.primaryButtonText}>Zaloguj się</Text>

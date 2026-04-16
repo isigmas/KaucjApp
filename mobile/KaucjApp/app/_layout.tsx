@@ -1,14 +1,20 @@
 import { Stack } from "expo-router";
-
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/src/api/query-client";
+import { useAuth } from "@/src/auth/use-auth";
+import { useAuthBootstrap } from "@/src/auth/auth-storage-init";
 
 // COMENTED OUT FOR NOW, EXPO GO DOES NOT SUPPORT REACT QUERY PERSISTENCE, BUT THIS IS HOW IT WOULD LOOK LIKE
 // import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 // import { queryClient, queryPersister } from "@/src/api/query-client";
 
 function RootLayoutAuth() {
-  const isAuthenticated = false; //  replace with real auth logic  based on the session
+  const { isAuthenticated } = useAuth();
+  const { isReady } = useAuthBootstrap();
+
+  if (!isReady) {
+    return null; // The native splash screen is covering the app at this point
+  }
 
   return (
     <Stack

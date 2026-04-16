@@ -1,361 +1,154 @@
-import { Compass, LocateFixed } from "lucide-react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import MapView, {
-  Marker,
-  PROVIDER_GOOGLE,
-  type Region,
-} from "react-native-maps";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useRef, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import MapView from "react-native-maps";
 
-import { BottlePin } from "@/src/components/map/BottlePin";
-import {
-  CategoryFilters,
-  type QuantityFilter,
-} from "@/src/components/map/CategoryFilters";
-import { ClusterPin } from "@/src/components/map/ClusterPin";
-import { OfferSheet } from "@/src/components/map/OfferSheet";
-import { isCluster, useClusters } from "@/src/hooks/useClusters";
-import { useLocation } from "@/src/hooks/useLocation";
+import { Offer, DepositMachine } from "@/src/types";
+import { OfferMarker } from "./markers/offer-marker";
+import { MachineMarker } from "./markers/machine-marker";
+import { useUserLocation } from "./use-user-location";
+import { SelectedMapItem } from "./map-container";
+import { useAllOffers } from "@/src/api/hooks/use-offer";
 
-import { colors } from "@/src/theme";
+import { useAllMachines } from "@/src/api/hooks/use-machines";
+import ErrorState from "@/src/components/states/error-state";
+import LoadingState from "@/src/components/states/loading-state";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-// const GLASS_BOTTLE_IDS = new Set([1]);
+interface MapScreenProps {
+  selectedItem: SelectedMapItem | null;
+  onOfferPress: (offer: Offer) => void;
+  onMachinePress: (machine: DepositMachine) => void;
+}
 
-// /**
-//  * Locks tracksViewChanges after the initial bitmap is captured.
-//  * The component remounts whenever its key changes (zoom / filter changes),
-//  * so the timer always fires for a freshly‑mounted instance.
-//  */
-// function StableMarker({
-//   children,
-//   ...markerProps
-// }: React.ComponentProps<typeof Marker>) {
-//   const [tracksViewChanges, setTracksViewChanges] = useState(true);
+export default function MapScreen({
+  selectedItem,
+  onOfferPress,
+  onMachinePress,
+}: MapScreenProps) {
+  const {
+    data: offers,
+    isLoading: isOffersLoading,
+    isError: isOffersError,
+    error: OfrersError,
+    refetch: refetchOffers,
+    isRefetching: isRefetchingOffers,
+  } = useAllOffers();
 
-//   useEffect(() => {
-//     const timer = setTimeout(() => setTracksViewChanges(false), 500);
-//     return () => clearTimeout(timer);
-//   }, []);
+  const {
+    data: depositMachines,
+    isLoading: isMachinesLoading,
+    isError: isMachinesError,
+    error: machinesError,
+    refetch: refetchMachines,
+    isRefetching: isMachinesRefetching,
+  } = useAllMachines();
 
-//   return (
-//     <Marker {...markerProps} tracksViewChanges={tracksViewChanges}>
-//       {children}
-//     </Marker>
-//   );
-// }
+  const { initialRegion, isLocationLoading } = useUserLocation();
 
-// const offerTotalQty = (offer: Offer) =>
-//   offer.items.reduce((sum, i) => sum + i.quantity, 0);
+  const isPending =
+    isLocationLoading ||
+    isOffersLoading ||
+    isRefetchingOffers ||
+    isMachinesLoading ||
+    isMachinesRefetching;
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-export default function MapScreen() {
-  // const insets = useSafeAreaInsets();
-  // const { coords, loading: locationLoading, errorMsg } = useLocation();
-  // const mapRef = useRef<MapView>(null);
-  // const [region, setRegion] = useState<Region>(DEFAULT_REGION);
+  const mapRef = useRef<MapView>(null);
 
-  // // ── Offers from API ─────────────────────────────────────────────────────────
-  // const [offers, setOffers] = useState<Offer[]>([]);
-  // const [offersLoading, setOffersLoading] = useState(true);
-  // const [offersError, setOffersError] = useState<string | null>(null);
+  // move the map when any item is selected to place it above  the bottom sheet
+  useEffect(() => {
+    if (selectedItem && mapRef.current) {
+      const LATITUDE_DELTA = 0.01;
+      const LONGITUDE_DELTA = 0.01;
+
+      // Extract coordinates from either Offer or DepositMachine
+      const { latitude, longitude } = selectedItem.data;
+      const offsetLatitude = latitude - LATITUDE_DELTA * 0.25;
+
+      mapRef.current.animateToRegion(
+        {
+          latitude: offsetLatitude,
+          longitude: longitude,
+          latitudeDelta: LATITUDE_DELTA,
+          longitudeDelta: LONGITUDE_DELTA,
+        },
+        500,
+      );
+    }
+  }, [selectedItem]);
+
+  if (isPending) {
+    const loadingTitle = isLocationLoading
+      ? "Ładowanie lokalizacji..."
+      : "Ładowanie danych...";
+
+    return <LoadingState title={loadingTitle} />;
+  }
+  if (isOffersError) {
+    const errorMessage =
+      OfrersError?.response?.data?.message ||
+      OfrersError?.message ||
+      "An unexpected error occurred while loading offers.";
+
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania ofert."
+        message={errorMessage}
+        onRetry={refetchOffers}
+      />
+    );
+  }
+  if (isMachinesError) {
+    const errorMessage =
+      machinesError?.response?.data?.message ||
+      machinesError?.message ||
+      "An unexpected error occurred while loading machines.";
+
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania kaucjomatów."
+        message={errorMessage}
+        onRetry={refetchMachines}
+      />
+    );
+  }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <Text>
-        Wszysto tutaj musi być napisane od nowa zgodnie z React Query do
-        pobierania danych - niech to pochodzi z folderu /api/hooks.
-      </Text>
-      <Text>
-        Trzeba tez ustalić spójne typy danych z backendem w folderze /types
-      </Text>
+    <View style={styles.container}>
+      {initialRegion && (
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={initialRegion}
+          showsUserLocation
+          showsMyLocationButton
+          moveOnMarkerPress={false}
+        >
+          {offers?.map((offer) => (
+            <OfferMarker
+              key={`offer-${offer.offer_id}`}
+              offer={offer}
+              onPress={onOfferPress}
+            />
+          ))}
+
+          {depositMachines?.map((machine) => (
+            <MachineMarker
+              key={`machine-${machine.id}`}
+              machine={machine}
+              onPress={onMachinePress}
+            />
+          ))}
+        </MapView>
+      )}
     </View>
   );
-
-  // useEffect(() => {
-  //   let cancelled = false;
-
-  //   setOffersLoading(true);
-  //   setOffersError(null);
-
-  //   fetchOffers()
-  //     .then((data) => {
-  //       if (!cancelled) setOffers(data);
-  //     })
-  //     .catch((err) => {
-  //       if (!cancelled)
-  //         setOffersError(err.message ?? "Nie udało się pobrać ofert.");
-  //     })
-  //     .finally(() => {
-  //       if (!cancelled) setOffersLoading(false);
-  //     });
-
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, []);
-
-  // // TODO: replace with real auth user id once auth is implemented
-  // const CURRENT_USER_ID = 1;
-
-  // const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  // const [reserving, setReserving] = useState(false);
-  // const [reserveError, setReserveError] = useState<string | null>(null);
-  // const [activeQuantity, setActiveQuantity] = useState<QuantityFilter>(null);
-  // const [activeAttributes, setActiveAttributes] = useState<string[]>([]);
-
-  // const handleReserve = useCallback(async (offer: Offer) => {
-  //   setReserving(true);
-  //   setReserveError(null);
-  //   try {
-  //     await reserveOffer(offer.offer_id, CURRENT_USER_ID);
-  //     setOffers((prev) => prev.filter((o) => o.offer_id !== offer.offer_id));
-  //     setSelectedOffer(null);
-  //   } catch (err: any) {
-  //     setReserveError(err.message ?? "Nie udało się zarezerwować oferty.");
-  //   } finally {
-  //     setReserving(false);
-  //   }
-  // }, []);
-
-  // const filterKey = useMemo(
-  //   () => `${activeQuantity ?? "x"}_${activeAttributes.join(",")}`,
-  //   [activeQuantity, activeAttributes],
-  // );
-
-  // const centerOnUser = useCallback(() => {
-  //   if (coords && mapRef.current) {
-  //     mapRef.current.animateToRegion(
-  //       {
-  //         latitude: coords.latitude,
-  //         longitude: coords.longitude,
-  //         latitudeDelta: 0.012,
-  //         longitudeDelta: 0.012,
-  //       },
-  //       600,
-  //     );
-  //   }
-  // }, [coords]);
-
-  // const resetNorth = useCallback(() => {
-  //   if (mapRef.current) {
-  //     mapRef.current.animateCamera({ heading: 0, pitch: 0 });
-  //   }
-  // }, []);
-
-  // const filteredAds = useMemo(() => {
-  //   const noGlass = activeAttributes.includes("no_glass");
-  //   const onlyFree = activeAttributes.includes("free");
-
-  //   return offers.filter((offer) => {
-  //     if (offer.status !== "open") return false;
-  //     if (activeQuantity !== null && offerTotalQty(offer) < activeQuantity)
-  //       return false;
-  //     if (noGlass && offer.items.some((i) => GLASS_BOTTLE_IDS.has(i.bottle_id)))
-  //       return false;
-  //     if (onlyFree && !offer.items.every((i) => i.fee === 0)) return false;
-  //     return true;
-  //   });
-  // }, [activeQuantity, activeAttributes, offers]);
-
-  // const { clusters, zoom } = useClusters(filteredAds, region);
-
-  // useEffect(() => {
-  //   if (coords) centerOnUser();
-  // }, [coords, centerOnUser]);
-
-  // if (locationLoading) {
-  //   return (
-  //     <View style={styles.centered}>
-  //       <ActivityIndicator size="large" color={colors.primary.base} />
-  //       <Text style={styles.infoText}>Ładowanie lokalizacji…</Text>
-  //     </View>
-  //   );
-  // }
-
-  // if (errorMsg) {
-  //   return (
-  //     <View style={styles.centered}>
-  //       <Text style={styles.errorText}>{errorMsg}</Text>
-  //     </View>
-  //   );
-  // }
-
-  // if (offersError) {
-  //   return (
-  //     <View style={styles.centered}>
-  //       <Text style={styles.errorText}>{offersError}</Text>
-  //     </View>
-  //   );
-  // }
-
-  // return (
-  //   <View style={styles.container}>
-  //     <MapView
-  //       ref={mapRef}
-  //       provider={PROVIDER_GOOGLE}
-  //       style={StyleSheet.absoluteFillObject}
-  //       initialRegion={DEFAULT_REGION}
-  //       showsUserLocation
-  //       showsMyLocationButton={false}
-  //       showsPointsOfInterest={false}
-  //       onRegionChangeComplete={setRegion}
-  //       moveOnMarkerPress={false}
-  //       onPress={(e) => {
-  //         if (e.nativeEvent.action === "press") {
-  //           setSelectedOffer(null);
-  //         }
-  //       }}
-  //     >
-  //       {clusters.map((item) => {
-  //         const [lng, lat] = item.geometry.coordinates;
-  //         const coordinate = { latitude: lat, longitude: lng };
-
-  //         if (isCluster(item)) {
-  //           return (
-  //             <StableMarker
-  //               // zoom in key forces full remount when cluster↔pin boundary crosses
-  //               key={`${filterKey}-z${zoom}-cluster-${item.id}`}
-  //               coordinate={coordinate}
-  //             >
-  //               <ClusterPin
-  //                 totalBottles={item.properties.totalBottles}
-  //                 adCount={item.properties.point_count}
-  //               />
-  //             </StableMarker>
-  //           );
-  //         }
-
-  //         const offer = item.properties;
-  //         const qty = offerTotalQty(offer);
-  //         return (
-  //           <StableMarker
-  //             key={`${filterKey}-z${zoom}-pin-${offer.offer_id}`}
-  //             coordinate={coordinate}
-  //             onPress={(e) => {
-  //               e.stopPropagation();
-  //               setSelectedOffer(offer);
-  //             }}
-  //           >
-  //             <BottlePin count={qty} />
-  //           </StableMarker>
-  //         );
-  //       })}
-  //     </MapView>
-
-  //     {offersLoading && (
-  //       <View style={styles.loadingOverlay}>
-  //         <ActivityIndicator size="small" color={colors.primary.base} />
-  //         <Text style={styles.loadingOverlayText}>Ładowanie ofert…</Text>
-  //       </View>
-  //     )}
-
-  //     <CategoryFilters
-  //       activeQuantity={activeQuantity}
-  //       onQuantityChange={setActiveQuantity}
-  //       activeAttributes={activeAttributes}
-  //       onAttributesChange={setActiveAttributes}
-  //     />
-
-  //     {selectedOffer && (
-  //       <OfferSheet
-  //         offer={selectedOffer}
-  //         onClose={() => {
-  //           setSelectedOffer(null);
-  //           setReserveError(null);
-  //         }}
-  //         onReserve={handleReserve}
-  //         reserving={reserving}
-  //         reserveError={reserveError}
-  //       />
-  //     )}
-
-  //     <TouchableOpacity
-  //       style={[styles.mapButton, { bottom: insets.bottom + 126 }]}
-  //       onPress={resetNorth}
-  //       activeOpacity={0.8}
-  //     >
-  //       <Compass size={24} color={colors.text.secondary} />
-  //     </TouchableOpacity>
-
-  //     <TouchableOpacity
-  //       style={[styles.mapButton, { bottom: insets.bottom + 60 }]}
-  //       onPress={centerOnUser}
-  //       activeOpacity={0.8}
-  //     >
-  //       <LocateFixed size={24} color={colors.primary.base} />
-  //     </TouchableOpacity>
-  //   </View>
-  // );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: {
+  container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    backgroundColor: colors.background.main,
+    backgroundColor: "#fff",
   },
-  infoText: { fontSize: 15, color: colors.text.secondary },
-  errorText: {
-    fontSize: 15,
-    color: colors.status.error,
-    textAlign: "center",
-    paddingHorizontal: 32,
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: "50%",
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  loadingOverlayText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.text.secondary,
-  },
-  mapButton: {
-    position: "absolute",
-    right: 20,
-    zIndex: 10,
-    backgroundColor: colors.background.main,
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

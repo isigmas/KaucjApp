@@ -10,24 +10,7 @@ export default function HomeLayout() {
     <Stack>
       <Stack.Screen
         name="index"
-        options={{
-          title: "Moje rezerwacje",
-          headerTintColor: colors.primary.base,
-          headerTitleStyle: {
-            color: colors.text.primary,
-            fontSize: 18,
-            fontWeight: "700",
-          },
-          headerBackTitle: "",
-          headerLeft: ({ tintColor }) => (
-            <Pressable
-              onPress={() => router.back()}
-              style={{ padding: 8 }}
-            >
-              <ChevronLeft size={24} color={tintColor} />
-            </Pressable>
-          ),
-        }}
+        options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
     </Stack>
   );

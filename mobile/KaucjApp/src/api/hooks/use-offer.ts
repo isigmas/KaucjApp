@@ -1,160 +1,138 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AxiosError } from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { apiClient } from "../api-client";
-
-export type OfferStatus = "OPEN" | "RESERVED" | "COMPLETED" | "CANCELED";
-
-export interface OfferDTO {
-  offer_id: number;
-  creator_id: number;
-  collector_id: number | null;
-  status: OfferStatus;
-  latitude: number;
-  longitude: number;
-  pickup_address: string;
-  pickup_instructions: string | null;
-  created_at: string;
-  plastic_quantity: number;
-  can_quantity: number;
-  total_quantity: number;
-  total_prize: number;
-  total_income: number;
-  plastic_price: number | null;
-  can_price: number | null;
-}
-
-export interface RatingRequestDTO {
-  score: number;
-}
-
-interface ApiErrorDTO {
-  error?: string;
-  message?: string;
-  detail?: string;
-  errors?: string[] | Record<string, string | string[]>;
-  status?: number;
-}
-
-interface CreateOfferItem {
-  bottleId: number;
-  quantity: number;
-  unitPrice: number;
-}
-
-interface CreateOfferPayload {
-  latitude: number;
-  longitude: number;
-  pickupAddress: string;
-  pickupInstructions: string;
-  items: CreateOfferItem[];
-}
+import {
+  Offer,
+  OfferPayload,
+  OfferStatus,
+  OfferSearchBBox,
+  ApiErrorResponse,
+} from "@/src/types";
 
 export const offerKeys = {
   all: () => ["offers"] as const,
-  mine: () => ["offers", "my"] as const,
-  reserved: () => ["offers", "reserved"] as const,
+  lists: () => [...offerKeys.all(), "list"] as const,
+  details: () => [...offerKeys.all(), "detail"] as const,
+  detail: (id: number) => [...offerKeys.details(), id] as const,
+  mine: () => [...offerKeys.all(), "my"] as const,
+  reserved: () => [...offerKeys.all(), "my-reserved"] as const,
+  search: (bbox: OfferSearchBBox) =>
+    [...offerKeys.all(), "search", bbox] as const,
 };
 
-export function getErrorMessage(error: unknown): string {
-  const fallback = "Wystąpił błąd. Spróbuj ponownie.";
-  if (!error) return fallback;
-  const axiosError = error as AxiosError<ApiErrorDTO>;
-  const data = axiosError.response?.data;
-  if (data?.message) return data.message;
-  if (data?.error) return data.error;
-  if (data?.detail) return data.detail;
-
-  if (Array.isArray(data?.errors) && data.errors.length > 0) {
-    return data.errors.join(", ");
-  }
-  if (data?.errors && typeof data.errors === "object") {
-    const firstValue = Object.values(data.errors)[0];
-    if (Array.isArray(firstValue) && firstValue.length > 0) return firstValue[0];
-    if (typeof firstValue === "string") return firstValue;
-  }
-
-  return axiosError.message || fallback;
-}
-
-export const useGetOffers = () =>
-  useQuery({
-    queryKey: offerKeys.all(),
-    queryFn: async (): Promise<OfferDTO[]> => {
-      const { data } = await apiClient.get<OfferDTO[]>("/offer/szosti");
+// GET /offer/szosti - get all offers (for map)
+export const useAllOffers = () => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.lists(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>("/offer/szosti");
       return data;
     },
   });
+};
 
+// GET /offer/my - get offers created by the current user
+export const useMyOffers = () => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.mine(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>("/offer/my");
+      return data;
+    },
+  });
+};
+
+// GET /offer/my/reserved - get offers reserved by the current user
+export const useMyReservedOffers = () => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.reserved(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>("/offer/my/reserved");
+      return data;
+    },
+  });
+};
+
+// GET /offer/search - search offers within a box
+export const useSearchOffers = (
+  bbox: OfferSearchBBox,
+  enabled: boolean = true,
+) => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.search(bbox),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>("/offer/search", {
+        params: bbox,
+      });
+      return data;
+    },
+    enabled,
+  });
+};
+
+// --- mutations ---
+
+// POST /offer/offer - create a new offer
 export const useCreateOffer = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (offerData: CreateOfferPayload) => {
-      const { data } = await apiClient.post("/offer/offer", offerData);
+  return useMutation<number, AxiosError<ApiErrorResponse>, OfferPayload>({
+    mutationFn: async (offerData) => {
+      const { data } = await apiClient.post<number>("/offer/offer", offerData);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
-      queryClient.invalidateQueries({ queryKey: offerKeys.mine() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
 };
 
-export const useMyOffers = () =>
-  useQuery({
-    queryKey: offerKeys.mine(),
-    queryFn: async (): Promise<OfferDTO[]> => {
-      const { data } = await apiClient.get<OfferDTO[]>("/offer/my");
-      return data;
-    },
-  });
-
-export const useReservedOffers = () =>
-  useQuery({
-    queryKey: offerKeys.reserved(),
-    queryFn: async (): Promise<OfferDTO[]> => {
-      const { data } = await apiClient.get<OfferDTO[]>("/offer/my/reserved");
-      return data;
-    },
-  });
-
-export const useCompleteOffer = () => {
+// PUT /offer/{id} - update an existing offer
+export const useUpdateOffer = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (offerId: number) => {
-      await apiClient.post(`/offer/${offerId}/status/COMPLETED`);
+
+  return useMutation<
+    void,
+    AxiosError<ApiErrorResponse>,
+    { id: number; payload: OfferPayload }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      await apiClient.put(`/offer/${id}`, payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
-      queryClient.invalidateQueries({ queryKey: offerKeys.mine() });
-      queryClient.invalidateQueries({ queryKey: offerKeys.reserved() });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
 };
 
-export const useCancelOffer = () => {
+// DELETE /offer/{id} - delete an offer
+export const useDeleteOffer = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (offerId: number) => {
-      await apiClient.post(`/offer/${offerId}/status/CANCELED`);
+
+  return useMutation<void, AxiosError<ApiErrorResponse>, number>({
+    mutationFn: async (id) => {
+      await apiClient.delete(`/offer/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
-      queryClient.invalidateQueries({ queryKey: offerKeys.mine() });
-      queryClient.invalidateQueries({ queryKey: offerKeys.reserved() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
 };
 
-export const useRateUser = () =>
-  useMutation({
-    mutationFn: async ({
-      userId,
-      payload,
-    }: {
-      userId: number;
-      payload: RatingRequestDTO;
-    }) => {
-      await apiClient.post(`/user/${userId}/rating`, payload);
+// POST /offer/{id}/status/{newStatus}
+export const useChangeOfferStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    AxiosError<ApiErrorResponse>,
+    { offerId: number; newStatus: OfferStatus }
+  >({
+    mutationFn: async ({ offerId, newStatus }) => {
+      await apiClient.post(`/offer/${offerId}/status/${newStatus}`);
+    },
+    onSuccess: async (_, { offerId }) => {
+      await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
+};

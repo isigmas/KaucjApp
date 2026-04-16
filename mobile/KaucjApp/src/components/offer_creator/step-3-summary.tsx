@@ -14,6 +14,7 @@ import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { useLocationStore } from "@/src/state/location";
+import { useCreateOffer } from "@/src/api/hooks/use-offer";
 
 interface Step3SummaryProps {
   data: OfferData;
@@ -23,13 +24,54 @@ interface Step3SummaryProps {
 export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
   const { clearLocation } = useLocationStore();
   const router = useRouter();
+  const { mutate: createOffer } = useCreateOffer();
 
   const isPending = false; // This will be derived from a mutation state
+
+  interface Offer {
+    latitude: number;
+    longitude: number;
+    pickupAddress: string;
+    pickupInstructions: string;
+    items: Item[];
+  }
+  interface Item {
+    bottleId: number;
+    quantity: number;
+    unitPrice: number;
+  }
 
   const handleSubmit = () => {
     console.log("Button pressed");
 
     // API call goees here
+    const payload = {
+      latitude: data.latitude!,
+      longitude: data.longitude!,
+      pickupAddress: data.address,
+      pickupInstructions: data.notes || "",
+      items: [
+        {
+          bottleId: 1, // Assuming 1 for plastic bottles
+          quantity: data.plasticBottles,
+          unitPrice: data.plasticPrice,
+        },
+        {
+          bottleId: 2, // Assuming 2 for cans
+          quantity: data.cans,
+          unitPrice: data.cansPrice,
+        },
+      ],
+    };
+
+    createOffer(payload, {
+      onSuccess: () => {
+        router.replace(`/(app)/(tabs)/create/success-screen`);
+      },
+      onError: (error) => {
+        console.error("Failed to create offer:", error);
+      },
+    });
   };
 
   const totalDepositValue =
