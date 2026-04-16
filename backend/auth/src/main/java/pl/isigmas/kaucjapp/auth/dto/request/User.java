@@ -30,8 +30,4 @@ public class User {
     @NotBlank(message = "Last name is needed")
     private String lastName;
 
-    private String role;
-
-    private String status;
-
 }

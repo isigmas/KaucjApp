@@ -240,21 +240,6 @@ class DtoValidationTest {
         }
 
         @Test
-        @DisplayName("Role and status can be null")
-        void roleAndStatusCanBeNull() {
-            // given
-            User user = createValidUser();
-            user.setRole(null);
-            user.setStatus(null);
-
-            // when
-            Set<ConstraintViolation<User>> violations = validator.validate(user);
-
-            // then
-            assertTrue(violations.isEmpty());
-        }
-
-        @Test
         @DisplayName("Unicode characters in names")
         void unicodeCharactersShouldBeValid() {
             // given
