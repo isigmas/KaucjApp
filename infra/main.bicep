@@ -36,6 +36,18 @@ param passwordSalt string
 @description('Email password')
 param mailPassword string
 
+@secure()
+@description('Admin password')
+param adminUsername string
+
+@secure()
+@description('Admin email')
+param adminEmail string
+
+@secure()
+@description('Admin password')
+param adminPassword string
+
 param apiGatewayImageName string = ''
 param authServiceImageName string = ''
 param offersServiceImageName string = ''
@@ -145,6 +157,9 @@ module authApp 'modules/app.bicep' = {
       { name: 'it-secret', value: itSecret }
       { name: 'jwt-secret', value: jwtSecret }
       { name: 'password-salt', value: passwordSalt }
+      { name: 'admin-username', value: adminUsername }
+      { name: 'admin-email', value: adminEmail }
+      { name: 'admin-password', value: adminPassword }
     ]
     envVars: [
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/auth_db?sslmode=require' }
@@ -154,6 +169,9 @@ module authApp 'modules/app.bicep' = {
       { name: 'IT_SECRET', secretRef: 'it-secret' }
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
       { name: 'PASSWORD_SALT', secretRef: 'password-salt' }
+      { name: 'ADMIN_USERNAME', secretRef: 'admin-username' }
+      { name: 'ADMIN_PASSWORD', secretRef: 'admin-password' }
+      { name: 'ADMIN_EMAIL', secretRef: 'admin-email' }
       { name: 'USER_SERVICE_URL', value: 'http://${usersApp.outputs.fqdn}' }
       { name: 'NOTIFICATION_SERVICE_URL', value: 'http://${notificationApp.outputs.fqdn}' }
     ]
