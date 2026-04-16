@@ -3,11 +3,7 @@ package pl.isigmas.kaucjapp.auth.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import lombok.*;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 
@@ -15,7 +11,10 @@ import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 @Table(name = "accounts")
 @Getter
 @Setter
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
     @Id
@@ -34,7 +33,6 @@ public class Account {
     @Size(max = 255)
     private String email;
 
-
     @NotNull
     @Column(name = "password_hash", nullable = false)
     @Size(max = 255)
@@ -42,13 +40,11 @@ public class Account {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "role", columnDefinition = "account_role", nullable = false)
+    @Column(name = "role", nullable = false)
     private AccountRole role = AccountRole.USER;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", columnDefinition = "account_status", nullable = false)
+    @Column(name = "status", nullable = false)
     private AccountStatus status = AccountStatus.INACTIVE;
 }

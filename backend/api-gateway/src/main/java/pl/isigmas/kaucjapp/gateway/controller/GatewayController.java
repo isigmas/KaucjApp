@@ -42,7 +42,8 @@ public class GatewayController {
     );
 
     private static final List<String> BLOCKED_HEADERS = List.of(
-            "x-internal-secret"
+            "x-internal-secret",
+            "x-user-id"
     );
 
     public GatewayController(RestClient.Builder restClientBuilder, GatewayProperties gatewayProperties) {

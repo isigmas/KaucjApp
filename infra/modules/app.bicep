@@ -66,6 +66,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           name: appName
           image: containerImage
           env: envVars
+          resources: {
+            cpu: json('1.0')
+            memory: '2.0Gi'
+          }
         }
       ]
     }
