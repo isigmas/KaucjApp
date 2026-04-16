@@ -1,11 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Text,
-  Pressable,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import MapView from "react-native-maps";
 
 import { Offer, DepositMachine } from "@/src/types";
@@ -14,8 +8,10 @@ import { MachineMarker } from "./markers/machine-marker";
 import { useUserLocation } from "./use-user-location";
 import { SelectedMapItem } from "./map-container";
 import { useAllOffers } from "@/src/api/hooks/use-offer";
-import { colors } from "@/src/theme";
+
 import { useAllMachines } from "@/src/api/hooks/use-machines";
+import ErrorState from "@/src/components/states/error-state";
+import LoadingState from "@/src/components/states/loading-state";
 
 interface MapScreenProps {
   selectedItem: SelectedMapItem | null;
@@ -47,6 +43,14 @@ export default function MapScreen({
   } = useAllMachines();
 
   const { initialRegion, isLocationLoading } = useUserLocation();
+
+  const isPending =
+    isLocationLoading ||
+    isOffersLoading ||
+    isRefetchingOffers ||
+    isMachinesLoading ||
+    isMachinesRefetching;
+
   const mapRef = useRef<MapView>(null);
 
   // move the map when any item is selected to place it above  the bottom sheet
@@ -71,23 +75,12 @@ export default function MapScreen({
     }
   }, [selectedItem]);
 
-  if (
-    isLocationLoading ||
-    isOffersLoading ||
-    isRefetchingOffers ||
-    isMachinesLoading ||
-    isMachinesRefetching
-  ) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>
-          {isLocationLoading
-            ? "Ładowanie lokalizacji..."
-            : "Ładowanie danych..."}
-        </Text>
-      </View>
-    );
+  if (isPending) {
+    const loadingTitle = isLocationLoading
+      ? "Ładowanie lokalizacji..."
+      : "Ładowanie danych...";
+
+    return <LoadingState title={loadingTitle} />;
   }
   if (isOffersError) {
     const errorMessage =
@@ -95,7 +88,13 @@ export default function MapScreen({
       OfrersError?.message ||
       "An unexpected error occurred while loading offers.";
 
-    return <MapErrorView message={errorMessage} onRetry={refetchOffers} />;
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania ofert."
+        message={errorMessage}
+        onRetry={refetchOffers}
+      />
+    );
   }
   if (isMachinesError) {
     const errorMessage =
@@ -103,7 +102,13 @@ export default function MapScreen({
       machinesError?.message ||
       "An unexpected error occurred while loading machines.";
 
-    return <MapErrorView message={errorMessage} onRetry={refetchMachines} />;
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania kaucjomatów."
+        message={errorMessage}
+        onRetry={refetchMachines}
+      />
+    );
   }
 
   return (
@@ -117,7 +122,6 @@ export default function MapScreen({
           showsMyLocationButton
           moveOnMarkerPress={false}
         >
-          {/* Render Offers */}
           {offers?.map((offer) => (
             <OfferMarker
               key={`offer-${offer.offer_id}`}
@@ -125,7 +129,7 @@ export default function MapScreen({
               onPress={onOfferPress}
             />
           ))}
-          {/* Render Deposit Machines */}
+
           {depositMachines?.map((machine) => (
             <MachineMarker
               key={`machine-${machine.id}`}
@@ -139,26 +143,6 @@ export default function MapScreen({
   );
 }
 
-function MapErrorView({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
-  return (
-    <View style={styles.centeredContainer}>
-      <Text style={styles.errorTitle}>
-        Oops! Coś poszło nie tak podczas ładowania ofert.
-      </Text>
-      <Text style={styles.errorText}>{message}</Text>
-      <Pressable style={styles.retryButton} onPress={onRetry}>
-        <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -166,46 +150,5 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    color: "#F44336",
-    fontSize: 16,
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#666",
-  },
-
-  // styles for error view
-  centeredContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#F2F2F7",
-  },
-  errorTitle: {
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FF3B30",
-    marginBottom: 4,
-  },
-  retryButton: {
-    backgroundColor: colors.primary.base,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 32,
-    marginTop: 16,
-  },
-  retryButtonText: {
-    color: "#FFF",
-    fontWeight: "600",
-    fontSize: 16,
   },
 });
