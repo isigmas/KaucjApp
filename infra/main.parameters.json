@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "acrName": {
+      "value": "${ACR_NAME}"
+    },
+    "dbPassword": {
+      "value": "${DB_PASSWORD}"
+    },
+    "itSecret": {
+      "value": "${IT_SECRET}"
+    },
+    "jwtSecret": {
+      "value": "${JWT_SECRET}"
+    },
+    "passwordSalt": {
+      "value": "${PASSWORD_SALT}"
+    },
+    "baseUrl": {
+      "value": "${BASE_URL}"
+    },
+    "mailUsername": {
+      "value": "${MAIL_USERNAME}"
+    },
+    "mailPassword": {
+      "value": "${MAIL_PASSWORD}"
+    }
+  }
+}

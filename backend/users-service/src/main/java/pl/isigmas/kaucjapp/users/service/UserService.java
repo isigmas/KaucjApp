@@ -3,11 +3,12 @@ package pl.isigmas.kaucjapp.users.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
 
 import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
+import pl.isigmas.kaucjapp.users.DTO.UpdateUserDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserAddressDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserDTO;
+import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserAddress;
@@ -28,7 +29,7 @@ public class UserService {
     public UserDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(this::mapToDTO)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Transactional
@@ -51,29 +52,22 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(Long id, UserDTO userDTO) {
+    public void updateUser(Long id, UpdateUserDTO dto) {
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-        existingUser.setFirstName(userDTO.getFirstName());
-        existingUser.setLastName(userDTO.getLastName());
-        existingUser.setUsername(userDTO.getUsername());
-        existingUser.setPhone(userDTO.getPhone());
-        existingUser.setEmail(userDTO.getEmail());
-
-        List<UserAddress> currentAddresses = new ArrayList<>(existingUser.getAddresses());
-        currentAddresses.forEach(existingUser::removeAddress);
-        userRepository.flush();
-
-        if (userDTO.getAddresses() != null) {
-            userDTO.getAddresses().forEach(addrDto -> {
+        if (dto.getFirstName() != null) existingUser.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) existingUser.setLastName(dto.getLastName());
+        if (dto.getAddresses() != null) {
+            new ArrayList<>(existingUser.getAddresses()).forEach(existingUser::removeAddress);
+            userRepository.flush();
+            dto.getAddresses().forEach(addrDto -> {
                 UserAddress address = new UserAddress();
                 address.setAddressLabel(addrDto.getAddressLabel());
                 address.setAddress(addrDto.getAddress());
                 address.setLatitude(addrDto.getLatitude());
                 address.setLongitude(addrDto.getLongitude());
                 address.setDefault(addrDto.isDefault());
-
                 existingUser.addAddress(address);
             });
         }
@@ -82,7 +76,7 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(user);
     }
 
@@ -115,7 +109,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserAddressDTO> getUserAddresses(Long myUserId) {
         User user = userRepository.findById(myUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + myUserId));
+                .orElseThrow(() -> new UserNotFoundException(myUserId));
         return user.getAddresses().stream()
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());

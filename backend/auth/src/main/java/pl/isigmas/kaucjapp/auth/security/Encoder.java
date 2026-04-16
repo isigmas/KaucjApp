@@ -6,6 +6,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+
 @Component
 @RequiredArgsConstructor
 public class Encoder {
@@ -38,5 +42,16 @@ public class Encoder {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new InvalidCredentialsException();
         }
+    }
+
+    public String hashToken(String rawToken) {
+        byte[] hash;
+        try {
+            hash = MessageDigest.getInstance("SHA-256")
+                    .digest(rawToken.getBytes());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not found", e);
+        }
+        return HexFormat.of().formatHex(hash);
     }
 }

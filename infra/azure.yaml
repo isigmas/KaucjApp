@@ -1,0 +1,42 @@
+name: kaucjapp-microservices
+metadata:
+  template: azd-init@1.0.0
+infra:
+  path: .
+services:
+  api-gateway:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: api-gateway/Dockerfile
+  auth-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: auth/Dockerfile
+  offers-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: offers-service/Dockerfile
+  users-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: users-service/Dockerfile
+  deposit-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: deposit-service/Dockerfile
+  notification-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: notification-service/Dockerfile

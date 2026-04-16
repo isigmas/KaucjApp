@@ -1,11 +1,16 @@
 package pl.isigmas.kaucjapp.auth.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class AuthBaseException extends RuntimeException {
-    public AuthBaseException(String message) {
+@Getter
+public abstract class AuthBaseException extends RuntimeException {
+    private final String errorCode;
+    private final HttpStatus status;
+
+    protected AuthBaseException(String message, String errorCode, HttpStatus status) {
         super(message);
+        this.errorCode = errorCode;
+        this.status = status;
     }
 }

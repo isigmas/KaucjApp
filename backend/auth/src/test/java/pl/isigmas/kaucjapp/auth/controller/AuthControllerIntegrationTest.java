@@ -6,10 +6,8 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.ServletException;
@@ -39,20 +37,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@Import({TestcontainersConfiguration.class, AuthControllerIntegrationTest.TestConfig.class})
+@Import({TestcontainersConfiguration.class})
 @DisplayName("AuthController Integration Tests")
 class AuthControllerIntegrationTest {
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        @Primary
-        public UserClient userClient() {
-            UserClient mock = Mockito.mock(UserClient.class);
-            when(mock.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
-            return mock;
-        }
-    }
 
     private MockMvc mockMvc;
 
@@ -71,8 +58,11 @@ class AuthControllerIntegrationTest {
     @Autowired
     private Encoder encoder;
 
-    @Autowired
+    @MockitoBean
     private UserClient userClient;
+
+    @MockitoBean
+    private pl.isigmas.kaucjapp.auth.client.NotificationClient notificationClient;
 
     @BeforeEach
     void setUp() {
@@ -83,6 +73,9 @@ class AuthControllerIntegrationTest {
         // Reset mock to default behavior
         Mockito.reset(userClient);
         when(userClient.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
+
+        Mockito.reset(notificationClient);
+        when(notificationClient.sendWelcomeEmail(any())).thenReturn(ResponseEntity.ok().build());
     }
 
     @Nested
@@ -272,10 +265,11 @@ class AuthControllerIntegrationTest {
             when(userClient.create(any(), anyString())).thenThrow(new RuntimeException("User service unavailable"));
 
             // when and then
-            assertThrows(ServletException.class, () ->
+            assertDoesNotThrow(() ->
                     mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(user))));
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(user)))
+                            .andExpect(status().isInternalServerError()));
 
             assertFalse(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent(),
                     "BUG: Account should not be created when UserClient fails");
@@ -368,7 +362,9 @@ class AuthControllerIntegrationTest {
         @DisplayName("Should reject wrong password")
         void shouldRejectWrongPassword() throws Exception {
             // given
-            createTestAccount();
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
@@ -378,7 +374,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -393,7 +389,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -474,7 +470,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -491,7 +487,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -543,7 +539,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("nonexistent-token"))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNotFound());
         }
 
         @Test
@@ -590,7 +586,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(tokenValue))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }
