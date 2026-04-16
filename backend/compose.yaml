@@ -100,6 +100,9 @@ services:
       - PASSWORD_SALT=${PASSWORD_SALT}
       - USER_SERVICE_URL=http://users-service:8080
       - NOTIFICATION_SERVICE_URL=http://notification-service:8080
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       auth-db:
         condition: service_healthy
