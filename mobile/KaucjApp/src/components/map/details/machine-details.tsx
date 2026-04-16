@@ -1,157 +1,123 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { DepositMachine, OpeningHour } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 import { formatHour, getDayName, getMachineStatusConfig } from "@/src/lib";
+import CurrentOpeningStatus from "./current-opening-status";
 
-interface MachineDetailsProps {
+export default function MachineDetails({
+  machine,
+}: {
   machine: DepositMachine;
-}
-
-export default function MachineDetails({ machine }: MachineDetailsProps) {
+}) {
   const { color: statusColor, label: statusLabel } = getMachineStatusConfig(
     machine.status,
   );
+  const isUnavailable = machine.status !== "AVAILABLE";
 
   return (
     <View style={styles.container}>
-      {/* Header: Title & Status */}
-      <View style={styles.headerRow}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Kaucjomat</Text>
-          <Text style={styles.subtitle}>
-            Sieć handlowa: {machine.networkName}
-          </Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={[styles.statusText]}>{statusLabel}</Text>
-        </View>
-      </View>
+      <MachineHeader
+        networkName={machine.networkName}
+        statusLabel={statusLabel}
+        statusColor={statusColor}
+      />
 
-      {/* Location Card */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Lokalizacja</Text>
-        <Text style={styles.primaryText}>{machine.address}</Text>
-        <CurrentOpeningStatus openingHours={machine.openingHours} />
-      </View>
+      <InfoCard address={machine.address} openingHours={machine.openingHours} />
 
-      {/* Hours Card */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Godziny otwarcia</Text>
-        {machine.openingHours.map((day) => (
-          <View key={day.dayOfWeek} style={styles.hoursRow}>
-            <Text style={styles.primaryText}>{getDayName(day.dayOfWeek)}</Text>
-            <Text style={styles.primaryText}>
-              {formatHour(day.openTime)} - {formatHour(day.closeTime)}
-            </Text>
-          </View>
-        ))}
-      </View>
+      <OpeningHoursCard openingHours={machine.openingHours} />
 
-      {machine.status !== "AVAILABLE" && (
-        <View style={[styles.warningCard, { borderLeftColor: statusColor }]}>
-          <Text style={styles.warningText}>
-            {machine.status === "FULL"
-              ? "Ten kaucjomat jest obecnie pełny. Proszę wybrać inny punkt w okolicy."
-              : "Ten kaucjomat uległ awarii. Przepraszamy za utrudnienia."}
-          </Text>
-        </View>
+      {isUnavailable && (
+        <UnavailableWarning status={machine.status} statusColor={statusColor} />
       )}
 
-      <Image
-        source={require("@/assets/images/kaucjomat.jpg")}
-        style={styles.machineImage}
-        resizeMode="cover"
-      />
+      <MachineImage />
     </View>
   );
 }
 
-const CurrentOpeningStatus = ({
+function MachineHeader({
+  networkName,
+  statusLabel,
+  statusColor,
+}: {
+  networkName: string;
+  statusLabel: string;
+  statusColor: string;
+}) {
+  return (
+    <View style={styles.headerRow}>
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>Kaucjomat</Text>
+        <Text style={styles.subtitle}>Sieć handlowa: {networkName}</Text>
+      </View>
+      <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+        <Text style={styles.statusText}>{statusLabel}</Text>
+      </View>
+    </View>
+  );
+}
+
+function InfoCard({
+  address,
   openingHours,
 }: {
+  address: string;
   openingHours: OpeningHour[];
-}) => {
-  const [status, setStatus] = useState<{
-    isOpen: boolean;
-    text: string;
-  } | null>(null);
+}) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.sectionTitle}>Lokalizacja</Text>
+      <Text style={styles.primaryText}>{address}</Text>
+      <CurrentOpeningStatus openingHours={openingHours} />
+    </View>
+  );
+}
 
-  useEffect(() => {
-    const checkStatus = () => {
-      if (!openingHours || openingHours.length === 0) return;
+function OpeningHoursCard({ openingHours }: { openingHours: OpeningHour[] }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.sectionTitle}>Godziny otwarcia</Text>
+      {openingHours.map((day) => (
+        <View style={styles.hoursRow} key={day.dayOfWeek}>
+          <Text style={styles.primaryText}>{getDayName(day.dayOfWeek)}</Text>
+          <Text style={styles.primaryText}>
+            {formatHour(day.openTime)} - {formatHour(day.closeTime)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
-      const now = new Date();
-      let currentDayOfWeek = now.getDay();
-      currentDayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
-
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-
-      const today = openingHours.find((h) => h.dayOfWeek === currentDayOfWeek);
-
-      // seee if it's currently open
-      if (
-        today &&
-        currentTime >= today.openTime &&
-        currentTime < today.closeTime
-      ) {
-        setStatus({
-          isOpen: true,
-          text: `Otwarte do ${formatHour(today.closeTime)}`,
-        });
-        return;
-      }
-
-      // If closed, find the next available opening time
-      let nextOpenTime = "";
-      let nextDayOfWeek = "";
-      if (today && currentTime < today.openTime) {
-        nextOpenTime = today.openTime;
-        nextDayOfWeek = getDayName(today.dayOfWeek);
-      } else {
-        for (let i = 1; i <= 7; i++) {
-          const nextDay = ((currentDayOfWeek + i - 1) % 7) + 1;
-          const nextDayData = openingHours.find((h) => h.dayOfWeek === nextDay);
-          if (nextDayData) {
-            nextOpenTime = nextDayData.openTime;
-            nextDayOfWeek = getDayName(nextDayData.dayOfWeek);
-            break;
-          }
-        }
-      }
-
-      setStatus({
-        isOpen: false,
-        text: nextOpenTime
-          ? `Zamknięte do ${formatHour(nextOpenTime)} (${nextDayOfWeek})`
-          : "Obecnie zamknięte",
-      });
-    };
-
-    checkStatus();
-    // Update the status every minute
-    const interval = setInterval(checkStatus, 60000);
-    return () => clearInterval(interval);
-  }, [openingHours]);
-
-  if (!status) return null;
+function UnavailableWarning({
+  status,
+  statusColor,
+}: {
+  status: string;
+  statusColor: string;
+}) {
+  const message =
+    status === "FULL"
+      ? "Ten kaucjomat jest obecnie pełny. Proszę wybrać inny punkt w okolicy."
+      : "Ten kaucjomat uległ awarii. Przepraszamy za utrudnienia.";
 
   return (
-    <Text
-      style={[
-        styles.dynamicStatusText,
-        {
-          color: status.isOpen ? colors.status.success : colors.status.error,
-        },
-      ]}
-    >
-      {status.text}
-    </Text>
+    <View style={[styles.warningCard, { borderLeftColor: statusColor }]}>
+      <Text style={styles.warningText}>{message}</Text>
+    </View>
   );
-};
+}
+
+function MachineImage() {
+  return (
+    <Image
+      source={require("@/assets/images/kaucjomat.jpg")}
+      style={styles.machineImage}
+      resizeMode="cover"
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -188,18 +154,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: "#fff",
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text.secondary,
-    marginBottom: spacing.sm,
-    textTransform: "uppercase",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.status.border,
-    marginVertical: spacing.sm,
-  },
+
   card: {
     backgroundColor: colors.background.card,
     borderRadius: rounded.xl,
@@ -207,6 +162,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.status.border,
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text.secondary,
+    marginBottom: spacing.sm,
+    textTransform: "uppercase",
   },
   primaryText: {
     fontSize: 16,
@@ -218,22 +181,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: spacing.xs,
   },
-  secondaryText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    marginTop: 2,
-  },
   hoursRow: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.xs,
-  },
-  openIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.status?.success || "#10b981",
   },
   warningCard: {
     backgroundColor: colors.background.main,
