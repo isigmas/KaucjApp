@@ -47,6 +47,10 @@ public class AuthService {
 
     @Transactional
     public void create(User newUser) {
+        accountRepository.findByUsernameOrEmail(newUser.getUsername(), newUser.getEmail())
+                .ifPresent(a -> {
+                    throw new AccountAlreadyExistsException("Account with given username or email already exists");
+                });
 
         Account newAccount = new Account();
         newAccount.setUsername(newUser.getUsername());
