@@ -51,7 +51,7 @@ public class DepositMachineController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PutMapping("machine/{id}")
+    @PatchMapping("machine/{id}")
     public ResponseEntity<Void> update(
             @Valid @RequestBody UpdateMachineDTO updateMachineDTO,
             @PathVariable Long id

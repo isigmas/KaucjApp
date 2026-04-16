@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -111,6 +111,7 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
+                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
                 .andExpect(jsonPath("$[0].openingHours.length()").value(7));
 
         String updateDepositJSON = """
@@ -122,7 +123,7 @@ class DepositEndpointTest {
 
         Long id = depositMachineRepository.findAll().getFirst().getId();
 
-        mockMvc.perform(put("/api/deposit/machine/" + id)
+        mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateDepositJSON))
                 .andExpect(status().isOk());
@@ -135,6 +136,7 @@ class DepositEndpointTest {
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
+                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
                 .andExpect(jsonPath("$[0].openingHours.length()").value(7));
 
         mockMvc.perform(delete("/api/deposit/machine/"+id))
@@ -213,7 +215,7 @@ class DepositEndpointTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/deposit/machine/" + id)
+        mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateMachineHoursJSON))
                 .andExpect(status().isOk());
@@ -221,8 +223,10 @@ class DepositEndpointTest {
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].openingHours[0].dayOfWeek").value(1))
+                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
                 .andExpect(jsonPath("$[0].openingHours[0].openTime").value("07:00:00"))
                 .andExpect(jsonPath("$[0].openingHours[0].closeTime").value("21:00:00"))
+                .andExpect(jsonPath("$[0].openingHours[1].isClosed").value(false))
                 .andExpect(jsonPath("$[0].openingHours[1].openTime").value("06:00:00"))
                 .andExpect(jsonPath("$[0].openingHours[1].closeTime").value("23:00:00"))
                 .andExpect(jsonPath("$[0].openingHours.length()").value(7));

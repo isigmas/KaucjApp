@@ -22,6 +22,8 @@ public class OpeningHourDTO {
     @Max(7)
     private Integer dayOfWeek;
 
+    private Boolean isClosed;
+
     @NotNull
     private LocalTime openTime;
 

@@ -37,6 +37,7 @@ public class DepositMachineService {
     private DepositMachineResponseDTO mapToResponseDTO(DepositMachine depositMachine) {
         List<OpeningHourDTO> openingHourDTOs = depositMachine.getItems().stream()
                 .map(hourRecord -> OpeningHourDTO.builder()
+                        .isClosed(hourRecord.getIsClosed())
                         .dayOfWeek(hourRecord.getDayOfWeek())
                         .openTime(hourRecord.getOpenTime())
                         .closeTime(hourRecord.getCloseTime())
@@ -67,6 +68,7 @@ public class DepositMachineService {
 
         for (var day : depositMachineRequestDTO.getOpeningHours()) {
             OpeningHourRecord record = new OpeningHourRecord();
+            record.setIsClosed(Boolean.TRUE.equals(day.getIsClosed()));
             record.setOpenTime(day.getOpenTime());
             record.setCloseTime(day.getCloseTime());
             record.setDayOfWeek(day.getDayOfWeek());
@@ -111,10 +113,14 @@ public class DepositMachineService {
 
                 if (existingHour.isPresent()) {
                     OpeningHourRecord recordToUpdate = existingHour.get();
+                    if (hourDto.getIsClosed() != null) {
+                        recordToUpdate.setIsClosed(hourDto.getIsClosed());
+                    }
                     recordToUpdate.setOpenTime(hourDto.getOpenTime());
                     recordToUpdate.setCloseTime(hourDto.getCloseTime());
                 } else {
                     OpeningHourRecord newRecord = new OpeningHourRecord();
+                    newRecord.setIsClosed(Boolean.TRUE.equals(hourDto.getIsClosed()));
                     newRecord.setDayOfWeek(hourDto.getDayOfWeek());
                     newRecord.setOpenTime(hourDto.getOpenTime());
                     newRecord.setCloseTime(hourDto.getCloseTime());
