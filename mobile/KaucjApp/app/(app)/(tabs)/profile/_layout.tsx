@@ -20,7 +20,14 @@ export default function HomeLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
-      <Stack.Screen name="bookings" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="bookings"
+        options={{
+          headerTitle: "Moje rezerwacje",
+          headerLargeTitleEnabled: true,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
     </Stack>
   );
 }
