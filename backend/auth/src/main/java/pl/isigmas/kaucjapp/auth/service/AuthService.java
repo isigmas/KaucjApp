@@ -48,7 +48,7 @@ public class AuthService {
     @Transactional
     public void create(User newUser) {
         accountRepository.findByUsernameOrEmail(newUser.getUsername(), newUser.getEmail())
-                .ifPresent(a -> {
+                .ifPresent(_ -> {
                     throw new AccountAlreadyExistsException("Account with given username or email already exists");
                 });
 
@@ -143,6 +143,14 @@ public class AuthService {
         account.setStatus(AccountStatus.ACTIVE);
 
         activationToken.setUsed(true);
+    }
+
+    @Transactional
+    public void suspend(Long id) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFondException(id));
+
+        account.setStatus(AccountStatus.SUSPENDED);
     }
 
     @Transactional(readOnly = true)

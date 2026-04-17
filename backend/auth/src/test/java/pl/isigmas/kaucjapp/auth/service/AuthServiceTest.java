@@ -16,6 +16,7 @@ import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
+import pl.isigmas.kaucjapp.auth.exception.AccountNotFondException;
 import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
@@ -553,6 +554,135 @@ class AuthServiceTest {
 
             // when & then
             assertThrows(TokenNotFoundException.class, () -> authService.logout("   "));
+        }
+    }
+
+    @Nested
+    @DisplayName("suspend() - Account Suspension Tests")
+    class SuspendTests {
+
+        private Account existingAccount;
+
+        @BeforeEach
+        void setUp() {
+            existingAccount = new Account();
+            existingAccount.setId(1L);
+            existingAccount.setUsername("testuser");
+            existingAccount.setEmail("test@example.com");
+            existingAccount.setPasswordHash("hashedPassword");
+            existingAccount.setRole(AccountRole.USER);
+            existingAccount.setStatus(AccountStatus.ACTIVE);
+        }
+
+        @Test
+        @DisplayName("Should suspend account successfully")
+        void shouldSuspendAccountSuccessfully() {
+            // given
+            when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(1L);
+
+            // then
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
+        }
+
+        @Test
+        @DisplayName("Should throw AccountNotFondException when account not found")
+        void shouldThrowExceptionWhenAccountNotFound() {
+            // given
+            when(accountRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThrows(AccountNotFondException.class, () -> authService.suspend(999L));
+        }
+
+        @Test
+        @DisplayName("Should suspend already inactive account")
+        void shouldSuspendAlreadyInactiveAccount() {
+            // given
+            existingAccount.setStatus(AccountStatus.INACTIVE);
+            when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(1L);
+
+            // then
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
+        }
+
+        @Test
+        @DisplayName("Should suspend already suspended account (idempotent)")
+        void shouldSuspendAlreadySuspendedAccount() {
+            // given
+            existingAccount.setStatus(AccountStatus.SUSPENDED);
+            when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(1L);
+
+            // then
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
+        }
+
+        @Test
+        @DisplayName("Should suspend deleted account")
+        void shouldSuspendDeletedAccount() {
+            // given
+            existingAccount.setStatus(AccountStatus.DELETED);
+            when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(1L);
+
+            // then
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
+        }
+
+        @Test
+        @DisplayName("Should suspend account with negative ID")
+        void shouldThrowExceptionForNegativeId() {
+            // given
+            when(accountRepository.findById(-1L)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThrows(AccountNotFondException.class, () -> authService.suspend(-1L));
+        }
+
+        @Test
+        @DisplayName("Should suspend account with very large ID")
+        void shouldSuspendAccountWithLargeId() {
+            // given
+            existingAccount.setId(Long.MAX_VALUE);
+            when(accountRepository.findById(Long.MAX_VALUE)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(Long.MAX_VALUE);
+
+            // then
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
+        }
+
+        @Test
+        @DisplayName("Suspension should not affect other account properties")
+        void shouldNotAffectOtherAccountProperties() {
+            // given
+            String originalUsername = existingAccount.getUsername();
+            String originalEmail = existingAccount.getEmail();
+            String originalPasswordHash = existingAccount.getPasswordHash();
+            AccountRole originalRole = existingAccount.getRole();
+
+            when(accountRepository.findById(1L)).thenReturn(Optional.of(existingAccount));
+
+            // when
+            authService.suspend(1L);
+
+            // then
+            assertEquals(originalUsername, existingAccount.getUsername());
+            assertEquals(originalEmail, existingAccount.getEmail());
+            assertEquals(originalPasswordHash, existingAccount.getPasswordHash());
+            assertEquals(originalRole, existingAccount.getRole());
+            assertEquals(AccountStatus.SUSPENDED, existingAccount.getStatus());
         }
     }
 }
