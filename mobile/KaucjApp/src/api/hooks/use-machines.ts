@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { apiClient } from "../api-client";
 import { DepositMachine, MachineSearchBBox } from "@/src/types";
@@ -31,12 +31,13 @@ export const useSearchMachines = (
     queryFn: async () => {
       const { data } = await apiClient.get<DepositMachine[]>(
         "/deposit/search",
-        {
-          params: box,
-        },
+        { params: box },
       );
       return data;
     },
     enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };

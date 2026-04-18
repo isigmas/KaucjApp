@@ -1,3 +1,5 @@
+export * from "./map-box";
+
 import { DepositMachineStatus, OfferStatus } from "@/src/types";
 import { colors } from "../theme";
 
