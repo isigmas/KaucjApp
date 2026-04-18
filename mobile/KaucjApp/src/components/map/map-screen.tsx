@@ -98,7 +98,6 @@ export default function MapScreen({
   }, [selectedItem]);
 
   const handleRegionChangeComplete = (newRegion: Region) => {
-    console.log("Region changed to:", newRegion);
     setRegion(newRegion);
   };
 
@@ -136,6 +135,12 @@ export default function MapScreen({
     );
   }
 
+  console.log(` MAP STATE UPDATE:
+    - Accumulated Offers in Memory: ${offers.length}
+    - Accumulated Machines in Memory: ${depositMachines.length}
+    - Map is currently rendering: ${offers.length + depositMachines.length} total markers.
+    `);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -146,6 +151,7 @@ export default function MapScreen({
         showsUserLocation
         showsMyLocationButton
         moveOnMarkerPress={false}
+        minZoomLevel={9}
       >
         {offers.map((offer) => (
           <OfferMarker

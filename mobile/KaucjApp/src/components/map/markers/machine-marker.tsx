@@ -1,5 +1,6 @@
 import { getMachineStatusConfig } from "@/src/lib";
 import { DepositMachine } from "@/src/types";
+import { preventAutoHideAsync } from "expo-splash-screen";
 import React, { useState, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Marker } from "react-native-maps";
@@ -21,6 +22,7 @@ export const MachineMarker = React.memo(
 
     return (
       <Marker
+        identifier={`machine-${machine.id}`}
         coordinate={{
           latitude: machine.latitude,
           longitude: machine.longitude,
@@ -44,6 +46,7 @@ export const MachineMarker = React.memo(
     );
   },
   (prevProps, nextProps) =>
+    prevProps.machine.id === nextProps.machine.id &&
     prevProps.machine.status === nextProps.machine.status,
 );
 
