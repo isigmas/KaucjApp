@@ -81,9 +81,17 @@ function OpeningHoursCard({ openingHours }: { openingHours: OpeningHour[] }) {
       {openingHours.map((day) => (
         <View style={styles.hoursRow} key={day.dayOfWeek}>
           <Text style={styles.primaryText}>{getDayName(day.dayOfWeek)}</Text>
-          <Text style={styles.primaryText}>
-            {formatHour(day.openTime)} - {formatHour(day.closeTime)}
-          </Text>
+          {day.isClosed ? (
+            <Text
+              style={[styles.primaryText, { color: colors.text.secondary }]}
+            >
+              zamknięte
+            </Text>
+          ) : (
+            <Text style={styles.primaryText}>
+              {formatHour(day.openTime)} - {formatHour(day.closeTime)}
+            </Text>
+          )}
         </View>
       ))}
     </View>
