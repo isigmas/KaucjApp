@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.MediaType;
-import pl.isigmas.kaucjapp.users.integration.BaseIntegrationTest;
 import pl.isigmas.kaucjapp.users.model.User;
 
 import java.util.stream.Stream;
