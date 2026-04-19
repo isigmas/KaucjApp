@@ -76,6 +76,24 @@ public class UserController {
     };
 
 
+    @PostMapping("admin/delete/{id}")
+    @Operation(
+            summary = "Suspend user",
+            description = "Admin can suspend user"
+    )
+    public ResponseEntity<Void> suspendUser(
+            @PathVariable Long id,
+            @RequestHeader("X-Internal-Secret") String secret
+                                            ) {
+        if (!secretKey.equals(secret)) {
+            throw new InvalidInternalSecretException();
+        }
+        log.info("Admin requested suspension of user ID: {}", id);
+        userService.adminDeleteUser(id);
+        return ResponseEntity.ok().build();
+    }
+
+
 
     @GetMapping("/me/addresses")
     @Operation(

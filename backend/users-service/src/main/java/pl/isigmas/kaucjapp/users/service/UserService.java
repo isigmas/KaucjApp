@@ -130,4 +130,16 @@ public class UserService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void adminDeleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.setUsername("deleted-user-"+id);
+        user.setEmail(user.getUsername()+"@deleted.com");
+        user.setFirstName("Deleted");
+        user.setLastName("User");
+        user.setPhone(null);
+    }
 }
