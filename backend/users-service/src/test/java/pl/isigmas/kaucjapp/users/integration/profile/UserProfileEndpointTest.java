@@ -1,10 +1,12 @@
-package pl.isigmas.kaucjapp.users;
+package pl.isigmas.kaucjapp.users.integration.profile;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.MediaType;
 import pl.isigmas.kaucjapp.users.model.User;
+import pl.isigmas.kaucjapp.users.support.BaseIntegrationTest;
 
 import java.util.stream.Stream;
 
@@ -75,7 +77,6 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
         assertThat(userRepository.findById(userId)).isEmpty();
     }
 
-
     @Test
     void userNotFoundCasesReturn404() throws Exception {
         mockMvc.perform(get("/api/user/999999"))
@@ -116,6 +117,92 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 """;
 
         postCreateUser(createUserJson).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void creatingUserWithWrongInternalSecretReturns403() throws Exception {
+        String createUserJson = """
+                {
+                    "user_id": 91005,
+                    "username": "secretuser",
+                    "firstName": "S",
+                    "lastName": "U",
+                    "phone": "111222333",
+                    "email": "secretuser@example.com"
+                }
+                """;
+
+        mockMvc.perform(post("/api/user/user")
+                        .header("X-Internal-Secret", "wrong-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserJson))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("USER_003"));
+    }
+
+    @Test
+    void creatingUserWithoutInternalSecretHeaderReturns400() throws Exception {
+        String createUserJson = """
+                {
+                    "user_id": 91006,
+                    "username": "nosecret",
+                    "firstName": "N",
+                    "lastName": "S",
+                    "phone": "111222334",
+                    "email": "nosecret@example.com"
+                }
+                """;
+
+        mockMvc.perform(post("/api/user/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
+    }
+
+    @Test
+    void creatingUserWithDuplicateEmailReturns409() throws Exception {
+        String first = """
+                {
+                    "user_id": 92001,
+                    "username": "dupe",
+                    "firstName": "A",
+                    "lastName": "A",
+                    "phone": "111222335",
+                    "email": "duplicate@example.com"
+                }
+                """;
+        String second = """
+                {
+                    "user_id": 92002,
+                    "username": "dupb",
+                    "firstName": "B",
+                    "lastName": "B",
+                    "phone": "111222336",
+                    "email": "duplicate@example.com"
+                }
+                """;
+
+        postCreateUser(first).andExpect(status().isCreated());
+        postCreateUser(second)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("USER_005"));
+    }
+
+    @Test
+    void getMeWithoutUserIdHeaderReturns400() throws Exception {
+        mockMvc.perform(get("/api/user/me"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
+    }
+
+    @Test
+    void patchMeWithoutUserIdHeaderReturns400() throws Exception {
+        mockMvc.perform(patch("/api/user/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\": \"X\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
     }
 
     @ParameterizedTest(name = "Should return 400 when: {1}")

@@ -1,6 +1,7 @@
-package pl.isigmas.kaucjapp.users;
+package pl.isigmas.kaucjapp.users.integration.admin;
 
 import org.junit.jupiter.api.Test;
+import pl.isigmas.kaucjapp.users.support.BaseIntegrationTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,7 +37,7 @@ public class UserAdminTest extends BaseIntegrationTest {
         postCreateUser(createUserJson2);
 
         mockMvc.perform(get("/api/user/admin/users"))
-                .andExpect(jsonPath("$.length()").value(usersCount+2))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(usersCount + 2));
     }
 }

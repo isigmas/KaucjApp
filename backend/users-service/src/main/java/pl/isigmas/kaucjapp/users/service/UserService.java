@@ -8,6 +8,7 @@ import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
 import pl.isigmas.kaucjapp.users.DTO.UpdateUserDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserAddressDTO;
 import pl.isigmas.kaucjapp.users.DTO.UserDTO;
+import pl.isigmas.kaucjapp.users.exception.UserAlreadyExistsException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
@@ -34,6 +35,14 @@ public class UserService {
 
     @Transactional
     public void createUser(long id, CreateUserDTO userDTO) {
+
+        if (userRepository.existsByEmail(userDTO.getEmail())) {
+            throw UserAlreadyExistsException.forEmail(userDTO.getEmail());
+        }
+        if (userRepository.existsByUsername(userDTO.getUsername())) {
+            throw UserAlreadyExistsException.forUsername(userDTO.getUsername());
+        }
+
         User user = new User();
         user.setId(id);
         user.setUsername(userDTO.getUsername());

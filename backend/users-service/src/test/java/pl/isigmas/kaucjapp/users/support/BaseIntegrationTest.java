@@ -1,4 +1,4 @@
-package pl.isigmas.kaucjapp.users;
+package pl.isigmas.kaucjapp.users.support;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

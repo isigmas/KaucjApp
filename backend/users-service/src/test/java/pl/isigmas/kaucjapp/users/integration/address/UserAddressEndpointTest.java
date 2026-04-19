@@ -1,7 +1,8 @@
-package pl.isigmas.kaucjapp.users;
+package pl.isigmas.kaucjapp.users.integration.address;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import pl.isigmas.kaucjapp.users.support.BaseIntegrationTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;

@@ -1,7 +1,8 @@
-package pl.isigmas.kaucjapp.users;
+package pl.isigmas.kaucjapp.users.integration.rating;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import pl.isigmas.kaucjapp.users.support.BaseIntegrationTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserRatingEndpointTest extends BaseIntegrationTest {
 
     @Test
-    void ratingWorks() throws Exception{
+    void ratingWorks() throws Exception {
         String jsonFirst = """
                 {
                     "user_id": 1005,
@@ -53,12 +54,19 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                         .content("{\"score\":5}"))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/user/{id}/rating",secondUserId)
-                .header("X-User-Id",secondUserId))
+        mockMvc.perform(get("/api/user/{id}/rating", secondUserId)
+                        .header("X-User-Id", secondUserId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user_id").value(secondUserId))
                 .andExpect(jsonPath("$.feedback_count").value(1))
                 .andExpect(jsonPath("$.avg_score").value(5.00));
+    }
+
+    @Test
+    void getRatingForNonExistentUserReturns404() throws Exception {
+        mockMvc.perform(get("/api/user/999999/rating"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("USER_002"));
     }
 
     @Test
