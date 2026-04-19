@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.MediaType;
+import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.support.BaseIntegrationTest;
 
@@ -74,7 +75,13 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 .header("X-User-Id", userId))
                 .andExpect(status().isOk());
 
-        assertThat(userRepository.findById(userId)).isEmpty();
+        var deletedUser = userRepository.findById(userId).orElseThrow();
+
+        assertThat(deletedUser.getUsername()).isEqualTo("deleted-user-"+userId);
+        assertThat(deletedUser.getFirstName()).isEqualTo("Deleted");
+        assertThat(deletedUser.getLastName()).isEqualTo("User");
+        assertThat(deletedUser.getPhone()).isNull();
+        assertThat(deletedUser.getEmail()).isEqualTo("deleted-user-"+userId+"@deleted.com");
     }
 
     @Test
