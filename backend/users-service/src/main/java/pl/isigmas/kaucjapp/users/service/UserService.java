@@ -86,7 +86,12 @@ public class UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        userRepository.delete(user);
+
+        user.setUsername("deleted-user-"+id);
+        user.setEmail(user.getUsername()+"@deleted.com");
+        user.setFirstName("Deleted");
+        user.setLastName("User");
+        user.setPhone(null);
     }
 
     private UserDTO mapToDTO(User user) {
@@ -131,15 +136,4 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
-    public void adminDeleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-
-        user.setUsername("deleted-user-"+id);
-        user.setEmail(user.getUsername()+"@deleted.com");
-        user.setFirstName("Deleted");
-        user.setLastName("User");
-        user.setPhone(null);
-    }
 }

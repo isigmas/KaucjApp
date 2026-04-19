@@ -17,7 +17,6 @@ import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
 import java.util.List;
-import java.util.Locale;
 
 @Slf4j
 @RestController
@@ -76,20 +75,24 @@ public class UserController {
     };
 
 
-    @PostMapping("admin/delete/{id}")
+    @DeleteMapping("admin/delete/{id}")
     @Operation(
-            summary = "Suspend user",
-            description = "Admin can suspend user"
+            summary = "Admin delete user",
+            description = "Admin can safe delete user"
     )
-    public ResponseEntity<Void> suspendUser(
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User deleted."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<Void> adminDeleteUser(
             @PathVariable Long id,
             @RequestHeader("X-Internal-Secret") String secret
                                             ) {
         if (!secretKey.equals(secret)) {
             throw new InvalidInternalSecretException();
         }
-        log.info("Admin requested suspension of user ID: {}", id);
-        userService.adminDeleteUser(id);
+        log.info("Admin requested delete of user ID: {}", id);
+        userService.deleteUser(id);
         return ResponseEntity.ok().build();
     }
 
