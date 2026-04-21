@@ -4,7 +4,7 @@ import { Region } from "react-native-maps";
 
 export const getSnappedBBox = (region: Region) => {
   console.log("[getSnappedBBox] Region:", region);
-  const CHUNK_SIZE = 0.05;
+  const CHUNK_SIZE = 0.005;
   const PADDING = region.latitudeDelta * 0.1;
 
   const minLat = region.latitude - region.latitudeDelta / 2 - PADDING;

@@ -105,7 +105,7 @@ export const useUpdateOffer = () => {
     { id: number; payload: OfferPayload }
   >({
     mutationFn: async ({ id, payload }) => {
-      await apiClient.put(`/offer/${id}`, payload);
+      await apiClient.patch(`/offer/${id}`, payload);
     },
     onSuccess: async (_, { id }) => {
       await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
