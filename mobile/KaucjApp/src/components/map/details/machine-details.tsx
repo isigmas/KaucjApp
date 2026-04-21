@@ -1,19 +1,59 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
-import { DepositMachine, OpeningHour } from "@/src/types";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { DepositMachine, DepositMachineStatus, OpeningHour } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 import { formatHour, getDayName, getMachineStatusConfig } from "@/src/lib";
 import CurrentOpeningStatus from "./current-opening-status";
+import {
+  useMachineDetails,
+  useUpdateMachineStatus,
+} from "@/src/api/hooks/use-machines";
+import LoadingState from "../../states/loading-state";
+import ErrorState from "../../states/error-state";
+import EmptyState from "../../states/empty-state";
 
-export default function MachineDetails({
-  machine,
-}: {
-  machine: DepositMachine;
-}) {
+export default function MachineDetails({ machineId }: { machineId: number }) {
+  const {
+    data: machine,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMachineDetails(machineId);
+  const { mutate: updateStatus, isPending } = useUpdateMachineStatus();
+
+  if (isLoading) {
+    return <LoadingState title="Ładowanie szczegółów kaucjomatu" />;
+  }
+
+  if (isError) {
+    const message =
+      error.message || "Nie udało się pobrać szczegółów kaucjomatu.";
+    return (
+      <ErrorState
+        title="Ops! coś poszło nie tak podczas szukania tego kaucjomatu."
+        message={message}
+        onRetry={refetch}
+      />
+    );
+  }
+
+  if (!machine) {
+    return (
+      <EmptyState title="Brak informacji o kaucjomacie." onRefresh={refetch} />
+    );
+  }
+
   const { color: statusColor, label: statusLabel } = getMachineStatusConfig(
     machine.status,
   );
   const isUnavailable = machine.status !== "AVAILABLE";
+
+  const handleStatusChange = (newStatus: DepositMachineStatus) => {
+    if (machine.status !== newStatus) {
+      updateStatus({ id: machine.id, status: newStatus });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -21,6 +61,8 @@ export default function MachineDetails({
         networkName={machine.networkName}
         statusLabel={statusLabel}
         statusColor={statusColor}
+        isPending={isPending}
+        onStatusChange={handleStatusChange}
       />
 
       <InfoCard address={machine.address} openingHours={machine.openingHours} />
@@ -40,19 +82,67 @@ function MachineHeader({
   networkName,
   statusLabel,
   statusColor,
+  isPending,
+  onStatusChange,
 }: {
   networkName: string;
   statusLabel: string;
   statusColor: string;
+  isPending: boolean;
+  onStatusChange: (status: DepositMachineStatus) => void;
 }) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleSelect = (status: DepositMachineStatus) => {
+    onStatusChange(status);
+    setIsDropdownOpen(false);
+  };
+
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Kaucjomat</Text>
         <Text style={styles.subtitle}>Sieć handlowa: {networkName}</Text>
       </View>
-      <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-        <Text style={styles.statusText}>{statusLabel}</Text>
+
+      <View style={{ position: "relative", zIndex: 10 }}>
+        <TouchableOpacity
+          style={[
+            styles.statusBadge,
+            { backgroundColor: statusColor, opacity: isPending ? 0.7 : 1 },
+          ]}
+          onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+          disabled={isPending}
+        >
+          <Text style={styles.statusText}>
+            {isPending ? "Zgłaszanie..." : `${statusLabel}  ▼`}
+          </Text>
+        </TouchableOpacity>
+
+        {isDropdownOpen && (
+          <View style={styles.dropdownContainer}>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => handleSelect("AVAILABLE")}
+            >
+              <Text style={styles.dropdownText}>Zgłoś poprawne działanie</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => handleSelect("FULL")}
+            >
+              <Text style={styles.dropdownText}>Zgłoś przepełnienie</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.dropdownItem, { borderBottomWidth: 0 }]}
+              onPress={() => handleSelect("OUT_OF_ORDER")}
+            >
+              <Text style={styles.dropdownText}>Zgłoś awarię</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -212,5 +302,36 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: rounded.xl,
     marginTop: spacing.lg,
+  },
+
+  //dROPDOWN
+
+  dropdownContainer: {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    marginTop: 0,
+    backgroundColor: "#ffffff",
+    borderRadius: rounded.apple,
+    paddingVertical: spacing.xs,
+    minWidth: 200,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: colors.text.primary,
+    fontWeight: "500",
   },
 });
