@@ -61,6 +61,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
         networkName={machine.networkName}
         statusLabel={statusLabel}
         statusColor={statusColor}
+        currentStatus={machine.status}
         isPending={isPending}
         onStatusChange={handleStatusChange}
       />
@@ -82,12 +83,14 @@ function MachineHeader({
   networkName,
   statusLabel,
   statusColor,
+  currentStatus,
   isPending,
   onStatusChange,
 }: {
   networkName: string;
   statusLabel: string;
   statusColor: string;
+  currentStatus: DepositMachineStatus;
   isPending: boolean;
   onStatusChange: (status: DepositMachineStatus) => void;
 }) {
@@ -121,26 +124,32 @@ function MachineHeader({
 
         {isDropdownOpen && (
           <View style={styles.dropdownContainer}>
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => handleSelect("AVAILABLE")}
-            >
-              <Text style={styles.dropdownText}>Zgłoś poprawne działanie</Text>
-            </TouchableOpacity>
+            {currentStatus !== "AVAILABLE" ? (
+              <TouchableOpacity
+                style={[styles.dropdownItem, { borderBottomWidth: 0 }]}
+                onPress={() => handleSelect("AVAILABLE")}
+              >
+                <Text style={styles.dropdownText}>
+                  Zgłoś poprawne działanie
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => handleSelect("FULL")}
+                >
+                  <Text style={styles.dropdownText}>Zgłoś przepełnienie</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => handleSelect("FULL")}
-            >
-              <Text style={styles.dropdownText}>Zgłoś przepełnienie</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.dropdownItem, { borderBottomWidth: 0 }]}
-              onPress={() => handleSelect("OUT_OF_ORDER")}
-            >
-              <Text style={styles.dropdownText}>Zgłoś awarię</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dropdownItem, { borderBottomWidth: 0 }]}
+                  onPress={() => handleSelect("OUT_OF_ORDER")}
+                >
+                  <Text style={styles.dropdownText}>Zgłoś awarię</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         )}
       </View>
@@ -314,7 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: rounded.apple,
     paddingVertical: spacing.xs,
-    minWidth: 200,
+    minWidth: 250,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
