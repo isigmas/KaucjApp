@@ -75,7 +75,7 @@ public class UserController {
     };
 
 
-    @DeleteMapping("admin/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     @Operation(
             summary = "Admin delete user",
             description = "Admin can safe delete user"
