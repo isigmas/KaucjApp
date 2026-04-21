@@ -31,6 +31,15 @@
     },
     "mailPassword": {
       "value": "${MAIL_PASSWORD}"
+    },
+    "adminUsername": {
+      "value": "${ADMIN_USERNAME}"
+    },
+    "adminEmail": {
+      "value": "${ADMIN_EMAIL}"
+    },
+    "adminPassword": {
+      "value": "${ADMIN_PASSWORD}"
     }
   }
 }

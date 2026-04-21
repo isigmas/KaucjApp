@@ -33,3 +33,21 @@ export const colors = {
 } as const;
 
 export type AppColors = typeof colors;
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16, // Default screen padding
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const rounded = {
+  sm: 6,
+  md: 10,
+  lg: 14,
+  xl: 20,
+  apple: 32,
+  pill: 9999,
+};

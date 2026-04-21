@@ -1,0 +1,1 @@
+<img src="assets/logo-wide.jpeg" width="100%" alt="KaucjApp">

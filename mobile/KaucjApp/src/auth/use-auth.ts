@@ -1,0 +1,134 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore, User } from "./auth-store";
+import { apiClient } from "@/src/api/api-client";
+import { SignInValues, SignUpValues } from "@/src/types";
+import { AxiosError } from "axios";
+import { tokenStorage } from "./secure-storage";
+
+export const useAuth = () => {
+  const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const purgeAuth = useAuthStore((state) => state.purgeAuth);
+
+  const queryClient = useQueryClient();
+
+  const signIn = useMutation({
+    mutationFn: async (credentials: SignInValues) => {
+      const payload = {
+        identifier: credentials.email,
+        password: credentials.password,
+      };
+
+      // ----LOGIN----
+      const loginRes = await apiClient.post(
+        "/auth/login",
+        JSON.stringify(payload, null, 2),
+      );
+      const refreshToken = loginRes.data;
+      console.log("refreshToken :", refreshToken);
+
+      // ----REFRESH----
+      const refreshRes = await apiClient.post("/auth/refresh", refreshToken, {
+        headers: {
+          "Content-Type": "text/plain", // it's a raw string
+        },
+      });
+
+      const accessToken = refreshRes.data;
+      console.log("accessToken :", accessToken);
+
+      // ----USER INFO (mock)----
+      const user: User = {
+        id: "1",
+        email: credentials.email,
+        name: "Aska",
+      };
+
+      const data = {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        user: user,
+      };
+
+      return data; // { user, accessToken, refreshToken }
+    },
+    onSuccess: async (data) => {
+      await setAuth(data.user, data.accessToken, data.refreshToken);
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      const errorMessage =
+        error.response?.data?.message ||
+        "An unexpected error occurred during sign in.";
+
+      console.error("Sign-in failed:", errorMessage);
+    },
+  });
+
+  const signUp = useMutation({
+    mutationFn: async (credentials: SignUpValues) => {
+      const body = {
+        firstName: credentials.firstName,
+        lastName: credentials.lastName,
+        username: credentials.userName,
+        phone: credentials.phoneNumber,
+        email: credentials.email,
+        password: credentials.password,
+      };
+
+      console.log("Signing up with:", JSON.stringify(body, null, 2));
+
+      const res = await apiClient.post("/auth/register", body);
+      return res.data;
+    },
+
+    onSuccess: async (data) => {
+      // await setAuth(data.user, data.accessToken, data.refreshToken);
+      console.log("Sign-up successful:", data);
+    },
+
+    onError: (error: AxiosError<{ message?: string }>) => {
+      const errorMessage =
+        error.response?.data?.message ||
+        "An unexpected error occurred during sign in.";
+
+      console.error("Sign-in failed:", errorMessage);
+    },
+  });
+
+  const signOut = useMutation({
+    mutationFn: async () => {
+      const refreshToken = await tokenStorage.getRefreshToken();
+
+      await apiClient.post("/auth/logout", refreshToken, {
+        headers: {
+          "Content-Type": "text/plain", // it's a raw string
+        },
+      });
+    },
+    onSettled: async () => {
+      // Force cleanup locally regardless of backend success/failure
+      await purgeAuth();
+      queryClient.clear();
+    },
+  });
+
+  return {
+    // Session State
+    user,
+    session: accessToken ? { accessToken } : null,
+    isAuthenticated: !!user && !!accessToken,
+
+    //expose mutateAsync to await them in form  submission
+    signIn: signIn.mutateAsync,
+    signUp: signUp.mutateAsync,
+    signOut: signOut.mutateAsync,
+
+    isSigningIn: signIn.isPending,
+    isSigningUp: signUp.isPending,
+    isSigningOut: signOut.isPending,
+
+    signInError: signIn.error,
+    signUpError: signUp.error,
+  };
+};

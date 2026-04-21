@@ -33,16 +33,8 @@ const CONTAINER_TYPES: RowConfig[] = [
     maxPrice: 0.5,
   },
   {
-    id: "glass",
-    title: "Butelki szklane",
-    icon: "🍾",
-    quantityKey: "glassBottles",
-    priceKey: "glassPrice",
-    maxPrice: 1,
-  },
-  {
     id: "cans",
-    title: "Puszki aluminiowe",
+    title: "Puszki",
     icon: "🥫",
     quantityKey: "cans",
     priceKey: "cansPrice",
