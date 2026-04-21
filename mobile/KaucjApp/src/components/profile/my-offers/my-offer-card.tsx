@@ -10,12 +10,14 @@ interface OfferCardProps {
   offer: Offer;
   index: number;
   onComplete: (id: number) => void;
+  onCancel: (id: number) => void;
 }
 
 export default function OfferCard({
   offer,
   index,
   onComplete,
+  onCancel,
 }: OfferCardProps) {
   const isOpen = offer.status === "OPEN";
 
@@ -29,6 +31,21 @@ export default function OfferCard({
           text: "Zakończ",
           style: "destructive",
           onPress: () => onComplete(offer.offer_id),
+        },
+      ],
+    );
+  };
+
+  const handleCancel = () => {
+    Alert.alert(
+      "Potwierdzenie",
+      "Czy na pewno chcesz anulować tę ofertę? Oznacza to, że oferta nie będzie widoczna.",
+      [
+        { text: "Wróć", style: "cancel" },
+        {
+          text: "Potwierdź",
+          style: "destructive",
+          onPress: () => onCancel(offer.offer_id),
         },
       ],
     );
@@ -105,12 +122,16 @@ export default function OfferCard({
 
       {isOpen && (
         <Animated.View exiting={FadeOut} style={styles.cardFooter}>
+          <Pressable style={styles.completeButton} onPress={handleCancel}>
+            <Ionicons name="close" size={20} color={colors.text.white} />
+            <Text style={styles.completeButtonText}>Anuluj ofertę</Text>
+          </Pressable>
+        </Animated.View>
+      )}
+      {!isOpen && (
+        <Animated.View exiting={FadeOut} style={styles.cardFooter}>
           <Pressable style={styles.completeButton} onPress={handleComplete}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color={colors.text.white}
-            />
+            <Ionicons name="close" size={20} color={colors.text.white} />
             <Text style={styles.completeButtonText}>
               Oznacz jako zakończoną
             </Text>
