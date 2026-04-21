@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,22 +11,20 @@ import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
-import pl.isigmas.kaucjapp.auth.entity.Account;
-import pl.isigmas.kaucjapp.auth.entity.ActivationToken;
-import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
+import pl.isigmas.kaucjapp.auth.entity.*;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.*;
-import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
-import pl.isigmas.kaucjapp.auth.repository.ActivationTokenRepository;
-import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
+import pl.isigmas.kaucjapp.auth.repository.*;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -36,6 +35,8 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ActivationTokenRepository activationTokenRepository;
+    private final DeletionScheduleRepository deletionScheduleRepository;
+    private final WarningRepository warningRepository;
 
     private final UserClient userClient;
     private final NotificationClient notificationClient;
@@ -151,6 +152,54 @@ public class AuthService {
                 .orElseThrow(() -> new AccountNotFondException(id));
 
         account.setStatus(AccountStatus.SUSPENDED);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        // Find account
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFondException(id));
+
+        // Check account status
+        if (EnumSet.of(AccountStatus.DELETED, AccountStatus.PENDING_DELETION).contains(account.getStatus())) {
+            throw AccountAlreadyDeleted.of(account.getStatus());
+        }
+
+        if (account.getStatus() == AccountStatus.SUSPENDED) {
+            log.warn("Attempt to delete a suspended account");
+
+            Warning warning = Warning.builder()
+                    .message("Attempt to delete a suspended account, id: " + id)
+                    .build();
+
+            warningRepository.save(warning);
+        }
+
+        // Logout from all devices
+        refreshTokenRepository.findAllByAccount(account)
+                .forEach(token -> token.setRevoked(true));
+
+        // Anonymize account
+        String seed = UUID.randomUUID().toString();
+
+        String backupEmail = account.getEmail();
+        account.setEmail(seed + "@deleted.user");
+
+        String backupUsername = account.getUsername();
+        account.setUsername("deleted#" + seed);
+
+        userClient.delete(id, itSecret);
+
+        // Schedule deletion
+        DeletionSchedule deletionSchedule = DeletionSchedule.builder()
+                        .account(account)
+                        .scheduledDeletionDate(Instant.now().plus(Duration.ofDays(30)))
+                        .backupUsername(backupUsername)
+                        .backupEmail(backupEmail)
+                        .build();
+        deletionScheduleRepository.save(deletionSchedule);
+
+        account.setStatus(AccountStatus.PENDING_DELETION);
     }
 
     @Transactional(readOnly = true)
