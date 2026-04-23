@@ -1,0 +1,30 @@
+FROM ghcr.io/graalvm/native-image-community:25 AS builder
+WORKDIR /app
+
+RUN rm -f /usr/bin/curl || true
+
+ENV NOTIFICATION_SERVICE_URL=http://placeholder
+ENV USER_SERVICE_URL=http://placeholder
+
+ARG SERVICE_NAME
+
+COPY . .
+
+RUN cd ${SERVICE_NAME} && ../mvnw native:compile -Pnative -DskipTests
+
+FROM ubuntu:24.04
+WORKDIR /app
+
+ARG SERVICE_NAME
+ENV SERVER_PORT=8080
+
+RUN groupadd -r spring && useradd -r -g spring spring
+RUN apt-get update && apt-get install -y wget ca-certificates && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/${SERVICE_NAME}/target/${SERVICE_NAME} app
+
+RUN chown spring:spring app
+USER spring:spring
+
+EXPOSE 8080
+ENTRYPOINT ["./app"]
