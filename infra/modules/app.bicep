@@ -35,6 +35,12 @@ param appSecrets array = []
 @description('Container environment variables. Format: [{name: "X", value: "Y"} or {name: "X", secretRef: "Z"}]')
 param envVars array = []
 
+@description('CPU allocation')
+param cpuCore string = '0.25'
+
+@description('Memory allocation')
+param memorySize string = '0.5Gi'
+
 var allSecrets = concat([{ name: 'acr-password', value: acrPassword }], appSecrets)
 
 resource app 'Microsoft.App/containerApps@2023-05-01' = {
@@ -67,8 +73,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           image: containerImage
           env: envVars
           resources: {
-            cpu: json('1.0')
-            memory: '2.0Gi'
+            cpu: json(cpuCore)
+            memory: memorySize
           }
         }
       ]
