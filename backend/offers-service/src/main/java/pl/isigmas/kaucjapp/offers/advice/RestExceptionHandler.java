@@ -1,6 +1,5 @@
 package pl.isigmas.kaucjapp.offers.advice;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -106,50 +105,6 @@ public class RestExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(EntityNotFoundException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("DB_NOT_FOUND")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("BAD_REQUEST")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<ApiError> handleForbidden(SecurityException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("SECURITY_FORBIDDEN")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiError> handleConflict(IllegalStateException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("STATE_CONFLICT")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(Exception.class)
