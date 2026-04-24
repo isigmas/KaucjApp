@@ -130,6 +130,6 @@ public class OfferLifecycleEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(delete("/api/offer/" + offerId)
                         .header("X-User-Id", otherUserId))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("SECURITY_FORBIDDEN"));
+                .andExpect(jsonPath("$.errorCode").value("OFFER_007"));
     }
 }

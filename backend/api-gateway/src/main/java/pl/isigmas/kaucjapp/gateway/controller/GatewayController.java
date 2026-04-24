@@ -12,8 +12,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.ResourceAccessException;
 import pl.isigmas.kaucjapp.gateway.config.GatewayProperties;
+import pl.isigmas.kaucjapp.gateway.exception.DownstreamTimeoutException;
+import pl.isigmas.kaucjapp.gateway.exception.DownstreamUnavailableException;
+import pl.isigmas.kaucjapp.gateway.exception.HeaderInjectionException;
+import pl.isigmas.kaucjapp.gateway.exception.InvalidRouteConfigurationException;
+import pl.isigmas.kaucjapp.gateway.exception.RouteNotFoundException;
 
+import java.net.SocketTimeoutException;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -75,7 +82,7 @@ public class GatewayController {
         // Find matching route
         GatewayProperties.Route matchedRoute = findMatchingRoute(requestPath);
         if (matchedRoute == null) {
-            return ResponseEntity.notFound().build();
+            throw new RouteNotFoundException(requestPath);
         }
 
         // Build target URL
@@ -100,21 +107,27 @@ public class GatewayController {
         }
 
         // Perform the request and return the response
-        return requestSpec
-                .exchange((req, res) -> {
-                    HttpHeaders responseHeaders = new HttpHeaders();
-                    res.getHeaders().forEach((name, values) -> {
-                        if (!HOP_BY_HOP_HEADERS.contains(name.toLowerCase())) {
-                            responseHeaders.addAll(name, values);
-                        }
-                    });
-                    
-                    byte[] responseBody = res.getBody().readAllBytes();
-                    return ResponseEntity
-                            .status(res.getStatusCode())
-                            .headers(responseHeaders)
-                            .body(responseBody);
+        try {
+            return requestSpec.exchange((req, res) -> {
+                HttpHeaders responseHeaders = new HttpHeaders();
+                res.getHeaders().forEach((name, values) -> {
+                    if (!HOP_BY_HOP_HEADERS.contains(name.toLowerCase())) {
+                        responseHeaders.addAll(name, values);
+                    }
                 });
+
+                byte[] responseBody = res.getBody().readAllBytes();
+                return ResponseEntity
+                        .status(res.getStatusCode())
+                        .headers(responseHeaders)
+                        .body(responseBody);
+            });
+        } catch (ResourceAccessException ex) {
+            if (isTimeout(ex)) {
+                throw new DownstreamTimeoutException(targetUrl);
+            }
+            throw new DownstreamUnavailableException(targetUrl);
+        }
     }
 
     /**
@@ -149,7 +162,12 @@ public class GatewayController {
      * @return the formatted target URL string
      */
     private String buildTargetUrl(GatewayProperties.Route route, String requestPath, String queryString) {
-        StringBuilder url = new StringBuilder(route.getUri());
+        String uri = route.getUri();
+        if (uri == null || uri.isBlank()) {
+            throw new InvalidRouteConfigurationException("Route '" + route.getId() + "' has empty uri");
+        }
+
+        StringBuilder url = new StringBuilder(uri);
         
         // Delete trailing slash from URI if it exists
         if (url.charAt(url.length() - 1) == '/') {
@@ -202,9 +220,40 @@ public class GatewayController {
             Jwt jwt = jwtAuth.getToken();
             Object userIdObj = jwt.getClaims().get("user_id");
             
-            if (userIdObj != null) {
-                requestSpec.header("X-User-Id", String.valueOf(userIdObj));
+            if (userIdObj == null) {
+                return;
             }
+
+            String userId = normalizeUserIdClaim(userIdObj);
+            requestSpec.header("X-User-Id", userId);
         }
+    }
+
+    private String normalizeUserIdClaim(Object userIdObj) {
+        if (userIdObj instanceof Number) {
+            return String.valueOf(userIdObj);
+        }
+        if (userIdObj instanceof String s) {
+            String trimmed = s.trim();
+            if (trimmed.isEmpty()) {
+                throw new HeaderInjectionException("/", "user_id claim is empty");
+            }
+            if (!trimmed.matches("\\d+")) {
+                throw new HeaderInjectionException("/", "user_id claim must be numeric");
+            }
+            return trimmed;
+        }
+        throw new HeaderInjectionException("/", "user_id claim has unsupported type: " + userIdObj.getClass().getSimpleName());
+    }
+
+    private static boolean isTimeout(ResourceAccessException ex) {
+        Throwable t = ex;
+        while (t != null) {
+            if (t instanceof SocketTimeoutException) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 }
