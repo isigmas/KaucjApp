@@ -33,6 +33,14 @@ public class RestExceptionHandler {
     }
 
 
+    /**
+     * Fallback handler for all unexpected exceptions that bypass specific domain handlers.
+     * Prevents stack trace leakage by returning a generic 500 Internal Server Error.
+     *
+     * @param ex      the unhandled exception
+     * @param request the current HTTP request
+     * @return a structured {@link ApiError} with a generic internal error message
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
