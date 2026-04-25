@@ -1,5 +1,7 @@
 package pl.isigmas.kaucjapp.auth.controller;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
@@ -223,6 +225,28 @@ class AuthControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(user)))
                     .andExpect(status().isBadRequest());
+        }
+
+        @ParameterizedTest(name = "Should reject invalid password: {0}")
+        @ValueSource(strings = {
+                "password123!", // no big letter
+                "PASSWORD123!", // no small letter
+                "Password!!!",  // no digit
+                "Password1234", // no special sign
+                "Pa1!"          // to short(min=6)
+        })
+        void shouldRejectInvalidPassword(String invalidPassword) throws Exception{
+            // given
+            User user = createValidUser();
+
+            user.setPassword("invalidPassword");
+
+            // when and then
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(user)))
+                    .andExpect(status().isBadRequest());
+
         }
 
         @Test
