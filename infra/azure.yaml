@@ -3,40 +3,64 @@ metadata:
   template: azd-init@1.0.0
 infra:
   path: .
+
 services:
   api-gateway:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: api-gateway/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=api-gateway
+
   auth-service:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: auth/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=auth
+
   offers-service:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: offers-service/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=offers-service
+
   users-service:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: users-service/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=users-service
+
   deposit-service:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: deposit-service/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=deposit-service
+
   notification-service:
     project: ../backend
     language: java
     host: containerapp
     docker:
-      path: notification-service/Dockerfile
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=notification-service
