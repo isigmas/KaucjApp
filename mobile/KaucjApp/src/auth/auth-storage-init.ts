@@ -1,26 +1,36 @@
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuthStore } from "./auth-store";
+import { useAppStore } from "../state/app-store";
 
 SplashScreen.preventAutoHideAsync();
 
 //This component is responsible for keeping the splash screen visible while we check for an existing auth session and hydrate our auth state.
 //Used ONLY in the RootLayout
-export const useAuthBootstrap = () => {
-  const isHydrating = useAuthStore((state) => state.isHydrating);
-  const hydrate = useAuthStore((state) => state.hydrate);
+export const useAppBootstrap = () => {
+  const hydrateAuth = useAuthStore((state) => state.hydrate);
+  const isAuthHydrating = useAuthStore((state) => state.isHydrating);
+
+  const hydrateApp = useAppStore((state) => state.hydrateApp);
+  const isAppHydrating = useAppStore((state) => state.isHydrating);
+
+  // 1. Kick off hydration for both stores on mount
+  useEffect(() => {
+    hydrateAuth();
+    hydrateApp();
+  }, [hydrateAuth, hydrateApp]);
+
+  const isReady = !isAuthHydrating && !isAppHydrating;
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
-  useEffect(() => {
-    if (!isHydrating) {
-      SplashScreen.hideAsync();
+    if (isReady) {
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 50);
     }
-  }, [isHydrating]);
+  }, [isReady]);
 
   return {
-    isReady: !isHydrating,
+    isReady,
   };
 };
