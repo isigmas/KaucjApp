@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { colors, rounded, spacing } from "@/src/theme";
 import { signInSchema, SignInValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
+import { ResetOnboardingButton } from "../onboarding/reset-onboarding-button";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();
@@ -134,6 +135,20 @@ export default function SignInScreen() {
             >
               <Text style={styles.footerAction}>Zarejestruj się</Text>
             </TouchableOpacity>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "column",
+              marginTop: 20,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.footerText}>
+              Tylko dla testów, najepiej po kliknięciu odświezyć expo go przez
+              klikniecie r w terimnalu
+            </Text>
+            <ResetOnboardingButton />
           </View>
         </View>
       </KeyboardAvoidingView>

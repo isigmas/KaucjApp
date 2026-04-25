@@ -5,6 +5,7 @@ interface AppState {
   hasSeenOnboarding: boolean;
   isHydrating: boolean;
   completeOnboarding: () => Promise<void>;
+  resetOnboarding: () => Promise<void>;
   hydrateApp: () => Promise<void>;
 }
 
@@ -15,6 +16,12 @@ export const useAppStore = create<AppState>((set) => ({
   completeOnboarding: async () => {
     await appStorage.setOnboardingSeen();
     set({ hasSeenOnboarding: true });
+  },
+
+  //only for testing not used in the app
+  resetOnboarding: async () => {
+    await appStorage.clearOnboarding();
+    set({ hasSeenOnboarding: false });
   },
 
   hydrateApp: async () => {
