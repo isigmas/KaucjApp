@@ -1,6 +1,5 @@
 package pl.isigmas.kaucjapp.offers.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,7 +9,9 @@ import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
 import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
+import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
+import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
 import pl.isigmas.kaucjapp.offers.exception.OfferValidationException;
 import pl.isigmas.kaucjapp.offers.model.*;
 import pl.isigmas.kaucjapp.offers.repository.*;
@@ -68,11 +69,11 @@ public class OfferService {
                 .orElseThrow(() -> new OfferNotFoundException(id));
 
         if (!offer.getCreatorId().equals(userId)) {
-            throw new SecurityException("Only offer creator can update the offer");
+            throw new OfferForbiddenException("Only offer creator can update the offer");
         }
 
         if (offer.getStatus() != OfferStatus.OPEN) {
-            throw new IllegalStateException("Only OPEN offers can be updated");
+            throw new OfferStateException("Only OPEN offers can be updated");
         }
 
         BigDecimal updatedLatitude = dto.getLatitude() != null ? dto.getLatitude() : offer.getLatitude();
@@ -212,16 +213,16 @@ public class OfferService {
 
         OfferStatus currentStatus = offer.getStatus();
         if (currentStatus == OfferStatus.COMPLETED || currentStatus == OfferStatus.CANCELED) {
-            throw new IllegalStateException("Offer status can no longer be changed");
+            throw new OfferStateException("Offer status can no longer be changed");
         }
 
         if (currentStatus == OfferStatus.OPEN && targetStatus == OfferStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot complete an OPEN offer");
+            throw new OfferStateException("Cannot complete an OPEN offer");
         }
 
         if (targetStatus == OfferStatus.RESERVED) {
             if (offer.getCreatorId().equals(userId)) {
-                throw new SecurityException("You cannot reserve your own offer");
+                throw new OfferForbiddenException("You cannot reserve your own offer");
             }
             if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
@@ -233,24 +234,24 @@ public class OfferService {
             if (currentStatus == OfferStatus.RESERVED
                     && offer.getCollectorId() != null
                     && !offer.getCollectorId().equals(userId)) {
-                throw new SecurityException("Only current collector can unreserve the offer");
+                throw new OfferForbiddenException("Only current collector can unreserve the offer");
             }
             offer.setCollectorId(null);
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {
             if (currentStatus != OfferStatus.RESERVED) {
-                throw new IllegalStateException("Only RESERVED offers can be completed");
+                throw new OfferStateException("Only RESERVED offers can be completed");
             }
             if (offer.getCollectorId() == null || !offer.getCollectorId().equals(userId)) {
-                throw new SecurityException("Only current collector can complete the offer");
+                throw new OfferForbiddenException("Only current collector can complete the offer");
             }
             offer.setTimeCompleted(LocalDateTime.now());
         }
 
         if (targetStatus == OfferStatus.CANCELED) {
             if (!offer.getCreatorId().equals(userId)) {
-                throw new SecurityException("Only offer creator can cancel the offer");
+                throw new OfferForbiddenException("Only offer creator can cancel the offer");
             }
         }
 
@@ -263,7 +264,7 @@ public class OfferService {
                 .orElseThrow(() -> new OfferNotFoundException(offerId));
 
         if (!offer.getCreatorId().equals(userId)) {
-            throw new SecurityException("Only offer creator can delete the offer");
+            throw new OfferForbiddenException("Only offer creator can delete the offer");
         }
 
         offerRepository.delete(offer);

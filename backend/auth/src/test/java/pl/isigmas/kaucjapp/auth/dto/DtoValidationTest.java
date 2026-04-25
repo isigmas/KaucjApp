@@ -35,7 +35,7 @@ class DtoValidationTest {
             User user = new User();
             user.setUsername("validuser");
             user.setEmail("valid@example.com");
-            user.setPassword("password123");
+            user.setPassword("Password123!");
             user.setPhone("123456789");
             user.setFirstName("John");
             user.setLastName("Doe");

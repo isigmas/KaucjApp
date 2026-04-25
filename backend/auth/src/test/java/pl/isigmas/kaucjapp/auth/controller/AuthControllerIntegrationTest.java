@@ -1,5 +1,7 @@
 package pl.isigmas.kaucjapp.auth.controller;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
@@ -99,7 +101,7 @@ class AuthControllerIntegrationTest {
             User user = new User();
             user.setUsername("newuser");
             user.setEmail("newuser@example.com");
-            user.setPassword("password123");
+            user.setPassword("Password123!");
             user.setPhone("123456789");
             user.setFirstName("John");
             user.setLastName("Doe");
@@ -119,7 +121,7 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isCreated());
 
             // Verify account was created in database
-            assertTrue(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent());
+            assertTrue(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").isPresent());
         }
 
         @Test
@@ -127,7 +129,7 @@ class AuthControllerIntegrationTest {
         void shouldHashPasswordBeforeStoring() throws Exception {
             // given
             User user = createValidUser();
-            user.setPassword("myPlainPassword");
+            user.setPassword("myPlainPassword123!");
 
             // when
             mockMvc.perform(post("/api/auth/register")
@@ -136,7 +138,7 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isCreated());
 
             // then
-            Account savedAccount = accountRepository.findByUsernameOrEmail("newuser", "newuser").orElseThrow();
+            Account savedAccount = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").orElseThrow();
             assertNotEquals("myPlainPassword", savedAccount.getPasswordHash());
             assertTrue(savedAccount.getPasswordHash().startsWith("$2a$"));
         }
@@ -225,6 +227,28 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isBadRequest());
         }
 
+        @ParameterizedTest(name = "Should reject invalid password: {0}")
+        @ValueSource(strings = {
+                "password123!", // no big letter
+                "PASSWORD123!", // no small letter
+                "Password!!!",  // no digit
+                "Password1234", // no special sign
+                "Pa1!"          // to short(min=6)
+        })
+        void shouldRejectInvalidPassword(String invalidPassword) throws Exception{
+            // given
+            User user = createValidUser();
+
+            user.setPassword("invalidPassword");
+
+            // when and then
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(user)))
+                    .andExpect(status().isBadRequest());
+
+        }
+
         @Test
         @DisplayName("Should reject phone with letters")
         void shouldRejectPhoneWithLetters() throws Exception {
@@ -271,7 +295,7 @@ class AuthControllerIntegrationTest {
                                     .content(objectMapper.writeValueAsString(user)))
                             .andExpect(status().isInternalServerError()));
 
-            assertFalse(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent(),
+            assertFalse(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").isPresent(),
                     "BUG: Account should not be created when UserClient fails");
         }
     }
@@ -285,7 +309,8 @@ class AuthControllerIntegrationTest {
             Account account = new Account();
             account.setUsername("existinguser");
             account.setEmail("existing@example.com");
-            account.setPasswordHash(encoder.hashPassword("correctPassword"));
+            account.setPasswordHash(encoder.hashPassword("correctPassword123!"));
+            account.setStatus(AccountStatus.ACTIVE);
             return accountRepository.save(account);
         }
 
@@ -299,7 +324,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
@@ -319,7 +344,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existing@example.com");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
@@ -339,7 +364,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
             credentials.setDeviceInfo("Test Device");
 
             // when
@@ -457,20 +482,20 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("Username should be case-sensitive")
-        void usernameShouldBeCaseSensitive() throws Exception {
+        @DisplayName("Username should not be case-sensitive")
+        void usernameShouldNotBeCaseSensitive() throws Exception {
             // given
             createTestAccount(); // username: existinguser
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("ExistingUser"); // different case
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
