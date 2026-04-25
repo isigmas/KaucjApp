@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
 import { OnboardingData } from "@/src/types";
+import { colors, spacing } from "@/src/theme";
 
 interface Props {
   item: OnboardingData;
@@ -99,11 +100,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   imageContainer: {
-    flex: 0.65,
     justifyContent: "flex-end",
     alignItems: "center",
     width: "100%",
-    paddingBottom: 40,
+    paddingBottom: spacing.xl,
   },
   lottie: {
     width: "80%",
@@ -117,21 +117,21 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 0.35,
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing.lg,
     alignItems: "center",
   },
   title: {
     fontSize: 32,
     fontWeight: "900",
-    color: "#0F172A",
-    marginBottom: 16,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
     textAlign: "center",
     letterSpacing: -0.5,
     lineHeight: 38,
   },
   description: {
     fontSize: 16,
-    color: "#64748B",
+    color: colors.text.secondary,
     textAlign: "center",
     lineHeight: 26,
     fontWeight: "400",

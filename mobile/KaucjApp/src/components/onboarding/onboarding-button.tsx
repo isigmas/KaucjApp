@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  Pressable,
-} from "react-native";
+import { View, StyleSheet, useWindowDimensions, Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
   interpolateColor,
@@ -15,6 +9,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { colors, rounded } from "@/src/theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -28,12 +23,11 @@ export const OnboardingButton = ({ onPress, scrollX, totalSlides }: Props) => {
   const { width } = useWindowDimensions();
   const lastIndex = totalSlides - 1;
 
-  // ANIMATION: Morph Button Color & Scale
   const buttonStyle = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
       scrollX.value,
       [(lastIndex - 1) * width, lastIndex * width],
-      ["#0F172A", "#10B981"], // Premium Slate to Kaucjapp Green
+      [colors.black.default, colors.primary.dark],
     );
 
     const scale = interpolate(
@@ -48,8 +42,6 @@ export const OnboardingButton = ({ onPress, scrollX, totalSlides }: Props) => {
       transform: [{ scale: withSpring(scale) }],
     };
   });
-
-  // ANIMATION: Slide & Fade "Continue" Text (Exit Up)
   const continueTextStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollX.value,
@@ -67,7 +59,7 @@ export const OnboardingButton = ({ onPress, scrollX, totalSlides }: Props) => {
     return { opacity, transform: [{ translateY }] };
   });
 
-  // ANIMATION: Slide & Fade "Start Building" Text (Enter from Bottom)
+  //  zaczynamy text style (enters from bottom)
   const startTextStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollX.value,
@@ -97,12 +89,12 @@ export const OnboardingButton = ({ onPress, scrollX, totalSlides }: Props) => {
     >
       <View style={styles.textStack}>
         <Animated.Text style={[styles.buttonText, continueTextStyle]}>
-          Continue
+          Dalej
         </Animated.Text>
         <Animated.Text
           style={[styles.buttonText, styles.absoluteText, startTextStyle]}
         >
-          Start
+          Zaczynamy!
         </Animated.Text>
       </View>
     </AnimatedPressable>
@@ -112,13 +104,12 @@ export const OnboardingButton = ({ onPress, scrollX, totalSlides }: Props) => {
 const styles = StyleSheet.create({
   button: {
     height: 64,
-    borderRadius: 20,
+    borderRadius: rounded.apple,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden", // Clips the sliding text
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 2, height: 6 },
+    shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 5,
   },
@@ -128,7 +119,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: colors.text.white,
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,

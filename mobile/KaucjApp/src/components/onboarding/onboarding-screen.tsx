@@ -10,6 +10,7 @@ import { ONBOARDING_SLIDES } from "@/src/constants";
 import { OnboardingSlide } from "@/src/components/onboarding/onboarding-slide";
 import { Paginator } from "@/src/components/onboarding/paginator";
 import { OnboardingButton } from "./onboarding-button";
+import { colors, spacing } from "@/src/theme";
 
 export default function OnboardingScreen() {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
@@ -83,37 +84,15 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.main,
   },
   sliderContainer: {
-    flex: 3,
+    flex: 1,
   },
   footer: {
-    flex: 1,
     paddingHorizontal: 32,
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     paddingBottom: 50,
-  },
-  button: {
-    backgroundColor: "#0F172A", // Dark, premium slate button
-    paddingVertical: 20,
-    borderRadius: 20, // More rounded, modern feel
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.97 }], // Slight shrink on press
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+    gap: spacing.lg,
   },
 });
