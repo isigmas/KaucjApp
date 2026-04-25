@@ -48,22 +48,24 @@ public class AuthService {
 
     @Transactional
     public void create(User newUser) {
-        accountRepository.findByUsernameOrEmail(newUser.getUsername(), newUser.getEmail())
+        String normalizedUsername = newUser.getUsername().toLowerCase().trim();
+        String normalizedEmail = newUser.getEmail().toLowerCase().trim();
+        accountRepository.findByUsernameOrEmail(normalizedUsername, normalizedEmail)
                 .ifPresent(_ -> {
                     throw new AccountAlreadyExistsException("Account with given username or email already exists");
                 });
 
         Account newAccount = new Account();
-        newAccount.setUsername(newUser.getUsername());
-        newAccount.setEmail(newUser.getEmail());
+        newAccount.setUsername(normalizedUsername);
+        newAccount.setEmail(normalizedEmail);
         newAccount.setPasswordHash(encoder.hashPassword(newUser.getPassword()));
 
         Account createdAccount = accountRepository.save(newAccount);
 
         UsersServiceUser newUsersServiceUser = new UsersServiceUser();
         newUsersServiceUser.setId(createdAccount.getId());
-        newUsersServiceUser.setUsername(newUser.getUsername());
-        newUsersServiceUser.setEmail(newUser.getEmail());
+        newUsersServiceUser.setUsername(normalizedUsername);
+        newUsersServiceUser.setEmail(normalizedEmail);
         newUsersServiceUser.setPhone(newUser.getPhone());
         newUsersServiceUser.setFirstName(newUser.getFirstName());
         newUsersServiceUser.setLastName(newUser.getLastName());
@@ -101,7 +103,7 @@ public class AuthService {
     @Transactional
     public String login(LoginCredentials loginCredentials) {
 
-        String identifier = loginCredentials.getIdentifier();
+        String identifier = loginCredentials.getIdentifier().toLowerCase().trim();
         Account account = accountRepository.findByUsernameOrEmail(identifier, identifier)
                 .orElseThrow(InvalidCredentialsException::new);
 

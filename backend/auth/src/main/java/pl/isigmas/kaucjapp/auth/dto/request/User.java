@@ -1,16 +1,14 @@
 package pl.isigmas.kaucjapp.auth.dto.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
 public class User {
 
     @NotBlank(message = "Username is needed")
-    @Size(max = 100)
+    @Size(min=6, max = 100)
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "Username can only contain letters and numbers")
     private String username;
 
     @NotBlank(message = "Email is needed")
@@ -18,6 +16,11 @@ public class User {
     private String email;
 
     @NotBlank(message = "Password is needed")
+    @Size(min=6)
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%&]).+$",
+            message = "Password must contain at least: one small letter, one big letter, one number and one special sign"
+    )
     private String password;
 
     @NotBlank(message = "Phone number cannot be blank")

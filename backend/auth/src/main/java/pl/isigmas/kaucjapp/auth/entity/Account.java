@@ -47,4 +47,8 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private AccountStatus status = AccountStatus.INACTIVE;
+
+    public void setUsername(String username) {
+        this.username = (username != null) ? username.toLowerCase().trim() : null;
+    }
 }
