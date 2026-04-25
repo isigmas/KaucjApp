@@ -1,13 +1,12 @@
 package pl.isigmas.kaucjapp.deposit.advice;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -36,17 +35,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(EntityNotFoundException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("DB_NOT_FOUND")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
@@ -69,35 +57,30 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        Map<String, Object> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        err -> err.getField(),
-                        err -> err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage(),
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                ));
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<ApiError> handleValidation(Exception ex, HttpServletRequest request) {
+        Map<String, Object> validationErrors = new LinkedHashMap<>();
 
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("VALIDATION_ERR")
-                .message("Validation failed")
-                .path(request.getRequestURI())
-                .validationErrors(validationErrors.isEmpty() ? null : validationErrors)
-                .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
+        java.util.List<FieldError> fieldErrors;
+        java.util.List<org.springframework.validation.ObjectError> globalErrors;
 
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ApiError> handleBind(BindException ex, HttpServletRequest request) {
-        Map<String, Object> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        err -> err.getField(),
-                        err -> err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage(),
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                ));
+        if (ex instanceof MethodArgumentNotValidException manv) {
+            fieldErrors = manv.getBindingResult().getFieldErrors();
+            globalErrors = manv.getBindingResult().getGlobalErrors();
+        } else {
+            BindException bex = (BindException) ex;
+            fieldErrors = bex.getBindingResult().getFieldErrors();
+            globalErrors = bex.getBindingResult().getGlobalErrors();
+        }
+
+        for (FieldError err : fieldErrors) {
+            validationErrors.put(err.getField(), err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage());
+        }
+        globalErrors.forEach(err -> {
+            String key = "_global." + err.getCode();
+            String msg = err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage();
+            validationErrors.putIfAbsent(key, msg);
+        });
 
         ApiError error = ApiError.builder()
                 .timestamp(LocalDateTime.now())
@@ -135,39 +118,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("STATE_CONFLICT")
-                .message("Data integrity violation")
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<ApiError> handleForbidden(SecurityException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("SECURITY_FORBIDDEN")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiError> handleConflict(IllegalStateException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("STATE_CONFLICT")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
@@ -179,4 +129,3 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
-
