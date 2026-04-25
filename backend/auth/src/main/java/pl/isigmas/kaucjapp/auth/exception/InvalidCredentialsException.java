@@ -4,6 +4,6 @@ import org.springframework.http.HttpStatus;
 
 public class InvalidCredentialsException extends AuthBaseException {
     public InvalidCredentialsException() {
-        super("Invalid credentials", "AU_001", HttpStatus.UNAUTHORIZED);
+        super("Invalid credentials", "AU_001", HttpStatus.BAD_REQUEST);
     }
 }

@@ -121,16 +121,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("AU_001")
-                .message("Invalid credentials")
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-    }
 
     @ExceptionHandler({ExpiredJwtException.class, SignatureException.class, MalformedJwtException.class})
     public ResponseEntity<ApiError> handleJwtErrors(Exception ex, HttpServletRequest request) {
@@ -154,26 +144,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
-        if (!isAccountUsernameOrEmailUniqueViolation(ex)) {
-            ApiError error = ApiError.builder()
-                    .timestamp(LocalDateTime.now())
-                    .errorCode("INTERNAL_ERR")
-                    .message("Unexpected server error")
-                    .path(request.getRequestURI())
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
-
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("AU_007")
-                .message("Account with given username or email already exists")
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
@@ -186,19 +156,4 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    private static boolean isAccountUsernameOrEmailUniqueViolation(DataIntegrityViolationException ex) {
-        Throwable mostSpecific = NestedExceptionUtils.getMostSpecificCause(ex);
-        String message = mostSpecific == null ? null : mostSpecific.getMessage();
-        if (message == null) {
-            return false;
-        }
-        String m = message.toLowerCase();
-
-        boolean looksLikeUniqueViolation = m.contains("duplicate key") || m.contains("unique constraint") || m.contains("23505");
-        if (!looksLikeUniqueViolation) {
-            return false;
-        }
-
-        return (m.contains("accounts") || m.contains("account")) && (m.contains("username") || m.contains("email"));
-    }
 }
