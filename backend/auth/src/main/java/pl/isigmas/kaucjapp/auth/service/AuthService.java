@@ -48,25 +48,25 @@ public class AuthService {
 
     @Transactional
     public void create(User newUser) {
-        accountRepository.findByUsernameOrEmail(newUser.getUsername(), newUser.getEmail())
+        accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(newUser.getUsername(), newUser.getEmail())
                 .ifPresent(_ -> {
                     throw new AccountAlreadyExistsException("Account with given username or email already exists");
                 });
 
         Account newAccount = new Account();
-        newAccount.setUsername(newUser.getUsername());
-        newAccount.setEmail(newUser.getEmail());
+        newAccount.setUsername(newUser.getUsername().trim());
+        newAccount.setEmail(newUser.getEmail().toLowerCase().trim());
         newAccount.setPasswordHash(encoder.hashPassword(newUser.getPassword()));
 
         Account createdAccount = accountRepository.save(newAccount);
 
         UsersServiceUser newUsersServiceUser = new UsersServiceUser();
         newUsersServiceUser.setId(createdAccount.getId());
-        newUsersServiceUser.setUsername(newUser.getUsername());
-        newUsersServiceUser.setEmail(newUser.getEmail());
+        newUsersServiceUser.setUsername(newUser.getUsername().trim());
+        newUsersServiceUser.setEmail(newUser.getEmail().toLowerCase().trim());
         newUsersServiceUser.setPhone(newUser.getPhone());
-        newUsersServiceUser.setFirstName(newUser.getFirstName());
-        newUsersServiceUser.setLastName(newUser.getLastName());
+        newUsersServiceUser.setFirstName(newUser.getFirstName().trim());
+        newUsersServiceUser.setLastName(newUser.getLastName().trim());
 
         userClient.create(newUsersServiceUser, itSecret);
 
@@ -101,8 +101,8 @@ public class AuthService {
     @Transactional
     public String login(LoginCredentials loginCredentials) {
 
-        String identifier = loginCredentials.getIdentifier();
-        Account account = accountRepository.findByUsernameOrEmail(identifier, identifier)
+        String identifier = loginCredentials.getIdentifier().toLowerCase().trim();
+        Account account = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier)
                 .orElseThrow(InvalidCredentialsException::new);
 
         AccountStatus accountStatus = account.getStatus();

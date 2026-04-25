@@ -42,8 +42,8 @@ class AccountRepositoryIntegrationTest {
     }
 
     @Nested
-    @DisplayName("findByUsernameOrEmail() Tests")
-    class FindByUsernameOrEmailTests {
+    @DisplayName("findByUsernameIgnoreCaseOrEmailIgnoreCase() Tests")
+    class findByUsernameIgnoreCaseOrEmailIgnoreCaseTests {
 
         @BeforeEach
         void setUp() {
@@ -59,7 +59,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("testuser", "testuser");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("testuser", "testuser");
 
             // then
             assertTrue(result.isPresent());
@@ -74,7 +74,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("test@example.com", "test@example.com");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("test@example.com", "test@example.com");
 
             // then
             assertTrue(result.isPresent());
@@ -85,7 +85,7 @@ class AccountRepositoryIntegrationTest {
         @DisplayName("Should return empty when account not found")
         void shouldReturnEmptyWhenNotFound() {
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("nonexistent", "nonexistent");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("nonexistent", "nonexistent");
 
             // then
             assertTrue(result.isEmpty());
@@ -99,7 +99,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("user1", "different@email.com");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("user1", "different@email.com");
 
             // then
             assertTrue(result.isPresent());
@@ -114,39 +114,26 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("differentuser", "user1@test.com");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("differentuser", "user1@test.com");
 
             // then
             assertTrue(result.isPresent());
             assertEquals("user1@test.com", result.get().getEmail());
         }
 
-        @Test
-        @DisplayName("Username search is case-sensitive")
-        void usernameShouldBeCaseSensitive() {
-            // given
-            Account account = createAccount("TestUser", "test@example.com");
-            accountRepository.saveAndFlush(account);
-
-            // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("testuser", "testuser");
-
-            // then
-            assertTrue(result.isEmpty());
-        }
 
         @Test
         @DisplayName("Email search is case-sensitive")
-        void emailShouldBeCaseSensitive() {
+        void emailShouldNotBeCaseSensitive() {
             // given
             Account account = createAccount("testuser", "Test@Example.com");
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("test@example.com", "test@example.com");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("test@example.com", "test@example.com");
 
             // then
-            assertTrue(result.isEmpty());
+            assertTrue(result.isPresent());
         }
 
         @Test
@@ -157,7 +144,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("", "");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("", "");
 
             // then
             assertTrue(result.isEmpty());
@@ -171,7 +158,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("user_123-test", "user_123-test");
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("user_123-test", "user_123-test");
 
             // then
             assertTrue(result.isPresent());
@@ -186,7 +173,7 @@ class AccountRepositoryIntegrationTest {
 
             // when
             String maliciousInput = "' OR '1'='1";
-            Optional<Account> result = accountRepository.findByUsernameOrEmail(maliciousInput, maliciousInput);
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(maliciousInput, maliciousInput);
 
             // then
             assertTrue(result.isEmpty());
@@ -201,7 +188,7 @@ class AccountRepositoryIntegrationTest {
             accountRepository.saveAndFlush(account);
 
             // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail(longUsername, longUsername);
+            Optional<Account> result = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(longUsername, longUsername);
 
             // then
             assertTrue(result.isPresent());

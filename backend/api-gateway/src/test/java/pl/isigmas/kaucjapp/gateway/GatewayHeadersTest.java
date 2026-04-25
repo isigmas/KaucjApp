@@ -46,6 +46,7 @@ class GatewayHeadersTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("JWT_SECRET", () -> "0123456789abcdef0123456789abcdef");
         wireMockServer.start();
         registry.add("gateway.routes[0].id", () -> "test-service");
         registry.add("gateway.routes[0].path", () -> "/api/**");
