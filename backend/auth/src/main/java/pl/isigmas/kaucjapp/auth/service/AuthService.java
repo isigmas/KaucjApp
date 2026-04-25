@@ -48,24 +48,22 @@ public class AuthService {
 
     @Transactional
     public void create(User newUser) {
-        String normalizedUsername = newUser.getUsername().toLowerCase().trim();
-        String normalizedEmail = newUser.getEmail().toLowerCase().trim();
-        accountRepository.findByUsernameOrEmail(normalizedUsername, normalizedEmail)
+        accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(newUser.getUsername(), newUser.getEmail())
                 .ifPresent(_ -> {
                     throw new AccountAlreadyExistsException("Account with given username or email already exists");
                 });
 
         Account newAccount = new Account();
-        newAccount.setUsername(normalizedUsername);
-        newAccount.setEmail(normalizedEmail);
+        newAccount.setUsername(newUser.getUsername());
+        newAccount.setEmail(newUser.getEmail());
         newAccount.setPasswordHash(encoder.hashPassword(newUser.getPassword()));
 
         Account createdAccount = accountRepository.save(newAccount);
 
         UsersServiceUser newUsersServiceUser = new UsersServiceUser();
         newUsersServiceUser.setId(createdAccount.getId());
-        newUsersServiceUser.setUsername(normalizedUsername);
-        newUsersServiceUser.setEmail(normalizedEmail);
+        newUsersServiceUser.setUsername(newUser.getUsername());
+        newUsersServiceUser.setEmail(newUser.getEmail());
         newUsersServiceUser.setPhone(newUser.getPhone());
         newUsersServiceUser.setFirstName(newUser.getFirstName());
         newUsersServiceUser.setLastName(newUser.getLastName());
@@ -104,7 +102,7 @@ public class AuthService {
     public String login(LoginCredentials loginCredentials) {
 
         String identifier = loginCredentials.getIdentifier().toLowerCase().trim();
-        Account account = accountRepository.findByUsernameOrEmail(identifier, identifier)
+        Account account = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier)
                 .orElseThrow(InvalidCredentialsException::new);
 
         AccountStatus accountStatus = account.getStatus();

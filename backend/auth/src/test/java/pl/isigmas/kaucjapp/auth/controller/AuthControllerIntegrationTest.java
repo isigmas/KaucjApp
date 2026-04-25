@@ -121,7 +121,7 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isCreated());
 
             // Verify account was created in database
-            assertTrue(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent());
+            assertTrue(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").isPresent());
         }
 
         @Test
@@ -138,7 +138,7 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isCreated());
 
             // then
-            Account savedAccount = accountRepository.findByUsernameOrEmail("newuser", "newuser").orElseThrow();
+            Account savedAccount = accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").orElseThrow();
             assertNotEquals("myPlainPassword", savedAccount.getPasswordHash());
             assertTrue(savedAccount.getPasswordHash().startsWith("$2a$"));
         }
@@ -295,7 +295,7 @@ class AuthControllerIntegrationTest {
                                     .content(objectMapper.writeValueAsString(user)))
                             .andExpect(status().isInternalServerError()));
 
-            assertFalse(accountRepository.findByUsernameOrEmail("newuser", "newuser").isPresent(),
+            assertFalse(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").isPresent(),
                     "BUG: Account should not be created when UserClient fails");
         }
     }

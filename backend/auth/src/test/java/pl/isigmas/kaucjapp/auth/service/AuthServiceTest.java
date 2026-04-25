@@ -247,7 +247,7 @@ class AuthServiceTest {
         @DisplayName("Should return refresh token on successful login with username")
         void shouldReturnTokenOnSuccessfulLoginWithUsername() {
             // given
-            when(accountRepository.findByUsernameOrEmail("testuser", "testuser"))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("testuser", "testuser"))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword("correctPassword", "hashedPassword")).thenReturn(true);
 
@@ -265,7 +265,7 @@ class AuthServiceTest {
         void shouldReturnTokenOnSuccessfulLoginWithEmail() {
             // given
             validCredentials.setIdentifier("test@example.com");
-            when(accountRepository.findByUsernameOrEmail("test@example.com", "test@example.com"))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("test@example.com", "test@example.com"))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword("correctPassword", "hashedPassword")).thenReturn(true);
 
@@ -280,7 +280,7 @@ class AuthServiceTest {
         @DisplayName("Should throw InvalidCredentialsException when user not found")
         void shouldThrowExceptionWhenUserNotFound() {
             // given
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.empty());
 
             // when & then
@@ -291,7 +291,7 @@ class AuthServiceTest {
         @DisplayName("Should throw InvalidCredentialsException when password is wrong")
         void shouldThrowExceptionWhenPasswordIsWrong() {
             // given
-            when(accountRepository.findByUsernameOrEmail("testuser", "testuser"))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("testuser", "testuser"))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword("correctPassword", "hashedPassword")).thenReturn(false);
 
@@ -303,7 +303,7 @@ class AuthServiceTest {
         @DisplayName("Should save refresh token with correct expiration date (7 days)")
         void shouldSaveRefreshTokenWithCorrectExpiration() {
             // given
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
@@ -331,7 +331,7 @@ class AuthServiceTest {
         void shouldSaveDeviceInfoInRefreshToken() {
             // given
             validCredentials.setDeviceInfo("Firefox on Mac");
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
@@ -349,7 +349,7 @@ class AuthServiceTest {
         @DisplayName("Should generate UUID format token")
         void shouldGenerateUuidToken() {
             // given
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
@@ -365,7 +365,7 @@ class AuthServiceTest {
         void shouldThrowExceptionWhenUserIsInactive() {
             // given
             existingAccount.setStatus(AccountStatus.INACTIVE);
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
 
             lenient().when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
@@ -380,7 +380,7 @@ class AuthServiceTest {
         void shouldThrowExceptionWhenUserIsSuspended() {
             // given
             existingAccount.setStatus(AccountStatus.SUSPENDED);
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
 
             lenient().when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
@@ -396,7 +396,7 @@ class AuthServiceTest {
         void shouldThrowExceptionWhenUserIsDeleted() {
             // given
             existingAccount.setStatus(AccountStatus.DELETED);
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
 
             lenient().when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
@@ -412,7 +412,7 @@ class AuthServiceTest {
         void shouldAllowLoginWithNullDeviceInfo() {
             // given
             validCredentials.setDeviceInfo(null);
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
@@ -428,7 +428,7 @@ class AuthServiceTest {
         void shouldAllowLoginWithEmptyDeviceInfo() {
             // given
             validCredentials.setDeviceInfo("");
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
@@ -443,7 +443,7 @@ class AuthServiceTest {
         @DisplayName("Should link refresh token to correct account")
         void shouldLinkRefreshTokenToCorrectAccount() {
             // given
-            when(accountRepository.findByUsernameOrEmail(anyString(), anyString()))
+            when(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(anyString(), anyString()))
                     .thenReturn(Optional.of(existingAccount));
             when(encoder.verifyPassword(anyString(), anyString())).thenReturn(true);
 
