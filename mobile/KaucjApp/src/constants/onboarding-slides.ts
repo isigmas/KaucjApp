@@ -1,4 +1,4 @@
-import { OnboardingData } from "@/src/types/onboarding";
+import { OnboardingData } from "@/src/types";
 
 export const ONBOARDING_SLIDES: OnboardingData[] = [
   {
