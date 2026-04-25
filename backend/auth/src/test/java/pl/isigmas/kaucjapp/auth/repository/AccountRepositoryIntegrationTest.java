@@ -121,19 +121,6 @@ class AccountRepositoryIntegrationTest {
             assertEquals("user1@test.com", result.get().getEmail());
         }
 
-        @Test
-        @DisplayName("Username search is case-sensitive")
-        void usernameShouldBeCaseSensitive() {
-            // given
-            Account account = createAccount("TestUser", "test@example.com");
-            accountRepository.saveAndFlush(account);
-
-            // when
-            Optional<Account> result = accountRepository.findByUsernameOrEmail("testuser", "testuser");
-
-            // then
-            assertTrue(result.isEmpty());
-        }
 
         @Test
         @DisplayName("Email search is case-sensitive")

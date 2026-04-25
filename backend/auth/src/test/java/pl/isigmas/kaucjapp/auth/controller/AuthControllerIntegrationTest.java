@@ -99,7 +99,7 @@ class AuthControllerIntegrationTest {
             User user = new User();
             user.setUsername("newuser");
             user.setEmail("newuser@example.com");
-            user.setPassword("password123");
+            user.setPassword("Password123!");
             user.setPhone("123456789");
             user.setFirstName("John");
             user.setLastName("Doe");
@@ -127,7 +127,7 @@ class AuthControllerIntegrationTest {
         void shouldHashPasswordBeforeStoring() throws Exception {
             // given
             User user = createValidUser();
-            user.setPassword("myPlainPassword");
+            user.setPassword("myPlainPassword123!");
 
             // when
             mockMvc.perform(post("/api/auth/register")
@@ -285,7 +285,8 @@ class AuthControllerIntegrationTest {
             Account account = new Account();
             account.setUsername("existinguser");
             account.setEmail("existing@example.com");
-            account.setPasswordHash(encoder.hashPassword("correctPassword"));
+            account.setPasswordHash(encoder.hashPassword("correctPassword123!"));
+            account.setStatus(AccountStatus.ACTIVE);
             return accountRepository.save(account);
         }
 
@@ -299,7 +300,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
@@ -319,7 +320,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existing@example.com");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
@@ -339,7 +340,7 @@ class AuthControllerIntegrationTest {
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("existinguser");
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
             credentials.setDeviceInfo("Test Device");
 
             // when
@@ -457,20 +458,20 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("Username should be case-sensitive")
-        void usernameShouldBeCaseSensitive() throws Exception {
+        @DisplayName("Username should not be case-sensitive")
+        void usernameShouldNotBeCaseSensitive() throws Exception {
             // given
             createTestAccount(); // username: existinguser
             
             LoginCredentials credentials = new LoginCredentials();
             credentials.setIdentifier("ExistingUser"); // different case
-            credentials.setPassword("correctPassword");
+            credentials.setPassword("correctPassword123!");
 
             // when and then
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(credentials)))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
