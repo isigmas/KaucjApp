@@ -1,10 +1,7 @@
 package pl.isigmas.kaucjapp.users.advice;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.core.NestedExceptionUtils;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -38,17 +35,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(EntityNotFoundException ex, HttpServletRequest request) {
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("DB_NOT_FOUND")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
@@ -71,26 +57,26 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        Map<String, Object> validationErrors = collectBindingErrors(ex);
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("VALIDATION_ERR")
-                .message("Validation failed")
-                .path(request.getRequestURI())
-                .validationErrors(validationErrors.isEmpty() ? null : validationErrors)
-                .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ApiError> handleBind(BindException ex, HttpServletRequest request) {
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<ApiError> handleValidation(Exception ex, HttpServletRequest request) {
         Map<String, Object> validationErrors = new LinkedHashMap<>();
-        for (FieldError err : ex.getBindingResult().getFieldErrors()) {
+
+        java.util.List<FieldError> fieldErrors;
+        java.util.List<org.springframework.validation.ObjectError> globalErrors;
+
+        if (ex instanceof MethodArgumentNotValidException manv) {
+            fieldErrors = manv.getBindingResult().getFieldErrors();
+            globalErrors = manv.getBindingResult().getGlobalErrors();
+        } else {
+            BindException bex = (BindException) ex;
+            fieldErrors = bex.getBindingResult().getFieldErrors();
+            globalErrors = bex.getBindingResult().getGlobalErrors();
+        }
+
+        for (FieldError err : fieldErrors) {
             validationErrors.put(err.getField(), err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage());
         }
-        ex.getBindingResult().getGlobalErrors().forEach(err -> {
+        globalErrors.forEach(err -> {
             String key = "_global." + err.getCode();
             String msg = err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage();
             validationErrors.putIfAbsent(key, msg);
@@ -157,90 +143,6 @@ public class RestExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
-        if (isUsersUsernameOrEmailUniqueViolation(ex)) {
-            ApiError error = ApiError.builder()
-                    .timestamp(LocalDateTime.now())
-                    .errorCode("USER_005")
-                    .message("User already exists")
-                    .path(request.getRequestURI())
-                    .build();
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-        }
-
-        if (isNumericOrValueOutOfRange(ex)) {
-            Map<String, Object> details = new LinkedHashMap<>();
-            details.put("database", "A value could not be stored in the database. Check numeric ranges and field lengths.");
-            ApiError error = ApiError.builder()
-                    .timestamp(LocalDateTime.now())
-                    .errorCode("VALIDATION_ERR")
-                    .message("Invalid or out-of-range value")
-                    .path(request.getRequestURI())
-                    .validationErrors(details)
-                    .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("INTERNAL_ERR")
-                .message("Unexpected server error")
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
-   
-    private static boolean isUsersUsernameOrEmailUniqueViolation(DataIntegrityViolationException ex) {
-        Throwable mostSpecific = NestedExceptionUtils.getMostSpecificCause(ex);
-        String message = mostSpecific == null ? null : mostSpecific.getMessage();
-        if (message == null) {
-            return false;
-        }
-        String m = message.toLowerCase();
-
-        boolean looksLikeUniqueViolation = m.contains("duplicate key") || m.contains("unique constraint") || m.contains("23505");
-        if (!looksLikeUniqueViolation) {
-            return false;
-        }
-
-        return m.contains("users") && (m.contains("username") || m.contains("email"));
-    }
-
-    private static boolean isNumericOrValueOutOfRange(DataIntegrityViolationException ex) {
-        Throwable t = NestedExceptionUtils.getMostSpecificCause(ex);
-        if (t == null) {
-            return false;
-        }
-        String m = t.getMessage();
-        if (m == null) {
-            return false;
-        }
-        String lower = m.toLowerCase();
-        return lower.contains("22003")
-                || lower.contains("22008")
-                || lower.contains("numeric value out of range")
-                || lower.contains("out of range for type")
-                || lower.contains("value too long")
-                || lower.contains("22001");
-    }
-
-    private static Map<String, Object> collectBindingErrors(MethodArgumentNotValidException ex) {
-        Map<String, Object> validationErrors = new LinkedHashMap<>();
-        for (FieldError err : ex.getBindingResult().getFieldErrors()) {
-            validationErrors.put(err.getField(), err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage());
-        }
-        ex.getBindingResult().getGlobalErrors().forEach(err -> {
-            String key = "_global." + err.getCode();
-            String msg = err.getDefaultMessage() == null
-                    ? "Invalid value"
-                    : err.getDefaultMessage();
-            validationErrors.putIfAbsent(key, msg);
-        });
-        return validationErrors;
     }
 
     @ExceptionHandler(Exception.class)

@@ -45,9 +45,14 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        Map<String, Object> validationErrors = ex.getBindingResult().getFieldErrors().stream()
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<ApiError> handleValidation(Exception ex, HttpServletRequest request) {
+
+        var fieldErrors = (ex instanceof MethodArgumentNotValidException manv)
+                ? manv.getBindingResult().getFieldErrors()
+                : ((BindException) ex).getBindingResult().getFieldErrors();
+
+        Map<String, Object> validationErrors = fieldErrors.stream()
                 .collect(Collectors.toMap(
                         err -> err.getField(),
                         err -> err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage(),
@@ -62,26 +67,7 @@ public class RestExceptionHandler {
                 .path(request.getRequestURI())
                 .validationErrors(validationErrors.isEmpty() ? null : validationErrors)
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
 
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ApiError> handleBind(BindException ex, HttpServletRequest request) {
-        Map<String, Object> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                        err -> err.getField(),
-                        err -> err.getDefaultMessage() == null ? "Invalid value" : err.getDefaultMessage(),
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                ));
-
-        ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .errorCode("VALIDATION_ERR")
-                .message("Validation failed")
-                .path(request.getRequestURI())
-                .validationErrors(validationErrors.isEmpty() ? null : validationErrors)
-                .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
