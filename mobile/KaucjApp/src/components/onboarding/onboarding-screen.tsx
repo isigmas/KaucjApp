@@ -4,14 +4,16 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { useAppStore } from "@/src/state/app-store";
 import { ONBOARDING_SLIDES } from "@/src/constants";
+import { OnboardingSlide } from "@/src/components/onboarding/onboarding-slide";
 import { Paginator } from "@/src/components/onboarding/paginator";
-import { OnboardingSlide } from "./onboarding-slide";
 
 export default function OnboardingScreen() {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const scrollX = useSharedValue(0);
   const flatListRef = useRef<Animated.FlatList<any>>(null);
 
@@ -24,19 +26,22 @@ export default function OnboardingScreen() {
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems[0]) {
       setCurrentIndex(viewableItems[0].index);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   }).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     if (currentIndex < ONBOARDING_SLIDES.length - 1) {
       flatListRef.current?.scrollToIndex({
         index: currentIndex + 1,
         animated: true,
       });
     } else {
-      completeOnboarding();
+      await completeOnboarding();
     }
   };
 
@@ -46,14 +51,16 @@ export default function OnboardingScreen() {
         <Animated.FlatList
           ref={flatListRef}
           data={ONBOARDING_SLIDES}
-          renderItem={({ item }) => <OnboardingSlide item={item} />}
+          renderItem={({ item, index }) => (
+            <OnboardingSlide item={item} index={index} scrollX={scrollX} />
+          )}
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
           bounces={false}
           keyExtractor={(item) => item.id}
           onScroll={scrollHandler}
-          scrollEventThrottle={16} //60fps
+          scrollEventThrottle={16}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewConfig}
         />
@@ -71,8 +78,8 @@ export default function OnboardingScreen() {
         >
           <Text style={styles.buttonText}>
             {currentIndex === ONBOARDING_SLIDES.length - 1
-              ? "Get Started"
-              : "Next"}
+              ? "Start Building"
+              : "Continue"}
           </Text>
         </Pressable>
       </View>
@@ -90,29 +97,30 @@ const styles = StyleSheet.create({
   },
   footer: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     justifyContent: "space-between",
-    paddingBottom: 48,
+    paddingBottom: 50,
   },
   button: {
-    backgroundColor: "#2563EB", // Brand Blue
-    paddingVertical: 18,
-    borderRadius: 16,
+    backgroundColor: "#0F172A", // Dark, premium slate button
+    paddingVertical: 20,
+    borderRadius: 20, // More rounded, modern feel
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }], // Slight shrink on press
   },
   buttonText: {
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "700",
+    letterSpacing: 0.5,
   },
 });
