@@ -9,6 +9,7 @@ import { useAppStore } from "@/src/state/app-store";
 import { ONBOARDING_SLIDES } from "@/src/constants";
 import { OnboardingSlide } from "@/src/components/onboarding/onboarding-slide";
 import { Paginator } from "@/src/components/onboarding/paginator";
+import { OnboardingButton } from "./onboarding-button";
 
 export default function OnboardingScreen() {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
@@ -69,19 +70,11 @@ export default function OnboardingScreen() {
       <View style={styles.footer}>
         <Paginator data={ONBOARDING_SLIDES} scrollX={scrollX} />
 
-        <Pressable
+        <OnboardingButton
           onPress={handleNext}
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <Text style={styles.buttonText}>
-            {currentIndex === ONBOARDING_SLIDES.length - 1
-              ? "Start Building"
-              : "Continue"}
-          </Text>
-        </Pressable>
+          scrollX={scrollX}
+          totalSlides={ONBOARDING_SLIDES.length}
+        />
       </View>
     </View>
   );
