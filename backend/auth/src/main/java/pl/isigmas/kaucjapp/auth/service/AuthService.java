@@ -228,6 +228,23 @@ public class AuthService {
         notificationClient.sendResetPasswordEmail(mailRequest);
     }
 
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordToken passwordToken = passwordTokenRepository.findByToken(encoder.hashToken(token))
+                .orElseThrow(TokenNotFoundException::new);
+
+        if (passwordToken.isUsed()) {
+            throw new UsedTokenException();
+        }
+
+        if (passwordToken.getExpirationDate().isBefore(Instant.now())) {
+            throw new ExpiredTokenException(passwordToken);
+        }
+
+        passwordToken.getAccount().setPasswordHash(encoder.hashPassword(newPassword));
+        passwordToken.setUsed(true);
+    }
+
     @Transactional(readOnly = true)
     public String generateJWT(String refreshTokenStr) {
 
