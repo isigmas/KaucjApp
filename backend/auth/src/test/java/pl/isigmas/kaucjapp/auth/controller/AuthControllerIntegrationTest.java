@@ -12,7 +12,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import jakarta.servlet.ServletException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -25,6 +24,10 @@ import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
+import pl.isigmas.kaucjapp.auth.entity.PasswordToken;
+import pl.isigmas.kaucjapp.auth.repository.PasswordTokenRepository;
+import java.time.Instant;
+import java.time.Duration;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
@@ -56,6 +59,9 @@ class AuthControllerIntegrationTest {
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private PasswordTokenRepository passwordTokenRepository;
 
     @Autowired
     private Encoder encoder;
@@ -612,6 +618,75 @@ class AuthControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(tokenValue))
                     .andExpect(status().isUnauthorized());
+        }
+    @Nested
+    @DisplayName("POST /api/auth/resetpassword/{token}")
+    class ResetPasswordEndpointTests {
+
+        @Test
+        @DisplayName("Should reset password successfully")
+        void shouldResetPassword() throws Exception {
+            Account account = new Account();
+            account.setUsername("resetuser");
+            account.setEmail("reset@example.com");
+            account.setPasswordHash(encoder.hashPassword("oldPassword"));
+            account.setRole(pl.isigmas.kaucjapp.auth.entity.enums.AccountRole.USER);
+            account.setStatus(pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus.ACTIVE);
+            account = accountRepository.save(account);
+
+            String rawToken = "rawTokenValue";
+            PasswordToken token = new PasswordToken();
+            token.setAccount(account);
+            token.setToken(encoder.hashToken(rawToken));
+            token.setUsed(false);
+            token.setExpirationDate(Instant.now().plus(Duration.ofHours(1)));
+            passwordTokenRepository.save(token);
+
+            mockMvc.perform(post("/api/auth/resetpassword/{token}", rawToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("newPassword123"))
+                    .andExpect(status().isOk());
+
+            Account updatedAccount = accountRepository.findById(account.getId()).get();
+            assertTrue(encoder.verifyPassword("newPassword123", updatedAccount.getPasswordHash()));
+
+            PasswordToken updatedToken = passwordTokenRepository.findById(token.getId()).get();
+            assertTrue(updatedToken.isUsed());
+        }
+        
+        @Test
+        @DisplayName("Should return 404 when token is not found")
+        void shouldReturn404WhenTokenNotFound() throws Exception {
+            mockMvc.perform(post("/api/auth/resetpassword/{token}", "invalidToken")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("newPassword123"))
+                    .andExpect(status().isNotFound());
+        }
+        
+        @Test
+        @DisplayName("Should return 401 when token is expired")
+        void shouldReturn401WhenTokenExpired() throws Exception {
+            Account account = new Account();
+            account.setUsername("expireduser");
+            account.setEmail("expired@example.com");
+            account.setPasswordHash(encoder.hashPassword("oldPassword"));
+            account.setRole(pl.isigmas.kaucjapp.auth.entity.enums.AccountRole.USER);
+            account.setStatus(pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus.ACTIVE);
+            account = accountRepository.save(account);
+
+            String rawToken = "expiredRawToken";
+            PasswordToken token = new PasswordToken();
+            token.setAccount(account);
+            token.setToken(encoder.hashToken(rawToken));
+            token.setUsed(false);
+            token.setExpirationDate(Instant.now().minus(Duration.ofHours(1)));
+            passwordTokenRepository.save(token);
+
+            mockMvc.perform(post("/api/auth/resetpassword/{token}", rawToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("newPassword123"))
+                    .andExpect(status().isUnauthorized());
+        }
         }
     }
 }

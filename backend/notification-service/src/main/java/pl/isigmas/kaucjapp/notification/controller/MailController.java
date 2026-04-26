@@ -28,4 +28,13 @@ public class MailController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/resetpassword")
+    public ResponseEntity<Void> sendResetPasswordEmail(
+            @Valid @RequestBody MailRequest mailRequest
+    ) {
+        mailService.sendMail(mailRequest.getEmailTo(), mailRequest.getMessage(), TemplateType.RESET_PASSWORD);
+
+        return ResponseEntity.ok().build();
+    }
 }
