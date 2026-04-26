@@ -78,7 +78,7 @@ public class AuthController {
             @PathVariable String token,
             @RequestBody String newPassword
     ) {
-        // TODO: set new password
+        service.resetPassword(token, newPassword);
 
         return ResponseEntity.ok().build();
     }
