@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum TemplateType {
-    WELCOME("welcome-email");
+    WELCOME("welcome-email"),
+    RESET_PASSWORD("reset-password-email");
 
     private final String templateName;
 
