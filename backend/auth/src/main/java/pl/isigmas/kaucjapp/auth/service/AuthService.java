@@ -149,7 +149,7 @@ public class AuthService {
     @Transactional
     public void suspend(Long id) {
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFondException(id));
+                .orElseThrow(() -> new AccountNotFoundException(id));
 
         account.setStatus(AccountStatus.SUSPENDED);
     }
@@ -158,7 +158,7 @@ public class AuthService {
     public void delete(Long id) {
         // Find account
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFondException(id));
+                .orElseThrow(() -> new AccountNotFoundException(id));
 
         // Check account status
         if (EnumSet.of(AccountStatus.DELETED, AccountStatus.PENDING_DELETION).contains(account.getStatus())) {
@@ -200,6 +200,23 @@ public class AuthService {
         deletionScheduleRepository.save(deletionSchedule);
 
         account.setStatus(AccountStatus.PENDING_DELETION);
+    }
+
+    @Transactional
+    public void sendResetPasswordEmail(String email) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AccountNotFoundException(email));
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(account.getStatus());
+        }
+
+        MailRequest mailRequest = MailRequest.builder()
+                .emailTo(email)
+                .message(tokenService.generateBase64())
+                .build();
+
+        notificationClient.sendResetPasswordEmail(mailRequest);
     }
 
     @Transactional(readOnly = true)
