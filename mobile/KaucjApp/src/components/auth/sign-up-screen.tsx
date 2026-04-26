@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import { signUpSchema, SignUpValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 
@@ -210,12 +210,11 @@ const styles = StyleSheet.create({
 
   //error
   errorBanner: {
-    backgroundColor: colors.status.error,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: rounded.lg,
     marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.status.error,
+    borderWidth: 2,
+    borderColor: colors.status.error,
   },
   errorBannerText: {
     color: colors.status.error,

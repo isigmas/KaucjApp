@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import { signInSchema, SignInValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 import { ResetOnboardingButton } from "../onboarding/reset-onboarding-button";
@@ -119,7 +119,7 @@ export default function SignInScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* <View style={styles.testFooter}>
+            <View style={styles.testFooter}>
               <Text
                 style={[
                   styles.footerText,
@@ -129,7 +129,7 @@ export default function SignInScreen() {
                 Tylko dla testów, najepiej po kliknięciu odświezyć expo go
               </Text>
               <ResetOnboardingButton />
-            </View> */}
+            </View>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -143,12 +143,11 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
   formContainer: { width: "100%" },
   errorBanner: {
-    backgroundColor: colors.status.error,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: rounded.lg,
     marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.status.error,
+    borderWidth: 2,
+    borderColor: colors.status.error,
   },
   errorBannerText: {
     color: colors.status.error,
