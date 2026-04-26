@@ -16,7 +16,7 @@ import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.Warning;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountAlreadyDeleted;
-import pl.isigmas.kaucjapp.auth.exception.AccountNotFondException;
+import pl.isigmas.kaucjapp.auth.exception.AccountNotFoundException;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
 import pl.isigmas.kaucjapp.auth.repository.DeletionScheduleRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
@@ -99,7 +99,7 @@ class AuthServiceDeleteTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.delete(accountId))
-                .isInstanceOf(AccountNotFondException.class);
+                .isInstanceOf(AccountNotFoundException.class);
     }
 
     @Test

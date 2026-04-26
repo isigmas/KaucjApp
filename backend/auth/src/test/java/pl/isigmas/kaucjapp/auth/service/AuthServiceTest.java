@@ -16,7 +16,7 @@ import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
-import pl.isigmas.kaucjapp.auth.exception.AccountNotFondException;
+import pl.isigmas.kaucjapp.auth.exception.AccountNotFoundException;
 import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
@@ -594,7 +594,7 @@ class AuthServiceTest {
             when(accountRepository.findById(999L)).thenReturn(Optional.empty());
 
             // when & then
-            assertThrows(AccountNotFondException.class, () -> authService.suspend(999L));
+            assertThrows(AccountNotFoundException.class, () -> authService.suspend(999L));
         }
 
         @Test
@@ -646,7 +646,7 @@ class AuthServiceTest {
             when(accountRepository.findById(-1L)).thenReturn(Optional.empty());
 
             // when & then
-            assertThrows(AccountNotFondException.class, () -> authService.suspend(-1L));
+            assertThrows(AccountNotFoundException.class, () -> authService.suspend(-1L));
         }
 
         @Test
