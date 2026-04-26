@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
 
-const API_URL = "http://192.168.1.13:8080/api";
+const API_URL = "http://192.168.100.7:8080/api";
 
 export const apiClient = axios.create({
   baseURL: API_URL,

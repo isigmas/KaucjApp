@@ -1,29 +1,17 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  ScrollView,
-  TextInput,
-} from "react-native";
+import { Keyboard } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { colors, rounded, spacing } from "@/src/theme";
 import { signInSchema, SignInValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
-import { ResetOnboardingButton } from "../onboarding/reset-onboarding-button";
 
-import { AuthInput } from "@/src/components/auth/input-form";
-import { AuthButton } from "@/src/components/auth/auth-button";
 import { AuthHeader } from "@/src/components/auth/auth-header";
-import { useRef } from "react";
+import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
+import { AuthFooter } from "@/src/components/auth/auth-footer";
+import { ErrorBanner } from "@/src/components/auth/error-banner";
+import { TestFooter } from "@/src/components/auth/onboarding-tester";
+import { SignInForm } from "@/src/components/auth/sign-in-form";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();
@@ -37,8 +25,6 @@ export default function SignInScreen() {
     defaultValues: { email: "", password: "" },
   });
 
-  const passwordInputRef = useRef<TextInput>(null);
-
   const onSubmit = async (data: SignInValues) => {
     Keyboard.dismiss();
     try {
@@ -49,117 +35,33 @@ export default function SignInScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Animated.View
-            entering={FadeInDown.duration(600).springify()}
-            style={styles.content}
-          >
-            <AuthHeader
-              title="Siema!"
-              subtitle="Zaloguj się, aby korzystać z aplikacji"
-            />
+    <AuthFormWrapper>
+      <AuthHeader
+        title="Siema!"
+        subtitle="Zaloguj się, aby korzystać z aplikacji"
+      />
 
-            <View style={styles.formContainer}>
-              {signInError && (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorBannerText}>
-                    {signInError.message ||
-                      "Nie można się zalogować. Sprawdź dane."}
-                  </Text>
-                </View>
-              )}
+      {signInError && (
+        <ErrorBanner
+          message={signInError.message}
+          fallback="Nie można się zalogować. Sprawdź dane."
+        />
+      )}
 
-              <AuthInput
-                control={control}
-                name="email"
-                icon="mail"
-                placeholder="Adres e-mail"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={errors.email?.message}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()} // Jumps to password
-              />
+      <SignInForm
+        control={control}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        isLoading={isSigningIn}
+      />
 
-              <AuthInput
-                ref={passwordInputRef}
-                control={control}
-                name="password"
-                icon="lock"
-                placeholder="Hasło"
-                isPassword
-                error={errors.password?.message}
-                returnKeyType="done"
-                onSubmitEditing={() => Keyboard.dismiss()}
-              />
+      <AuthFooter
+        prompt="Nie masz konta? "
+        actionLabel="Zarejestruj się"
+        onPress={() => router.push("/sign-up")}
+      />
 
-              <AuthButton
-                label="Zaloguj się"
-                onPress={handleSubmit(onSubmit)}
-                isLoading={isSigningIn}
-              />
-            </View>
-
-            <View style={styles.footerContainer}>
-              <Text style={styles.footerText}>Nie masz konta? </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/sign-up")}
-                activeOpacity={0.6}
-              >
-                <Text style={styles.footerAction}>Zarejestruj się</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.testFooter}>
-              <Text
-                style={[
-                  styles.footerText,
-                  { textAlign: "center", marginBottom: 10 },
-                ]}
-              >
-                Tylko dla testów, najepiej po kliknięciu odświezyć expo go
-              </Text>
-              <ResetOnboardingButton />
-            </View>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+      <TestFooter />
+    </AuthFormWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.main },
-  scrollContent: { flexGrow: 1, justifyContent: "center" },
-  content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  formContainer: { width: "100%" },
-  errorBanner: {
-    padding: 12,
-    borderRadius: rounded.lg,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: colors.status.error,
-  },
-  errorBannerText: {
-    color: colors.status.error,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  footerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: spacing.md,
-  },
-  footerText: { fontSize: 15, color: colors.text.secondary },
-  footerAction: { fontSize: 15, fontWeight: "700", color: colors.primary.dark },
-  testFooter: { marginTop: 40, alignItems: "center", opacity: 0.5 },
-});
