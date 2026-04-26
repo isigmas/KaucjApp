@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class PageController {
 
-    @GetMapping("/confirm")
+    @GetMapping("/api/notification/account/confirm")
     public String showConfirmationPage() {
         return "account-registration-confirmation";
     }
