@@ -37,6 +37,7 @@ public class AuthService {
     private final ActivationTokenRepository activationTokenRepository;
     private final DeletionScheduleRepository deletionScheduleRepository;
     private final WarningRepository warningRepository;
+    private final PasswordTokenRepository passwordTokenRepository;
 
     private final UserClient userClient;
     private final NotificationClient notificationClient;
@@ -149,7 +150,7 @@ public class AuthService {
     @Transactional
     public void suspend(Long id) {
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFondException(id));
+                .orElseThrow(() -> new AccountNotFoundException(id));
 
         account.setStatus(AccountStatus.SUSPENDED);
     }
@@ -158,7 +159,7 @@ public class AuthService {
     public void delete(Long id) {
         // Find account
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFondException(id));
+                .orElseThrow(() -> new AccountNotFoundException(id));
 
         // Check account status
         if (EnumSet.of(AccountStatus.DELETED, AccountStatus.PENDING_DELETION).contains(account.getStatus())) {
@@ -200,6 +201,48 @@ public class AuthService {
         deletionScheduleRepository.save(deletionSchedule);
 
         account.setStatus(AccountStatus.PENDING_DELETION);
+    }
+
+    @Transactional
+    public void sendResetPasswordEmail(String email) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AccountNotFoundException(email));
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(account.getStatus());
+        }
+
+        String token = tokenService.generateBase64();
+        PasswordToken passwordToken = PasswordToken.builder()
+                .account(account)
+                .token(encoder.hashToken(token))
+                .expirationDate(Instant.now().plus(Duration.ofHours(1)))
+                .build();
+        passwordTokenRepository.save(passwordToken);
+
+        MailRequest mailRequest = MailRequest.builder()
+                .emailTo(email)
+                .message(token)
+                .build();
+
+        notificationClient.sendResetPasswordEmail(mailRequest);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordToken passwordToken = passwordTokenRepository.findByToken(encoder.hashToken(token))
+                .orElseThrow(TokenNotFoundException::new);
+
+        if (passwordToken.isUsed()) {
+            throw new UsedTokenException();
+        }
+
+        if (passwordToken.getExpirationDate().isBefore(Instant.now())) {
+            throw new ExpiredTokenException(passwordToken);
+        }
+
+        passwordToken.getAccount().setPasswordHash(encoder.hashPassword(newPassword));
+        passwordToken.setUsed(true);
     }
 
     @Transactional(readOnly = true)

@@ -12,4 +12,7 @@ public interface NotificationClient {
 
     @PostMapping("/api/notification/mail/welcome")
     ResponseEntity<Void> sendWelcomeEmail(@Valid @RequestBody MailRequest mailRequest);
+
+    @PostMapping("/api/notification/mail/resetpassword")
+    ResponseEntity<Void> sendResetPasswordEmail(@Valid @RequestBody MailRequest mailRequest);
 }

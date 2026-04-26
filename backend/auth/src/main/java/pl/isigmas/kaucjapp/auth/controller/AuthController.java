@@ -65,4 +65,21 @@ public class AuthController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/resetpassword")
+    public ResponseEntity<Void> sendResetPasswordEmail(@RequestBody String email) {
+        service.sendResetPasswordEmail(email);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/resetpassword/{token}")
+    public ResponseEntity<Void> resetPassword(
+            @PathVariable String token,
+            @RequestBody String newPassword
+    ) {
+        service.resetPassword(token, newPassword);
+
+        return ResponseEntity.ok().build();
+    }
 }
