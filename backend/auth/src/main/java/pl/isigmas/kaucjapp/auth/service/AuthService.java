@@ -37,6 +37,7 @@ public class AuthService {
     private final ActivationTokenRepository activationTokenRepository;
     private final DeletionScheduleRepository deletionScheduleRepository;
     private final WarningRepository warningRepository;
+    private final PasswordTokenRepository passwordTokenRepository;
 
     private final UserClient userClient;
     private final NotificationClient notificationClient;
@@ -211,9 +212,17 @@ public class AuthService {
             throw new AccountNotActiveException(account.getStatus());
         }
 
+        String token = tokenService.generateBase64();
+        PasswordToken passwordToken = PasswordToken.builder()
+                .account(account)
+                .token(encoder.hashToken(token))
+                .expirationDate(Instant.now().plus(Duration.ofHours(1)))
+                .build();
+        passwordTokenRepository.save(passwordToken);
+
         MailRequest mailRequest = MailRequest.builder()
                 .emailTo(email)
-                .message(tokenService.generateBase64())
+                .message(token)
                 .build();
 
         notificationClient.sendResetPasswordEmail(mailRequest);
