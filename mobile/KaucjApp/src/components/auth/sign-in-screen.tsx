@@ -8,6 +8,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,10 +20,10 @@ import { signInSchema, SignInValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 import { ResetOnboardingButton } from "../onboarding/reset-onboarding-button";
 
-// Import your new components
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { AuthHeader } from "@/src/components/auth/auth-header";
+import { useRef } from "react";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();
@@ -36,12 +37,14 @@ export default function SignInScreen() {
     defaultValues: { email: "", password: "" },
   });
 
+  const passwordInputRef = useRef<TextInput>(null);
+
   const onSubmit = async (data: SignInValues) => {
     Keyboard.dismiss();
     try {
       await signIn(data);
     } catch (error) {
-      console.log("[frontend] Logowanie nie powiodło się", error);
+      console.log("[frontend] Sign-in failed", error);
     }
   };
 
@@ -54,6 +57,7 @@ export default function SignInScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Animated.View
             entering={FadeInDown.duration(600).springify()}
@@ -78,19 +82,24 @@ export default function SignInScreen() {
                 control={control}
                 name="email"
                 icon="mail"
-                placeholder="Adres email"
+                placeholder="Adres e-mail"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={errors.email?.message}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()} // Jumps to password
               />
 
               <AuthInput
+                ref={passwordInputRef}
                 control={control}
                 name="password"
                 icon="lock"
                 placeholder="Hasło"
                 isPassword
                 error={errors.password?.message}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
 
               <AuthButton

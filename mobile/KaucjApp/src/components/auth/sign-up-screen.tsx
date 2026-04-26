@@ -8,6 +8,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,7 @@ import { useAuth } from "@/src/auth/use-auth";
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { AuthHeader } from "@/src/components/auth/auth-header";
+import { useRef } from "react";
 
 export default function SignUpScreen() {
   const { signUp, isSigningUp, signUpError } = useAuth();
@@ -41,6 +43,12 @@ export default function SignUpScreen() {
     },
   });
 
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
+  const userNameRef = useRef<TextInput>(null);
+  const phoneNumberRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
   const onSubmit = async (data: SignUpValues) => {
     Keyboard.dismiss();
     signUp(data);
@@ -55,6 +63,7 @@ export default function SignUpScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Animated.View
             entering={FadeInDown.duration(600).springify()}
@@ -66,6 +75,14 @@ export default function SignUpScreen() {
             />
 
             <View style={styles.formContainer}>
+              {signUpError && (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorBannerText}>
+                    {signUpError.message ||
+                      "Nie można Stworzyć konta. Sprawdź dane."}
+                  </Text>
+                </View>
+              )}
               <AuthInput
                 control={control}
                 name="email"
@@ -74,55 +91,76 @@ export default function SignUpScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={errors.email?.message}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => firstNameRef.current?.focus()}
               />
 
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
                   <AuthInput
+                    ref={firstNameRef}
                     control={control}
                     name="firstName"
                     icon="user"
                     placeholder="Imię"
                     error={errors.firstName?.message}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => lastNameRef.current?.focus()}
                   />
                 </View>
-                <View style={{ width: 12 }} />
                 <View style={{ flex: 1 }}>
                   <AuthInput
+                    ref={lastNameRef}
                     control={control}
                     name="lastName"
                     icon="user"
                     placeholder="Nazwisko"
                     error={errors.lastName?.message}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => userNameRef.current?.focus()}
                   />
                 </View>
               </View>
 
               <AuthInput
+                ref={userNameRef}
                 control={control}
                 name="userName"
                 icon="at-sign"
                 placeholder="Nazwa użytkownika"
                 autoCapitalize="none"
                 error={errors.userName?.message}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => phoneNumberRef.current?.focus()}
               />
 
               <AuthInput
+                ref={phoneNumberRef}
                 control={control}
                 name="phoneNumber"
                 icon="phone"
                 placeholder="Numer telefonu"
                 keyboardType="numeric"
                 error={errors.phoneNumber?.message}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => passwordRef.current?.focus()}
               />
 
               <AuthInput
+                ref={passwordRef}
                 control={control}
                 name="password"
                 icon="lock"
                 placeholder="Hasło"
                 isPassword
                 error={errors.password?.message}
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit(onSubmit)}
               />
 
               <AuthButton
@@ -157,7 +195,11 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   formContainer: { width: "100%" },
-  row: { flexDirection: "row", justifyContent: "space-between" },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   footerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -165,4 +207,19 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 15, color: colors.text.secondary },
   footerAction: { fontSize: 15, fontWeight: "700", color: colors.primary.dark },
+
+  //error
+  errorBanner: {
+    backgroundColor: colors.status.error,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.status.error,
+  },
+  errorBannerText: {
+    color: colors.status.error,
+    fontSize: 14,
+    fontWeight: "500",
+  },
 });

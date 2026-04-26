@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef } from "react";
 import {
   View,
   TextInput,
@@ -18,22 +18,25 @@ import { Feather } from "@expo/vector-icons";
 import { colors, rounded, spacing } from "@/src/theme";
 import * as Haptics from "expo-haptics";
 
-interface AuthInputProps<T extends FieldValues> extends TextInputProps {
+export type AuthInputProps<T extends FieldValues> = TextInputProps & {
   control: Control<T>;
   name: Path<T>;
   error?: string;
   icon: keyof typeof Feather.glyphMap;
   isPassword?: boolean;
-}
+};
 
-export function AuthInput<T extends FieldValues>({
-  control,
-  name,
-  error,
-  icon,
-  isPassword,
-  ...textInputProps
-}: AuthInputProps<T>) {
+const AuthInputInner = <T extends FieldValues>(
+  {
+    control,
+    name,
+    error,
+    icon,
+    isPassword,
+    ...textInputProps
+  }: AuthInputProps<T>,
+  ref: React.ForwardedRef<TextInput>,
+) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(!isPassword);
   const isFocused = useSharedValue(0);
 
@@ -87,6 +90,7 @@ export function AuthInput<T extends FieldValues>({
             />
 
             <TextInput
+              ref={ref}
               style={styles.input}
               placeholderTextColor={colors.text.muted}
               onFocus={() => {
@@ -118,11 +122,14 @@ export function AuthInput<T extends FieldValues>({
         )}
       />
 
-      {/* Reserve space for error text so the layout doesn't jump */}
       <Text style={styles.errorText}>{error || " "}</Text>
     </View>
   );
-}
+};
+
+export const AuthInput = forwardRef(AuthInputInner) as <T extends FieldValues>(
+  props: AuthInputProps<T> & { ref?: React.ForwardedRef<TextInput> },
+) => React.ReactElement;
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: 4 },
