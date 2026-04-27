@@ -153,6 +153,16 @@ class SecurityTest {
     }
 
     @Test
+    @DisplayName("Should route notification confirmation page without token")
+    void shouldRouteNotificationConfirmationPageWithoutToken() {
+        HttpStatusCode status = restClient.get()
+                .uri("/api/notification/account/confirm?token=test-token")
+                .exchange((request, response) -> response.getStatusCode());
+
+        assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("Should block direct access to /error endpoint without token")
     void shouldBlockDirectAccessToErrorEndpointWithoutToken() {
         HttpStatusCode status = restClient.get()

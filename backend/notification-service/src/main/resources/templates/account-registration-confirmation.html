@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaucjapp - Aktywacja konta</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f5;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #16a34a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-bg {
+            background-color: #dcfce7;
+        }
+
+        .error-bg {
+            background-color: #fee2e2;
+        }
+
+        .success-icon {
+            color: #16a34a;
+        }
+
+        .error-icon {
+            color: #dc2626;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            color: #111827;
+            font-size: 22px;
+        }
+
+        p {
+            margin: 0;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        #status-message {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card" id="main-card">
+    <div id="loader" class="loader"></div>
+
+    <div id="success-box" class="status-icon success-bg">
+        <svg class="success-icon" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+    </div>
+
+    <div id="error-box" class="status-icon error-bg">
+        <svg class="error-icon" width="40" height="40" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+    </div>
+
+    <h1 id="title">Trwa aktywacja...</h1>
+    <p id="message">Prosimy o cierpliwość, weryfikujemy Twój token.</p>
+    <p id="status-message"></p>
+</div>
+
+<script>
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const loader = document.getElementById('loader');
+        const successBox = document.getElementById('success-box');
+        const errorBox = document.getElementById('error-box');
+        const title = document.getElementById('title');
+        const message = document.getElementById('message');
+
+        if (!token) {
+            showError("Błąd aktywacji", "Skontaktuj się z pomocą techniczną, brak tokena aktywacyjnego.");
+            return;
+        }
+
+
+        fetch('/api/auth/activate/' + token, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    return response.json().then(err => {
+                        throw new Error(err.message || "Błąd aktywacji");
+                    });
+                }
+            })
+            .catch(error => {
+                showError("Coś poszło nie tak", error.message);
+            });
+
+        function showSuccess() {
+            loader.style.display = 'none';
+            successBox.style.display = 'flex';
+            title.innerText = "Konto aktywowane!";
+            message.innerText = "Twoje konto w Kaucjapp jest już aktywne. Możesz się zalogować w aplikacji.";
+        }
+
+        function showError(t, msg) {
+            loader.style.display = 'none';
+            errorBox.style.display = 'flex';
+            title.innerText = t;
+            message.innerText = msg;
+        }
+    };
+</script>
+</body>
+
+</html>

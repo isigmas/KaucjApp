@@ -629,7 +629,7 @@ class AuthControllerIntegrationTest {
             Account account = new Account();
             account.setUsername("resetuser");
             account.setEmail("reset@example.com");
-            account.setPasswordHash(encoder.hashPassword("oldPassword"));
+            account.setPasswordHash(encoder.hashPassword("oldPassword123!"));
             account.setRole(pl.isigmas.kaucjapp.auth.entity.enums.AccountRole.USER);
             account.setStatus(pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus.ACTIVE);
             account = accountRepository.save(account);
@@ -644,11 +644,11 @@ class AuthControllerIntegrationTest {
 
             mockMvc.perform(post("/api/auth/resetpassword/{token}", rawToken)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("newPassword123"))
+                            .content("newPassword123!"))
                     .andExpect(status().isOk());
 
             Account updatedAccount = accountRepository.findById(account.getId()).get();
-            assertTrue(encoder.verifyPassword("newPassword123", updatedAccount.getPasswordHash()));
+            assertTrue(encoder.verifyPassword("newPassword123!", updatedAccount.getPasswordHash()));
 
             PasswordToken updatedToken = passwordTokenRepository.findById(token.getId()).get();
             assertTrue(updatedToken.isUsed());
@@ -669,7 +669,7 @@ class AuthControllerIntegrationTest {
             Account account = new Account();
             account.setUsername("expireduser");
             account.setEmail("expired@example.com");
-            account.setPasswordHash(encoder.hashPassword("oldPassword"));
+            account.setPasswordHash(encoder.hashPassword("oldPassword123!"));
             account.setRole(pl.isigmas.kaucjapp.auth.entity.enums.AccountRole.USER);
             account.setStatus(pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus.ACTIVE);
             account = accountRepository.save(account);
@@ -684,7 +684,7 @@ class AuthControllerIntegrationTest {
 
             mockMvc.perform(post("/api/auth/resetpassword/{token}", rawToken)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("newPassword123"))
+                            .content("newPassword123!"))
                     .andExpect(status().isUnauthorized());
         }
         }

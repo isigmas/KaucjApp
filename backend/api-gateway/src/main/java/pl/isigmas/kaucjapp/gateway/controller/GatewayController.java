@@ -8,6 +8,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +40,8 @@ public class GatewayController {
 
     private final RestClient restClient;
     private final GatewayProperties gatewayProperties;
+
+    private static final PathMatcher PATH_MATCHER = new AntPathMatcher();
 
     /**
      * List of Hop-by-hop headers that should not be forwarded by the proxy.
@@ -140,13 +144,7 @@ public class GatewayController {
     private GatewayProperties.Route findMatchingRoute(String requestPath) {
         for (GatewayProperties.Route route : gatewayProperties.getRoutes()) {
             String pathPattern = route.getPath();
-            // Pattern /api/** -> /api/
-            if (pathPattern.endsWith("/**")) {
-                String prefix = pathPattern.substring(0, pathPattern.length() - 2);
-                if (requestPath.startsWith(prefix)) {
-                    return route;
-                }
-            } else if (requestPath.equals(pathPattern) || requestPath.startsWith(pathPattern + "/")) {
+            if (pathPattern != null && PATH_MATCHER.match(pathPattern, requestPath)) {
                 return route;
             }
         }
