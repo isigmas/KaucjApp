@@ -25,13 +25,9 @@ export default function SignInScreen() {
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = async (data: SignInValues) => {
+  const onSubmit = (data: SignInValues) => {
     Keyboard.dismiss();
-    try {
-      await signIn(data);
-    } catch (error) {
-      console.log("[frontend] Sign-in failed", error);
-    }
+    signIn(data);
   };
 
   return (
@@ -43,8 +39,8 @@ export default function SignInScreen() {
 
       {signInError && (
         <ErrorBanner
-          message={signInError.message}
-          fallback="Nie można się zalogować. Sprawdź dane."
+          message={signInError.userMessage}
+          isNetworkError={signInError.isNetworkError}
         />
       )}
 

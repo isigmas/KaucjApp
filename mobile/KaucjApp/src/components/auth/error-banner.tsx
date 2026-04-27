@@ -5,9 +5,10 @@ import { colors, rounded } from "@/src/theme";
 type Props = {
   message?: string;
   fallback?: string;
+  isNetworkError?: boolean;
 };
 
-export function ErrorBanner({ message, fallback }: Props) {
+export function ErrorBanner({ message, fallback, isNetworkError }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{message || fallback}</Text>

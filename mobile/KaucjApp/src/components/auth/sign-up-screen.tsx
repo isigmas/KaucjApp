@@ -10,6 +10,7 @@ import { useAuth } from "@/src/auth/use-auth";
 import { AuthHeader } from "@/src/components/auth/auth-header";
 import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
 import { AuthFooter } from "@/src/components/auth/auth-footer";
+import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignUpForm } from "@/src/components/auth/sign-up-form";
 
 export default function SignUpScreen() {
@@ -31,7 +32,7 @@ export default function SignUpScreen() {
     },
   });
 
-  const onSubmit = async (data: SignUpValues) => {
+  const onSubmit = (data: SignUpValues) => {
     Keyboard.dismiss();
     signUp(data);
   };
@@ -43,12 +44,18 @@ export default function SignUpScreen() {
         subtitle="Zarejestruj się i bądź częścią społeczności!"
       />
 
+      {signUpError && (
+        <ErrorBanner
+          message={signUpError.userMessage}
+          isNetworkError={signUpError.isNetworkError}
+        />
+      )}
+
       <SignUpForm
         control={control}
         errors={errors}
         onSubmit={handleSubmit(onSubmit)}
         isLoading={isSigningUp}
-        error={signUpError}
       />
 
       <AuthFooter
