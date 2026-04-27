@@ -63,8 +63,11 @@ export const useAuth = () => {
       }
     },
 
-    onSuccess: () => {
-      //router.push("/check-your-email");
+    onSuccess: (_, variables) => {
+      router.push({
+        pathname: "/(auth)/email-sent",
+        params: { email: variables.email },
+      });
     },
   });
 

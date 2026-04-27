@@ -2,10 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import LottieView from "lottie-react-native";
 import { colors, rounded, spacing } from "@/src/theme";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 export default function EmailSentScreen() {
-  const animation = require("../../../assets/animations/email-sent.json");
+  const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
+  const displayEmail = email || "email";
 
+  const animation = require("../../../assets/animations/email-sent.json");
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
@@ -16,14 +20,17 @@ export default function EmailSentScreen() {
         <View style={styles.textContainer}>
           <Text style={styles.title}>Potwierdź emial</Text>
           <Text style={styles.description}>
-            Na adres kamilmaslanka212@gmail.com wysłano email z linkiem do
-            potwierdzenia adresu.
+            Na adres {displayEmail} wysłano maila z linkiem do potwierdzenia
+            adresu.
           </Text>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => {}} style={styles.button}>
+        <Pressable
+          onPress={() => router.push("/(auth)/sign-in")}
+          style={styles.button}
+        >
           <View style={styles.textStack}>
             <Text style={styles.buttonText}>Potwierdzono!</Text>
           </View>
@@ -44,7 +51,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imageContainer: {
-    width: "100%",
+    width: "80%",
     alignItems: "center",
     marginBottom: spacing.xl,
   },

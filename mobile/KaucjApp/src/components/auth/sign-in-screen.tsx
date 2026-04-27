@@ -57,7 +57,9 @@ export default function SignInScreen() {
         onPress={() => router.push("/sign-up")}
       />
 
-      <TestFooter />
+      {/* jezeli chcecie resetowac onboarding zeby sie znow pojawil to trzeba odkomentowac linijke nizej i na ekranie logowania pojawi sie przycisk do resetowania onboardingu  */}
+
+      {/* <TestFooter /> */}
     </AuthFormWrapper>
   );
 }

@@ -25,7 +25,6 @@ export function SignInForm({ control, errors, onSubmit, isLoading }: Props) {
         placeholder="Adres e-mail"
         keyboardType="email-address"
         autoCapitalize="none"
-        error={errors.email?.message}
         returnKeyType="next"
         onSubmitEditing={() => passwordRef.current?.focus()}
       />
@@ -37,7 +36,6 @@ export function SignInForm({ control, errors, onSubmit, isLoading }: Props) {
         icon="lock"
         placeholder="Hasło"
         isPassword
-        error={errors.password?.message}
         returnKeyType="done"
         onSubmitEditing={() => Keyboard.dismiss()}
       />

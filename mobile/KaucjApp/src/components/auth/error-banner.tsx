@@ -19,7 +19,7 @@ export function ErrorBanner({ message, fallback, isNetworkError }: Props) {
 const styles = StyleSheet.create({
   container: {
     padding: 12,
-    borderRadius: rounded.lg,
+    borderRadius: rounded.xl,
     marginBottom: 16,
     borderWidth: 2,
     borderColor: colors.status.error,
