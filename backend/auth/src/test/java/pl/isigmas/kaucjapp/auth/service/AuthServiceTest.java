@@ -684,7 +684,7 @@ class AuthServiceTest {
         @DisplayName("Should successfully reset password")
         void shouldResetPassword() {
             String rawToken = "rawTokenValue";
-            String newPassword = "newPassword123";
+            String newPassword = "newPassword123!";
             String newHash = "newHashValue";
 
             when(encoder.hashToken(rawToken)).thenReturn("hashedTokenValue");
@@ -717,7 +717,7 @@ class AuthServiceTest {
             when(encoder.hashToken(rawToken)).thenReturn("hashedTokenValue");
             when(passwordTokenRepository.findByToken("hashedTokenValue")).thenReturn(Optional.of(passwordToken));
 
-            assertThrows(UsedTokenException.class, () -> authService.resetPassword(rawToken, "newPassword123"));
+            assertThrows(UsedTokenException.class, () -> authService.resetPassword(rawToken, "newPassword123!"));
         }
 
         @Test
@@ -729,7 +729,7 @@ class AuthServiceTest {
             when(encoder.hashToken(rawToken)).thenReturn("hashedTokenValue");
             when(passwordTokenRepository.findByToken("hashedTokenValue")).thenReturn(Optional.of(passwordToken));
 
-            assertThrows(ExpiredTokenException.class, () -> authService.resetPassword(rawToken, "newPassword123"));
+            assertThrows(ExpiredTokenException.class, () -> authService.resetPassword(rawToken, "newPassword123!"));
         }
         }
     }

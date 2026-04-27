@@ -233,6 +233,10 @@ public class AuthService {
         PasswordToken passwordToken = passwordTokenRepository.findByToken(encoder.hashToken(token))
                 .orElseThrow(TokenNotFoundException::new);
 
+        if(!newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%&]).+$")){
+            throw new PasswordNotMatchesRegexException("Password must contain at least: one small letter, one big letter, one number and one special sign");
+        }
+
         if (passwordToken.isUsed()) {
             throw new UsedTokenException();
         }

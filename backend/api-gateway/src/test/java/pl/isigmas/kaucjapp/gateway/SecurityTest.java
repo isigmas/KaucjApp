@@ -118,6 +118,7 @@ class SecurityTest {
         String validToken = Jwts.builder()
                 .subject("tester")
                 .claim("user_id", 1)
+                .claim("role", "tester")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(key)
@@ -129,6 +130,74 @@ class SecurityTest {
                 .exchange((request, response) -> response.getStatusCode());
 
         assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("Should allow access to admin endpoint when role is ADMIN")
+    void shouldAllowAccessToAdminEndpointWithTesterRole() {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+
+        String testerToken = Jwts.builder()
+                .subject("tester")
+                .claim("user_id", 1)
+                .claim("role", "ADMIN")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        HttpStatusCode status = restClient.get()
+                .uri("/api/something/admin/test")
+                .header("Authorization", "Bearer " + testerToken)
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Should pass 401/403 and hit the missing route (404/503/etc)
+        assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("Should block access to admin endpoint when role is user")
+    void shouldBlockAccessToAdminEndpointWithUserRole() {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+
+        String userToken = Jwts.builder()
+                .subject("user")
+                .claim("user_id", 2)
+                .claim("role", "user")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        HttpStatusCode status = restClient.get()
+                .uri("/api/something/admin/test")
+                .header("Authorization", "Bearer " + userToken)
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Should return 403 Forbidden because it lacks the "tester" role
+        assertThat(status).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("Should block access to admin endpoint when token is missing role")
+    void shouldBlockAccessToAdminEndpointWithMissingRole() {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+
+        String noRoleToken = Jwts.builder()
+                .subject("user")
+                .claim("user_id", 3)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key)
+                .compact();
+
+        HttpStatusCode status = restClient.get()
+                .uri("/api/something/admin/test")
+                .header("Authorization", "Bearer " + noRoleToken)
+                .exchange((request, response) -> response.getStatusCode());
+
+        // Should return 403 Forbidden because it lacks the "tester" role
+        assertThat(status).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -153,6 +222,16 @@ class SecurityTest {
     }
 
     @Test
+    @DisplayName("Should route notification confirmation page without token")
+    void shouldRouteNotificationConfirmationPageWithoutToken() {
+        HttpStatusCode status = restClient.get()
+                .uri("/api/notification/account/confirm?token=test-token")
+                .exchange((request, response) -> response.getStatusCode());
+
+        assertThat(status).isNotIn(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("Should block direct access to /error endpoint without token")
     void shouldBlockDirectAccessToErrorEndpointWithoutToken() {
         HttpStatusCode status = restClient.get()
@@ -160,6 +239,26 @@ class SecurityTest {
                 .exchange((request, response) -> response.getStatusCode());
 
         // Direct request to /error should be blocked (401)
+        assertThat(status).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Should block access to /api/auth/admin/** without token")
+    void shouldBlockAccessToAuthAdminEndpointWithoutToken() {
+        HttpStatusCode status = restClient.get()
+                .uri("/api/auth/admin/status")
+                .exchange((request, response) -> response.getStatusCode());
+
+        assertThat(status).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Should block access to other service admin endpoint without token")
+    void shouldBlockAccessToOtherAdminEndpointWithoutToken() {
+        HttpStatusCode status = restClient.get()
+                .uri("/api/something/admin/test")
+                .exchange((request, response) -> response.getStatusCode());
+
         assertThat(status).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }
