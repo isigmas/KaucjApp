@@ -23,6 +23,11 @@ public class AuthController {
         return ResponseEntity.ok("Ready");
     }
 
+    @GetMapping("/admin/status")
+    public ResponseEntity<String> getAdminStatus() {
+        return ResponseEntity.ok("Admin allowed");
+    }
+
     @PostMapping("/register")
     public ResponseEntity<Void> register(
             @Valid @RequestBody User newUser

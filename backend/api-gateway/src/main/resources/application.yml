@@ -21,6 +21,9 @@ gateway:
     - id: auth-service
       path: /api/auth/**
       uri: http://localhost:8083
+    - id: notification-service
+      path: /api/notification/**
+      uri: http://localhost:8085
 
 jwt:
   secret: ${JWT_SECRET}
