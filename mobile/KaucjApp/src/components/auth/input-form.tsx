@@ -18,10 +18,18 @@ export type AuthInputProps<T extends FieldValues> = TextInputProps & {
   name: Path<T>;
   icon: keyof typeof Feather.glyphMap;
   isPassword?: boolean;
+  hideErrorMessage?: boolean;
 };
 
 const AuthInputInner = <T extends FieldValues>(
-  { control, name, icon, isPassword, ...textInputProps }: AuthInputProps<T>,
+  {
+    control,
+    name,
+    icon,
+    isPassword,
+    hideErrorMessage,
+    ...textInputProps
+  }: AuthInputProps<T>,
   ref: React.ForwardedRef<TextInput>,
 ) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(!isPassword);
@@ -95,9 +103,11 @@ const AuthInputInner = <T extends FieldValues>(
                 )}
               </Animated.View>
 
-              <Text style={[styles.errorText, { opacity: error ? 1 : 0 }]}>
-                {error?.message || " "}
-              </Text>
+              {!hideErrorMessage && (
+                <Text style={[styles.errorText, { opacity: error ? 1 : 0 }]}>
+                  {error?.message || " "}
+                </Text>
+              )}
             </>
           );
         }}

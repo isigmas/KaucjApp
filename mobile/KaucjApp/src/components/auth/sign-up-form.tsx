@@ -1,5 +1,5 @@
 import { View, TextInput, StyleSheet } from "react-native";
-import { Control, FieldErrors } from "react-hook-form";
+import { Control, FieldErrors, useWatch } from "react-hook-form";
 import { useRef } from "react";
 
 import { spacing } from "@/src/theme";
@@ -7,6 +7,7 @@ import { SignUpValues } from "@/src/types";
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
+import { PasswordChecklist } from "./password-checklist";
 
 type Props = {
   control: Control<SignUpValues>;
@@ -21,6 +22,11 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
   const userNameRef = useRef<TextInput>(null);
   const phoneNumberRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+
+  const passwordValue = useWatch({
+    control,
+    name: "password",
+  });
 
   return (
     <View style={styles.container}>
@@ -103,7 +109,9 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         isPassword
         returnKeyType="done"
         onSubmitEditing={onSubmit}
+        hideErrorMessage={true}
       />
+      <PasswordChecklist password={passwordValue} />
 
       <AuthButton
         label="Zarejestruj się"
