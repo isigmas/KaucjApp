@@ -41,6 +41,7 @@ export default function SignUpScreen() {
       <AuthHeader
         title="Stwórz konto"
         subtitle="Zarejestruj się i bądź częścią społeczności!"
+        imageShown={false}
       />
 
       {signUpError && (
