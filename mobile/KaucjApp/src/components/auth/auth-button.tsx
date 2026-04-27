@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   button: {
     height: 56,
     backgroundColor: colors.primary.dark,
-    borderRadius: rounded.xl,
+    borderRadius: rounded.apple,
     justifyContent: "center",
     alignItems: "center",
     marginTop: spacing.xs,

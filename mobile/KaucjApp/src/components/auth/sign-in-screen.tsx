@@ -57,7 +57,7 @@ export default function SignInScreen() {
         onPress={() => router.push("/sign-up")}
       />
 
-      {/* <TestFooter /> */}
+      <TestFooter />
     </AuthFormWrapper>
   );
 }
