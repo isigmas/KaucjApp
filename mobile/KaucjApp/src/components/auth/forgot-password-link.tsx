@@ -1,10 +1,13 @@
 import { colors, spacing } from "@/src/theme";
+import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 
 export default function ForgotPassword() {
+  const router = useRouter();
+
   return (
     <View style={styles.forgotPasswordContainer}>
-      <Pressable onPress={() => {}}>
+      <Pressable onPress={() => router.push("/(auth)/password-reset")}>
         <Text style={styles.forgotPasswordText}>Zapomniałeś hasła?</Text>
       </Pressable>
     </View>

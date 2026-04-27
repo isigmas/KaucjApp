@@ -27,5 +27,10 @@ export const signInSchema = z.object({
   email: z.string().trim().email("Wprowadź poprawny adres email."),
   password: z.string().trim().min(6, "Hasło musi mieć co najmniej 6 znaków."),
 });
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("Podaj poprawny adres e-mail"),
+});
+
 export type SignUpValues = z.infer<typeof signUpSchema>;
 export type SignInValues = z.infer<typeof signInSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
