@@ -4,12 +4,35 @@ import LottieView from "lottie-react-native";
 import { colors, rounded, spacing } from "@/src/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+type FlowType = "signUp" | "resetPassword";
+
 export default function EmailSentScreen() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
-  const displayEmail = email || "email";
+
+  const { email, type = "signUp" } = useLocalSearchParams<{
+    email: string;
+    type?: FlowType;
+  }>();
+
+  const displayEmail = email || "twój e-mail";
 
   const animation = require("../../../assets/animations/email-sent.json");
+
+  const contentMap = {
+    signUp: {
+      title: "Potwierdź e-mail",
+      description: `Na adres ${displayEmail} wysłano maila z linkiem do potwierdzenia adresu.`,
+      buttonText: "Potwierdzono!",
+    },
+    resetPassword: {
+      title: "Sprawdź skrzynkę",
+      description: `Na adres ${displayEmail} wysłano maila z linkiem do resetowania hasła.`,
+      buttonText: "Wróć do logowania",
+    },
+  };
+
+  const content = contentMap[type as FlowType] || contentMap.signUp;
+
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
@@ -18,11 +41,8 @@ export default function EmailSentScreen() {
         </View>
 
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Potwierdź emial</Text>
-          <Text style={styles.description}>
-            Na adres {displayEmail} wysłano maila z linkiem do potwierdzenia
-            adresu.
-          </Text>
+          <Text style={styles.title}>{content.title}</Text>
+          <Text style={styles.description}>{content.description}</Text>
         </View>
       </View>
 
@@ -32,7 +52,7 @@ export default function EmailSentScreen() {
           style={styles.button}
         >
           <View style={styles.textStack}>
-            <Text style={styles.buttonText}>Potwierdzono!</Text>
+            <Text style={styles.buttonText}>{content.buttonText}</Text>
           </View>
         </Pressable>
       </View>

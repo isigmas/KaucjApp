@@ -38,7 +38,10 @@ export default function ForgotPasswordScreen() {
     // After successful request, route to the confirmation screen
     router.push({
       pathname: "/(auth)/email-sent",
-      params: { email: data.email },
+      params: {
+        email: data.email,
+        type: "resetPassword",
+      },
     });
   };
 
