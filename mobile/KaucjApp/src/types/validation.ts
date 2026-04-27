@@ -2,18 +2,29 @@ import * as z from "zod";
 
 // AUTH
 export const signUpSchema = z.object({
-  firstName: z.string().min(2, "Podaj swoje imię."),
-  lastName: z.string().min(2, "Podaj swoje nazwisko."),
+  firstName: z.string().trim().min(2, "Podaj swoje imię."),
+  lastName: z.string().trim().min(2, "Podaj swoje nazwisko."),
   userName: z
     .string()
-    .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki."),
-  phoneNumber: z.string().min(9, "Podaj poprawny numer telefonu."),
-  email: z.string().email("Wprowadź poprawny adres email."),
-  password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków."),
-}); //username
+    .trim()
+    .min(6, "Nazwa użytkownika musi mieć co najmniej 6 znaków."),
+  phoneNumber: z.string().trim().min(9, "Podaj poprawny numer telefonu."),
+  email: z.string().trim().email("Wprowadź poprawny adres email."),
+  password: z
+    .string()
+    .trim()
+    .min(6, "Hasło musi mieć co najmniej 6 znaków.")
+    .regex(/[A-Z]/, "Hasło musi zawierać co najmniej jedną wielką literę.")
+    .regex(/[a-z]/, "Hasło musi zawierać co najmniej jedną małą literę.")
+    .regex(/[0-9]/, "Hasło musi zawierać co najmniej jedną cyfrę.")
+    .regex(
+      /[^a-zA-Z0-9]/,
+      "Hasło musi zawierać co najmniej jeden znak specjalny.",
+    ),
+});
 export const signInSchema = z.object({
-  email: z.string().email("Wprowadź poprawny adres email."),
-  password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków."),
+  email: z.string().trim().email("Wprowadź poprawny adres email."),
+  password: z.string().trim().min(6, "Hasło musi mieć co najmniej 6 znaków."),
 });
 export type SignUpValues = z.infer<typeof signUpSchema>;
 export type SignInValues = z.infer<typeof signInSchema>;

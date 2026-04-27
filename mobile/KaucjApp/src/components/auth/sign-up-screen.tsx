@@ -12,16 +12,15 @@ import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
 import { AuthFooter } from "@/src/components/auth/auth-footer";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignUpForm } from "@/src/components/auth/sign-up-form";
+import { useEffect } from "react";
 
 export default function SignUpScreen() {
   const { signUp, isSigningUp, signUpError } = useAuth();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignUpValues>({
+  const { control, handleSubmit } = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -53,7 +52,6 @@ export default function SignUpScreen() {
 
       <SignUpForm
         control={control}
-        errors={errors}
         onSubmit={handleSubmit(onSubmit)}
         isLoading={isSigningUp}
       />
