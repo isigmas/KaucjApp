@@ -48,6 +48,9 @@ public class GatewayController {
             "te", "trailers", "transfer-encoding", "upgrade", "host", "content-length"
     );
 
+    /**
+     * List of headers that should be blocked, because they are meant for internal use only.
+     */
     private static final List<String> BLOCKED_HEADERS = List.of(
             "x-internal-secret",
             "x-user-id"
