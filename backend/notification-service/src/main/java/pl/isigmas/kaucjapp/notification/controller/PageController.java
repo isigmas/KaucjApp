@@ -10,4 +10,9 @@ public class PageController {
     public String showConfirmationPage() {
         return "account-registration-confirmation";
     }
+
+    @GetMapping("/api/notification/account/resetpassword")
+    public String showResetPasswordPage() {
+        return "reset-password-page";
+    }
 }

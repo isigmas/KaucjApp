@@ -48,7 +48,7 @@ public class SecurityConfig {
         http
                 .securityMatcher(request -> {
                     String path = request.getRequestURI();
-                    return path != null && (path.startsWith("/api/auth/") || path.startsWith("/api/notification/account/confirm"));
+                    return path != null && (path.startsWith("/api/auth/") || path.startsWith("/api/notification/account/"));
                 })
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
