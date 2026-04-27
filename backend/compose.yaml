@@ -183,6 +183,9 @@ services:
       - GATEWAY_ROUTES_3_ID=deposit
       - GATEWAY_ROUTES_3_URI=http://deposit-service:8080
       - GATEWAY_ROUTES_3_PATH=/api/deposit/**
+      - GATEWAY_ROUTES_4_ID=notification
+      - GATEWAY_ROUTES_4_URI=http://notification-service:8080
+      - GATEWAY_ROUTES_4_PATH=/api/notification/**
     depends_on:
       offers-service:
         condition: service_healthy

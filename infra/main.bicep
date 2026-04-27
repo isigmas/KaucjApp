@@ -256,6 +256,10 @@ module apiGateway 'modules/app.bicep' = {
       { name: 'GATEWAY_ROUTES_3_ID', value: 'deposit' }
       { name: 'GATEWAY_ROUTES_3_PATH', value: '/api/deposit/**' }
       { name: 'GATEWAY_ROUTES_3_URI', value: 'http://${depositApp.outputs.fqdn}' }
+
+      { name: 'GATEWAY_ROUTES_4_ID', value: 'notification' }
+      { name: 'GATEWAY_ROUTES_4_PATH', value: '/api/notification/**' }
+      { name: 'GATEWAY_ROUTES_4_URI', value: 'http://${notificationApp.outputs.fqdn}' }
     ]
   }
 }
