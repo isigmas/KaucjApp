@@ -15,6 +15,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.Collections;
 
 /**
  * Security configuration for the API Gateway.
@@ -48,7 +51,7 @@ public class SecurityConfig {
         http
                 .securityMatcher(request -> {
                     String path = request.getRequestURI();
-                    return path != null && path.startsWith("/api/auth/");
+                    return path != null && path.startsWith("/api/auth/") && !path.contains("/admin/");
                 })
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -78,12 +81,28 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // Allow internal error dispatches (DispatcherType.ERROR) but block direct requests to /error from outside
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/api/*/admin/**", "/api/*/*/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.decoder(jwtDecoder()))
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder())
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        )
                 );
         return http.build();
+    }
+
+    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String role = jwt.getClaimAsString("role");
+            if (role == null || role.isBlank()) {
+                return Collections.emptyList();
+            }
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+        });
+        return converter;
     }
 
     /**
