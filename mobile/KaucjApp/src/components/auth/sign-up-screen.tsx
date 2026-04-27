@@ -60,7 +60,7 @@ export default function SignUpScreen() {
       <AuthFooter
         prompt="Masz już konto? "
         actionLabel="Zaloguj się"
-        onPress={() => router.push("/(auth)")}
+        onPress={() => router.back()}
       />
     </AuthFormWrapper>
   );
