@@ -10,11 +10,12 @@ import { AuthHeader } from "@/src/components/auth/auth-header";
 import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
 import { AuthFooter } from "@/src/components/auth/auth-footer";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
-import { TestFooter } from "@/src/components/auth/onboarding-tester";
 import { SignInForm } from "@/src/components/auth/sign-in-form";
+import ForgotPassword from "./forgot-password-link";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();
+  const isEmailorPasswordError = signInError?.errorCode === "AU_001";
 
   const {
     control,
@@ -38,10 +39,13 @@ export default function SignInScreen() {
       />
 
       {signInError && (
-        <ErrorBanner
-          message={signInError.userMessage}
-          isNetworkError={signInError.isNetworkError}
-        />
+        <>
+          <ErrorBanner
+            message={signInError.userMessage}
+            isNetworkError={signInError.isNetworkError}
+          />
+          {isEmailorPasswordError && <ForgotPassword />}
+        </>
       )}
 
       <SignInForm
