@@ -4,19 +4,21 @@ import { colors, spacing } from "@/src/theme";
 
 interface DetailHeaderProps {
   title: string;
+  titleSize?: number;
   subtitle?: string;
   rightSlot?: React.ReactNode;
 }
 
 export default function DetailHeader({
   title,
+  titleSize = 24,
   subtitle,
   rightSlot,
 }: DetailHeaderProps) {
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { fontSize: titleSize }]}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
 
@@ -37,7 +39,6 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   title: {
-    fontSize: 24,
     fontWeight: "700",
     color: colors.text.primary,
   },
