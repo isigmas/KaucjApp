@@ -26,16 +26,16 @@ export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   }
 };
 
-export const getOfferStatusColor = (status: OfferStatus) => {
+export const getOfferStatusConfig = (status: OfferStatus) => {
   switch (status) {
     case "OPEN":
-      return colors.primary.base;
+      return { color: colors.primary.base, label: "Otwarta" };
     case "RESERVED":
-      return colors.accent.base;
+      return {color:colors.accent.base , label: "Zarezerwowana" };
     case "COMPLETED":
-      return colors.status.success;
+      return {color:colors.status.success, label: "Zakończona" };
     case "CANCELED":
-      return colors.status.error;
+      return {color:colors.status.error, label: "Anulowana" };
   }
 };
 

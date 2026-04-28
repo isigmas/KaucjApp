@@ -12,6 +12,7 @@ import { AuthFooter } from "@/src/components/auth/auth-footer";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignInForm } from "@/src/components/auth/sign-in-form";
 import ForgotPassword from "./forgot-password-link";
+import { TestFooter } from "./onboarding-tester";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();
