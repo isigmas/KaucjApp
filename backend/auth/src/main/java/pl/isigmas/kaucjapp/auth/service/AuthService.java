@@ -49,9 +49,15 @@ public class AuthService {
 
     @Transactional
     public void create(User newUser) {
-        accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(newUser.getUsername(), newUser.getEmail())
+
+        accountRepository.findByEmailIgnoreCase(newUser.getEmail())
                 .ifPresent(_ -> {
-                    throw new AccountAlreadyExistsException("Account with given username or email already exists");
+                    throw new AccountAlreadyExistsException("Account with given email already exists");
+                });
+
+        accountRepository.findByUsernameIgnoreCase(newUser.getUsername())
+                .ifPresent(_ -> {
+                    throw new AccountAlreadyExistsException("Username is already taken");
                 });
 
         Account newAccount = new Account();

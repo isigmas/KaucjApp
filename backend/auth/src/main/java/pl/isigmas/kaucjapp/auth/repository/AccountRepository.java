@@ -1,5 +1,8 @@
 package pl.isigmas.kaucjapp.auth.repository;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
@@ -11,4 +14,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
     List<Account> findByRole(AccountRole role);
     Optional<Account> findByEmail(String email);
+    Optional<Account> findByUsernameIgnoreCase(String username);
+    Optional<Account> findByEmailIgnoreCase(String email);
 }
