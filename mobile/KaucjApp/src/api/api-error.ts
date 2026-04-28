@@ -7,6 +7,7 @@ export const AUTH_ERROR_CODES = {
   ACCOUNT_ALREADY_EXISTS: "AU_007",
   ACCOUNT_NOT_FOUND: "AU_008",
   VALIDATION_ERROR: "VALIDATION_ERR",
+  SERVER_ERROR: "INTERNAL_ERR",
 } as const;
 type AuthErrorCode = (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES];
 
@@ -21,6 +22,8 @@ const USER_MESSAGES: Record<AuthErrorCode, string> = {
     "Nie znaleziono konta. Sprawdź dane lub zarejestruj się.",
   [AUTH_ERROR_CODES.VALIDATION_ERROR]:
     "Sprawdź poprawność wprowadzonych danych.",
+  [AUTH_ERROR_CODES.SERVER_ERROR]:
+    "500 - Coś poszło nie tak po stronie serwera. Spróbuj ponowie później",
 };
 
 const FALLBACK_MESSAGE = "Coś poszło nie tak. Spróbuj ponownie.";
