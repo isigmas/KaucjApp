@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { DepositMachine, DepositMachineStatus, OpeningHour } from "@/src/types";
 import { colors, spacing, rounded } from "@/src/theme";
 import { formatHour, getDayName, getMachineStatusConfig } from "@/src/lib";
@@ -97,8 +104,41 @@ function MachineHeader({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleSelect = (status: DepositMachineStatus) => {
-    onStatusChange(status);
     setIsDropdownOpen(false);
+
+    let actionText = "";
+    let title = "Potwierdzenie zgłoszenia";
+    switch (status) {
+      case "AVAILABLE":
+        actionText = "poprawne działanie";
+        title = "Zgłoszenie poprawnego działania";
+        break;
+      case "FULL":
+        actionText = "przepełnienie";
+        title = "Zgłoszenie przepełnienia";
+        break;
+      case "OUT_OF_ORDER":
+        actionText = "awarię";
+        title = "Zgłoszenie awarii";
+        break;
+    }
+
+    Alert.alert(
+      title,
+      `Czy na pewno chcesz zgłosić ${actionText} tego kaucjomatu?`,
+      [
+        {
+          text: "Anuluj",
+          style: "cancel",
+        },
+        {
+          text: "Zgłoś",
+          style: status === "AVAILABLE" ? "default" : "destructive",
+          onPress: () => onStatusChange(status),
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   return (
