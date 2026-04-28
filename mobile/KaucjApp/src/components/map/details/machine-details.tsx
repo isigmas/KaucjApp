@@ -174,10 +174,14 @@ function InfoCard({
 }
 
 function OpeningHoursCard({ openingHours }: { openingHours: OpeningHour[] }) {
+  const sortedOpeningHours = [...openingHours].sort(
+    (a, b) => a.dayOfWeek - b.dayOfWeek,
+  );
+
   return (
     <View style={styles.card}>
       <Text style={styles.sectionTitle}>Godziny otwarcia</Text>
-      {openingHours.map((day) => (
+      {sortedOpeningHours.map((day) => (
         <View style={styles.hoursRow} key={day.dayOfWeek}>
           <Text style={styles.primaryText}>{getDayName(day.dayOfWeek)}</Text>
           {day.isClosed ? (
