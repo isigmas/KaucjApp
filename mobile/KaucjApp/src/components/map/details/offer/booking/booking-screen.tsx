@@ -68,6 +68,7 @@ export default function BookingScreen() {
     >
       <DetailHeader
         title="Gotowy do rezerwacji?"
+        titleSize={30}
         subtitle="Sprawdź szczegóły i potwierdź rezerwację"
       />
 

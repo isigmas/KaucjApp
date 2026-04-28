@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { Offer } from "@/src/types";
 import { colors, rounded, spacing } from "@/src/theme";
-import { useCountUp } from "./use-count-up";
 import ConfettiBurst from "./confetti-burst";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
+import { useRouter } from "expo-router";
 
 interface ReservationSuccessProps {
   offer: Offer;
@@ -16,6 +16,8 @@ export default function ReservationSuccess({
   offer,
   onDone,
 }: ReservationSuccessProps) {
+  const router = useRouter();
+
   const scale = useRef(new Animated.Value(0)).current;
   const fade = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(24)).current;
@@ -56,6 +58,7 @@ export default function ReservationSuccess({
           transform: [{ translateY: slideY }],
           alignItems: "center",
           width: "100%",
+          flex: 1,
         }}
       >
         <Text style={styles.headline}>Zarezerwowano!</Text>
@@ -88,10 +91,18 @@ export default function ReservationSuccess({
           style={({ pressed }) => [
             styles.doneBtn,
             pressed && styles.doneBtnPressed,
+            { marginTop: "auto" }, //
           ]}
           onPress={onDone}
         >
           <Text style={styles.doneBtnText}>Przejdź do rezerwacji</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.backToMapBtn}
+          onPress={() => router.push("/(app)/(tabs)/home")}
+        >
+          <Text style={styles.backToMapBtnText}>Powrót do mapy</Text>
         </Pressable>
       </Animated.View>
     </Animated.View>
@@ -103,6 +114,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.md,
   },
   iconWrap: {
     width: 80,
@@ -130,7 +142,7 @@ const styles = StyleSheet.create({
   sub: {
     fontSize: 15,
     color: colors.text.secondary,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
     textAlign: "center",
   },
   earningsCard: {
@@ -172,21 +184,37 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },
-
   doneBtn: {
     width: "100%",
+    height: 54,
     backgroundColor: colors.primary.base,
-    borderRadius: rounded.xl,
-    paddingVertical: spacing.md,
+    borderRadius: rounded.apple,
     alignItems: "center",
+    justifyContent: "center",
   },
   doneBtnPressed: {
     backgroundColor: colors.primary.dark,
     transform: [{ scale: 0.98 }],
   },
   doneBtnText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
     color: "#fff",
+  },
+
+  backToMapBtn: {
+    marginTop: spacing.sm,
+    width: "100%",
+    height: 54,
+    borderWidth: 2,
+    borderColor: colors.primary.base,
+    borderRadius: rounded.apple,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backToMapBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.primary.dark,
   },
 });

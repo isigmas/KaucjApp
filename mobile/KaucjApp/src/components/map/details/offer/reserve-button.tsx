@@ -37,7 +37,8 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    borderRadius: rounded.xl,
+    borderRadius: rounded.apple,
+    height: 64,
     alignSelf: "center",
     marginTop: spacing.lg,
     width: "100%",
