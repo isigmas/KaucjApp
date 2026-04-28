@@ -18,8 +18,8 @@ public class User {
     @NotBlank(message = "Password is needed")
     @Size(min=6)
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%&]).+$",
-            message = "Password must contain at least: one small letter, one big letter, one number and one special sign"
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}$",
+            message = "Password must be minimum 6 characters long contain at least: one small letter, one big letter, one number and one special sign"
     )
     private String password;
 
