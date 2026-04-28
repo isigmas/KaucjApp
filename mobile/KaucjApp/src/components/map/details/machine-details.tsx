@@ -66,13 +66,13 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
         onStatusChange={handleStatusChange}
       />
 
-      <InfoCard address={machine.address} openingHours={machine.openingHours} />
-
-      <OpeningHoursCard openingHours={machine.openingHours} />
-
       {isUnavailable && (
         <UnavailableWarning status={machine.status} statusColor={statusColor} />
       )}
+
+      <InfoCard address={machine.address} openingHours={machine.openingHours} />
+
+      <OpeningHoursCard openingHours={machine.openingHours} />
 
       <MachineImage />
     </View>
@@ -254,6 +254,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: rounded.pill,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statusText: {
     fontSize: 13,
@@ -299,7 +304,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: rounded.xl,
     borderLeftWidth: 4,
-    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
   },
   warningText: {
     fontSize: 14,
@@ -310,7 +315,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     borderRadius: rounded.xl,
-    marginTop: spacing.lg,
+    marginBottom: spacing.xxl,
   },
 
   //dROPDOWN
