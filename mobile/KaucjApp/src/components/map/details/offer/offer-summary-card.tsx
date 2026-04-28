@@ -11,15 +11,22 @@ export default function OfferSummaryCard({ offer }: OfferSummaryCardProps) {
   return (
     <View style={styles.card}>
       <SummaryRow
-        label="Łączna liczba butelek"
+        label="Łączna liczba opakowań kaucyjnych"
         value={String(offer.total_quantity)}
       />
       <View style={styles.divider} />
       <SummaryRow
-        label="Całkowita wartość"
+        label="Całkowita cena oferty"
         value={`${offer.total_prize.toFixed(2)} zł`}
         isBold
       />
+
+      <SummaryRow
+        label="Łączna wartość kaucji"
+        value={`${(offer.total_quantity * 0.5).toFixed(2)} zł`}
+        isBold
+      />
+
       <SummaryRow
         label="Całkowity zysk"
         value={`${offer.total_income.toFixed(2)} zł`}
@@ -54,12 +61,13 @@ const styles = StyleSheet.create({
   divider: {
     borderTopWidth: 1,
     borderTopColor: colors.primary.base,
-    marginVertical: spacing.xs,
+    marginVertical: spacing.sm,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+
     marginBottom: spacing.sm,
   },
   label: {

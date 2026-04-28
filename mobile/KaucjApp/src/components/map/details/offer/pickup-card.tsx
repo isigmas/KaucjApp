@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   secondaryText: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text.secondary,
     marginTop: 2,
   },
