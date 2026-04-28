@@ -18,7 +18,12 @@ function getCurrentOpenStatus(openingHours: OpeningHour[]): OpenStatus | null {
 
   const today = openingHours.find((h) => h.dayOfWeek === currentDayOfWeek);
 
-  if (today && currentTime >= today.openTime && currentTime < today.closeTime) {
+  if (
+    today &&
+    currentTime >= today.openTime &&
+    currentTime < today.closeTime &&
+    !today.isClosed
+  ) {
     return { isOpen: true, text: `Otwarte do ${formatHour(today.closeTime)}` };
   }
 
@@ -32,7 +37,7 @@ function getCurrentOpenStatus(openingHours: OpeningHour[]): OpenStatus | null {
   for (let i = 1; i <= 7; i++) {
     const nextDayOfWeek = ((currentDayOfWeek + i - 1) % 7) + 1;
     const nextDay = openingHours.find((h) => h.dayOfWeek === nextDayOfWeek);
-    if (nextDay) {
+    if (nextDay && !nextDay.isClosed) {
       return {
         isOpen: false,
         text: `Zamknięte do ${formatHour(nextDay.openTime)} (${getDayName(nextDay.dayOfWeek)})`,

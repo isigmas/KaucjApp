@@ -43,6 +43,24 @@ export default function MyOffers() {
     );
   };
 
+  const markAsCanceled = (offerId: number) => {
+    console.log("Marking offer as canceled, id: ", offerId);
+
+    changeOfferStatus(
+      { offerId, newStatus: "CANCELED" },
+      {
+        onSuccess: () => {
+          router.push("/profile/offers/confirmation");
+        },
+        onError: (error) => {
+          const errorMessage =
+            error.response?.data?.message || "Nie udało się zakończyć oferty.";
+          Alert.alert("Błąd", errorMessage);
+        },
+      },
+    );
+  };
+
   if (isPending) return <LoadingState title="Ładowanie twoich ofert" />;
   if (isError)
     return (
@@ -71,6 +89,7 @@ export default function MyOffers() {
             offer={offer}
             index={index}
             onComplete={markAsCompleted}
+            onCancel={markAsCanceled}
           />
         ))}
       </View>

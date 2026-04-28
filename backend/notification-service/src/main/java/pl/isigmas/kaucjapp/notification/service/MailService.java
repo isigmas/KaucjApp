@@ -21,7 +21,7 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
 
-    public void sendMail(String email, String message, TemplateType templateType) {
+    public void sendMail(String subject, String username,String email, String message, TemplateType templateType) {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
@@ -29,13 +29,13 @@ public class MailService {
 
             Context context = new Context();
             context.setVariable("baseUrl", baseUrl);
-            context.setVariable("name", "Aśka");
+            context.setVariable("name", username);
             context.setVariable("token", message);
 
             String htmlContent = templateEngine.process(templateType.getTemplateName(), context);
 
             helper.setTo(email);
-            helper.setSubject("Activate your account");
+            helper.setSubject(subject);
 
             helper.setText(htmlContent, true);
 
