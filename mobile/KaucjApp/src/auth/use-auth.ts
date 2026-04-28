@@ -50,14 +50,15 @@ export const useAuth = () => {
   const signUp = useMutation<void, AuthError, SignUpValues>({
     mutationFn: async (credentials) => {
       try {
-        await apiClient.post("/auth/register", {
+        const payload = {
           firstName: credentials.firstName,
           lastName: credentials.lastName,
           username: credentials.userName,
           phone: credentials.phoneNumber,
           email: credentials.email,
           password: credentials.password,
-        });
+        };
+        await apiClient.post("/auth/register", payload);
       } catch (error) {
         throw parseAuthError(error);
       }
