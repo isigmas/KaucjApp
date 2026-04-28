@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MailRequest {
 
+    @NotBlank(message = "Reveiver username must be provided")
+    private String username;
+
     @NotBlank(message = "Receiver email must be provided")
     @Email(message = "Invalid email format")
     private String emailTo;

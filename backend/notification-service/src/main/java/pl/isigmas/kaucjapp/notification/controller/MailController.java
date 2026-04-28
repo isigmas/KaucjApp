@@ -24,7 +24,7 @@ public class MailController {
     public ResponseEntity<Void> sendWelcomeEmail(
             @Valid @RequestBody MailRequest mailRequest
     ) {
-        mailService.sendMail(mailRequest.getEmailTo(), mailRequest.getMessage(), TemplateType.WELCOME);
+        mailService.sendMail("Aktywacja konta",mailRequest.getUsername(),mailRequest.getEmailTo(), mailRequest.getMessage(), TemplateType.WELCOME);
 
         return ResponseEntity.ok().build();
     }
@@ -33,7 +33,7 @@ public class MailController {
     public ResponseEntity<Void> sendResetPasswordEmail(
             @Valid @RequestBody MailRequest mailRequest
     ) {
-        mailService.sendMail(mailRequest.getEmailTo(), mailRequest.getMessage(), TemplateType.RESET_PASSWORD);
+        mailService.sendMail("Reset hasła",mailRequest.getUsername(),mailRequest.getEmailTo(), mailRequest.getMessage(), TemplateType.RESET_PASSWORD);
 
         return ResponseEntity.ok().build();
     }

@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
+import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
 import pl.isigmas.kaucjapp.auth.entity.Account;
@@ -113,6 +114,12 @@ class AuthServiceTest {
             // then
             verify(accountRepository).save(any(Account.class));
             verify(userClient).create(any(UsersServiceUser.class), eq("test-it-secret"));
+
+            ArgumentCaptor<MailRequest> mailCaptor = ArgumentCaptor.forClass(MailRequest.class);
+            verify(notificationClient).sendWelcomeEmail(mailCaptor.capture());
+            assertEquals(validUser.getUsername(), mailCaptor.getValue().getUsername());
+            assertEquals(validUser.getEmail(), mailCaptor.getValue().getEmailTo());
+            assertEquals("dummy-token", mailCaptor.getValue().getMessage());
         }
 
         @Test

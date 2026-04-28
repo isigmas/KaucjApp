@@ -87,6 +87,7 @@ public class AuthService {
         activationTokenRepository.save(activationToken);
 
         MailRequest mailRequest = MailRequest.builder()
+                .username(newUser.getUsername())
                 .emailTo(newUser.getEmail())
                 .message(token)
                 .build();
@@ -210,9 +211,10 @@ public class AuthService {
     }
 
     @Transactional
-    public void sendResetPasswordEmail(String email) {
-        Account account = accountRepository.findByEmail(email)
-                .orElseThrow(() -> new AccountNotFoundException(email));
+    public void sendResetPasswordEmail(MailRequest request) {
+        String emailTo = request.getEmailTo();
+        Account account = accountRepository.findByEmail(emailTo)
+                .orElseThrow(() -> new AccountNotFoundException(emailTo));
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new AccountNotActiveException(account.getStatus());
@@ -227,7 +229,8 @@ public class AuthService {
         passwordTokenRepository.save(passwordToken);
 
         MailRequest mailRequest = MailRequest.builder()
-                .emailTo(email)
+                .username(account.getUsername())
+                .emailTo(emailTo)
                 .message(token)
                 .build();
 
