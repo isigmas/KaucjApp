@@ -7,7 +7,7 @@ interface OfferSummaryCardProps {
   offer: Offer;
 }
 
-export default function OfferSummaryCard({ offer }: OfferSummaryCardProps) {
+export function OfferSummaryCard({ offer }: OfferSummaryCardProps) {
   return (
     <View style={styles.card}>
       <SummaryRow
@@ -42,7 +42,7 @@ interface SummaryRowProps {
   isBold?: boolean;
 }
 
-function SummaryRow({ label, value, isBold = false }: SummaryRowProps) {
+export function SummaryRow({ label, value, isBold = false }: SummaryRowProps) {
   return (
     <View style={styles.row}>
       <Text style={[styles.label, isBold && styles.labelBold]}>{label}</Text>

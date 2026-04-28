@@ -1,63 +1,34 @@
 import React from "react";
-import {
-  Pressable,
-  Text,
-  Alert,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { Pressable, Text, StyleSheet } from "react-native";
 import { colors, rounded, spacing } from "@/src/theme";
-import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
+import { useRouter } from "expo-router";
+import { Offer } from "@/src/types";
 
 interface ReserveButtonProps {
-  offerId: number;
-  onSuccessCallback?: () => void;
+  offer: Offer;
 }
 
-export default function ReserveButton({
-  offerId,
-  onSuccessCallback,
-}: ReserveButtonProps) {
-  const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
+export default function ReserveButton({ offer }: ReserveButtonProps) {
+  const router = useRouter();
 
   const handleReserve = () => {
-    if (isPending) return;
-
-    changeOfferStatus(
-      { offerId, newStatus: "RESERVED" },
-      {
-        onSuccess: () => {
-          Alert.alert("Sukces", "Oferta została pomyślnie zarezerwowana!");
-          if (onSuccessCallback) onSuccessCallback();
-        },
-        onError: (error) => {
-          const errorMessage =
-            error.response?.data?.message ||
-            "Nie udało się zarezerwować oferty.";
-          Alert.alert("Błąd", errorMessage);
-        },
-      },
-    );
+    router.push({
+      pathname: "/(app)/(tabs)/home/reserve-screen",
+      params: { offerData: JSON.stringify(offer) },
+    });
   };
 
   return (
     <Pressable
       onPress={handleReserve}
-      disabled={isPending}
       style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: pressed ? colors.primary.dark : colors.primary.base,
         },
-        isPending && styles.pending,
       ]}
     >
-      {isPending && (
-        <ActivityIndicator color={colors.text.white} size="small" />
-      )}
-      <Text style={styles.label}>
-        {isPending ? "Rezerwowanie..." : "Zarezerwuj ofertę"}
-      </Text>
+      <Text style={styles.label}>Zarezerwuj ofertę</Text>
     </Pressable>
   );
 }
