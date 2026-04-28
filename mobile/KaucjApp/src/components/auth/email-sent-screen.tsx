@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imageContainer: {
-    width: "80%",
+    width: "70%",
     alignItems: "center",
     marginBottom: spacing.xl,
   },

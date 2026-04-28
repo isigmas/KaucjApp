@@ -89,6 +89,25 @@ export const useAuth = () => {
     },
   });
 
+  const resetPassword = useMutation<void, AuthError, string>({
+    mutationFn: async (email) => {
+      try {
+        await apiClient.post("/auth/resetpassword", email, {
+          headers: { "Content-Type": "text/plain" },
+        });
+      } catch (error) {
+        throw parseAuthError(error);
+      }
+    },
+
+    onSuccess: (_, email) => {
+      router.push({
+        pathname: "/(auth)/email-sent",
+        params: { email: email, type: "resetPassword" },
+      });
+    },
+  });
+
   return {
     user,
     session: accessToken ? { accessToken } : null,
@@ -98,13 +117,16 @@ export const useAuth = () => {
     signIn: signIn.mutate,
     signUp: signUp.mutate,
     signOut: signOut.mutate,
+    resetPassword: resetPassword.mutate,
 
     isSigningIn: signIn.isPending,
     isSigningUp: signUp.isPending,
     isSigningOut: signOut.isPending,
+    isPasswordResetting: resetPassword.isPending,
 
     // AuthError | null
     signInError: signIn.error,
     signUpError: signUp.error,
+    resetPasswordError: resetPassword.error,
   };
 };

@@ -17,32 +17,23 @@ import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { AuthHeader } from "./auth-header";
 import { forgotPasswordSchema, ForgotPasswordValues } from "@/src/types";
+import { useAuth } from "@/src/auth/use-auth";
+import { ErrorBanner } from "./error-banner";
 
 export default function ForgotPasswordScreen() {
+  const { resetPassword, isPasswordResetting, resetPasswordError } = useAuth();
+
   const router = useRouter();
   const emailRef = useRef<TextInput>(null);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<ForgotPasswordValues>({
+  const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
   });
 
-  const onSubmit = (data: ForgotPasswordValues) => {
+  const onSubmit = ({ email }: ForgotPasswordValues) => {
     Keyboard.dismiss();
-    // TODO: Call backend
-
-    // After successful request, route to the confirmation screen
-    router.push({
-      pathname: "/(auth)/email-sent",
-      params: {
-        email: data.email,
-        type: "resetPassword",
-      },
-    });
+    resetPassword(email);
   };
 
   return (
@@ -53,6 +44,12 @@ export default function ForgotPasswordScreen() {
           subtitle="Podaj swój adres e-mail, a my wyślemy Ci link do zresetowania hasła."
           imageShown={false}
         />
+        {resetPasswordError && (
+          <ErrorBanner
+            message={resetPasswordError.userMessage}
+            isNetworkError={resetPasswordError.isNetworkError}
+          />
+        )}
 
         <AuthInput
           ref={emailRef}
@@ -70,7 +67,7 @@ export default function ForgotPasswordScreen() {
           <AuthButton
             label="Wyślij link"
             onPress={handleSubmit(onSubmit)}
-            isLoading={isSubmitting}
+            isLoading={isPasswordResetting}
           />
 
           <Pressable onPress={() => router.back()} style={styles.backButton}>
