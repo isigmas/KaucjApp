@@ -56,7 +56,7 @@ export default function ReserveButton({
         <ActivityIndicator color={colors.text.white} size="small" />
       )}
       <Text style={styles.label}>
-        {isPending ? "Rezerwowanie..." : "Zarezerwuj"}
+        {isPending ? "Rezerwowanie..." : "Zarezerwuj ofertę"}
       </Text>
     </Pressable>
   );

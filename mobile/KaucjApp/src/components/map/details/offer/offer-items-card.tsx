@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Offer } from "@/src/types";
 import { colors, spacing } from "@/src/theme";
 import SectionCard from "../section-card";
+import CardTitle from "../card-title";
 
 interface OfferItemsCardProps {
   offer: Offer;
@@ -11,6 +12,7 @@ interface OfferItemsCardProps {
 export default function OfferItemsCard({ offer }: OfferItemsCardProps) {
   return (
     <SectionCard>
+      <CardTitle>Opakowania kaucyjne</CardTitle>
       <ItemRow
         label="Butelki plastikowe"
         quantity={offer.plastic_quantity}
@@ -34,7 +36,7 @@ interface ItemRowProps {
 function ItemRow({ label, quantity, price }: ItemRowProps) {
   const total = price ? (price * quantity).toFixed(2) : "0";
   const priceLabel = price
-    ? `cena: ${price.toFixed(2)}zł`
+    ? `cena(szt): ${price.toFixed(2)}zł`
     : "Brak podanej ceny";
 
   return (
@@ -66,7 +68,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   secondaryText: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text.secondary,
     marginTop: 2,
   },
