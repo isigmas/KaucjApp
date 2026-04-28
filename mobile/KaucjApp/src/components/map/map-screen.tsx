@@ -1,17 +1,22 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
-import MapView from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 
 import { Offer, DepositMachine } from "@/src/types";
 import { OfferMarker } from "./markers/offer-marker";
 import { MachineMarker } from "./markers/machine-marker";
 import { useUserLocation } from "./use-user-location";
 import { SelectedMapItem } from "./map-container";
-import { useAllOffers } from "@/src/api/hooks/use-offer";
+import { useDebounce } from "./use-debounce";
+import { useAccumulatedMapData } from "./use-accumulate-map";
+import MapFetchIndicator from "./map-fetch-indicator";
 
-import { useAllMachines } from "@/src/api/hooks/use-machines";
+import { useSearchOffers } from "@/src/api/hooks/use-offer";
+import { useSearchMachines } from "@/src/api/hooks/use-machines";
+
 import ErrorState from "@/src/components/states/error-state";
 import LoadingState from "@/src/components/states/loading-state";
+import { getSnappedBBox } from "@/src/lib";
 
 interface MapScreenProps {
   selectedItem: SelectedMapItem | null;
@@ -24,49 +29,66 @@ export default function MapScreen({
   onOfferPress,
   onMachinePress,
 }: MapScreenProps) {
-  const {
-    data: offers,
-    isLoading: isOffersLoading,
-    isError: isOffersError,
-    error: OfrersError,
-    refetch: refetchOffers,
-    isRefetching: isRefetchingOffers,
-  } = useAllOffers();
-
-  const {
-    data: depositMachines,
-    isLoading: isMachinesLoading,
-    isError: isMachinesError,
-    error: machinesError,
-    refetch: refetchMachines,
-    isRefetching: isMachinesRefetching,
-  } = useAllMachines();
-
   const { initialRegion, isLocationLoading } = useUserLocation();
-
-  const isPending =
-    isLocationLoading ||
-    isOffersLoading ||
-    isRefetchingOffers ||
-    isMachinesLoading ||
-    isMachinesRefetching;
-
   const mapRef = useRef<MapView>(null);
 
-  // move the map when any item is selected to place it above  the bottom sheet
+  const [region, setRegion] = useState<Region | null>(null);
+
+  useEffect(() => {
+    if (initialRegion && !region) {
+      setRegion(initialRegion);
+    }
+  }, [initialRegion]);
+
+  const debouncedRegion = useDebounce(region, 600);
+
+  const searchBBox = useMemo(
+    () => (debouncedRegion ? getSnappedBBox(debouncedRegion) : null),
+    [debouncedRegion],
+  );
+
+  const isSearchEnabled = !!searchBBox;
+
+  const {
+    data: latestOffers,
+    isLoading: isOffersLoading,
+    isError: isOffersError,
+    isFetching: isOffersFetching,
+    error: offersError,
+    refetch: refetchOffers,
+  } = useSearchOffers(searchBBox!, isSearchEnabled);
+
+  const {
+    data: latestMachines,
+    isLoading: isMachinesLoading,
+    isError: isMachinesError,
+    isFetching: isMachinesFetching,
+    error: machinesError,
+    refetch: refetchMachines,
+  } = useSearchMachines(searchBBox!, isSearchEnabled);
+
+  const offers = useAccumulatedMapData(latestOffers, (o) => o.offer_id);
+  const depositMachines = useAccumulatedMapData(latestMachines, (m) => m.id);
+
+  const isFetching =
+    isOffersFetching ||
+    isMachinesFetching ||
+    isOffersLoading ||
+    isMachinesLoading;
+
+  // Move the map when an item is selected from the bottom sheet.
   useEffect(() => {
     if (selectedItem && mapRef.current) {
       const LATITUDE_DELTA = 0.01;
       const LONGITUDE_DELTA = 0.01;
 
-      // Extract coordinates from either Offer or DepositMachine
       const { latitude, longitude } = selectedItem.data;
       const offsetLatitude = latitude - LATITUDE_DELTA * 0.25;
 
       mapRef.current.animateToRegion(
         {
           latitude: offsetLatitude,
-          longitude: longitude,
+          longitude,
           latitudeDelta: LATITUDE_DELTA,
           longitudeDelta: LONGITUDE_DELTA,
         },
@@ -75,17 +97,18 @@ export default function MapScreen({
     }
   }, [selectedItem]);
 
-  if (isPending) {
-    const loadingTitle = isLocationLoading
-      ? "Ładowanie lokalizacji..."
-      : "Ładowanie danych...";
+  const handleRegionChangeComplete = (newRegion: Region) => {
+    setRegion(newRegion);
+  };
 
-    return <LoadingState title={loadingTitle} />;
+  if (isLocationLoading || !initialRegion) {
+    return <LoadingState title="Ładowanie lokalizacji..." />;
   }
+
   if (isOffersError) {
     const errorMessage =
-      OfrersError?.response?.data?.message ||
-      OfrersError?.message ||
+      offersError?.response?.data?.message ||
+      offersError?.message ||
       "An unexpected error occurred while loading offers.";
 
     return (
@@ -96,11 +119,12 @@ export default function MapScreen({
       />
     );
   }
+
   if (isMachinesError) {
     const errorMessage =
       machinesError?.response?.data?.message ||
       machinesError?.message ||
-      "An unexpected error occurred while loading machines.";
+      "An unexpected error occurred while loading kaucjomatów.";
 
     return (
       <ErrorState
@@ -111,34 +135,42 @@ export default function MapScreen({
     );
   }
 
+  console.log(` MAP STATE UPDATE:
+    - Accumulated Offers in Memory: ${offers.length}
+    - Accumulated Machines in Memory: ${depositMachines.length}
+    - Map is currently rendering: ${offers.length + depositMachines.length} total markers.
+    `);
+
   return (
     <View style={styles.container}>
-      {initialRegion && (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={initialRegion}
-          showsUserLocation
-          showsMyLocationButton
-          moveOnMarkerPress={false}
-        >
-          {offers?.map((offer) => (
-            <OfferMarker
-              key={`offer-${offer.offer_id}`}
-              offer={offer}
-              onPress={onOfferPress}
-            />
-          ))}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={initialRegion}
+        onRegionChangeComplete={handleRegionChangeComplete}
+        showsUserLocation
+        showsMyLocationButton
+        moveOnMarkerPress={false}
+        minZoomLevel={9}
+      >
+        {offers.map((offer) => (
+          <OfferMarker
+            key={`offer-${offer.offer_id}`}
+            offer={offer}
+            onPress={onOfferPress}
+          />
+        ))}
 
-          {depositMachines?.map((machine) => (
-            <MachineMarker
-              key={`machine-${machine.id}`}
-              machine={machine}
-              onPress={onMachinePress}
-            />
-          ))}
-        </MapView>
-      )}
+        {depositMachines.map((machine) => (
+          <MachineMarker
+            key={`machine-${machine.id}`}
+            machine={machine}
+            onPress={onMachinePress}
+          />
+        ))}
+      </MapView>
+
+      <MapFetchIndicator isFetching={isFetching} />
     </View>
   );
 }

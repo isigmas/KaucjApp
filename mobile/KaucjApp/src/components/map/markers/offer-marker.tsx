@@ -21,6 +21,7 @@ export const OfferMarker = React.memo(
 
     return (
       <Marker
+        identifier={`offer-${offer.offer_id}`}
         coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}
         onPress={() => onPress(offer)}
         tracksViewChanges={isTracking}
@@ -39,15 +40,11 @@ export const OfferMarker = React.memo(
       </Marker>
     );
   },
-  (prevProps, nextProps) => {
-    return (
-      prevProps.offer.status === nextProps.offer.status &&
-      prevProps.offer.latitude === nextProps.offer.latitude &&
-      prevProps.offer.longitude === nextProps.offer.longitude &&
-      prevProps.offer.total_quantity === nextProps.offer.total_quantity &&
-      prevProps.offer.total_prize === nextProps.offer.total_prize
-    );
-  },
+  (prevProps, nextProps) =>
+    prevProps.offer.offer_id === nextProps.offer.offer_id &&
+    prevProps.offer.status === nextProps.offer.status &&
+    prevProps.offer.total_quantity === nextProps.offer.total_quantity &&
+    prevProps.offer.total_prize === nextProps.offer.total_prize,
 );
 
 const styles = StyleSheet.create({

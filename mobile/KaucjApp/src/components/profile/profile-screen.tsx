@@ -176,7 +176,7 @@ export default function ProfileScreen() {
         />
         <ProfileMenuItem
           icon="list"
-          title="Moje oferty"
+          title="Moje ogłoszenia"
           subtitle="Aktywne i zakończone"
           delay={500}
           onPress={() => router.push("/profile/offers")}

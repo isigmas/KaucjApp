@@ -27,7 +27,7 @@ const DetailsSheet = forwardRef<BottomSheet, DetailsSheetProps>(
       }
 
       if (selectedItem.type === "machine") {
-        return <MachineDetails machine={selectedItem.data} />;
+        return <MachineDetails machineId={selectedItem.id} />;
       }
     };
 

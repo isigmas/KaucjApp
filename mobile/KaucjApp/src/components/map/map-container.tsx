@@ -8,7 +8,7 @@ import DetailsSheet from "./details-sheet";
 
 export type SelectedMapItem =
   | { type: "offer"; data: Offer }
-  | { type: "machine"; data: DepositMachine };
+  | { type: "machine"; data: DepositMachine; id: number };
 
 export default function MapContainer() {
   const [selectedItem, setSelectedItem] = useState<SelectedMapItem | null>(
@@ -22,7 +22,7 @@ export default function MapContainer() {
   }, []);
 
   const handleMachinePress = useCallback((machine: DepositMachine) => {
-    setSelectedItem({ type: "machine", data: machine });
+    setSelectedItem({ type: "machine", data: machine, id: machine.id });
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 

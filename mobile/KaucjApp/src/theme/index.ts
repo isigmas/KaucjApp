@@ -16,6 +16,9 @@ export const colors = {
     card: "#FFFFFF", // Pure White (Cards, Bottom Sheets, Modals)
     subtle: "#F3F4F6", // Light Gray (Input backgrounds)
   },
+  black: {
+    default: "#0F172A", // premium slate (Primary text & Icons)
+  },
 
   text: {
     primary: "#111827", // Charcoal (High readability)

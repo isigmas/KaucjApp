@@ -51,8 +51,8 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response) {
-      console.error(
-        `[API Error] ${error.response.status} - ${originalRequest?.url}`,
+      console.warn(
+        `[API Error] ${error.response.status} - ${originalRequest?.url} - ${JSON.stringify(error.response.data, null, 2)}`,
       );
     } else {
       console.error(`[API Error] Client Setup Error - ${error.message}`);
