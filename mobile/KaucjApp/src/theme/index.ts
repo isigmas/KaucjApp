@@ -30,8 +30,8 @@ export const colors = {
 
   status: {
     success: "#5B8266", // Matches Primary Sage
-    error: "#C86A58", // Terracotta/Clay (Softer, less panic-inducing than pure red)
-    warning: "#D4A373", // Warm Sand (Low stock / Pending payment)
+    error: "#EF4444", // Soft Red (Cancelations/Alerts)
+    warning: "#F59E0B", // Amber (Low stock / Pending payment)
     border: "#DCE0DA", // Subtle Twig Gray (Hairline dividers)
   },
 } as const;

@@ -7,7 +7,7 @@ import StatusBadge from "./status-badge";
 import OfferItemsCard from "./offer-items-card";
 import PickupCard from "./pickup-card";
 import { OfferSummaryCard } from "./offer-summary-card";
-import ReserveButton from "./reserve-button";
+import ReserveOffer from "./reserve-offer";
 
 interface OfferDetailsProps {
   offer: Offer;
@@ -31,7 +31,7 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
 
       <OfferSummaryCard offer={offer} />
 
-      <ReserveButton offer={offer} />
+      <ReserveOffer />
     </View>
   );
 }
