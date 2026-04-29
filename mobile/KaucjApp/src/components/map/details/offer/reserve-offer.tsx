@@ -2,45 +2,22 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "@/src/theme";
 import CardTitle from "../card-title";
-import SwipeToReserve from "./booking/swipe-to-reserve";
-import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import SwipeToReserve from "./slider";
+import { useReserveOffer } from "@/src/api/hooks/use-offer";
 
 interface ReserveOfferProps {
   offerId: number;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default function ReserveOffer({ offerId }: ReserveOfferProps) {
-  const { mutateAsync, isPending, isError, reset } = useChangeOfferStatus();
-
-  // Wrapped in useCallback so SwipeToReserve's pan gesture handler receives
-  // a stable reference and does not recreate the Gesture object on each render.
-  const handleComplete = React.useCallback(async () => {
-    // Reset any previous error state before retrying.
-    reset();
-    await mutateAsync({ offerId, newStatus: "RESERVED" });
-  }, [mutateAsync, reset, offerId]);
+  const { mutateAsync, isPending, isError } = useReserveOffer(offerId);
 
   return (
     <View style={styles.container}>
       <CardTitle>Rezerwacja oferty</CardTitle>
 
-      <SwipeToReserve
-        onComplete={handleComplete}
-        // Keep the slider locked while the mutation is in flight, preventing
-        // double-submission if the sheet is still mounted after success.
-        disabled={isPending}
-      />
+      <SwipeToReserve onComplete={mutateAsync} disabled={isPending} />
 
-      {/* Error message is driven by React Query's isError — single source of
-          truth. It resets automatically when handleComplete calls reset(). */}
       {isError && (
         <Text style={styles.errorText}>
           Coś poszło nie tak, spróbuj ponownie
@@ -53,10 +30,6 @@ export default function ReserveOffer({ offerId }: ReserveOfferProps) {
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
   container: {
