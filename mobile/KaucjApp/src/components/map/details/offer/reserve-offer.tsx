@@ -7,10 +7,17 @@ import { useReserveOffer } from "@/src/api/hooks/use-offer";
 
 interface ReserveOfferProps {
   offerId: number;
+  totalIncome: number;
 }
 
-export default function ReserveOffer({ offerId }: ReserveOfferProps) {
-  const { mutateAsync, isPending, isError } = useReserveOffer(offerId);
+export default function ReserveOffer({
+  offerId,
+  totalIncome,
+}: ReserveOfferProps) {
+  const { mutateAsync, isPending, isError } = useReserveOffer(
+    offerId,
+    totalIncome.toString(),
+  );
 
   return (
     <View style={styles.container}>

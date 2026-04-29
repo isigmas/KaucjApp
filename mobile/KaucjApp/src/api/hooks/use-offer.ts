@@ -147,13 +147,16 @@ export const useChangeOfferStatus = () => {
 };
 
 // POST /offer/{id}/status/RESERVED - reserve an offer
-export const useReserveOffer = (offerId: number) => {
+export const useReserveOffer = (offerId: number, totalIncome: string) => {
   const queryClient = useQueryClient();
 
   return useMutation<void, AxiosError<ApiErrorResponse>>({
-    mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
+    mutationFn: () => apiClient.post(`/offer/${offerId}/status/CANCELED`),
     onSuccess: () => {
-      router.push({ pathname: "/(app)/success-screen", params: { offerId } });
+      router.push({
+        pathname: "/(app)/success-screen",
+        params: { totalIncome },
+      });
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
