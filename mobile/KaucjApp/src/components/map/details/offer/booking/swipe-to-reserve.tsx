@@ -1,38 +1,65 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   Animated,
   Platform,
   LayoutChangeEvent,
+  ActivityIndicator,
+  Text,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import * as Haptics from "expo-haptics";
 import { colors } from "@/src/theme";
 
+// TO KOMPONENT STWORZONY PRZEZ CLAUDE CODE XD ALE DZIAŁA KOZACKO
+
+export type SliderState = "idle" | "loading" | "success" | "error";
+
 interface SwipeToReserveProps {
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
   disabled?: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
 const THUMB_SIZE = 64;
-const RESET_DELAY_MS = 400;
+/** How long the success / error state is shown before resetting. */
+const FEEDBACK_DURATION_MS = 1000;
+/** Fraction of the track the thumb must reach to trigger completion. */
+const COMPLETION_THRESHOLD = 0.85;
+
+const THUMB_COLORS: Record<SliderState, string> = {
+  idle: colors.primary.base,
+  loading: colors.primary.base,
+  success: colors.status.success,
+  error: colors.status.error,
+};
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function SwipeToReserve({
   onComplete,
   disabled = false,
 }: SwipeToReserveProps) {
+  // useState so that thumb icon / color changes actually trigger a re-render.
+  const [sliderState, setSliderState] = useState<SliderState>("idle");
+
   const trackWidth = useRef(0);
   const maxTranslate = useRef(0);
 
-  // Shared values via plain Animated — keeps this compatible with
-  // projects that haven't enabled the new architecture / Reanimated.
+  // Animated values — kept as refs so gesture handlers can read them
+  // synchronously without closing over stale state.
   const translateX = useRef(new Animated.Value(0)).current;
   const fillWidth = useRef(new Animated.Value(THUMB_SIZE)).current;
-  const thumbScale = useRef(new Animated.Value(1)).current;
   const labelOpacity = useRef(new Animated.Value(1)).current;
+  const thumbColorAnim = useRef(new Animated.Value(0)).current; // 0 = primary, 1 = feedback
 
-  // Track the raw JS-side position so the pan gesture can read it.
+  // JS-side mirror of translateX for threshold checks inside gesture handlers.
   const currentX = useRef(0);
   useEffect(() => {
     const id = translateX.addListener(({ value }) => {
@@ -41,79 +68,134 @@ export default function SwipeToReserve({
     return () => translateX.removeListener(id);
   }, [translateX]);
 
-  const reset = useCallback(() => {
+  // Guard so onUpdate / onEnd are no-ops once the swipe is committed.
+  const isLocked = useRef(false);
+
+  // ------------------------------------------------------------------
+  // Animations
+  // ------------------------------------------------------------------
+
+  const animateToEnd = useCallback(() => {
     Animated.parallel([
-      Animated.spring(translateX, {
-        toValue: 0,
+      Animated.timing(translateX, {
+        toValue: maxTranslate.current,
+        duration: 120,
         useNativeDriver: true,
-        bounciness: 8,
       }),
       Animated.timing(fillWidth, {
-        toValue: THUMB_SIZE,
-        duration: 250,
+        toValue: trackWidth.current,
+        duration: 120,
         useNativeDriver: false,
       }),
-      Animated.timing(thumbScale, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(labelOpacity, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      currentX.current = 0;
-    });
-  }, [translateX, fillWidth, thumbScale, labelOpacity]);
+    ]).start();
+  }, [translateX, fillWidth]);
+
+  const animateReset = useCallback(
+    (onDone?: () => void) => {
+      Animated.parallel([
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+          bounciness: 8,
+        }),
+        Animated.timing(fillWidth, {
+          toValue: THUMB_SIZE,
+          duration: 300,
+          useNativeDriver: false,
+        }),
+        Animated.timing(labelOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        currentX.current = 0;
+        onDone?.();
+      });
+    },
+    [translateX, fillWidth, labelOpacity],
+  );
+
+  // ------------------------------------------------------------------
+  // Swipe completion handler
+  // ------------------------------------------------------------------
+
+  const handleSwipeComplete = useCallback(async () => {
+    isLocked.current = true;
+    animateToEnd();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSliderState("loading");
+
+    try {
+      await onComplete();
+
+      setSliderState("success");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      setTimeout(() => {
+        animateReset(() => {
+          setSliderState("idle");
+          isLocked.current = false;
+        });
+      }, FEEDBACK_DURATION_MS);
+    } catch {
+      // onComplete is responsible for surfacing the error to the UI above.
+      // The slider just resets cleanly after showing brief error feedback.
+      setSliderState("error");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+      setTimeout(() => {
+        animateReset(() => {
+          setSliderState("idle");
+          isLocked.current = false;
+        });
+      }, FEEDBACK_DURATION_MS);
+    }
+  }, [onComplete, animateToEnd, animateReset]);
+
+  // ------------------------------------------------------------------
+  // Layout
+  // ------------------------------------------------------------------
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     trackWidth.current = e.nativeEvent.layout.width;
     maxTranslate.current = trackWidth.current - THUMB_SIZE;
   }, []);
 
-  // Built on Gesture.Pan() — lives entirely inside the RNGH arena and can
-  // declare priority over the bottom-sheet's pan handler via activateAfterLongPress
-  // / simultaneousWithExternalGesture without any PanResponder conflicts.
+  // ------------------------------------------------------------------
+  // Gesture
+  // ------------------------------------------------------------------
+
+  const isDisabled = disabled || sliderState !== "idle";
+
   const pan = Gesture.Pan()
     .runOnJS(true)
-    .enabled(!disabled)
-    // Only activate on clear horizontal intent — this alone prevents the
-    // bottom sheet's vertical pan from racing with the thumb drag.
+    .enabled(!isDisabled)
+    // Only activates on clear horizontal intent — prevents the bottom sheet's
+    // vertical pan handler from racing with the thumb drag.
     .activeOffsetX([-6, 6])
     .failOffsetY([-8, 8])
     .onUpdate((e) => {
+      if (isLocked.current) return;
       const next = Math.max(0, Math.min(e.translationX, maxTranslate.current));
       translateX.setValue(next);
       fillWidth.setValue(THUMB_SIZE + next);
       labelOpacity.setValue(1 - next / (maxTranslate.current * 0.6));
     })
-    .onEnd((e) => {
-      const threshold = maxTranslate.current * 0.85;
-      if (currentX.current >= threshold) {
-        // Snap to end, fire callback, then reset.
-        Animated.parallel([
-          Animated.timing(translateX, {
-            toValue: maxTranslate.current,
-            duration: 120,
-            useNativeDriver: true,
-          }),
-          Animated.timing(fillWidth, {
-            toValue: trackWidth.current,
-            duration: 120,
-            useNativeDriver: false,
-          }),
-        ]).start(() => {
-          onComplete();
-          setTimeout(reset, RESET_DELAY_MS);
-        });
+    .onEnd(() => {
+      if (isLocked.current) return;
+      if (currentX.current >= maxTranslate.current * COMPLETION_THRESHOLD) {
+        handleSwipeComplete();
       } else {
-        reset();
+        Haptics.selectionAsync();
+        animateReset();
       }
     });
 
-  // Pulse animation for the arrow icon
+  // ------------------------------------------------------------------
+  // Idle arrow pulse
+  // ------------------------------------------------------------------
+
   const pulseAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -143,15 +225,23 @@ export default function SwipeToReserve({
     outputRange: [0.5, 1],
   });
 
+  // ------------------------------------------------------------------
+  // Render
+  // ------------------------------------------------------------------
+
+  const thumbBg = THUMB_COLORS[sliderState];
+
   return (
     <View
-      style={[styles.wrapper, disabled && styles.wrapperDisabled]}
+      style={[styles.wrapper, isDisabled && styles.wrapperDisabled]}
       onLayout={onLayout}
     >
       {/* Fill bar */}
-      <Animated.View style={[styles.fill, { width: fillWidth }]} />
+      <Animated.View
+        style={[styles.fill, { width: fillWidth, backgroundColor: thumbBg }]}
+      />
 
-      {/* Label */}
+      {/* Idle label — fades out as the thumb advances */}
       <Animated.Text style={[styles.label, { opacity: labelOpacity }]}>
         Przesuń, aby zarezerwować
       </Animated.Text>
@@ -161,27 +251,59 @@ export default function SwipeToReserve({
         <Animated.View
           style={[
             styles.thumb,
-            {
-              transform: [{ translateX }, { scale: thumbScale }],
-            },
+            { backgroundColor: thumbBg, transform: [{ translateX }] },
           ]}
         >
-          <Animated.Text
-            style={[
-              styles.arrow,
-              {
-                opacity: arrowOpacity,
-                transform: [{ translateX: arrowTranslateX }],
-              },
-            ]}
-          >
-            »
-          </Animated.Text>
+          <ThumbContent
+            state={sliderState}
+            arrowOpacity={arrowOpacity}
+            arrowTranslateX={arrowTranslateX}
+          />
         </Animated.View>
       </GestureDetector>
     </View>
   );
 }
+
+// ---------------------------------------------------------------------------
+// ThumbContent — isolated so the parent never re-renders just for icon changes
+// ---------------------------------------------------------------------------
+
+interface ThumbContentProps {
+  state: SliderState;
+  arrowOpacity: Animated.AnimatedInterpolation<number>;
+  arrowTranslateX: Animated.AnimatedInterpolation<number>;
+}
+
+function ThumbContent({
+  state,
+  arrowOpacity,
+  arrowTranslateX,
+}: ThumbContentProps) {
+  if (state === "loading") {
+    return <ActivityIndicator color="#fff" size="small" />;
+  }
+  if (state === "success") {
+    return <Text style={styles.thumbIcon}>✓</Text>;
+  }
+  if (state === "error") {
+    return <Text style={styles.thumbIcon}>✕</Text>;
+  }
+  return (
+    <Animated.Text
+      style={[
+        styles.arrow,
+        { opacity: arrowOpacity, transform: [{ translateX: arrowTranslateX }] },
+      ]}
+    >
+      »
+    </Animated.Text>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -202,7 +324,7 @@ const styles = StyleSheet.create({
     }),
   },
   wrapperDisabled: {
-    opacity: 1,
+    opacity: 0.6,
     ...Platform.select({
       ios: { shadowOpacity: 0 },
       android: { elevation: 0 },
@@ -211,7 +333,6 @@ const styles = StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
     right: undefined,
-    backgroundColor: colors.primary.base,
     borderRadius: THUMB_SIZE / 2,
     opacity: 0.6,
   },
@@ -230,7 +351,6 @@ const styles = StyleSheet.create({
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
-    backgroundColor: colors.primary.base,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -240,5 +360,10 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 32,
     marginLeft: 2,
+  },
+  thumbIcon: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
   },
 });

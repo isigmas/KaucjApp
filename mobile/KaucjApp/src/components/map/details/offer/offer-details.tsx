@@ -31,7 +31,7 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
 
       <OfferSummaryCard offer={offer} />
 
-      <ReserveOffer />
+      <ReserveOffer offerId={offer.offer_id} />
     </View>
   );
 }
