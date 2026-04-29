@@ -13,13 +13,13 @@ export const getMachineStatusConfig = (status: DepositMachineStatus) => {
       };
     case "FULL":
       return {
-        color: "#FF9800",
+        color: colors.status.warning,
         shadow: "rgba(255, 152, 0, 0.4)",
         label: "Przepełniony",
       };
     case "OUT_OF_ORDER":
       return {
-        color: "#F44336",
+        color: colors.status.error,
         shadow: "rgba(244, 67, 54, 0.4)",
         label: "Awaria",
       };
