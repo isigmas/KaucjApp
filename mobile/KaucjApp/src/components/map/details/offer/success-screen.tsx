@@ -23,14 +23,10 @@ export default function EmailSentScreen() {
         <View style={styles.textContainer}>
           <Text style={styles.title}>Zarezerwowano!</Text>
 
+          {/* Karta z zyskiem - ulepszony wygląd */}
           <View style={styles.earningsCard}>
             <Text style={styles.earningsLabel}>Twój potencjalny zysk</Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
+            <View style={styles.amountWrapper}>
               <AnimatedRollingNumber
                 value={totalIncome}
                 toFixed={2}
@@ -41,33 +37,26 @@ export default function EmailSentScreen() {
                   easing: Easing.bounce,
                 }}
               />
-              <Text style={styles.totalAmount}>zł</Text>
+              <Text style={styles.totalAmountCurrency}> zł</Text>
             </View>
           </View>
 
-          <Text style={styles.description}>
-            {"Skontaktuj się z właścicielem,\naby ustalić szczegóły odbioru."}
-          </Text>
-          <Text
-            style={[
-              styles.description,
-              { marginTop: spacing.sm, fontSize: 16, fontWeight: "300" },
-            ]}
-          >
-            Jeśli tego nie zrobisz, rezerwacja zostanie anulowana po 2
-            godzinach.
-          </Text>
+          <View style={styles.warningContainer}>
+            <Text style={styles.warningText}>
+              {`Jeśli nie skontaktujesz się z właścicielem, rezerwacja zostanie anulowana 
+po 2 godzinach.`}
+            </Text>
+          </View>
         </View>
       </View>
 
+      {/* Przycisk na samym dole */}
       <View style={styles.footer}>
         <Pressable
           onPress={() => router.push("/(app)/(tabs)/profile/bookings")}
           style={styles.button}
         >
-          <View style={styles.textStack}>
-            <Text style={styles.buttonText}>Moje rezerwacje</Text>
-          </View>
+          <Text style={styles.buttonText}>Moje rezerwacje</Text>
         </Pressable>
       </View>
     </View>
@@ -85,15 +74,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   imageContainer: {
-    width: "70%",
+    width: "100%",
     alignItems: "center",
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   lottie: {
-    width: "80%",
+    width: "60%",
     aspectRatio: 1,
   },
   textContainer: {
+    width: "100%",
     paddingHorizontal: spacing.lg,
     alignItems: "center",
   },
@@ -101,52 +91,73 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "900",
     color: colors.text.primary,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
     textAlign: "center",
     letterSpacing: -0.5,
-    lineHeight: 38,
+  },
+  description: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: "center",
+    lineHeight: 24,
+    fontWeight: "400",
+    marginBottom: spacing.md,
   },
 
+  /* --- Karta Zysków --- */
   earningsCard: {
     width: "100%",
-    backgroundColor: colors.primary.light,
+    backgroundColor: colors.background.card,
     borderRadius: rounded.apple,
-    padding: spacing.md,
+    padding: spacing.lg,
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.accent.light,
+    shadowColor: colors.black.default,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   earningsLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#3B6D11",
+    color: colors.accent.dark,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     marginBottom: spacing.xs,
   },
-  earningsAmount: {
-    fontSize: 40,
-    fontWeight: "700",
-    color: "#27500A",
-    lineHeight: 48,
-  },
-  earningsCaption: {
-    fontSize: 13,
-    color: "#3B6D11",
-    marginTop: 4,
+  amountWrapper: {
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   totalAmount: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "800",
     color: colors.primary.dark,
   },
-
-  description: {
-    fontSize: 18,
-    color: colors.text.secondary,
-    textAlign: "center",
-    lineHeight: 23,
-    fontWeight: "400",
+  totalAmountCurrency: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.primary.dark,
   },
+
+  warningContainer: {
+    backgroundColor: `${colors.status.warning}15`,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: rounded.apple,
+    width: "100%",
+  },
+  warningText: {
+    fontSize: 14,
+    color: colors.status.warning,
+    textAlign: "center",
+    lineHeight: 20,
+    fontWeight: "600",
+  },
+
   footer: {
     paddingHorizontal: 32,
     paddingBottom: 50,
@@ -156,17 +167,12 @@ const styles = StyleSheet.create({
     borderRadius: rounded.apple,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
     backgroundColor: colors.primary.base,
-  },
-  textStack: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
+    shadowColor: colors.primary.dark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   buttonText: {
     color: colors.text.white,
