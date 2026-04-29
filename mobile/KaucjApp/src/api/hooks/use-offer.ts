@@ -13,6 +13,7 @@ import {
   OfferSearchBBox,
   ApiErrorResponse,
 } from "@/src/types";
+import { router } from "expo-router";
 
 export const offerKeys = {
   all: () => ["offers"] as const,
@@ -151,7 +152,9 @@ export const useReserveOffer = (offerId: number) => {
 
   return useMutation<void, AxiosError<ApiErrorResponse>>({
     mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() }),
+    onSuccess: () => {
+      router.push({ pathname: "/(app)/success-screen", params: { offerId } });
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
   });
 };
