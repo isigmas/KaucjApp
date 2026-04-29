@@ -151,7 +151,7 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
   const queryClient = useQueryClient();
 
   return useMutation<void, AxiosError<ApiErrorResponse>>({
-    mutationFn: () => apiClient.post(`/offer/${offerId}/status/CANCELED`),
+    mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
     onSuccess: () => {
       router.push({
         pathname: "/(app)/success-screen",
