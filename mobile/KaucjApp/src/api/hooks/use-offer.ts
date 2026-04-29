@@ -144,3 +144,14 @@ export const useChangeOfferStatus = () => {
     },
   });
 };
+
+// POST /offer/{id}/status/RESERVED - reserve an offer
+export const useReserveOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>>({
+    mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() }),
+  });
+};
