@@ -7,7 +7,7 @@ export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   switch (status) {
     case "AVAILABLE":
       return {
-        color: "#2d8d33",
+        color: colors.primary.base,
         shadow: "rgba(33, 150, 243, 0.4)",
         label: "Dostępny",
       };
