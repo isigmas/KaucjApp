@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
+import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.service.AuthService;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 
@@ -72,8 +73,8 @@ public class AuthController {
     }
 
     @PostMapping("/resetpassword")
-    public ResponseEntity<Void> sendResetPasswordEmail(@RequestBody String email) {
-        service.sendResetPasswordEmail(email);
+    public ResponseEntity<Void> sendResetPasswordEmail(@RequestBody MailRequest request) {
+        service.sendResetPasswordEmail(request);
 
         return ResponseEntity.ok().build();
     }
