@@ -153,7 +153,6 @@ services:
       args:
         SERVICE_NAME: notification-service
     environment:
-      - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - BASE_URL=http://localhost:8080
     healthcheck:
