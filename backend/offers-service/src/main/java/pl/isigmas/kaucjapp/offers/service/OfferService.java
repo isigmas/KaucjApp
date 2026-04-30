@@ -189,6 +189,8 @@ public class OfferService {
                 .pickupAddress(offer.getPickupAddress())
                 .pickupInstructions(offer.getPickupInstructions())
                 .createdAt(offer.getTimeCreated())
+                .reservedAt(offer.getReservedAt())
+                .reservedTo(offer.getReservedTo())
                 .plasticQuantity(plasticQty)
                 .canQuantity(canQty)
                 .totalQuantity(totalQty)
@@ -229,6 +231,7 @@ public class OfferService {
             }
             offer.setCollectorId(userId);
             offer.setReservedAt(LocalDateTime.now());
+            offer.setReservedTo(LocalDateTime.now().plusHours(2));
         }
 
         if (targetStatus == OfferStatus.OPEN) {
@@ -239,6 +242,7 @@ public class OfferService {
             }
             offer.setCollectorId(null);
             offer.setReservedAt(null);
+            offer.setReservedTo(null);
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {

@@ -30,7 +30,7 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     );
 
     @Modifying
-    @Query("UPDATE Offer o SET o.status = :openStatus, o.collectorId = null, o.reservedAt = null " +
+    @Query("UPDATE Offer o SET o.status = :openStatus, o.collectorId = null, o.reservedAt = null, o.reservedTo = null " +
             "WHERE o.status = :reservedStatus AND o.reservedAt < :expirationTime")
     int releaseExpiredReservations(
             @Param("openStatus") OfferStatus openStatus,

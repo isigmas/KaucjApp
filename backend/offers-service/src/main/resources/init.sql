@@ -19,6 +19,7 @@ CREATE TABLE offers (
                         pickup_instructions TEXT,
                         created_at      TIMESTAMP DEFAULT NOW(),
                         reserved_at      TIMESTAMP DEFAULT NULL,
+                        reserved_to      TIMESTAMP DEFAULT NULL,
                         updated_at      TIMESTAMP DEFAULT NOW(),
                         completed_at    TIMESTAMP
 );

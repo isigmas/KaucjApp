@@ -20,7 +20,7 @@ public class ReservationCleanupService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void cleanupExpiredReservations() {
-        LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(120);
 
         int updatedCount = offerRepository.releaseExpiredReservations(
                 OfferStatus.OPEN,
