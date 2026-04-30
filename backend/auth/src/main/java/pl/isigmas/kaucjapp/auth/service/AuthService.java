@@ -211,9 +211,9 @@ public class AuthService {
     }
 
     @Transactional
-    public void sendResetPasswordEmail(MailRequest request) {
-        String emailTo = request.getEmailTo();
-        Account account = accountRepository.findByEmail(emailTo)
+    public void sendResetPasswordEmail(String email) {
+        String emailTo = email == null ? null : email.trim();
+        Account account = accountRepository.findByEmailIgnoreCase(emailTo)
                 .orElseThrow(() -> new AccountNotFoundException(emailTo));
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
@@ -242,7 +242,7 @@ public class AuthService {
         PasswordToken passwordToken = passwordTokenRepository.findByToken(encoder.hashToken(token))
                 .orElseThrow(TokenNotFoundException::new);
 
-        if(!newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}$")){
+        if (newPassword == null || !newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}$")) {
             throw new PasswordNotMatchesRegexException("Password must be minimum 6 characters long contain at least: one small letter, one big letter, one number and one special sign");
         }
 
