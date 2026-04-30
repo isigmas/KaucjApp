@@ -1,11 +1,11 @@
 import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
-import { formatDate } from "@/src/lib";
+import { formatDate, getOfferStatusConfig } from "@/src/lib";
 import { colors, rounded, spacing } from "@/src/theme";
-import { Offer } from "@/src/types";
+import { Offer, OfferStatus } from "@/src/types";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 
 export default function ReservedOfferCard({ offer }: { offer: Offer }) {
-  const formattedDate = formatDate(offer.created_at);
+  const formattedDate = formatDate(offer.reserved_to!);
   const formattedPrice = `${offer.total_prize.toFixed(2)} PLN`;
   const formattedQuantity = `${offer.total_quantity} szt.`;
 
@@ -41,10 +41,11 @@ export default function ReservedOfferCard({ offer }: { offer: Offer }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: OfferStatus }) {
+  const { color, label } = getOfferStatusConfig(status);
   return (
-    <View style={styles.statusBadge}>
-      <Text style={styles.statusBadgeText}>{status}</Text>
+    <View style={[styles.statusBadge, { backgroundColor: color }]}>
+      <Text style={styles.statusBadgeText}>{label}</Text>
     </View>
   );
 }
@@ -66,11 +67,10 @@ function StatBox({
   );
 }
 
-function CardHeader({ status, date }: { status: string; date: string }) {
+function CardHeader({ status, date }: { status: OfferStatus; date: string }) {
   return (
     <View style={styles.cardHeader}>
-      <StatusBadge status={status} />
-      <Text style={styles.dateText}>{date}</Text>
+      <Text style={styles.dateText}>rezerwacja aktywna do: {date}</Text>
     </View>
   );
 }
@@ -143,13 +143,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   statusBadge: {
-    backgroundColor: colors.primary.light,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: rounded.pill,
   },
   statusBadgeText: {
-    color: colors.primary.dark,
+    color: colors.text.white,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
