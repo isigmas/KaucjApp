@@ -44,7 +44,6 @@ export const useSearchMachines = (
         "/deposit/search",
         { params: box },
       );
-      console.log(JSON.stringify(data, null, 2));
       return data;
     },
     enabled,

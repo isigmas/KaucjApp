@@ -7,7 +7,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 5000,
+  timeout: 10000,
 });
 
 // Injecting the Access Token
@@ -43,9 +43,6 @@ const processQueue = (error: any, token: string | null = null) => {
 apiClient.interceptors.response.use(
   (response) => response, // 200 OK
   async (error: AxiosError) => {
-    console.debug(
-      `[API Error Response body]: ${JSON.stringify(error.response?.data, null, 2)}`,
-    );
     const originalRequest = error.config as any;
 
     if (error.code === "ECONNABORTED" || error.message === "Network Error") {

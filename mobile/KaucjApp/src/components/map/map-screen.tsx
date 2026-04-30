@@ -135,12 +135,6 @@ export default function MapScreen({
     );
   }
 
-  console.log(` MAP STATE UPDATE:
-    - Accumulated Offers in Memory: ${offers.length}
-    - Accumulated Machines in Memory: ${depositMachines.length}
-    - Map is currently rendering: ${offers.length + depositMachines.length} total markers.
-    `);
-
   return (
     <View style={styles.container}>
       <MapView
