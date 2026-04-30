@@ -52,6 +52,9 @@ public class Offer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "reserved_at")
+    private LocalDateTime reservedAt;
+
     @Column(name = "completed_at")
     private LocalDateTime timeCompleted;
 

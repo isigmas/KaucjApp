@@ -228,6 +228,7 @@ public class OfferService {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
             offer.setCollectorId(userId);
+            offer.setReservedAt(LocalDateTime.now());
         }
 
         if (targetStatus == OfferStatus.OPEN) {
@@ -237,6 +238,7 @@ public class OfferService {
                 throw new OfferForbiddenException("Only current collector can unreserve the offer");
             }
             offer.setCollectorId(null);
+            offer.setReservedAt(null);
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {

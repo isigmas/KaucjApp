@@ -1,12 +1,14 @@
 package pl.isigmas.kaucjapp.offers.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.offers.model.Offer;
 import pl.isigmas.kaucjapp.offers.model.OfferStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -25,5 +27,14 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
             @Param("swLon") double swLon,
             @Param("neLat") double neLat,
             @Param("neLon") double neLon
+    );
+
+    @Modifying
+    @Query("UPDATE Offer o SET o.status = :openStatus, o.collectorId = null, o.reservedAt = null " +
+            "WHERE o.status = :reservedStatus AND o.reservedAt < :expirationTime")
+    int releaseExpiredReservations(
+            @Param("openStatus") OfferStatus openStatus,
+            @Param("reservedStatus") OfferStatus reservedStatus,
+            @Param("expirationTime") LocalDateTime expirationTime
     );
 }

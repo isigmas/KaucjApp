@@ -18,6 +18,7 @@ CREATE TABLE offers (
                         longitude       NUMERIC(9,6),
                         pickup_instructions TEXT,
                         created_at      TIMESTAMP DEFAULT NOW(),
+                        reserved_at      TIMESTAMP DEFAULT NULL,
                         updated_at      TIMESTAMP DEFAULT NOW(),
                         completed_at    TIMESTAMP
 );

@@ -18,6 +18,9 @@ public class MailService {
     @Value("${app.base-url}")
     private String baseUrl;
 
+    @Value("${app.mail.from}")
+    private String mailFrom;
+
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
 
@@ -34,6 +37,7 @@ public class MailService {
 
             String htmlContent = templateEngine.process(templateType.getTemplateName(), context);
 
+            helper.setFrom(mailFrom);
             helper.setTo(email);
             helper.setSubject(subject);
 
