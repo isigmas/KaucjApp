@@ -9,15 +9,6 @@ export default function HomeLayout() {
           name="index"
           options={{ headerShown: false, headerLargeTitleEnabled: false }}
         />
-        <Stack.Screen
-          name="reserve-screen"
-          options={{
-            headerTitle: "",
-            headerLargeTitleEnabled: false,
-            headerTransparent: true,
-            headerBackButtonDisplayMode: "minimal",
-          }}
-        />
       </Stack>
     </GestureHandlerRootView>
   );
