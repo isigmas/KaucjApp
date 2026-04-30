@@ -20,6 +20,7 @@ import pl.isigmas.kaucjapp.auth.exception.AccountNotActiveException;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotFoundException;
 import pl.isigmas.kaucjapp.auth.exception.ExpiredTokenException;
 import pl.isigmas.kaucjapp.auth.exception.InvalidCredentialsException;
+import pl.isigmas.kaucjapp.auth.exception.PasswordNotMatchesRegexException;
 import pl.isigmas.kaucjapp.auth.exception.TokenNotFoundException;
 import pl.isigmas.kaucjapp.auth.exception.UsedTokenException;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
@@ -540,6 +541,41 @@ class AuthServiceTest {
     }
 
     @Nested
+    @DisplayName("sendResetPasswordEmail() - Password reset email tests")
+    class SendResetPasswordEmailTests {
+
+        @Test
+        @DisplayName("Should trim email and use case-insensitive lookup")
+        void shouldNormalizeEmailBeforeLookup() {
+            Account account = new Account();
+            account.setUsername("resetuser");
+            account.setEmail("existing@example.com");
+            account.setStatus(AccountStatus.ACTIVE);
+
+            when(accountRepository.findByEmailIgnoreCase("existing@example.com")).thenReturn(Optional.of(account));
+            when(tokenService.generateBase64()).thenReturn("rawToken");
+            when(encoder.hashToken("rawToken")).thenReturn("hashedToken");
+
+            authService.sendResetPasswordEmail(" existing@example.com ");
+
+            verify(accountRepository).findByEmailIgnoreCase("existing@example.com");
+            verify(passwordTokenRepository).save(argThat(t ->
+                    t.getAccount() == account
+                            && "hashedToken".equals(t.getToken())
+                            && !t.isUsed()
+                            && t.getExpirationDate() != null
+                            && t.getExpirationDate().isAfter(Instant.now())
+            ));
+
+            ArgumentCaptor<MailRequest> mailCaptor = ArgumentCaptor.forClass(MailRequest.class);
+            verify(notificationClient).sendResetPasswordEmail(mailCaptor.capture());
+            assertEquals("resetuser", mailCaptor.getValue().getUsername());
+            assertEquals("existing@example.com", mailCaptor.getValue().getEmailTo());
+            assertEquals("rawToken", mailCaptor.getValue().getMessage());
+        }
+    }
+
+    @Nested
     @DisplayName("suspend() - Account Suspension Tests")
     class SuspendTests {
 
@@ -737,6 +773,17 @@ class AuthServiceTest {
             when(passwordTokenRepository.findByToken("hashedTokenValue")).thenReturn(Optional.of(passwordToken));
 
             assertThrows(ExpiredTokenException.class, () -> authService.resetPassword(rawToken, "newPassword123!"));
+        }
+
+        @Test
+        @DisplayName("Should throw PasswordNotMatchesRegexException when new password is null")
+        void shouldThrowWhenNewPasswordIsNull() {
+            String rawToken = "rawTokenValue";
+
+            when(encoder.hashToken(rawToken)).thenReturn("hashedTokenValue");
+            when(passwordTokenRepository.findByToken("hashedTokenValue")).thenReturn(Optional.of(passwordToken));
+
+            assertThrows(PasswordNotMatchesRegexException.class, () -> authService.resetPassword(rawToken, null));
         }
         }
     }
