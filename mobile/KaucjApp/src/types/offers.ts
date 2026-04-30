@@ -10,6 +10,8 @@ export interface Offer {
   pickup_address: string;
   pickup_instructions: string | null;
   created_at: string;
+  reserved_at: string | null;
+  reserved_to: string | null;
   plastic_quantity: number;
   can_quantity: number;
   total_quantity: number;
