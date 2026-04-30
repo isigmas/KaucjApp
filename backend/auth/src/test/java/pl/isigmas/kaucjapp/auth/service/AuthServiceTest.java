@@ -568,7 +568,7 @@ class AuthServiceTest {
             ));
 
             ArgumentCaptor<MailRequest> mailCaptor = ArgumentCaptor.forClass(MailRequest.class);
-            verify(notificationClient).sendResetPasswordEmail(mailCaptor.capture());
+            verify(authKafkaPublisher).sendResetPasswordEmail(mailCaptor.capture());
             assertEquals("resetuser", mailCaptor.getValue().getUsername());
             assertEquals("existing@example.com", mailCaptor.getValue().getEmailTo());
             assertEquals("rawToken", mailCaptor.getValue().getMessage());
