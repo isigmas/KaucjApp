@@ -1,19 +1,22 @@
 package pl.isigmas.kaucjapp.auth.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
-import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
+import pl.isigmas.kaucjapp.auth.dto.request.ResetPasswordEmailRequest;
 import pl.isigmas.kaucjapp.auth.service.AuthService;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@Validated
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -73,8 +76,10 @@ public class AuthController {
     }
 
     @PostMapping("/resetpassword")
-    public ResponseEntity<Void> sendResetPasswordEmail(@RequestBody MailRequest request) {
-        service.sendResetPasswordEmail(request);
+    public ResponseEntity<Void> sendResetPasswordEmail(
+            @Valid @RequestBody ResetPasswordEmailRequest request
+    ) {
+        service.sendResetPasswordEmail(request.getEmailTo());
 
         return ResponseEntity.ok().build();
     }
@@ -82,7 +87,7 @@ public class AuthController {
     @PostMapping("/resetpassword/{token}")
     public ResponseEntity<Void> resetPassword(
             @PathVariable String token,
-            @RequestBody String newPassword
+            @RequestBody @NotBlank(message = "New password cannot be empty") String newPassword
     ) {
         service.resetPassword(token, newPassword);
 

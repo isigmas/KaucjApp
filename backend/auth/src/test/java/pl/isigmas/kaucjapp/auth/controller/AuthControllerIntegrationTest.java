@@ -84,6 +84,7 @@ class AuthControllerIntegrationTest {
 
         Mockito.reset(notificationClient);
         when(notificationClient.sendWelcomeEmail(any())).thenReturn(ResponseEntity.ok().build());
+        when(notificationClient.sendResetPasswordEmail(any())).thenReturn(ResponseEntity.ok().build());
     }
 
     @Nested
@@ -620,6 +621,62 @@ class AuthControllerIntegrationTest {
                     .andExpect(status().isUnauthorized());
         }
     @Nested
+    @DisplayName("POST /api/auth/resetpassword")
+    class SendResetPasswordEmailEndpointTests {
+
+        private Account createActiveAccount(String email) {
+            Account account = new Account();
+            account.setUsername("resetuser");
+            account.setEmail(email);
+            account.setPasswordHash(encoder.hashPassword("oldPassword123!"));
+            account.setStatus(AccountStatus.ACTIVE);
+            return accountRepository.save(account);
+        }
+
+        @Test
+        @DisplayName("Should accept email-only body and create token")
+        void shouldSendResetPasswordEmail() throws Exception {
+            createActiveAccount("existing@example.com");
+
+            mockMvc.perform(post("/api/auth/resetpassword")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"emailTo\":\"existing@example.com\"}"))
+                    .andExpect(status().isOk());
+
+            assertEquals(1, passwordTokenRepository.count(), "Expected password reset token to be created");
+        }
+
+        @Test
+        @DisplayName("Should reject blank email")
+        void shouldRejectBlankEmail() throws Exception {
+            mockMvc.perform(post("/api/auth/resetpassword")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"emailTo\":\"\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should reject invalid email format")
+        void shouldRejectInvalidEmail() throws Exception {
+            mockMvc.perform(post("/api/auth/resetpassword")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"emailTo\":\"not-an-email\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should find account by email ignoring case")
+        void shouldFindByEmailIgnoreCase() throws Exception {
+            createActiveAccount("existing@example.com");
+
+            mockMvc.perform(post("/api/auth/resetpassword")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"emailTo\":\"EXISTING@EXAMPLE.COM\"}"))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Nested
     @DisplayName("POST /api/auth/resetpassword/{token}")
     class ResetPasswordEndpointTests {
 
@@ -686,6 +743,15 @@ class AuthControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("newPassword123!"))
                     .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should reject blank new password")
+        void shouldRejectBlankNewPassword() throws Exception {
+            mockMvc.perform(post("/api/auth/resetpassword/{token}", "anyToken")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(""))
+                    .andExpect(status().isBadRequest());
         }
         }
     }
