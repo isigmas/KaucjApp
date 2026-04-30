@@ -43,6 +43,9 @@ const processQueue = (error: any, token: string | null = null) => {
 apiClient.interceptors.response.use(
   (response) => response, // 200 OK
   async (error: AxiosError) => {
+    console.debug(
+      `[API Error Response body]: ${JSON.stringify(error.response?.data, null, 2)}`,
+    );
     const originalRequest = error.config as any;
 
     if (error.code === "ECONNABORTED" || error.message === "Network Error") {
