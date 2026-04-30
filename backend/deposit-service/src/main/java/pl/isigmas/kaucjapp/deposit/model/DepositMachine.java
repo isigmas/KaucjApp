@@ -46,6 +46,7 @@ public class DepositMachine {
     private LocalDateTime timeCreated;
 
     @OneToMany(mappedBy = "depositMachine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("dayOfWeek ASC")
     private java.util.List<OpeningHourRecord> openingHours = new java.util.ArrayList<>();
 
     public List<OpeningHourRecord> getItems() {

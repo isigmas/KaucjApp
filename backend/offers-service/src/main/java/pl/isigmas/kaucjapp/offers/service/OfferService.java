@@ -189,6 +189,8 @@ public class OfferService {
                 .pickupAddress(offer.getPickupAddress())
                 .pickupInstructions(offer.getPickupInstructions())
                 .createdAt(offer.getTimeCreated())
+                .reservedAt(offer.getReservedAt())
+                .reservedTo(offer.getReservedTo())
                 .plasticQuantity(plasticQty)
                 .canQuantity(canQty)
                 .totalQuantity(totalQty)
@@ -228,6 +230,8 @@ public class OfferService {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
             offer.setCollectorId(userId);
+            offer.setReservedAt(LocalDateTime.now());
+            offer.setReservedTo(LocalDateTime.now().plusHours(2));
         }
 
         if (targetStatus == OfferStatus.OPEN) {
@@ -237,6 +241,8 @@ public class OfferService {
                 throw new OfferForbiddenException("Only current collector can unreserve the offer");
             }
             offer.setCollectorId(null);
+            offer.setReservedAt(null);
+            offer.setReservedTo(null);
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {

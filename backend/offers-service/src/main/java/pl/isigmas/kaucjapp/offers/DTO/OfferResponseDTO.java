@@ -33,6 +33,12 @@ public class OfferResponseDTO {
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
+    @JsonProperty("reserved_at")
+    private LocalDateTime reservedAt;
+
+    @JsonProperty("reserved_to")
+    private LocalDateTime reservedTo;
+
     @JsonProperty("plastic_quantity")
     private int plasticQuantity;
 
