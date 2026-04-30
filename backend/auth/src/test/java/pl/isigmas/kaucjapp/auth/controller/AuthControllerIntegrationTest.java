@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import pl.isigmas.kaucjapp.auth.TestcontainersConfiguration;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
+import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.entity.Account;
@@ -70,7 +71,7 @@ class AuthControllerIntegrationTest {
     private UserClient userClient;
 
     @MockitoBean
-    private pl.isigmas.kaucjapp.auth.client.NotificationClient notificationClient;
+    private AuthKafkaPublisher authKafkaPublisher;
 
     @BeforeEach
     void setUp() {
@@ -82,9 +83,7 @@ class AuthControllerIntegrationTest {
         Mockito.reset(userClient);
         when(userClient.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
 
-        Mockito.reset(notificationClient);
-        when(notificationClient.sendWelcomeEmail(any())).thenReturn(ResponseEntity.ok().build());
-        when(notificationClient.sendResetPasswordEmail(any())).thenReturn(ResponseEntity.ok().build());
+        Mockito.reset(authKafkaPublisher);
     }
 
     @Nested
