@@ -13,12 +13,19 @@ export const apiClient = axios.create({
 // Injecting the Access Token
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+  console.log(
+    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
+  );
+
+  if (config.data) {
+    console.log(
+      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
+    );
+  }
 
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.debug(`[Auth] Injected Access Token into request header.`);
-    console.debug(`[Auth] Current Access Token: ${token}`);
+    // console.debug(`[Auth] Current Access Token: ${token}`);
   } else {
     console.debug(`[Auth] No Access Token found in memory for this request.`);
   }
@@ -41,7 +48,12 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response Interceptor
 apiClient.interceptors.response.use(
-  (response) => response, // 200 OK
+  (response) => {
+    console.log(
+      `[API] ◄ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
+    );
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
