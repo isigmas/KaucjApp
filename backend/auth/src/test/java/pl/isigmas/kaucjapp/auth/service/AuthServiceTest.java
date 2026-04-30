@@ -28,7 +28,7 @@ import pl.isigmas.kaucjapp.auth.repository.PasswordTokenRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
 import pl.isigmas.kaucjapp.auth.entity.PasswordToken;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
-import pl.isigmas.kaucjapp.auth.client.NotificationClient;
+import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 
 import java.util.Date;
 import java.util.Optional;
@@ -67,7 +67,7 @@ class AuthServiceTest {
     private PasswordTokenRepository passwordTokenRepository;
 
     @Mock
-    private NotificationClient notificationClient;
+    private AuthKafkaPublisher authKafkaPublisher;
 
     @InjectMocks
     private AuthService authService;
@@ -116,7 +116,7 @@ class AuthServiceTest {
             verify(userClient).create(any(UsersServiceUser.class), eq("test-it-secret"));
 
             ArgumentCaptor<MailRequest> mailCaptor = ArgumentCaptor.forClass(MailRequest.class);
-            verify(notificationClient).sendWelcomeEmail(mailCaptor.capture());
+            verify(authKafkaPublisher).sendWelcomeEmail(mailCaptor.capture());
             assertEquals(validUser.getUsername(), mailCaptor.getValue().getUsername());
             assertEquals(validUser.getEmail(), mailCaptor.getValue().getEmailTo());
             assertEquals("dummy-token", mailCaptor.getValue().getMessage());
