@@ -39,13 +39,9 @@ public class AuthService {
     private final WarningRepository warningRepository;
     private final PasswordTokenRepository passwordTokenRepository;
 
-    private final UserClient userClient;
     private final AuthKafkaPublisher kafkaPublisher;
 
     private final Encoder encoder;
-
-    @Value("${IT_SECRET}")
-    private String itSecret;
 
     @Transactional
     public void create(User newUser) {
@@ -75,7 +71,7 @@ public class AuthService {
         newUsersServiceUser.setFirstName(newUser.getFirstName().trim());
         newUsersServiceUser.setLastName(newUser.getLastName().trim());
 
-        userClient.create(newUsersServiceUser, itSecret);
+        kafkaPublisher.sendSyncUser(newUsersServiceUser);
 
         String token = tokenService.generateBase64();
         ActivationToken activationToken = ActivationToken.builder()
@@ -196,7 +192,7 @@ public class AuthService {
         String backupUsername = account.getUsername();
         account.setUsername("deleted#" + seed);
 
-        userClient.delete(id, itSecret);
+        kafkaPublisher.sendDeleteUser(id, backupEmail);
 
         // Schedule deletion
         DeletionSchedule deletionSchedule = DeletionSchedule.builder()
