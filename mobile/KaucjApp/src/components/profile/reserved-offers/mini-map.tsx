@@ -9,6 +9,7 @@ interface MiniMapProps {
   longitude: number;
   height?: number;
   style?: ViewStyle;
+  interactive?: boolean;
   pointerEvents?: ViewStyle["pointerEvents"];
 }
 
@@ -17,12 +18,16 @@ export default function MiniMap({
   longitude,
   height = 140,
   style,
-  pointerEvents = "none",
+  interactive = false,
+  pointerEvents,
 }: MiniMapProps) {
+  const effectivePointerEvents =
+    pointerEvents ?? (interactive ? "auto" : "none");
+
   return (
     <View
       style={[styles.wrapper, { height }, style]}
-      pointerEvents={pointerEvents}
+      pointerEvents={effectivePointerEvents}
     >
       <MapView
         provider={PROVIDER_DEFAULT}
@@ -33,9 +38,9 @@ export default function MiniMap({
           latitudeDelta: 0.008,
           longitudeDelta: 0.008,
         }}
-        liteMode
-        scrollEnabled={false}
-        zoomEnabled={false}
+        liteMode={!interactive}
+        scrollEnabled={interactive}
+        zoomEnabled={interactive}
         rotateEnabled={false}
         pitchEnabled={false}
         toolbarEnabled={false}
@@ -46,7 +51,7 @@ export default function MiniMap({
         showsTraffic={false}
         showsIndoors={false}
         showsMyLocationButton={false}
-        showsUserLocation={false}
+        showsUserLocation={interactive}
         moveOnMarkerPress={false}
       >
         <Marker
