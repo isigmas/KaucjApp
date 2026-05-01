@@ -33,36 +33,6 @@ public class UserController {
     private final UserService userService;
     private final RatingService ratingService;
 
-    @Value("${IT_SECRET}")
-    private String secretKey;
-
-
-
-    @PostMapping("/user")
-    @Operation(
-            summary = "Create user profile (internal)",
-            description = "Creates a user row with primary key from JSON field `user_id`. "
-                    + "Requires header `X-Internal-Secret` equal to this service's `IT_SECRET` (e.g. auth-service after account creation). "
-                    + "Does not use `X-User-Id`. Body: CreateUserDTO (username, firstName, lastName, phone, email). "
-                    + "Initial rating aggregate is created automatically.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Profile created."),
-            @ApiResponse(responseCode = "400", description = "Validation error (VALIDATION_ERR / MALFORMED_JSON)."),
-            @ApiResponse(responseCode = "403", description = "Invalid or missing X-Internal-Secret (USER_003)."),
-            @ApiResponse(responseCode = "409", description = "Duplicate user constraint, e.g. email (USER_005).")
-    })
-    public ResponseEntity<Void> create(
-            @RequestHeader("X-Internal-Secret") String secret,
-            @Valid @RequestBody CreateUserDTO newUser) {
-
-        if (!secretKey.equals(secret)) {
-            throw new InvalidInternalSecretException();
-        }
-        userService.createUser(newUser.getId(), newUser);
-        log.info("New user created, ID: {}", newUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
 
     @GetMapping("/admin/users")
     @Operation(
@@ -72,28 +42,6 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         log.info("Getting all users");
         return ResponseEntity.ok(userService.getAll());
-    };
-
-
-    @DeleteMapping("/admin/delete/{id}")
-    @Operation(
-            summary = "Admin delete user",
-            description = "Admin can safe delete user"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User deleted."),
-            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
-    })
-    public ResponseEntity<Void> adminDeleteUser(
-            @PathVariable Long id,
-            @RequestHeader("X-Internal-Secret") String secret
-                                            ) {
-        if (!secretKey.equals(secret)) {
-            throw new InvalidInternalSecretException();
-        }
-        log.info("Admin requested delete of user ID: {}", id);
-        userService.deleteUser(id);
-        return ResponseEntity.ok().build();
     }
 
 
