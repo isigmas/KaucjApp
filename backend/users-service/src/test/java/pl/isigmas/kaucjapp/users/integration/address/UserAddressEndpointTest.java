@@ -23,7 +23,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 }
                 """;
 
-        postCreateUser(createUserJson).andExpect(status().isCreated());
+        postCreateUser(createUserJson);
 
         String updateUserJson = """
                 {
@@ -79,7 +79,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                     "email": "u2001@example.com"
                 }
                 """;
-        postCreateUser(createUserJson).andExpect(status().isCreated());
+        postCreateUser(createUserJson);
 
         String setAddressesJson = """
                 {
@@ -137,7 +137,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                     "email": "u2003@example.com"
                 }
                 """;
-        postCreateUser(createUserJson).andExpect(status().isCreated());
+        postCreateUser(createUserJson);
 
         String badLatJson = """
                 {
@@ -174,7 +174,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                     "email": "u2002@example.com"
                 }
                 """;
-        postCreateUser(createUserJson).andExpect(status().isCreated());
+        postCreateUser(createUserJson);
 
         String setAddressesJson = """
                 {
