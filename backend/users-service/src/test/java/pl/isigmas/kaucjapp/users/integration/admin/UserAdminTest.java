@@ -57,9 +57,7 @@ public class UserAdminTest extends BaseIntegrationTest {
                 """;
         postCreateUser(createUserJson);
 
-        mockMvc.perform(delete("/api/user/admin/delete/"+1005)
-                .header("X-Internal-Secret", TEST_INTERNAL_SECRET))
-                .andExpect(status().isOk());
+        deleteUser(1005L);
 
         var deletedUser = userRepository.findById(1005L).orElseThrow();
 

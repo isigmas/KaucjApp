@@ -1,6 +1,5 @@
 package pl.isigmas.kaucjapp.auth.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -8,8 +7,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.DeletionSchedule;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
@@ -17,6 +14,7 @@ import pl.isigmas.kaucjapp.auth.entity.Warning;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountAlreadyDeleted;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotFoundException;
+import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
 import pl.isigmas.kaucjapp.auth.repository.DeletionScheduleRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
@@ -28,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +41,7 @@ class AuthServiceDeleteTest {
     @Mock
     private WarningRepository warningRepository;
     @Mock
-    private UserClient userClient;
+    private AuthKafkaPublisher authKafkaPublisher;
 
     @InjectMocks
     private AuthService authService;
@@ -51,13 +50,6 @@ class AuthServiceDeleteTest {
     private ArgumentCaptor<DeletionSchedule> deletionScheduleCaptor;
     @Captor
     private ArgumentCaptor<Warning> warningCaptor;
-
-    private final String IT_SECRET = "super-secret-token";
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(authService, "itSecret", IT_SECRET);
-    }
 
     @Test
     void delete_ShouldSuccessfullyInitiateDeletion_WhenAccountIsActive() {
@@ -81,7 +73,7 @@ class AuthServiceDeleteTest {
         assertThat(account.getUsername()).startsWith("deleted#");
         assertThat(account.getStatus()).isEqualTo(AccountStatus.PENDING_DELETION);
 
-        verify(userClient).delete(accountId, IT_SECRET);
+        verify(authKafkaPublisher).sendDeleteUser(eq(accountId), anyString());
 
         verify(deletionScheduleRepository).save(deletionScheduleCaptor.capture());
         DeletionSchedule savedSchedule = deletionScheduleCaptor.getValue();

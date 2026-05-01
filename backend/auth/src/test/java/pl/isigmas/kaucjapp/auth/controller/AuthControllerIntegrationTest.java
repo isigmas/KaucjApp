@@ -11,14 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import pl.isigmas.kaucjapp.auth.TestcontainersConfiguration;
-import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
@@ -37,7 +35,7 @@ import java.util.Date;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -68,9 +66,6 @@ class AuthControllerIntegrationTest {
     private Encoder encoder;
 
     @MockitoBean
-    private UserClient userClient;
-
-    @MockitoBean
     private AuthKafkaPublisher authKafkaPublisher;
 
     @BeforeEach
@@ -79,10 +74,6 @@ class AuthControllerIntegrationTest {
         refreshTokenRepository.deleteAll();
         accountRepository.deleteAll();
         
-        // Reset mock to default behavior
-        Mockito.reset(userClient);
-        when(userClient.create(any(), anyString())).thenReturn(ResponseEntity.status(201).build());
-
         Mockito.reset(authKafkaPublisher);
     }
 
@@ -288,11 +279,11 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("UserClient failure should rollback account creation")
-        void shouldRollbackWhenUserClientFails() {
+        @DisplayName("Kafka publish failure should rollback account creation")
+        void shouldRollbackWhenKafkaPublishFails() {
             // given
             User user = createValidUser();
-            when(userClient.create(any(), anyString())).thenThrow(new RuntimeException("User service unavailable"));
+            doThrow(new RuntimeException("Kafka unavailable")).when(authKafkaPublisher).sendSyncUser(any());
 
             // when and then
             assertDoesNotThrow(() ->
@@ -302,7 +293,7 @@ class AuthControllerIntegrationTest {
                             .andExpect(status().isInternalServerError()));
 
             assertFalse(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("newuser", "newuser").isPresent(),
-                    "BUG: Account should not be created when UserClient fails");
+                    "BUG: Account should not be created when Kafka publish fails");
         }
     }
 
