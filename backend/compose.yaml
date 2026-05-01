@@ -82,8 +82,11 @@ services:
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       users-db:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
@@ -118,7 +121,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - JWT_SECRET=${JWT_SECRET}
       - PASSWORD_SALT=${PASSWORD_SALT}
-      - USER_SERVICE_URL=http://users-service:8080
+      - USER_SERVICE_URL=http://users-service:8080  # TODO: Delete after testing
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
