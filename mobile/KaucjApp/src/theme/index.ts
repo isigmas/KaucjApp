@@ -14,7 +14,7 @@ export const colors = {
   background: {
     main: "#F6F7F4", // Oat/Birch Off-White (The warm, natural canvas of the app)
     card: "#FFFFFF", // Pure White (Cards, Bottom Sheets, Modals to maintain contrast)
-    subtle: "#EAECE8", // Light Stone (Input backgrounds)
+    subtle: "#EAECE850", // Light Stone (Input backgrounds)
   },
 
   black: {

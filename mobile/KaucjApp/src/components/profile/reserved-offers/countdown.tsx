@@ -50,6 +50,12 @@ export default function Countdown({
           )}
           <Text style={[styles.blockValue, { color: config.fg }]}>{label}</Text>
         </View>
+
+        {urgency === "critical" && (
+          <Text style={{ color: config.fg }}>
+            Za chwilę twoja rezerwacja wygaśnie
+          </Text>
+        )}
       </View>
     );
   }
