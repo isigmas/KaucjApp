@@ -1,7 +1,7 @@
-export * from "./map-box";
-
 import { DepositMachineStatus, OfferStatus } from "@/src/types";
 import { colors } from "../theme";
+export * from "./map-box";
+export * from "./countdown";
 
 export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   switch (status) {

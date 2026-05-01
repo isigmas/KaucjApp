@@ -1,19 +1,19 @@
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  keepPreviousData,
-} from "@tanstack/react-query";
-import { AxiosError } from "axios";
-import { apiClient } from "../api-client";
-import {
+  ApiErrorResponse,
   Offer,
   OfferPayload,
-  OfferStatus,
   OfferSearchBBox,
-  ApiErrorResponse,
+  OfferStatus,
 } from "@/src/types";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { router } from "expo-router";
+import { apiClient } from "../api-client";
 
 export const offerKeys = {
   all: () => ["offers"] as const,
@@ -54,6 +54,7 @@ export const useMyReservedOffers = () => {
     queryKey: offerKeys.reserved(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my/reserved");
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
   });
