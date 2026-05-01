@@ -23,9 +23,11 @@ export default function HomeLayout() {
       <Stack.Screen
         name="bookings"
         options={{
-          headerTitle: "Moje rezerwacje",
+          headerShown: false,
           headerLargeTitleEnabled: true,
+          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
+          headerTitle: "Moje rezerwacje",
         }}
       />
     </Stack>
