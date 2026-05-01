@@ -68,6 +68,7 @@ export default function BookingDetailsScreen({
         </View>
       )}
       <MiniMap
+        interactive={true}
         latitude={offer.latitude}
         longitude={offer.longitude}
         height={180}
