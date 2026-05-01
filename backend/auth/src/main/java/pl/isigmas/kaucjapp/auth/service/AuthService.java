@@ -2,10 +2,8 @@ package pl.isigmas.kaucjapp.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
