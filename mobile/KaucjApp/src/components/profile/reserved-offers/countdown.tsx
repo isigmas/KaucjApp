@@ -12,12 +12,14 @@ interface CountdownProps {
   expiresAt: string; //ISO date string
   variant?: "pill" | "block";
   interval?: CountdownDisplayInterval;
+  showBorder?: boolean;
 }
 
 export default function Countdown({
   expiresAt,
   variant = "pill",
   interval = "seconds",
+  showBorder = true,
 }: CountdownProps) {
   const { urgency, label } = useCountdown({ expiresAt, interval });
   const config = getCountdownConfig(urgency);
@@ -29,7 +31,7 @@ export default function Countdown({
           styles.block,
           {
             backgroundColor: config.bg,
-            borderWidth: 1,
+            borderWidth: showBorder ? 1 : 0,
             borderColor: config.border,
           },
         ]}

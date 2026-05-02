@@ -127,7 +127,9 @@ function OfferStatusCard({
           />
         )}
       </View>
-      {reservedTo && <Countdown expiresAt={reservedTo} variant="block" />}
+      {reservedTo && (
+        <Countdown expiresAt={reservedTo} variant="block" showBorder={false} />
+      )}
     </SectionCard>
   );
 }
