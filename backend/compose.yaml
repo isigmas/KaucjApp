@@ -4,7 +4,6 @@ services:
     ports:
       - "9092:9092"
     environment:
-      - TZ=Europe/Warsaw
       - KAFKA_NODE_ID=1
       - KAFKA_PROCESS_ROLES=broker,controller
       - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
@@ -28,7 +27,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: offers_db
-      TZ: Europe/Warsaw
     volumes:
       - ./offers-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -44,7 +42,6 @@ services:
       args:
         SERVICE_NAME: offers-service
     environment:
-      - TZ=Europe/Warsaw
       - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -65,7 +62,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: users_db
-      TZ: Europe/Warsaw
     volumes:
       - ./users-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -81,7 +77,6 @@ services:
       args:
         SERVICE_NAME: users-service
     environment:
-      - TZ=Europe/Warsaw
       - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
@@ -103,7 +98,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: auth_db
-      TZ: Europe/Warsaw
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 5s
@@ -117,7 +111,6 @@ services:
       args:
         SERVICE_NAME: auth-service
     environment:
-      - TZ=Europe/Warsaw
       - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
       - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
@@ -148,7 +141,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: deposit_db
-      TZ: Europe/Warsaw
     volumes:
       - ./deposit-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -164,7 +156,6 @@ services:
       args:
         SERVICE_NAME: deposit-service
     environment:
-      - TZ=Europe/Warsaw
       - SPRING_DATASOURCE_URL=jdbc:postgresql://deposit-db:5432/deposit_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -186,7 +177,6 @@ services:
       args:
         SERVICE_NAME: notification-service
     environment:
-      - TZ=Europe/Warsaw
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - BASE_URL=http://localhost:8080
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -207,7 +197,6 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - TZ=Europe/Warsaw
       - JWT_SECRET=${JWT_SECRET}
       - GATEWAY_ROUTES_0_ID=users
       - GATEWAY_ROUTES_0_URI=http://users-service:8080
