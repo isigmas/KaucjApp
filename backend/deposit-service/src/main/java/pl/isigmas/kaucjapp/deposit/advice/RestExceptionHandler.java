@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
-public class gitRestExceptionHandler {
+public class RestExceptionHandler {
 
     @ExceptionHandler(KaucjappException.class)
     public ResponseEntity<ApiError> handleKaucjappException(KaucjappException ex, HttpServletRequest request) {
