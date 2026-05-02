@@ -1,15 +1,20 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
-import { colors, rounded, spacing } from "@/src/theme";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import SectionCard from "../section-card";
 
 interface OfferSummaryCardProps {
   offer: Offer;
+  isInMyOffers?: boolean;
 }
 
-export function OfferSummaryCard({ offer }: OfferSummaryCardProps) {
+export function OfferSummaryCard({
+  offer,
+  isInMyOffers = false,
+}: OfferSummaryCardProps) {
   return (
-    <View style={styles.card}>
+    <SectionCard style={styles.card}>
       <SummaryRow
         label="Łączna liczba opakowań kaucyjnych"
         value={String(offer.total_quantity)}
@@ -21,18 +26,22 @@ export function OfferSummaryCard({ offer }: OfferSummaryCardProps) {
         isBold
       />
 
-      <SummaryRow
-        label="Łączna wartość kaucji"
-        value={`${(offer.total_quantity * 0.5).toFixed(2)} zł`}
-        isBold
-      />
+      {!isInMyOffers && (
+        <>
+          <SummaryRow
+            label="Łączna wartość kaucji"
+            value={`${(offer.total_quantity * 0.5).toFixed(2)} zł`}
+            isBold
+          />
 
-      <SummaryRow
-        label="Całkowity zysk"
-        value={`${offer.total_income.toFixed(2)} zł`}
-        isBold
-      />
-    </View>
+          <SummaryRow
+            label="Całkowity zysk"
+            value={`${offer.total_income.toFixed(2)} zł`}
+            isBold
+          />
+        </>
+      )}
+    </SectionCard>
   );
 }
 
@@ -54,14 +63,12 @@ export function SummaryRow({ label, value, isBold = false }: SummaryRowProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.primary.light,
-    borderRadius: rounded.xl,
-    padding: spacing.md,
-    marginTop: spacing.xs,
+    borderWidth: 0,
   },
   divider: {
     borderTopWidth: 1,
     borderTopColor: colors.primary.base,
-    marginVertical: spacing.sm,
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: "row",

@@ -1,6 +1,6 @@
-import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
 import { colors, rounded, spacing } from "@/src/theme";
+import React from "react";
+import { StyleSheet, View, ViewStyle } from "react-native";
 
 interface SectionCardProps {
   children: React.ReactNode;
