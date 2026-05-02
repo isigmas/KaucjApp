@@ -1,294 +1,222 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
-import Animated, { Layout, FadeOut, FadeInLeft } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/src/theme";
+import { formatDate, getOfferStatusConfig } from "@/src/lib";
+import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
-import { formatDate } from "@/src/lib";
+import { useRouter } from "expo-router";
+import { ChevronRight, MapPin, Package, Wallet } from "lucide-react-native";
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-interface OfferCardProps {
+interface MyOfferCardProps {
   offer: Offer;
-  index: number;
-  onComplete: (id: number) => void;
-  onCancel: (id: number) => void;
 }
 
-export default function OfferCard({
-  offer,
-  index,
-  onComplete,
-  onCancel,
-}: OfferCardProps) {
-  const isOpen = offer.status === "OPEN";
+export default function MyOfferCard({ offer }: MyOfferCardProps) {
+  const router = useRouter();
+  const { color, label } = getOfferStatusConfig(offer.status);
 
-  const handleComplete = () => {
-    Alert.alert(
-      "Potwierdzenie",
-      "Czy na pewno chcesz oznaczyć tę ofertę jako zakończoną? Oznacza to, że kurier odebrał już opakowania.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Zakończ",
-          style: "destructive",
-          onPress: () => onComplete(offer.offer_id),
-        },
-      ],
-    );
+  const handlePress = () => {
+    router.push({
+      pathname: "/profile/offers/[id]",
+      params: { id: offer.offer_id },
+    });
   };
 
-  const handleCancel = () => {
-    Alert.alert(
-      "Potwierdzenie",
-      "Czy na pewno chcesz anulować tę ofertę? Oznacza to, że oferta nie będzie widoczna.",
-      [
-        { text: "Wróć", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "destructive",
-          onPress: () => onCancel(offer.offer_id),
-        },
-      ],
-    );
+  const pillLabel = () => {
+    if (offer.status === "OPEN") {
+      return `${label} ${formatDate(offer.created_at)}`;
+    } else if (offer.status === "RESERVED" && offer.reserved_at) {
+      return `${label} ${formatDate(offer.reserved_at)}`;
+    }
+    return label;
   };
 
   return (
-    <Animated.View
-      entering={FadeInLeft.delay(index * 150)
-        .springify()
-        .damping(50)
-        .stiffness(500)
-        .mass(2.5)}
-      layout={Layout.springify()}
-      style={[styles.card, !isOpen && styles.cardCompleted]}
+    <Pressable
+      onPress={handlePress}
+      android_ripple={{ color: colors.primary.light }}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
-      {/* Header */}
-      <View style={styles.cardHeader}>
-        <View
-          style={[styles.statusBadge, !isOpen && styles.statusBadgeCompleted]}
-        >
-          <View
-            style={[styles.statusDot, !isOpen && styles.statusDotCompleted]}
-          />
-          <Text
-            style={[styles.statusText, !isOpen && styles.statusTextCompleted]}
-          >
-            {isOpen ? "Aktywna" : "Zakończona"}
+      <View style={styles.body}>
+        <View style={styles.headerRow}>
+          <View style={[styles.statusPill, { backgroundColor: color + "22" }]}>
+            <View style={[styles.statusDot, { backgroundColor: color }]} />
+            <Text style={[styles.statusText, { color }]}>{pillLabel()}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <ChevronRight size={16} color={colors.text.muted} />
+          </View>
+        </View>
+
+        <View style={styles.addressRow}>
+          <MapPin size={14} color={colors.text.secondary} />
+          <Text style={styles.addressText} numberOfLines={1}>
+            {offer.pickup_address}
           </Text>
         </View>
-        <Text style={styles.dateText}>{formatDate(offer.created_at)}</Text>
-      </View>
 
-      {/* Body */}
-      <View style={styles.cardBody}>
-        <View style={styles.locationRow}>
-          <Ionicons
-            name="location-outline"
-            size={18}
-            color={colors.text.secondary}
+        <View style={styles.statsRow}>
+          <StatItem
+            icon={<Package size={16} color={colors.text.secondary} />}
+            label="Opakowania"
+            value={`${offer.total_quantity} szt.`}
           />
-          <Text style={styles.addressText}>{offer.pickup_address}</Text>
-        </View>
-
-        <View style={styles.itemsRow}>
-          {offer.plastic_quantity > 0 && (
-            <View key="plastic" style={styles.itemPill}>
-              <Text style={styles.itemIcon}>Plastiki</Text>
-              <Text style={styles.itemQuantity}>{offer.plastic_quantity}x</Text>
-            </View>
-          )}
-          {offer.can_quantity > 0 && (
-            <View key="cans" style={styles.itemPill}>
-              <Text style={styles.itemIcon}>Puszki</Text>
-              <Text style={styles.itemQuantity}>{offer.can_quantity}x</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Financial Summary */}
-        <View style={styles.summaryBox}>
-          <View style={styles.summaryColumn}>
-            <Text style={styles.summaryLabel}>Ilość</Text>
-            <Text style={styles.summaryValue}>{offer.total_quantity} szt.</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryColumn}>
-            <Text style={styles.summaryLabel}>Otrzymasz</Text>
-            <Text style={styles.summaryValueHighlight}>
-              {offer.total_prize.toFixed(2)} zł
-            </Text>
-          </View>
+          <View style={styles.statDivider} />
+          <StatItem
+            icon={<Wallet size={16} color={colors.primary.dark} />}
+            label="Należność"
+            value={`${offer.total_prize.toFixed(2)} zł`}
+            highlight
+          />
         </View>
       </View>
+    </Pressable>
+  );
+}
 
-      {isOpen && (
-        <Animated.View exiting={FadeOut} style={styles.cardFooter}>
-          <Pressable style={styles.completeButton} onPress={handleCancel}>
-            <Ionicons name="close" size={20} color={colors.text.white} />
-            <Text style={styles.completeButtonText}>Anuluj ofertę</Text>
-          </Pressable>
-        </Animated.View>
-      )}
-      {!isOpen && (
-        <Animated.View exiting={FadeOut} style={styles.cardFooter}>
-          <Pressable style={styles.completeButton} onPress={handleComplete}>
-            <Ionicons name="close" size={20} color={colors.text.white} />
-            <Text style={styles.completeButtonText}>
-              Oznacz jako zakończoną
-            </Text>
-          </Pressable>
-        </Animated.View>
-      )}
-    </Animated.View>
+interface StatItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  highlight?: boolean;
+}
+
+function StatItem({ icon, label, value, highlight }: StatItemProps) {
+  return (
+    <View style={styles.stat}>
+      <View style={styles.statHeader}>
+        {icon}
+        <Text style={styles.statLabel}>{label}</Text>
+      </View>
+      <Text style={[styles.statValue, highlight && styles.statValueHighlight]}>
+        {value}
+      </Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Card Styles
   card: {
     backgroundColor: colors.background.card,
-    borderRadius: 20,
+    borderRadius: rounded.apple,
     borderWidth: 1,
     borderColor: colors.status.border,
+    overflow: "hidden",
+    marginBottom: spacing.md,
     shadowColor: colors.text.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 2,
-    overflow: "hidden",
   },
-  cardCompleted: {
-    backgroundColor: colors.background.main,
+  cardPressed: {
     opacity: 0.85,
+    transform: [{ scale: 0.995 }],
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+  map: {
+    borderRadius: 0,
+    borderWidth: 0,
     borderBottomWidth: 1,
     borderBottomColor: colors.status.border,
   },
-  statusBadge: {
+  body: {
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.primary.light,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 6,
+    justifyContent: "space-between",
   },
-  statusBadgeCompleted: {
-    backgroundColor: colors.background.subtle,
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: rounded.pill,
+    gap: 5,
   },
   statusDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: colors.primary.base,
-  },
-  statusDotCompleted: {
-    backgroundColor: colors.text.muted,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
-    color: colors.primary.dark,
     textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
-  statusTextCompleted: {
-    color: colors.text.secondary,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   dateText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
     color: colors.text.secondary,
   },
-  cardBody: {
-    padding: 16,
-  },
-  locationRow: {
+  addressRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
-    gap: 6,
+    gap: 5,
   },
   addressText: {
-    fontSize: 15,
+    flex: 1,
+    fontSize: 14,
     fontWeight: "600",
     color: colors.text.primary,
   },
-  itemsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 20,
-  },
-  itemPill: {
+  reservedRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background.subtle,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.status.border,
-    gap: 4,
+    gap: 5,
   },
-  itemIcon: {
-    fontSize: 14,
+  reservedText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.accent.base,
   },
-  itemQuantity: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  summaryBox: {
+  statsRow: {
     flexDirection: "row",
     backgroundColor: colors.background.subtle,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: rounded.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+    marginTop: spacing.xs,
   },
-  summaryColumn: {
+  stat: {
     flex: 1,
+    gap: 4,
+    alignItems: "center",
   },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: colors.status.border,
-    marginHorizontal: 12,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  summaryValueHighlight: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.primary.dark,
-  },
-  cardFooter: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 4,
-  },
-  completeButton: {
+  statHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.primary.base,
-    paddingVertical: 14,
-    borderRadius: 14,
-    gap: 8,
+    gap: 6,
   },
-  completeButtonText: {
-    color: colors.text.white,
-    fontSize: 15,
+  statLabel: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  statValue: {
+    fontSize: 18,
     fontWeight: "700",
+    color: colors.text.primary,
+  },
+  statValueHighlight: {
+    color: colors.primary.base,
+    fontWeight: "800",
+  },
+  statDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: colors.status.border,
+    marginHorizontal: spacing.md,
   },
 });

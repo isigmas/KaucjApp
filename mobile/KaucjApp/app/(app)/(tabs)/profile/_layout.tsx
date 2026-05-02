@@ -15,9 +15,11 @@ export default function HomeLayout() {
       <Stack.Screen
         name="offers"
         options={{
-          headerTitle: "Moje oferty",
+          headerShown: false,
           headerLargeTitleEnabled: true,
+          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
+          headerTitle: "Moje rezerwacje",
         }}
       />
       <Stack.Screen

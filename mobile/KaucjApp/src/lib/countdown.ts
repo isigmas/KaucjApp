@@ -50,7 +50,7 @@ export function formatCountdownLabel(
   { totalMs }: TimeParts,
   interval: CountdownDisplayInterval = "seconds",
 ): string {
-  if (totalMs <= 0) return "Wygasła";
+  if (totalMs <= 0) return "Czas minął";
 
   const hoursLeft = Math.floor(totalMs / HOUR);
   const minutesLeft = Math.floor((totalMs % HOUR) / MINUTE);

@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   blockValue: {
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
     letterSpacing: 0.5,
