@@ -37,10 +37,7 @@ export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
       <View style={styles.body}>
         <View style={styles.timerRow}>
           {offer.reserved_to ? (
-            <Countdown
-              expiresAt={"2026-05-02T01:27:05.748149"}
-              interval="minutes"
-            />
+            <Countdown expiresAt={offer.reserved_to} interval="minutes" />
           ) : null}
           <ChevronRight size={20} color={colors.text.muted} />
         </View>

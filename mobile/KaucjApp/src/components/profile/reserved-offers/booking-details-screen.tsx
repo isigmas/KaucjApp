@@ -64,7 +64,7 @@ export default function BookingDetailsScreen({
     >
       {offer.reserved_to && (
         <View style={styles.countdownWrapper}>
-          <Countdown expiresAt={"2026-05-02T01:27:05.748149"} variant="block" />
+          <Countdown expiresAt={offer.reserved_to} variant="block" />
         </View>
       )}
       <MiniMap
