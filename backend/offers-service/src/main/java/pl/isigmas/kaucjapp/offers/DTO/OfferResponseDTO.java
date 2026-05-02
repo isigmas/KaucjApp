@@ -39,6 +39,15 @@ public class OfferResponseDTO {
     @JsonProperty("reserved_to")
     private Instant reservedTo;
 
+    @JsonProperty("creator_confirmed")
+    private Boolean creatorConfirmed;
+
+    @JsonProperty("collector_confirmed")
+    private Boolean collectorConfirmed;
+
+    @JsonProperty("confirmation_deadline")
+    private Instant confirmationDeadline;
+
     @JsonProperty("plastic_quantity")
     private int plasticQuantity;
 

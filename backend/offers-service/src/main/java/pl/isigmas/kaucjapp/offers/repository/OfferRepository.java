@@ -37,4 +37,13 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
             @Param("reservedStatus") OfferStatus reservedStatus,
             @Param("now") Instant now
     );
+
+    @Modifying
+    @Query("UPDATE Offer o SET o.status = :completedStatus, o.timeCompleted = :now, o.confirmationDeadline = null " +
+            "WHERE o.status = :pendingStatus AND o.confirmationDeadline IS NOT NULL AND o.confirmationDeadline < :now")
+    int completePendingOffers(
+            @Param("pendingStatus") OfferStatus pendingStatus,
+            @Param("completedStatus") OfferStatus completedStatus,
+            @Param("now") Instant now
+    );
 }

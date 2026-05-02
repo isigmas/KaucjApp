@@ -9,19 +9,24 @@ INSERT INTO bottle_types (name, deposit_fee) VALUES
                                                  ('can', 0.50);
 
 CREATE TABLE offers (
-                        offer_id        BIGSERIAL PRIMARY KEY,
-                        creator_id      BIGINT NOT NULL,
-                        collector_id    BIGINT,
-                        status          VARCHAR(32) NOT NULL DEFAULT 'OPEN',
-                        pickup_address  TEXT,
-                        latitude        NUMERIC(9,6),
-                        longitude       NUMERIC(9,6),
+                        offer_id            BIGSERIAL PRIMARY KEY,
+                        creator_id          BIGINT NOT NULL,
+                        collector_id        BIGINT,
+                        status              VARCHAR(32) NOT NULL DEFAULT 'OPEN',
+                        pickup_address      TEXT,
+                        latitude            NUMERIC(9,6),
+                        longitude           NUMERIC(9,6),
                         pickup_instructions TEXT,
-                        created_at      TIMESTAMP DEFAULT NOW(),
-                        reserved_at      TIMESTAMP DEFAULT NULL,
-                        reserved_to      TIMESTAMP DEFAULT NULL,
-                        updated_at      TIMESTAMP DEFAULT NOW(),
-                        completed_at    TIMESTAMP
+
+                        creator_confirmed     BOOLEAN NOT NULL DEFAULT FALSE,
+                        collector_confirmed   BOOLEAN NOT NULL DEFAULT FALSE,
+                        confirmation_deadline TIMESTAMPTZ DEFAULT NULL,
+
+                        created_at          TIMESTAMPTZ DEFAULT NOW(),
+                        reserved_at         TIMESTAMPTZ DEFAULT NULL,
+                        reserved_to         TIMESTAMPTZ DEFAULT NULL,
+                        updated_at          TIMESTAMPTZ DEFAULT NOW(),
+                        completed_at        TIMESTAMPTZ
 );
 
 CREATE INDEX idx_offers_creator  ON offers(creator_id);

@@ -17,6 +17,7 @@ import pl.isigmas.kaucjapp.offers.model.*;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
 import java.math.BigDecimal;
+import java.nio.file.AccessDeniedException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -192,6 +193,9 @@ public class OfferService {
                 .createdAt(offer.getTimeCreated())
                 .reservedAt(offer.getReservedAt())
                 .reservedTo(offer.getReservedTo())
+                .creatorConfirmed(offer.getCreatorConfirmed())
+                .collectorConfirmed(offer.getCollectorConfirmed())
+                .confirmationDeadline(offer.getConfirmationDeadline())
                 .plasticQuantity(plasticQty)
                 .canQuantity(canQty)
                 .totalQuantity(totalQty)
@@ -233,6 +237,9 @@ public class OfferService {
             offer.setCollectorId(userId);
             offer.setReservedAt(Instant.now());
             offer.setReservedTo(Instant.now().plus(Duration.ofHours(2)));
+            offer.setCreatorConfirmed(false);
+            offer.setCollectorConfirmed(false);
+            offer.setConfirmationDeadline(null);
         }
 
         if (targetStatus == OfferStatus.OPEN) {
@@ -244,16 +251,13 @@ public class OfferService {
             offer.setCollectorId(null);
             offer.setReservedAt(null);
             offer.setReservedTo(null);
+            offer.setCreatorConfirmed(false);
+            offer.setCollectorConfirmed(false);
+            offer.setConfirmationDeadline(null);
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {
-            if (currentStatus != OfferStatus.RESERVED) {
-                throw new OfferStateException("Only RESERVED offers can be completed");
-            }
-            if (offer.getCollectorId() == null || !offer.getCollectorId().equals(userId)) {
-                throw new OfferForbiddenException("Only current collector can complete the offer");
-            }
-            offer.setTimeCompleted(Instant.now());
+            throw new OfferForbiddenException("Offer complete only by two way completing");
         }
 
         if (targetStatus == OfferStatus.CANCELED) {
@@ -262,7 +266,49 @@ public class OfferService {
             }
         }
 
+        if (targetStatus == OfferStatus.COMPLAINT) {
+            if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
+                throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be completed");
+            }
+
+            if (!offer.getCreatorId().equals(userId) && !offer.getCollectorId().equals(userId)) {
+                throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
+            }
+
+            offer.setConfirmationDeadline(null);
+        }
+
         offer.setStatus(targetStatus);
+    }
+
+    @Transactional
+    public void confirmOffer(Long offerId, Long currentUserId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        if (offer.getStatus() != OfferStatus.RESERVED && offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
+            throw new OfferForbiddenException("You can only confirm RESERVED or PENDING offers");
+        }
+
+        if (currentUserId.equals(offer.getCreatorId())) {
+            offer.setCreatorConfirmed(true);
+        } else if (currentUserId.equals(offer.getCollectorId())) {
+            offer.setCollectorConfirmed(true);
+        } else {
+            throw new OfferForbiddenException("You are not part of this offer");
+        }
+
+        if (offer.getCreatorConfirmed() && offer.getCollectorConfirmed()) {
+            offer.setStatus(OfferStatus.COMPLETED);
+            offer.setConfirmationDeadline(null);
+            offer.setTimeCompleted(Instant.now());
+        } else {
+            if (offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
+                offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
+                offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
+            }
+        }
+        offerRepository.save(offer);
     }
 
     @Transactional

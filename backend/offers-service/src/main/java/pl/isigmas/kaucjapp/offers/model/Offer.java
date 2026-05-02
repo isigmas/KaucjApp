@@ -61,6 +61,15 @@ public class Offer {
     @Column(name = "completed_at")
     private Instant timeCompleted;
 
+    @Column(name = "creator_confirmed", nullable = false)
+    private Boolean creatorConfirmed = false;
+
+    @Column(name = "collector_confirmed", nullable = false)
+    private Boolean collectorConfirmed = false;
+
+    @Column(name = "confirmation_deadline")
+    private Instant confirmationDeadline;
+
     @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OfferItem> items = new ArrayList<>();
