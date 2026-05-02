@@ -17,7 +17,8 @@ import pl.isigmas.kaucjapp.offers.model.*;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -230,8 +231,8 @@ public class OfferService {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
             offer.setCollectorId(userId);
-            offer.setReservedAt(LocalDateTime.now());
-            offer.setReservedTo(LocalDateTime.now().plusHours(2));
+            offer.setReservedAt(Instant.now());
+            offer.setReservedTo(Instant.now().plus(Duration.ofHours(2)));
         }
 
         if (targetStatus == OfferStatus.OPEN) {
@@ -252,7 +253,7 @@ public class OfferService {
             if (offer.getCollectorId() == null || !offer.getCollectorId().equals(userId)) {
                 throw new OfferForbiddenException("Only current collector can complete the offer");
             }
-            offer.setTimeCompleted(LocalDateTime.now());
+            offer.setTimeCompleted(Instant.now());
         }
 
         if (targetStatus == OfferStatus.CANCELED) {

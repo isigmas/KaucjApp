@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,20 +46,20 @@ public class Offer {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime timeCreated;
+    private Instant timeCreated;
 
     @org.hibernate.annotations.UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "reserved_at")
-    private LocalDateTime reservedAt;
+    private Instant reservedAt;
 
     @Column(name = "reserved_to")
-    private LocalDateTime reservedTo;
+    private Instant reservedTo;
 
     @Column(name = "completed_at")
-    private LocalDateTime timeCompleted;
+    private Instant timeCompleted;
 
     @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)

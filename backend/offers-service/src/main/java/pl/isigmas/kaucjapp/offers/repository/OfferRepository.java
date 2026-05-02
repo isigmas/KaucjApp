@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.offers.model.Offer;
 import pl.isigmas.kaucjapp.offers.model.OfferStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -31,10 +31,10 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
 
     @Modifying
     @Query("UPDATE Offer o SET o.status = :openStatus, o.collectorId = null, o.reservedAt = null, o.reservedTo = null " +
-            "WHERE o.status = :reservedStatus AND o.reservedAt < :expirationTime")
+            "WHERE o.status = :reservedStatus AND o.reservedTo < :now")
     int releaseExpiredReservations(
             @Param("openStatus") OfferStatus openStatus,
             @Param("reservedStatus") OfferStatus reservedStatus,
-            @Param("expirationTime") LocalDateTime expirationTime
+            @Param("now") Instant now
     );
 }

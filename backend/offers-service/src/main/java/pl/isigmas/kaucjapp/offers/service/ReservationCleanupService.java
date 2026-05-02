@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.offers.model.OfferStatus;
 import pl.isigmas.kaucjapp.offers.repository.OfferRepository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 @Service
@@ -20,12 +20,12 @@ public class ReservationCleanupService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void cleanupExpiredReservations() {
-        LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(120);
+        Instant now = Instant.now();
 
         int updatedCount = offerRepository.releaseExpiredReservations(
                 OfferStatus.OPEN,
                 OfferStatus.RESERVED,
-                expirationTime
+                now
         );
 
         if (updatedCount > 0) {
