@@ -5,8 +5,8 @@ CREATE TABLE users (
                        last_name   VARCHAR(50) NOT NULL,
                        email       VARCHAR(255) NOT NULL UNIQUE,
                        phone       VARCHAR(20),
-                       created_at  TIMESTAMP DEFAULT NOW(),
-                       updated_at  TIMESTAMP DEFAULT NOW()
+                       created_at  TIMESTAMPTZ DEFAULT NOW(),
+                       updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE ratings (
@@ -23,8 +23,8 @@ CREATE TABLE user_addresses (
                                 latitude      NUMERIC(9,6) NOT NULL,
                                 longitude     NUMERIC(9,6) NOT NULL,
                                 is_default    BOOLEAN DEFAULT FALSE,
-                                created_at    TIMESTAMP DEFAULT NOW(),
-                                updated_at    TIMESTAMP DEFAULT NOW()
+                                created_at    TIMESTAMPTZ DEFAULT NOW(),
+                                updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_user_addresses_user_id ON user_addresses(user_id);
