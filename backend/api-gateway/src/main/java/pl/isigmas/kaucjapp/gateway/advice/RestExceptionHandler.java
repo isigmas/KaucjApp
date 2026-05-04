@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.isigmas.kaucjapp.gateway.dto.error.ApiError;
 import pl.isigmas.kaucjapp.gateway.exception.GatewayBaseException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Global exception handler for the API Gateway.
@@ -25,7 +25,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(GatewayBaseException.class)
     public ResponseEntity<ApiError> handleGatewayBaseException(GatewayBaseException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .errorCode(ex.getErrorCode())
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
@@ -46,7 +46,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .errorCode("INTERNAL_ERR")
                 .message("Unexpected server error")
                 .path(request.getRequestURI())
@@ -57,7 +57,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .errorCode("MALFORMED_JSON")
                 .message("Invalid request body")
                 .path(request.getRequestURI())
@@ -68,7 +68,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ApiError> handleMissingHeader(MissingRequestHeaderException ex, HttpServletRequest request) {
         ApiError error = ApiError.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .errorCode("BAD_REQUEST")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())

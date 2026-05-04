@@ -12,7 +12,7 @@ CREATE TABLE deposit_machines(
                                 address TEXT,
                                 latitude NUMERIC(9,6),
                                 longitude NUMERIC(9,6),
-                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE opening_hours (

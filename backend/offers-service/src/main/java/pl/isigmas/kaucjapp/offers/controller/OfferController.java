@@ -145,6 +145,13 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/confirm/{offerId}")
+    public ResponseEntity<Void> confirmOffer(
+            @PathVariable Long offerId,
+            @RequestHeader("X-User-Id") Long userId){
+        service.confirmOffer(offerId,userId);
+        return ResponseEntity.ok().build();
+    }
 
 
 
