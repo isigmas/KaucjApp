@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -31,13 +31,22 @@ public class OfferResponseDTO {
     private String pickupInstructions;
 
     @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @JsonProperty("reserved_at")
-    private LocalDateTime reservedAt;
+    private Instant reservedAt;
 
     @JsonProperty("reserved_to")
-    private LocalDateTime reservedTo;
+    private Instant reservedTo;
+
+    @JsonProperty("creator_confirmed")
+    private Boolean creatorConfirmed;
+
+    @JsonProperty("collector_confirmed")
+    private Boolean collectorConfirmed;
+
+    @JsonProperty("confirmation_deadline")
+    private Instant confirmationDeadline;
 
     @JsonProperty("plastic_quantity")
     private int plasticQuantity;
