@@ -266,6 +266,10 @@ public class OfferService {
             }
         }
 
+        if(targetStatus == OfferStatus.PENDING_CONFIRMATION){
+            throw new OfferForbiddenException("Offer confirmation can be done only by confirm - cannot be done here");
+        }
+
         if (targetStatus == OfferStatus.COMPLAINT) {
             if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
                 throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
