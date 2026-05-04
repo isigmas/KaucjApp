@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.auth.client.NotificationClient;
 import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
@@ -15,6 +14,7 @@ import pl.isigmas.kaucjapp.auth.entity.*;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.*;
+import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.repository.*;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
 
@@ -40,7 +40,7 @@ public class AuthService {
     private final PasswordTokenRepository passwordTokenRepository;
 
     private final UserClient userClient;
-    private final NotificationClient notificationClient;
+    private final AuthKafkaPublisher kafkaPublisher;
 
     private final Encoder encoder;
 
@@ -92,7 +92,7 @@ public class AuthService {
                 .message(token)
                 .build();
         
-        notificationClient.sendWelcomeEmail(mailRequest);
+        kafkaPublisher.sendWelcomeEmail(mailRequest);
     }
 
     @Transactional
@@ -211,9 +211,9 @@ public class AuthService {
     }
 
     @Transactional
-    public void sendResetPasswordEmail(MailRequest request) {
-        String emailTo = request.getEmailTo();
-        Account account = accountRepository.findByEmail(emailTo)
+    public void sendResetPasswordEmail(String email) {
+        String emailTo = email == null ? null : email.trim();
+        Account account = accountRepository.findByEmailIgnoreCase(emailTo)
                 .orElseThrow(() -> new AccountNotFoundException(emailTo));
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
@@ -234,7 +234,7 @@ public class AuthService {
                 .message(token)
                 .build();
 
-        notificationClient.sendResetPasswordEmail(mailRequest);
+        kafkaPublisher.sendResetPasswordEmail(mailRequest);
     }
 
     @Transactional
@@ -242,7 +242,7 @@ public class AuthService {
         PasswordToken passwordToken = passwordTokenRepository.findByToken(encoder.hashToken(token))
                 .orElseThrow(TokenNotFoundException::new);
 
-        if(!newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}$")){
+        if (newPassword == null || !newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}$")) {
             throw new PasswordNotMatchesRegexException("Password must be minimum 6 characters long contain at least: one small letter, one big letter, one number and one special sign");
         }
 
