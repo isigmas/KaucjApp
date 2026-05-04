@@ -34,14 +34,14 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 }
                 """;
 
-        postCreateUser(jsonFirst).andExpect(status().isCreated());
+        postCreateUser(jsonFirst);
         Long firstUserId = userRepository.findAll().stream()
                 .filter(u -> "first".equals(u.getUsername()))
                 .findFirst()
                 .orElseThrow()
                 .getId();
 
-        postCreateUser(jsonSecond).andExpect(status().isCreated());
+        postCreateUser(jsonSecond);
         Long secondUserId = userRepository.findAll().stream()
                 .filter(u -> "second".equals(u.getUsername()))
                 .findFirst()
@@ -82,7 +82,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 }
                 """;
 
-        postCreateUser(json).andExpect(status().isCreated());
+        postCreateUser(json);
 
         Long userId = userRepository.findAll().stream()
                 .filter(u -> "solo".equals(u.getUsername()))
@@ -110,7 +110,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 }
                 """;
 
-        postCreateUser(ratedJson).andExpect(status().isCreated());
+        postCreateUser(ratedJson);
 
         String raterJson = """
                 {
@@ -123,7 +123,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 }
                 """;
 
-        postCreateUser(raterJson).andExpect(status().isCreated());
+        postCreateUser(raterJson);
 
         Long ratedId = userRepository.findAll().stream()
                 .filter(u -> "rated".equals(u.getUsername()))

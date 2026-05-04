@@ -13,23 +13,23 @@ import java.time.Instant;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ReservationCleanupService {
+public class CompletingPendingOffersService {
 
     private final OfferRepository offerRepository;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 900000)
     @Transactional
-    public void cleanupExpiredReservations() {
+    public void completePendingOffers() {
         Instant now = Instant.now();
 
-        int updatedCount = offerRepository.releaseExpiredReservations(
-                OfferStatus.OPEN,
-                OfferStatus.RESERVED,
+        int completedCount = offerRepository.completePendingOffers(
+                OfferStatus.PENDING_CONFIRMATION,
+                OfferStatus.COMPLETED,
                 now
         );
 
-        if (updatedCount > 0) {
-            log.info("Released {} expired offer reservations.", updatedCount);
+        if (completedCount > 0) {
+            log.info("Completed {} pending offers.", completedCount);
         }
     }
 }

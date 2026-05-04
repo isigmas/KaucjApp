@@ -6,7 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "user_addresses")
@@ -43,10 +43,10 @@ public class UserAddress {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime timeCreated;
+    private Instant timeCreated;
 
     @org.hibernate.annotations.UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
 }

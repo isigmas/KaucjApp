@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +43,7 @@ public class DepositMachine {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime timeCreated;
+    private Instant timeCreated;
 
     @OneToMany(mappedBy = "depositMachine", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("dayOfWeek ASC")

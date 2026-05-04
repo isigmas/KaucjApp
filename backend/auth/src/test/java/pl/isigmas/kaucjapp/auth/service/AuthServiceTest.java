@@ -7,7 +7,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import pl.isigmas.kaucjapp.auth.client.UserClient;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.MailRequest;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
@@ -56,9 +55,6 @@ class AuthServiceTest {
     private Encoder encoder;
 
     @Mock
-    private UserClient userClient;
-
-    @Mock
     private TokenService tokenService;
 
     @Mock
@@ -72,11 +68,6 @@ class AuthServiceTest {
 
     @InjectMocks
     private AuthService authService;
-
-    @BeforeEach
-    void setUpAuthServiceSecret() {
-        ReflectionTestUtils.setField(authService, "itSecret", "test-it-secret");
-    }
 
     @Nested
     @DisplayName("create() - User Registration Tests")
@@ -114,7 +105,7 @@ class AuthServiceTest {
 
             // then
             verify(accountRepository).save(any(Account.class));
-            verify(userClient).create(any(UsersServiceUser.class), eq("test-it-secret"));
+            verify(authKafkaPublisher).sendSyncUser(any(UsersServiceUser.class));
 
             ArgumentCaptor<MailRequest> mailCaptor = ArgumentCaptor.forClass(MailRequest.class);
             verify(authKafkaPublisher).sendWelcomeEmail(mailCaptor.capture());
@@ -167,7 +158,7 @@ class AuthServiceTest {
 
             // then
             ArgumentCaptor<UsersServiceUser> userCaptor = ArgumentCaptor.forClass(UsersServiceUser.class);
-            verify(userClient).create(userCaptor.capture(), eq("test-it-secret"));
+            verify(authKafkaPublisher).sendSyncUser(userCaptor.capture());
 
             UsersServiceUser capturedUser = userCaptor.getValue();
             assertEquals(42L, capturedUser.getId());
