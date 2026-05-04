@@ -268,7 +268,7 @@ public class OfferService {
 
         if (targetStatus == OfferStatus.COMPLAINT) {
             if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
-                throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be completed");
+                throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
             }
 
             if (!offer.getCreatorId().equals(userId) && !offer.getCollectorId().equals(userId)) {
