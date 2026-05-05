@@ -43,6 +43,7 @@ export const useMyOffers = () => {
     queryKey: offerKeys.mine(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my");
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
   });
@@ -97,7 +98,7 @@ export const useCreateOffer = () => {
   });
 };
 
-// PUT /offer/{id} - update an existing offer
+// PATCH /offer/{id} - update an existing offer
 export const useUpdateOffer = () => {
   const queryClient = useQueryClient();
 
@@ -158,6 +159,20 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
         pathname: "/(app)/success-screen",
         params: { totalIncome },
       });
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+// POST /offer/confirm/{offerId} - confirm an offer
+export const useConfirmOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>>({
+    mutationFn: async () => {
+      await apiClient.post(`/offer/confirm/${offerId}`);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });

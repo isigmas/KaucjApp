@@ -1,4 +1,7 @@
-import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
+import {
+  useChangeOfferStatus,
+  useConfirmOffer,
+} from "@/src/api/hooks/use-offer";
 import { colors, rounded, spacing } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { Check, MessageCircle } from "lucide-react-native";
@@ -11,7 +14,7 @@ interface BookingActionsProps {
 
 export default function BookingActions({ offerId }: BookingActionsProps) {
   const router = useRouter();
-  const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
+  const { mutate: confirmOffer, isPending } = useConfirmOffer(offerId);
 
   const handleComplete = () => {
     Alert.alert(
@@ -23,20 +26,7 @@ export default function BookingActions({ offerId }: BookingActionsProps) {
           text: "Potwierdzam",
           style: "default",
           onPress: () => {
-            changeOfferStatus(
-              { offerId, newStatus: "COMPLETED" },
-              {
-                onSuccess: () => {
-                  router.replace("/profile/bookings");
-                },
-                onError: (error) => {
-                  const message =
-                    error.response?.data?.message ||
-                    "Nie udało się zakończyć oferty.";
-                  Alert.alert("Błąd", message);
-                },
-              },
-            );
+            confirmOffer();
           },
         },
       ],
