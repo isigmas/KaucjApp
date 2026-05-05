@@ -1,28 +1,45 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
-import { colors, spacing } from "@/src/theme";
-import SectionCard from "../section-card";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 import CardTitle from "../card-title";
+import SectionCard from "../section-card";
 
 interface OfferItemsCardProps {
   offer: Offer;
+  /**
+   * When true, renders only the inner rows without a SectionCard wrapper or
+   * title. Useful when embedding inside another card (e.g. an expandable one).
+   */
+  bare?: boolean;
 }
 
-export default function OfferItemsCard({ offer }: OfferItemsCardProps) {
-  return (
-    <SectionCard>
-      <CardTitle>Opakowania kaucyjne</CardTitle>
+export default function OfferItemsCard({
+  offer,
+  bare = false,
+}: OfferItemsCardProps) {
+  const body = (
+    <View style={bare ? styles.bareContainer : undefined}>
       <ItemRow
         label="Butelki plastikowe"
         quantity={offer.plastic_quantity}
         price={offer.plastic_price}
       />
+      <View style={styles.rowDivider} />
       <ItemRow
         label="Puszki"
         quantity={offer.can_quantity}
         price={offer.can_price}
       />
+    </View>
+  );
+
+  if (bare) return body;
+
+  return (
+    <SectionCard>
+      <CardTitle>Opakowania kaucyjne</CardTitle>
+      {body}
     </SectionCard>
   );
 }
@@ -53,11 +70,21 @@ function ItemRow({ label, quantity, price }: ItemRowProps) {
 }
 
 const styles = StyleSheet.create({
+  bareContainer: {
+    backgroundColor: colors.background.subtle,
+    borderRadius: rounded.lg,
+    paddingHorizontal: spacing.md,
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: spacing.sm,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: colors.status.border,
+    opacity: 0.6,
   },
   info: {
     flex: 1,

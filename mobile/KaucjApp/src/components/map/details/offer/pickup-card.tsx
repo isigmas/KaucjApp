@@ -1,26 +1,42 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "@/src/theme";
-import SectionCard from "../section-card";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 import SectionTitle from "../card-title";
+import SectionCard from "../section-card";
 
 interface PickupCardProps {
   address: string;
   instructions?: string | null;
+  /**
+   * When true, renders only the address/instructions block without a
+   * SectionCard wrapper or title.
+   */
+  bare?: boolean;
 }
 
-export default function PickupCard({ address, instructions }: PickupCardProps) {
-  return (
-    <SectionCard>
-      <SectionTitle>Adres odbioru</SectionTitle>
+export default function PickupCard({
+  address,
+  instructions,
+  bare = false,
+}: PickupCardProps) {
+  const body = (
+    <>
       <Text style={styles.primaryText}>{address}</Text>
-
       {instructions ? (
         <View style={styles.instructionBox}>
-          <Text style={styles.instructionLabel}>Instrukcje:</Text>
+          <Text style={styles.instructionLabel}>Instrukcje</Text>
           <Text style={styles.secondaryText}>{instructions}</Text>
         </View>
       ) : null}
+    </>
+  );
+
+  if (bare) return <View>{body}</View>;
+
+  return (
+    <SectionCard>
+      <SectionTitle>Adres odbioru</SectionTitle>
+      {body}
     </SectionCard>
   );
 }
@@ -30,11 +46,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.primary,
     fontWeight: "500",
+    lineHeight: 22,
   },
   secondaryText: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.text.secondary,
     marginTop: 2,
+    lineHeight: 20,
   },
   instructionBox: {
     marginTop: spacing.sm,
@@ -43,9 +61,11 @@ const styles = StyleSheet.create({
     borderTopColor: colors.status.border,
   },
   instructionLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.text.secondary,
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.muted,
     textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 2,
   },
 });
