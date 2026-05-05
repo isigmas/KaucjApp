@@ -33,7 +33,7 @@ export const getOfferStatusConfig = (status: OfferStatus) => {
     case "RESERVED":
       return { color: colors.status.warning, label: "Zarezerwowana" };
     case "COMPLETED":
-      return { color: colors.status.success, label: "Zakończona" };
+      return { color: colors.accent.base, label: "Zakończona" };
     case "CANCELED":
       return { color: colors.status.error, label: "Anulowana" };
     case "PENDING_CONFIRMATION":
