@@ -1,4 +1,9 @@
-export type OfferStatus = "OPEN" | "RESERVED" | "COMPLETED" | "CANCELED";
+export type OfferStatus =
+  | "OPEN"
+  | "RESERVED"
+  | "COMPLETED"
+  | "CANCELED"
+  | "PENDING_CONFIRMATION";
 
 export interface Offer {
   offer_id: number;

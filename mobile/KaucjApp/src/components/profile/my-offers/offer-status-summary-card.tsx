@@ -65,6 +65,12 @@ function getStatusContent(offer: Offer) {
   const price = formatPrice(offer.total_prize);
 
   switch (offer.status) {
+    case "OPEN":
+      return {
+        title: "Czeka na kuriera",
+        description: `Po rezerwacji kurier odbierze ${qty} za ${price}.`,
+        icon: <Hourglass size={18} color={colors.primary.base} />,
+      };
     case "RESERVED":
       return {
         title: "Oferta zarezerwowana",
@@ -77,12 +83,13 @@ function getStatusContent(offer: Offer) {
           />
         ),
       };
-    case "OPEN":
+    case "PENDING_CONFIRMATION":
       return {
-        title: "Czeka na kuriera",
-        description: `Po rezerwacji kurier odbierze ${qty} za ${price}.`,
+        title: "Czeka na potwierdzenie",
+        description: `Kurier potwierdził odbiór ${qty} za ${price}.`,
         icon: <Hourglass size={18} color={colors.primary.base} />,
       };
+
     case "COMPLETED":
       return {
         title: "Oferta zakończona",
