@@ -1,4 +1,4 @@
-import { DepositMachineStatus, OfferStatus } from "@/src/types";
+import { DepositMachineStatus, Offer, OfferStatus } from "@/src/types";
 import { colors } from "../theme";
 export * from "./map-box";
 export * from "./countdown";
@@ -31,7 +31,7 @@ export const getOfferStatusConfig = (status: OfferStatus) => {
     case "OPEN":
       return { color: colors.primary.base, label: "Otwarta" };
     case "RESERVED":
-      return { color: colors.accent.base, label: "Zarezerwowana" };
+      return { color: colors.status.warning, label: "Zarezerwowana" };
     case "COMPLETED":
       return { color: colors.status.success, label: "Zakończona" };
     case "CANCELED":
@@ -65,4 +65,21 @@ export const formatDate = (dateString: string) => {
 export const formatHour = (time: string) => {
   const [hour, minute] = time.split(":");
   return `${hour}:${minute}`;
+};
+
+export const formatPrice = (value: number) => {
+  return `${value.toFixed(2).replace(".", ",")} zł`;
+};
+
+export const getPolishPackageQuantity = (
+  n: number,
+  showNumber: boolean = false,
+) => {
+  if (n === 1) return "jedno opakowanie kaucyjne";
+  const last = n % 10;
+  const lastTwo = n % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return showNumber ? n + " opakowania kaucyjne" : "opakowania kaucyjne";
+  }
+  return showNumber ? n + " opakowań kaucyjnych" : "opakowań kaucyjnych";
 };

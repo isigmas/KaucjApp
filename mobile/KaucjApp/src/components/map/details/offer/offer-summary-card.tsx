@@ -1,4 +1,4 @@
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -7,21 +7,23 @@ import SectionCard from "../section-card";
 interface OfferSummaryCardProps {
   offer: Offer;
   isInMyOffers?: boolean;
+  bare?: boolean; //borderless card
 }
 
 export function OfferSummaryCard({
   offer,
   isInMyOffers = false,
+  bare = false,
 }: OfferSummaryCardProps) {
-  return (
-    <SectionCard style={styles.card}>
+  const body = (
+    <View style={bare ? styles.bareInner : undefined}>
       <SummaryRow
         label="Łączna liczba opakowań kaucyjnych"
         value={String(offer.total_quantity)}
       />
       <View style={styles.divider} />
       <SummaryRow
-        label="Całkowita cena oferty"
+        label="Cena oferty"
         value={`${offer.total_prize.toFixed(2)} zł`}
         isBold
       />
@@ -29,20 +31,24 @@ export function OfferSummaryCard({
       {!isInMyOffers && (
         <>
           <SummaryRow
-            label="Łączna wartość kaucji"
+            label="Wartość kaucji"
             value={`${(offer.total_quantity * 0.5).toFixed(2)} zł`}
             isBold
           />
 
           <SummaryRow
-            label="Całkowity zysk"
+            label="Zysk kuriera"
             value={`${offer.total_income.toFixed(2)} zł`}
             isBold
           />
         </>
       )}
-    </SectionCard>
+    </View>
   );
+
+  if (bare) return body;
+
+  return <SectionCard style={styles.card}>{body}</SectionCard>;
 }
 
 interface SummaryRowProps {
@@ -65,10 +71,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.light,
     borderWidth: 0,
   },
+  bareInner: {
+    backgroundColor: colors.primary.light,
+    borderRadius: rounded.lg,
+    padding: spacing.md,
+  },
   divider: {
     borderTopWidth: 1,
     borderTopColor: colors.primary.base,
     marginBottom: spacing.sm,
+    opacity: 0.4,
   },
   row: {
     flexDirection: "row",
