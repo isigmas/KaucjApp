@@ -97,24 +97,50 @@ export default function OfferActions({ offer }: OfferActionsProps) {
       </Pressable>
 
       {isReserved && (
-        <Pressable
+        <ActionButton
           onPress={handleComplete}
           disabled={isPending}
-          style={({ pressed }) => [
-            styles.completeButton,
-            pressed && styles.completeButtonPressed,
-            isPending && styles.buttonDisabled,
-          ]}
-        >
-          <CheckCircle size={18} color={colors.text.white} />
-          <Text style={styles.completeButtonText}>
-            {isPending ? "Zapisywanie..." : "Potwierdź odbiór"}
-          </Text>
-        </Pressable>
+          isPending={isPending}
+          label="Potwierdź odbiór"
+          icon={<CheckCircle size={18} color={colors.text.white} />}
+        />
       )}
     </Animated.View>
   );
 }
+
+interface ActionButtonProps {
+  onPress: () => void;
+  disabled: boolean;
+  isPending: boolean;
+  label: string;
+  icon: React.ReactNode;
+}
+
+export const ActionButton = ({
+  onPress,
+  disabled,
+  isPending,
+  label,
+  icon,
+}: ActionButtonProps) => {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.completeButton,
+        pressed && styles.completeButtonPressed,
+        isPending && styles.buttonDisabled,
+      ]}
+    >
+      {icon}
+      <Text style={styles.completeButtonText}>
+        {isPending ? "Zapisywanie..." : label}
+      </Text>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

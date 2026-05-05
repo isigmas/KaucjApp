@@ -5,6 +5,7 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   Calendar,
+  CheckCircle,
   CheckCircle2,
   Clock3,
   Hourglass,
@@ -12,16 +13,41 @@ import {
   XCircle,
 } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import CourierCard from "./courier-card";
+import { useConfirmOffer } from "@/src/api/hooks/use-offer";
+import { ActionButton } from "./offer-actions";
 
 interface OfferHeadlineProps {
   offer: Offer;
 }
 
 export default function OfferHeadline({ offer }: OfferHeadlineProps) {
+  const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
+
   const isReserved = offer.status === "RESERVED";
+  const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
+
+  const showCourierDetails =
+    (isReserved && offer.reserved_to) || isPendingConfirmation;
+
+  const handleComplete = () => {
+    Alert.alert(
+      "Potwierdź odbiór",
+      "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Potwierdź",
+          style: "default",
+          onPress: () => {
+            confirmOffer();
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <SectionCard style={styles.card}>
@@ -29,16 +55,34 @@ export default function OfferHeadline({ offer }: OfferHeadlineProps) {
 
       <StatusHeader offer={offer} />
 
-      {isReserved && offer.reserved_to ? (
+      {showCourierDetails ? (
         <>
           <View style={styles.hairline} />
           <CourierCard asCard={false} />
           <View style={styles.hairline} />
-          <Countdown
-            expiresAt={offer.reserved_to}
-            variant="block"
-            showBorder={false}
-          />
+
+          {isReserved && offer.reserved_to && (
+            <Countdown
+              expiresAt={offer.reserved_to}
+              variant="block"
+              showBorder={false}
+            />
+          )}
+
+          {isPendingConfirmation && (
+            <>
+              <ActionButton
+                onPress={handleComplete}
+                disabled={isPending}
+                isPending={isPending}
+                label="Potwierdź odbiór opakowań"
+                icon={<CheckCircle size={18} color={colors.text.white} />}
+              />
+              <Text style={styles.hint}>
+                Potwierdzenie odbioru kuriera zakończy ofertę.
+              </Text>
+            </>
+          )}
         </>
       ) : (
         <DateRow offer={offer} />
@@ -214,5 +258,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: colors.text.primary,
+  },
+
+  hint: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    textAlign: "center",
   },
 });
