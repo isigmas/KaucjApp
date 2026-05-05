@@ -93,6 +93,14 @@ module db 'modules/db.bicep' = {
   }
 }
 
+module eventhubs 'modules/eventhubs.bicep' = {
+  name: 'eventhubs-deployment'
+  params: {
+    location: location
+    namespaceName: '${environmentName}-eh-${uniqueString(resourceGroup().id)}'
+  }
+}
+
 module offersApp 'modules/app.bicep' = {
   name: 'offers-service-deployment'
   params: {
@@ -130,6 +138,7 @@ module usersApp 'modules/app.bicep' = {
     appSecrets: [
       { name: 'db-password', value: dbPassword }
       { name: 'it-secret', value: itSecret }
+      { name: 'kafka-jaas-config', value: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${eventhubs.outputs.connectionString}";' }
     ]
     envVars: [
       { name: 'IT_SECRET', secretRef: 'it-secret' }
@@ -137,6 +146,10 @@ module usersApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas-config' }
     ]
   }
 }
@@ -160,6 +173,7 @@ module authApp 'modules/app.bicep' = {
       { name: 'admin-username', value: adminUsername }
       { name: 'admin-email', value: adminEmail }
       { name: 'admin-password', value: adminPassword }
+      { name: 'kafka-jaas-config', value: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${eventhubs.outputs.connectionString}";' }
     ]
     envVars: [
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/auth_db?sslmode=require' }
@@ -174,6 +188,10 @@ module authApp 'modules/app.bicep' = {
       { name: 'ADMIN_EMAIL', secretRef: 'admin-email' }
       { name: 'USER_SERVICE_URL', value: 'http://${usersApp.outputs.fqdn}' }
       { name: 'NOTIFICATION_SERVICE_URL', value: 'http://${notificationApp.outputs.fqdn}' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas-config' }
     ]
   }
 }
@@ -214,11 +232,16 @@ module notificationApp 'modules/app.bicep' = {
     acrPassword: acr.listCredentials().passwords[0].value
     appSecrets: [
       { name: 'mail-password', value: mailPassword }
+      { name: 'kafka-jaas-config', value: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${eventhubs.outputs.connectionString}";' }
     ]
     envVars: [
       { name: 'BASE_URL', value: baseUrl }
       { name: 'MAIL_USERNAME', value: mailUsername }
       { name: 'MAIL_PASSWORD', secretRef: 'mail-password' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas-config' }
     ]
   }
 }
