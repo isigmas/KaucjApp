@@ -49,10 +49,10 @@ public abstract class BaseIntegrationTest {
                 .phone(node.has("phone") ? node.get("phone").asText() : null)
                 .email(node.get("email").asText())
                 .build();
-        usersKafkaListener.handleUserSync(user);
+        usersKafkaListener.handleUserSync(objectMapper.writeValueAsString(user));
     }
 
     public void deleteUser(Long userId) {
-        usersKafkaListener.handleUserDelete(userId);
+        usersKafkaListener.handleUserDelete(String.valueOf(userId));
     }
 }
