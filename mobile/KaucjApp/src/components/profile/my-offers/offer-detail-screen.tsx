@@ -11,11 +11,9 @@ import { Offer } from "@/src/types";
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import Animated from "react-native-reanimated";
-import CourierCard from "./courier-card";
-import ExpandableCard, { LAYOUT_SPRING } from "./expandable-card";
+import ExpandableCard from "./expandable-card";
 import OfferActions from "./offer-actions";
-import OfferHeadline from "./offer-headline";
+import OfferStatusSummaryCard from "./offer-status-summary-card";
 
 interface OfferDetailScreenProps {
   offerId: number;
@@ -53,11 +51,11 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
     >
-      <OfferHeadline offer={offer} />
-
-      {offer.status === "RESERVED" && <CourierCard />}
+      <OfferStatusSummaryCard offer={offer} />
 
       <OfferDetailsAccordion offer={offer} />
+
+      <OfferActions offer={offer} />
     </ScrollView>
   );
 }
@@ -100,10 +98,6 @@ function OfferDetailsAccordion({ offer }: { offer: Offer }) {
           />
         </View>
       </ExpandableCard>
-
-      <Animated.View layout={LAYOUT_SPRING}>
-        <OfferActions offer={offer} />
-      </Animated.View>
     </>
   );
 }

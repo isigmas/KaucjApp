@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { CheckCircle, XCircle } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { LAYOUT_SPRING } from "./expandable-card";
+import Animated from "react-native-reanimated";
 
 interface OfferActionsProps {
   offer: Offer;
@@ -80,7 +82,7 @@ export default function OfferActions({ offer }: OfferActionsProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} layout={LAYOUT_SPRING}>
       <Pressable
         onPress={handleCancel}
         disabled={isPending}
@@ -110,7 +112,7 @@ export default function OfferActions({ offer }: OfferActionsProps) {
           </Text>
         </Pressable>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

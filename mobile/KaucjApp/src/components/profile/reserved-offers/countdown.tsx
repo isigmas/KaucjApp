@@ -37,7 +37,9 @@ export default function Countdown({
         ]}
       >
         <Text style={[styles.blockHeaderText, { color: config.fg }]}>
-          {urgency === "expired" ? "Rezerwacja wygasła" : "Pozostały czas"}
+          {urgency === "expired"
+            ? "Rezerwacja wygasła"
+            : "Pozostały czas rezerwacji"}
         </Text>
 
         <View style={styles.blockHeader}>
@@ -55,7 +57,7 @@ export default function Countdown({
 
         {urgency === "critical" && (
           <Text style={{ color: config.fg }}>
-            Za chwilę twoja rezerwacja wygaśnie
+            Rezerwacja za chwilę wygaśnie
           </Text>
         )}
       </View>

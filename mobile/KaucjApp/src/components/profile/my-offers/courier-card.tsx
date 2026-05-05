@@ -13,7 +13,11 @@ const MOCK_COURIER = {
   joinedYear: 2023,
 };
 
-export default function CourierCard() {
+interface CourierCardProps {
+  asCard?: boolean;
+}
+
+export default function CourierCard({ asCard = true }: CourierCardProps) {
   const handleCall = () => {
     Alert.alert(
       "Wkrótce",
@@ -27,13 +31,9 @@ export default function CourierCard() {
       "Funkcja wiadomości do kuriera będzie dostępna już niedługo.",
     );
   };
-
-  return (
-    <SectionCard>
-      <View style={styles.titleRow}>
-        <Truck size={16} color={colors.accent.base} />
-        <Text style={styles.sectionTitle}>Kto odbiera tę ofertę?</Text>
-      </View>
+  const body = (
+    <>
+      <Text style={styles.sectionLabel}>Kto odbiera tę ofertę?</Text>
 
       <View style={styles.courierRow}>
         <View style={styles.avatar}>
@@ -42,115 +42,125 @@ export default function CourierCard() {
 
         <View style={styles.courierInfo}>
           <Text style={styles.courierName}>{MOCK_COURIER.name}</Text>
-          <View style={styles.metaRow}>
+          <View style={styles.ratingRow}>
             <Star
               size={12}
               color={colors.status.warning}
               fill={colors.status.warning}
             />
-            <Text style={styles.metaText}>
+            <Text style={styles.ratingText}>
               {MOCK_COURIER.rating.toFixed(1)} · {MOCK_COURIER.completedOrders}{" "}
               odbiorów
             </Text>
           </View>
-          <Text style={styles.metaSub}>
+          <Text style={styles.courierSince}>
             Kurier od {MOCK_COURIER.joinedYear}
           </Text>
         </View>
       </View>
 
-      <View style={styles.actions}>
+      <View style={styles.courierActions}>
         <Pressable
           onPress={handleCall}
           style={({ pressed }) => [
-            styles.actionButton,
-            styles.actionButtonSecondary,
-            pressed && styles.actionButtonPressed,
+            styles.actionBtn,
+            styles.actionBtnOutline,
+            pressed && styles.actionBtnOutlinePressed,
           ]}
         >
-          <Phone size={16} color={colors.accent.base} />
-          <Text style={styles.actionButtonSecondaryText}>Zadzwoń</Text>
+          <Phone size={15} color={colors.accent.base} strokeWidth={2.2} />
+          <Text style={styles.actionBtnOutlineLabel}>Zadzwoń</Text>
         </Pressable>
 
         <Pressable
           onPress={handleMessage}
           style={({ pressed }) => [
-            styles.actionButton,
-            styles.actionButtonPrimary,
-            pressed && styles.actionButtonPrimaryPressed,
+            styles.actionBtn,
+            styles.actionBtnFill,
+            pressed && styles.actionBtnFillPressed,
           ]}
         >
-          <MessageCircle size={16} color={colors.text.white} />
-          <Text style={styles.actionButtonPrimaryText}>Napisz</Text>
+          <MessageCircle
+            size={15}
+            color={colors.text.white}
+            strokeWidth={2.2}
+          />
+          <Text style={styles.actionBtnFillLabel}>Napisz</Text>
         </Pressable>
       </View>
-    </SectionCard>
+    </>
   );
+  if (!asCard) {
+    return <View style={styles.courierSection}>{body}</View>;
+  }
+
+  return <SectionCard>{body}</SectionCard>;
 }
 
 const styles = StyleSheet.create({
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: spacing.md,
+  courierSection: {
+    gap: spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 12,
+  sectionLabel: {
+    fontSize: 11,
     fontWeight: "700",
+    color: colors.text.muted,
     textTransform: "uppercase",
-    letterSpacing: 0.4,
-    color: colors.accent.base,
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   courierRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    marginBottom: spacing.md,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: rounded.pill,
     backgroundColor: colors.accent.light,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.accent.base,
+    borderWidth: 1.5,
+    borderColor: colors.accent.base + "60",
   },
   avatarText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
     color: colors.accent.dark,
+    letterSpacing: 0.5,
   },
   courierInfo: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   courierName: {
     fontSize: 16,
     fontWeight: "700",
     color: colors.text.primary,
   },
-  metaRow: {
+  ratingRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  metaText: {
+  ratingText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "500",
     color: colors.text.secondary,
   },
-  metaSub: {
+  courierSince: {
     fontSize: 12,
     color: colors.text.muted,
   },
-  actions: {
+
+  // Action buttons
+  courierActions: {
     flexDirection: "row",
     gap: spacing.sm,
+    marginTop: spacing.xs,
   },
-  actionButton: {
+  actionBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -159,31 +169,31 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     borderRadius: rounded.lg,
   },
-  actionButtonSecondary: {
+  actionBtnOutline: {
     borderWidth: 1.5,
     borderColor: colors.accent.base,
     backgroundColor: colors.background.card,
   },
-  actionButtonPressed: {
+  actionBtnOutlinePressed: {
     backgroundColor: colors.accent.light,
   },
-  actionButtonSecondaryText: {
+  actionBtnOutlineLabel: {
     fontSize: 14,
     fontWeight: "700",
     color: colors.accent.base,
   },
-  actionButtonPrimary: {
+  actionBtnFill: {
     backgroundColor: colors.accent.base,
     shadowColor: colors.accent.dark,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.18,
     shadowRadius: 6,
     elevation: 3,
   },
-  actionButtonPrimaryPressed: {
+  actionBtnFillPressed: {
     backgroundColor: colors.accent.dark,
   },
-  actionButtonPrimaryText: {
+  actionBtnFillLabel: {
     fontSize: 14,
     fontWeight: "700",
     color: colors.text.white,
