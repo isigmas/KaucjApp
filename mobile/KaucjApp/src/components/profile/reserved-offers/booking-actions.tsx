@@ -1,10 +1,11 @@
 import {
   useChangeOfferStatus,
+  useComplaintOffer,
   useConfirmOffer,
 } from "@/src/api/hooks/use-offer";
 import { colors, rounded, spacing } from "@/src/theme";
 import { useRouter } from "expo-router";
-import { Check, MessageCircle } from "lucide-react-native";
+import { AlertCircle, Check, MessageCircle } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -14,7 +15,11 @@ interface BookingActionsProps {
 
 export default function BookingActions({ offerId }: BookingActionsProps) {
   const router = useRouter();
-  const { mutate: confirmOffer, isPending } = useConfirmOffer(offerId);
+  const { mutate: confirmOffer, isPending: isConfirmPending } =
+    useConfirmOffer(offerId);
+  const { mutate: complaintOffer, isPending: isComplaintPending } =
+    useComplaintOffer(offerId);
+  const isPending = isConfirmPending || isComplaintPending;
 
   const handleComplete = () => {
     Alert.alert(
@@ -33,24 +38,37 @@ export default function BookingActions({ offerId }: BookingActionsProps) {
     );
   };
 
-  const handleContact = () => {
+  const handleComplaint = () => {
     Alert.alert(
-      "Wkrótce",
-      "Funkcja kontaktu ze sprzedającym będzie dostępna już niedługo.",
+      "Zgłoś problem",
+      "Czy chcesz zgłosić problem z ofertą? Zgłoszenie zakończy ofertę i nie będzie widoczna.",
+      [
+        { text: "anuluj", style: "cancel" },
+        {
+          text: "Zgłoś problem",
+          style: "destructive",
+          onPress: () => {
+            complaintOffer();
+          },
+        },
+      ],
     );
   };
 
   return (
     <View style={styles.container}>
       <Pressable
-        onPress={handleContact}
+        onPress={handleComplaint}
         style={({ pressed }) => [
           styles.secondaryButton,
           pressed && styles.secondaryButtonPressed,
         ]}
+        disabled={isComplaintPending}
       >
-        <MessageCircle size={18} color={colors.primary.base} />
-        <Text style={styles.secondaryButtonText}>Skontaktuj się</Text>
+        <AlertCircle size={18} color={colors.status.warning} />
+        <Text style={styles.secondaryButtonText}>
+          {isComplaintPending ? "Zgłaszanie..." : "Zgłoś problem"}
+        </Text>
       </Pressable>
 
       <Pressable
@@ -64,7 +82,7 @@ export default function BookingActions({ offerId }: BookingActionsProps) {
       >
         <Check size={18} color={colors.text.white} />
         <Text style={styles.primaryButtonText}>
-          {isPending ? "Potwierdzanie..." : "Potwierdź odbiór"}
+          {isConfirmPending ? "Potwierdzanie..." : "Potwierdź odbiór"}
         </Text>
       </Pressable>
     </View>
@@ -86,14 +104,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md - 2,
     borderRadius: rounded.xl,
     borderWidth: 1.5,
-    borderColor: colors.primary.base,
+    borderColor: colors.status.warning,
     backgroundColor: colors.background.card,
   },
   secondaryButtonPressed: {
     backgroundColor: colors.primary.light,
   },
   secondaryButtonText: {
-    color: colors.primary.base,
+    color: colors.status.warning,
     fontWeight: "700",
     fontSize: 15,
   },
