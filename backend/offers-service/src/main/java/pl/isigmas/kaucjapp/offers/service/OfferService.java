@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
-import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
-import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
-import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
+import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
@@ -342,13 +339,14 @@ public class OfferService {
 
         OfferStatus currentStatus = offer.getStatus();
 
-        if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
-            throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
-        }
-
         if (!offer.getCreatorId().equals(complainantId) && !offer.getCollectorId().equals(complainantId)) {
             throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
         }
+
+        if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION && currentStatus != OfferStatus.COMPLAINT) {
+            throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION or already COMPLAINT offers can be complaint");
+        }
+
         offer.setConfirmationDeadline(null);
         offer.setStatus(OfferStatus.COMPLAINT);
 
@@ -367,4 +365,20 @@ public class OfferService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDTO> getAllComplaints() {
+        return complaintRepository.findAllByOrderByIdDesc().stream()
+                .map(this::mapToComplaintResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private ComplaintResponseDTO mapToComplaintResponseDTO(OfferComplaint complaint) {
+        return ComplaintResponseDTO.builder()
+                .complaintId(complaint.getId())
+                .offerId(complaint.getOffer().getId())
+                .complainant(complaint.getComplainant())
+                .complaintReason(complaint.getComplaintReason())
+                .message(complaint.getMessage())
+                .build();
+    }
 }

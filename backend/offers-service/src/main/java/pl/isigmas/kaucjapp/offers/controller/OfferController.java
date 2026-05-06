@@ -10,10 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
-import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
-import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
-import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
+import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.service.OfferService;
 
 import java.util.List;
@@ -234,5 +231,11 @@ public class OfferController {
             service.addComplaint(userId,id,complaintDTO);
             log.info("Creating complaint for offer {} by user {}", id, userId);
             return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/admin/complaints")
+    public ResponseEntity<List<ComplaintResponseDTO>> getComplaints(){
+        log.info("Getting all complaints");
+        return ResponseEntity.ok(service.getAllComplaints());
     }
 }
