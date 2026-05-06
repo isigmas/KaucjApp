@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -339,7 +340,8 @@ public class OfferService {
 
         OfferStatus currentStatus = offer.getStatus();
 
-        if (!offer.getCreatorId().equals(complainantId) && !offer.getCollectorId().equals(complainantId)) {
+        if (!Objects.equals(offer.getCreatorId(), complainantId)
+                && !Objects.equals(offer.getCollectorId(), complainantId)) {
             throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
         }
 

@@ -226,7 +226,7 @@ public class OfferController {
     public ResponseEntity<Void> makeComplaint(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
-            @RequestBody ComplaintDTO complaintDTO
+            @Valid @RequestBody ComplaintDTO complaintDTO
             ){
             service.addComplaint(userId,id,complaintDTO);
             log.info("Creating complaint for offer {} by user {}", id, userId);
