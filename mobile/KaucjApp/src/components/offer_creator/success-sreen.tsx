@@ -15,7 +15,10 @@ export default function OfferSuccessScreen() {
   const router = useRouter();
 
   const handleGoHome = () => {
-    router.replace("/(app)/(tabs)/home"); // Replace with the actual path to your home screen
+    router.navigate("/(app)/(tabs)/home");
+  };
+  const handleAddAnotherOffer = () => {
+    router.replace("/(app)/(tabs)/create");
   };
 
   return (
@@ -47,6 +50,13 @@ export default function OfferSuccessScreen() {
         >
           <Pressable style={styles.primaryButton} onPress={handleGoHome}>
             <Text style={styles.primaryButtonText}>Wróć na stronę główną</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.primaryButton}
+            onPress={handleAddAnotherOffer}
+          >
+            <Text style={styles.primaryButtonText}>Dodaj kolejną ofertę</Text>
           </Pressable>
         </Animated.View>
       </View>
