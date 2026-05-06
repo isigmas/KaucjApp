@@ -164,6 +164,18 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
   });
 };
 
+// POST /offer/{id}/status/COMPLAINT - complaint an offer
+export const useComplaintOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>>({
+    mutationFn: () => apiClient.post(`/offer/${offerId}/status/COMPLAINT`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
 // POST /offer/confirm/{offerId} - confirm an offer
 export const useConfirmOffer = (offerId: number) => {
   const queryClient = useQueryClient();
