@@ -233,9 +233,4 @@ public class OfferController {
             return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/admin/complaints")
-    public ResponseEntity<List<ComplaintResponseDTO>> getComplaints(){
-        log.info("Getting all complaints");
-        return ResponseEntity.ok(service.getAllComplaints());
-    }
 }
