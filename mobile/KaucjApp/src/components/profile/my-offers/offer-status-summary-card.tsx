@@ -23,7 +23,7 @@ interface OfferHeadlineProps {
   offer: Offer;
 }
 
-export default function OfferHeadline({ offer }: OfferHeadlineProps) {
+export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
 
   const isReserved = offer.status === "RESERVED";
