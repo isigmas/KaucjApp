@@ -31,6 +31,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
   const isComplaint = offer.status === "COMPLAINT";
 
+  const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
   const showCourierDetails =
     (isReserved && offer.reserved_to) || isPendingConfirmation || isComplaint;
 
@@ -70,7 +71,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
 
   return (
     <SectionCard style={styles.card}>
-      {!isReserved && <OfferSatusPill status={offer.status} />}
+      {showStatusPill && <OfferSatusPill status={offer.status} />}
 
       <StatusHeader offer={offer} />
 
@@ -146,7 +147,7 @@ function getStatusContent(offer: Offer) {
     case "OPEN":
       return {
         title: "Czeka na kuriera",
-        description: `Po rezerwacji kurier odbierze ${qty} za ${price}.`,
+        description: `Po rezerwacji kurier odbierze od Ciebie ${qty} za ${price}.`,
         icon: <Hourglass size={18} color={colors.primary.base} />,
       };
     case "RESERVED":
