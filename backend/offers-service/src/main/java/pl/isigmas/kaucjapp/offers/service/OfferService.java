@@ -239,6 +239,9 @@ public class OfferService {
             if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
+            if (currentStatus != OfferStatus.OPEN) {
+                throw new OfferAlreadyClaimedException("Only OPEN offers can be reserved");
+            }
             offer.setCollectorId(userId);
             offer.setReservedAt(Instant.now());
             offer.setReservedTo(Instant.now().plus(Duration.ofHours(2)));
