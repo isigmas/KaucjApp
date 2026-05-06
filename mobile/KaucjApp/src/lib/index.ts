@@ -38,6 +38,8 @@ export const getOfferStatusConfig = (status: OfferStatus) => {
       return { color: colors.status.error, label: "Anulowana" };
     case "PENDING_CONFIRMATION":
       return { color: colors.primary.base, label: "Czeka na potwierdzenie" };
+    case "COMPLAINT":
+      return { color: colors.status.error, label: "Zgłoszono problem" };
   }
 };
 

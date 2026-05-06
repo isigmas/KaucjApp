@@ -4,6 +4,7 @@ import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
+  AlertCircle,
   Calendar,
   CheckCircle,
   CheckCircle2,
@@ -146,6 +147,12 @@ function getStatusContent(offer: Offer) {
         description:
           "Ta oferta została anulowana i nie jest już widoczna dla kurierów.",
         icon: <XCircle size={18} color={colors.status.error} />,
+      };
+    case "COMPLAINT":
+      return {
+        title: "Zgłoszono problem",
+        description: `Zgłoszono problem z ofertą.`,
+        icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }
 }
