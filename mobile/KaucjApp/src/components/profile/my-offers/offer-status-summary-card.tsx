@@ -29,14 +29,32 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
 
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
+  const isComplaint = offer.status === "COMPLAINT";
 
   const showCourierDetails =
-    (isReserved && offer.reserved_to) || isPendingConfirmation;
+    (isReserved && offer.reserved_to) || isPendingConfirmation || isComplaint;
 
   const handleComplete = () => {
     Alert.alert(
       "Potwierdź odbiór",
       "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Potwierdź",
+          style: "default",
+          onPress: () => {
+            confirmOffer();
+          },
+        },
+      ],
+    );
+  };
+
+  const handleComplaint = () => {
+    Alert.alert(
+      "Potwierdź rozwiązanie problemu",
+      "Czy rozwiązaliście problem z ofertą? Potwierdzenie rozwiązania problemu zakończy ofertę.",
       [
         { text: "Anuluj", style: "cancel" },
         {
@@ -81,6 +99,21 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               />
               <Text style={styles.hint}>
                 Potwierdzenie odbioru kuriera zakończy ofertę.
+              </Text>
+            </>
+          )}
+          {isComplaint && (
+            <>
+              <ActionButton
+                backgroundColor={colors.status.error}
+                onPress={handleComplaint}
+                disabled={isPending}
+                isPending={isPending}
+                label="Potwierdź rozwiązanie problemu"
+                icon={<CheckCircle size={18} color={colors.text.white} />}
+              />
+              <Text style={styles.hint}>
+                Potwierdzenie rozwiązania problemu zakończy ofertę.
               </Text>
             </>
           )}
@@ -151,7 +184,7 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Zgłoszono problem z ofertą.`,
+        description: `Kurier zgłosił problem z ofertą. Skontaktuj się z nim aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }

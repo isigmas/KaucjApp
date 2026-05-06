@@ -114,6 +114,7 @@ interface ActionButtonProps {
   disabled: boolean;
   isPending: boolean;
   label: string;
+  backgroundColor?: string;
   icon: React.ReactNode;
 }
 
@@ -123,12 +124,14 @@ export const ActionButton = ({
   isPending,
   label,
   icon,
+  backgroundColor = colors.primary.base,
 }: ActionButtonProps) => {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
+        { backgroundColor: backgroundColor },
         styles.completeButton,
         pressed && styles.completeButtonPressed,
         isPending && styles.buttonDisabled,
@@ -176,7 +179,6 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: spacing.md - 2,
     borderRadius: rounded.xl,
-    backgroundColor: colors.primary.base,
     shadowColor: colors.primary.dark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
