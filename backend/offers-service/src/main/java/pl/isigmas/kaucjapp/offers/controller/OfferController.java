@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
 import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
@@ -150,6 +151,7 @@ public class OfferController {
             @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId){
         service.confirmOffer(offerId,userId);
+        log.info("Confirmation of offer {} by user {}",offerId, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -221,5 +223,16 @@ public class OfferController {
 
         log.info("Searching for offers in Bounding Box: SW[{}, {}] to NE[{}, {}]", swLat, swLon, neLat, neLon);
         return ResponseEntity.ok(service.getOffersInArea(swLat, swLon, neLat, neLon));
+    }
+
+    @PostMapping("/complaint/{id}")
+    public ResponseEntity<Void> makeComplaint(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody ComplaintDTO complaintDTO
+            ){
+            service.addComplaint(userId,id,complaintDTO);
+            log.info("Creating complaint for offer {} by user {}", id, userId);
+            return ResponseEntity.ok().build();
     }
 }

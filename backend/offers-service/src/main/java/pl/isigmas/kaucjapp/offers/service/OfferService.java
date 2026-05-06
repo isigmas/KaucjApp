@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
 import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
 import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
@@ -34,6 +35,7 @@ public class OfferService {
 
     private final OfferRepository offerRepository;
     private final BottleTypeRepository bottleTypeRepository;
+    private final ComplaintRepository complaintRepository;
     private final GeoValidationService geoValidationService;
 
     @Transactional
@@ -140,7 +142,12 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
-        return offerRepository.findByCollectorIdAndStatus(userId, OfferStatus.RESERVED).stream()
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.RESERVED,
+                OfferStatus.PENDING_CONFIRMATION,
+                OfferStatus.COMPLAINT
+        );
+        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -271,15 +278,7 @@ public class OfferService {
         }
 
         if (targetStatus == OfferStatus.COMPLAINT) {
-            if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
-                throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
-            }
-
-            if (!offer.getCreatorId().equals(userId) && !offer.getCollectorId().equals(userId)) {
-                throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
-            }
-
-            offer.setConfirmationDeadline(null);
+            throw new OfferForbiddenException("Offer complaint can be done only by specific endpoint with a message");
         }
 
         offer.setStatus(targetStatus);
@@ -334,6 +333,37 @@ public class OfferService {
         if (!geoValidationService.isInPoland(latD, lonD)) {
             throw new OfferValidationException("Offer can only be created in Poland");
         }
+    }
+
+    @Transactional
+    public void addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint){
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        OfferStatus currentStatus = offer.getStatus();
+
+        if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
+            throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
+        }
+
+        if (!offer.getCreatorId().equals(complainantId) && !offer.getCollectorId().equals(complainantId)) {
+            throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
+        }
+        offer.setConfirmationDeadline(null);
+        offer.setStatus(OfferStatus.COMPLAINT);
+
+        OfferComplaint offerComplaint = new OfferComplaint();
+        offerComplaint.setOffer(offer);
+        if(complainantId.equals(offer.getCollectorId())){
+            offerComplaint.setComplainant(Complainant.COLLECTOR);
+        }
+        else {
+            offerComplaint.setComplainant(Complainant.CREATOR);
+        }
+        offerComplaint.setComplaintReason(complaint.getComplaintReason());
+        offerComplaint.setMessage(complaint.getMessage());
+
+        complaintRepository.save(offerComplaint);
     }
 
 
