@@ -39,20 +39,10 @@ export default function BookingActions({ offerId }: BookingActionsProps) {
   };
 
   const handleComplaint = () => {
-    Alert.alert(
-      "Zgłoś problem",
-      "Czy chcesz zgłosić problem z ofertą? Zgłoszenie zakończy ofertę i nie będzie widoczna.",
-      [
-        { text: "anuluj", style: "cancel" },
-        {
-          text: "Zgłoś problem",
-          style: "destructive",
-          onPress: () => {
-            complaintOffer();
-          },
-        },
-      ],
-    );
+    router.push({
+      pathname: "/profile/bookings/complaint",
+      params: { id: offerId },
+    });
   };
 
   return (

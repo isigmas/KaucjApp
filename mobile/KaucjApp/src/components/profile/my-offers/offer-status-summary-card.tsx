@@ -19,12 +19,14 @@ import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import CourierCard from "./courier-card";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { ActionButton } from "./offer-actions";
+import { useRouter } from "expo-router";
 
 interface OfferHeadlineProps {
   offer: Offer;
 }
 
 export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
+  const router = useRouter();
   const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
 
   const isReserved = offer.status === "RESERVED";
@@ -53,20 +55,10 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   };
 
   const handleComplaint = () => {
-    Alert.alert(
-      "Potwierdź rozwiązanie problemu",
-      "Czy rozwiązaliście problem z ofertą? Potwierdzenie rozwiązania problemu zakończy ofertę.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "default",
-          onPress: () => {
-            confirmOffer();
-          },
-        },
-      ],
-    );
+    router.push({
+      pathname: "/profile/offers/complaint",
+      params: { id: offer.offer_id },
+    });
   };
 
   return (
