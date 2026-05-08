@@ -1,7 +1,9 @@
-export type ComplaintReason =
-  | "INVALID_OFFER_CONTENT"
-  | "TROUBLE_WITH_OTHER_USER"
-  | "OTHER";
+export const COMPLAINT_REASONS = [
+  "INVALID_OFFER_CONTENT",
+  "TROUBLE_WITH_OTHER_USER",
+  "OTHER",
+] as const;
+export type ComplaintReason = (typeof COMPLAINT_REASONS)[number];
 export type Complainant = "CREATOR" | "COLLECTOR";
 
 export interface Complaint {
@@ -16,3 +18,10 @@ export interface ComplaintPayload {
   complaint_reason: ComplaintReason;
   message: string;
 }
+
+// UI
+export const REASON_LABELS: Record<ComplaintReason, string> = {
+  INVALID_OFFER_CONTENT: "Nieprawidłowa treść oferty",
+  TROUBLE_WITH_OTHER_USER: "Problem z innym użytkownikiem",
+  OTHER: "Inne",
+};
