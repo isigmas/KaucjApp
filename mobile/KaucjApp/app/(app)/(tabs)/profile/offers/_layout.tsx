@@ -51,7 +51,10 @@ export default function OffersLayout() {
           headerLargeTitleEnabled: false,
           headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
-          presentation: "modal",
+          presentation: "formSheet",
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [1],
+          contentStyle: { backgroundColor: "transparent" },
         }}
       />
     </Stack>
