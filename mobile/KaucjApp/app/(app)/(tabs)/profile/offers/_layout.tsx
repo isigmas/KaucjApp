@@ -42,9 +42,17 @@ export default function OffersLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
+      <Stack.Screen name="confirmation" options={{ headerShown: false }} />
+
       <Stack.Screen
-        name="confirmation"
-        options={{ headerShown: false }}
+        name="complaint"
+        options={{
+          headerTitle: "Zgłoś problem",
+          headerLargeTitleEnabled: false,
+          headerTransparent: true,
+          headerBackButtonDisplayMode: "minimal",
+          presentation: "modal",
+        }}
       />
     </Stack>
   );

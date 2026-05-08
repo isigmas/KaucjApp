@@ -1,6 +1,7 @@
 import { colors } from "@/src/theme";
 import { HeaderBackButton } from "@react-navigation/elements";
 import { Stack, useRouter } from "expo-router";
+import { Info } from "lucide-react-native";
 
 export default function BookingsLayout() {
   const router = useRouter();
@@ -41,6 +42,16 @@ export default function BookingsLayout() {
           headerLargeTitleEnabled: false,
           headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+
+      <Stack.Screen
+        name="complaint"
+        options={{
+          headerTitle: "Zgłoś problem",
+          headerLargeTitleEnabled: false,
+          headerTransparent: true,
+          presentation: "modal",
         }}
       />
     </Stack>
