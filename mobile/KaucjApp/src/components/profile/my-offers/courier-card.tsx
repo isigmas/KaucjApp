@@ -1,23 +1,35 @@
+import { useUserById } from "@/src/api/hooks/use-user";
 import SectionCard from "@/src/components/map/details/section-card";
 import { colors, rounded, spacing } from "@/src/theme";
-import { MessageCircle, Phone, Star, Truck } from "lucide-react-native";
+import { MessageCircle, Phone, Star } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-
-const MOCK_COURIER = {
-  name: "Michał Kowalski",
-  phone: "+48 600 123 456",
-  rating: 4.8,
-  completedOrders: 142,
-  initials: "MK",
-  joinedYear: 2023,
-};
+import ErrorState from "../../states/error-state";
 
 interface CourierCardProps {
   asCard?: boolean;
+  userId: number | null;
 }
 
-export default function CourierCard({ asCard = true }: CourierCardProps) {
+export default function CourierCard({
+  asCard = true,
+  userId,
+}: CourierCardProps) {
+  if (!userId) {
+    return null;
+  }
+  const { data: user, isError, error, refetch } = useUserById(userId);
+
+  if (isError || !user) {
+    return (
+      <ErrorState
+        title="Nie udało się załadować danych kuriera"
+        message={error?.message || "Spróbuj ponownie."}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   const handleCall = () => {
     Alert.alert(
       "Wkrótce",
@@ -37,25 +49,25 @@ export default function CourierCard({ asCard = true }: CourierCardProps) {
 
       <View style={styles.courierRow}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{MOCK_COURIER.initials}</Text>
+          <Text style={styles.avatarText}>
+            {user.firstName.charAt(0)}
+            {user.lastName.charAt(0)}
+          </Text>
         </View>
 
         <View style={styles.courierInfo}>
-          <Text style={styles.courierName}>{MOCK_COURIER.name}</Text>
+          <Text style={styles.courierName}>
+            {user.firstName} {user.lastName}
+          </Text>
+          <Text style={styles.courierUsername}>{user.username}</Text>
           <View style={styles.ratingRow}>
             <Star
               size={12}
               color={colors.status.warning}
               fill={colors.status.warning}
             />
-            <Text style={styles.ratingText}>
-              {MOCK_COURIER.rating.toFixed(1)} · {MOCK_COURIER.completedOrders}{" "}
-              odbiorów
-            </Text>
+            <Text style={styles.ratingText}>4.6 · 142 odbiorów</Text>
           </View>
-          <Text style={styles.courierSince}>
-            Kurier od {MOCK_COURIER.joinedYear}
-          </Text>
         </View>
       </View>
 
@@ -129,6 +141,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: colors.accent.dark,
     letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   courierInfo: {
     flex: 1,
@@ -149,7 +162,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.text.secondary,
   },
-  courierSince: {
+  courierUsername: {
     fontSize: 12,
     color: colors.text.muted,
   },
