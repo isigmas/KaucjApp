@@ -35,7 +35,7 @@ export const getOfferStatusConfig = (status: OfferStatus) => {
     case "COMPLETED":
       return { color: colors.accent.base, label: "Zakończona" };
     case "CANCELED":
-      return { color: colors.status.error, label: "Anulowana" };
+      return { color: colors.text.secondary, label: "Anulowana" };
     case "PENDING_CONFIRMATION":
       return { color: colors.primary.base, label: "Czeka na potwierdzenie" };
     case "COMPLAINT":
