@@ -35,7 +35,10 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
 
   const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
   const showCourierDetails =
-    (isReserved && offer.reserved_to) || isPendingConfirmation || isComplaint;
+    (isReserved && offer.reserved_to) ||
+    isPendingConfirmation ||
+    isComplaint ||
+    offer.collector_id;
 
   const handleComplete = () => {
     Alert.alert(
@@ -70,7 +73,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
       {showCourierDetails ? (
         <>
           <View style={styles.hairline} />
-          <CourierCard asCard={false} />
+          <CourierCard asCard={false} userId={offer.collector_id} />
           <View style={styles.hairline} />
 
           {isReserved && offer.reserved_to && (
