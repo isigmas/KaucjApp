@@ -1,10 +1,11 @@
 import SectionCard from "@/src/components/map/details/section-card";
 import Countdown from "@/src/components/profile/reserved-offers/countdown";
 import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   AlertCircle,
+  AlertTriangle,
   Calendar,
   CheckCircle,
   CheckCircle2,
@@ -31,6 +32,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
 
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
+  const isConfirmedByCreator = offer.creator_confirmed;
   const isComplaint = offer.status === "COMPLAINT";
 
   const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
@@ -85,18 +87,18 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             />
           )}
 
-          {isPendingConfirmation && (
+          {isPendingConfirmation && !isConfirmedByCreator && (
             <>
               <ActionButton
                 onPress={handleComplete}
                 disabled={isPending}
                 isPending={isPending}
-                label="Potwierdź odbiór opakowań"
+                label="Potwierdź odbiór kuriera"
                 icon={<CheckCircle size={18} color={colors.text.white} />}
               />
-              <Text style={styles.hint}>
-                Potwierdzenie odbioru kuriera zakończy ofertę.
-              </Text>
+              <Pressable onPress={handleComplaint}>
+                <Text style={styles.hintError}>Zgłoś problem</Text>
+              </Pressable>
             </>
           )}
           {isComplaint && (
@@ -106,8 +108,8 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
                 onPress={handleComplaint}
                 disabled={isPending}
                 isPending={isPending}
-                label="Potwierdź rozwiązanie problemu"
-                icon={<CheckCircle size={18} color={colors.text.white} />}
+                label="Zobacz problem"
+                icon={<AlertTriangle size={18} color={colors.text.white} />}
               />
               <Text style={styles.hint}>
                 Potwierdzenie rozwiązania problemu zakończy ofertę.
@@ -168,12 +170,13 @@ function StatusHeader({ offer }: OfferHeadlineProps) {
 function getStatusContent(offer: Offer) {
   const qty = getPolishPackageQuantity(offer.total_quantity, true);
   const price = formatPrice(offer.total_prize);
+  const isConfirmedByCreator = offer.creator_confirmed;
 
   switch (offer.status) {
     case "OPEN":
       return {
         title: "Czeka na kuriera",
-        description: `Po rezerwacji kurier odbierze od Ciebie ${qty} za ${price}.`,
+        description: `Oczekiwanie na kuriera, który odbierze od Ciebie ${qty} za ${price}.`,
         icon: <Hourglass size={18} color={colors.primary.base} />,
       };
     case "RESERVED":
@@ -189,9 +192,16 @@ function getStatusContent(offer: Offer) {
         ),
       };
     case "PENDING_CONFIRMATION":
+      if (isConfirmedByCreator) {
+        return {
+          title: "Czeka na potwierdzenie",
+          description: `Potwierdziłeś odbiór opakowań. Oczekiwanie na potwierdzenie od kuriera.`,
+          icon: <CheckCircle size={18} color={colors.status.success} />,
+        };
+      }
       return {
         title: "Czeka na potwierdzenie",
-        description: `Kurier potwierdził odbiór ${qty} za ${price}.`,
+        description: `Kurier potwierdził odbiór ${qty} za ${price}. Potwierdź odbiór opakowań aby zakończyć ofertę.`,
         icon: <Hourglass size={18} color={colors.primary.base} />,
       };
 
