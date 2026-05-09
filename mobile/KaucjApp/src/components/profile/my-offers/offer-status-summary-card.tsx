@@ -14,7 +14,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 import React from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import CourierCard from "./courier-card";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
@@ -77,10 +77,11 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
           <View style={styles.hairline} />
 
           {isReserved && offer.reserved_to && (
-            <Countdown
+            <ReservedState
               expiresAt={offer.reserved_to}
-              variant="block"
-              showBorder={false}
+              onConfirm={handleComplete}
+              onComplaint={handleComplaint}
+              isPending={isPending}
             />
           )}
 
@@ -118,6 +119,36 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
         <DateRow offer={offer} />
       )}
     </SectionCard>
+  );
+}
+
+function ReservedState({
+  expiresAt,
+  onConfirm,
+  isPending,
+  onComplaint,
+}: {
+  expiresAt: string;
+  onConfirm: () => void;
+  isPending: boolean;
+  onComplaint: () => void;
+}) {
+  return (
+    <>
+      <View style={{ gap: spacing.sm }}>
+        <Countdown expiresAt={expiresAt} variant="block" showBorder={false} />
+        <ActionButton
+          onPress={onConfirm}
+          disabled={isPending}
+          isPending={isPending}
+          label="Potwierdź odbiór opakowań"
+          icon={<CheckCircle size={18} color={colors.text.white} />}
+        />
+      </View>
+      <Pressable onPress={onComplaint}>
+        <Text style={styles.hintError}>Zgłoś problem</Text>
+      </Pressable>
+    </>
   );
 }
 
@@ -300,5 +331,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.secondary,
     textAlign: "center",
+  },
+  hintError: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    textAlign: "center",
+    textDecorationLine: "underline",
+    textDecorationColor: colors.text.secondary,
+    textDecorationStyle: "solid",
+    fontWeight: "600",
   },
 });
