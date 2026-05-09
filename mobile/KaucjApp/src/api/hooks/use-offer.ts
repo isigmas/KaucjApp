@@ -1,5 +1,6 @@
 import {
   ApiErrorResponse,
+  ComplaintPayload,
   Offer,
   OfferPayload,
   OfferSearchBBox,
@@ -168,8 +169,10 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
 export const useComplaintOffer = (offerId: number) => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AxiosError<ApiErrorResponse>>({
-    mutationFn: () => apiClient.post(`/offer/${offerId}/status/COMPLAINT`),
+  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
+    mutationFn: async (complaintData) => {
+      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },

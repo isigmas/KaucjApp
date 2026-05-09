@@ -1,21 +1,20 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
-} from "react-native";
+import React from "react";
+import { StyleSheet, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing } from "@/src/theme";
-import { ComplaintFormValues, complaintSchema } from "@/src/types";
+import {
+  ComplaintFormValues,
+  ComplaintPayload,
+  complaintSchema,
+} from "@/src/types";
 import ComplaintSection from "./components/complaint-section";
 import ComplaintReasonDropdown from "./components/dropdown";
 import ComplainMessageField from "./components/message-field";
 import ComplaintFooter from "./components/complaint-footer";
-import ComplaintSuccessView from "./components/succeess-view";
+import { useComplaintOffer } from "@/src/api/hooks/use-offer";
 
 interface ComplaintScreenProps {
   offerId: string;
@@ -23,8 +22,9 @@ interface ComplaintScreenProps {
 
 export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const { mutate: createComplaint, isPending } = useComplaintOffer(
+    Number(offerId),
+  );
 
   const { control, handleSubmit } = useForm<ComplaintFormValues>({
     resolver: zodResolver(complaintSchema),
@@ -32,21 +32,16 @@ export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
   });
 
   const onSubmit = async (data: ComplaintFormValues) => {
-    setIsLoading(true);
     const body = {
       complaintReason: data.complaintReason,
-      message: data.message || null,
-    };
-    //  API
-    console.log(`[ComplaintDTO] POST /api/offers/${offerId}/complaints`, body);
-    await new Promise((r) => setTimeout(r, 1200));
-    setIsLoading(false);
-    setSubmitted(true);
+      message: data.message,
+    } as ComplaintPayload;
+    createComplaint(body, {
+      onSuccess: () => {
+        router.back();
+      },
+    });
   };
-
-  if (submitted) {
-    return <ComplaintSuccessView onClose={() => router.back()} />;
-  }
 
   return (
     <ComplaintScreenWrapper>
@@ -66,7 +61,7 @@ export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
 
       <ComplaintFooter
         onSubmit={handleSubmit(onSubmit)}
-        isLoading={isLoading}
+        isLoading={isPending}
       />
     </ComplaintScreenWrapper>
   );

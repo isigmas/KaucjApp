@@ -15,7 +15,7 @@ export interface Complaint {
 }
 
 export interface ComplaintPayload {
-  complaint_reason: ComplaintReason;
+  complaintReason: ComplaintReason;
   message: string;
 }
 
