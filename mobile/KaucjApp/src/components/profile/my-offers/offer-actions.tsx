@@ -21,36 +21,6 @@ export default function OfferActions({ offer }: OfferActionsProps) {
 
   if (!isOpen && !isReserved) return null;
 
-  const handleComplete = () => {
-    Alert.alert(
-      "Potwierdź zakończenie",
-      "Czy kurier odebrał już opakowania? Oferta zostanie oznaczona jako zakończona.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Zakończ",
-          style: "default",
-          onPress: () => {
-            changeOfferStatus(
-              { offerId: offer.offer_id, newStatus: "COMPLETED" },
-              {
-                onSuccess: () => {
-                  router.replace("/profile/offers/confirmation");
-                },
-                onError: (error) => {
-                  const message =
-                    error.response?.data?.message ||
-                    "Nie udało się zakończyć oferty.";
-                  Alert.alert("Błąd", message);
-                },
-              },
-            );
-          },
-        },
-      ],
-    );
-  };
-
   const handleCancel = () => {
     Alert.alert(
       "Anuluj ofertę",
@@ -95,16 +65,6 @@ export default function OfferActions({ offer }: OfferActionsProps) {
         <XCircle size={18} color={colors.status.error} />
         <Text style={styles.cancelButtonText}>Anuluj ofertę</Text>
       </Pressable>
-
-      {isReserved && (
-        <ActionButton
-          onPress={handleComplete}
-          disabled={isPending}
-          isPending={isPending}
-          label="Potwierdź odbiór"
-          icon={<CheckCircle size={18} color={colors.text.white} />}
-        />
-      )}
     </Animated.View>
   );
 }
