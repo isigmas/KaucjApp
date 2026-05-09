@@ -6,6 +6,8 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Countdown from "./countdown";
 import MiniMap from "./mini-map";
+import { getOfferStatusConfig } from "@/src/lib";
+import OfferSatusPill from "../../ui/offer-status-pill";
 
 interface ReservedOfferCardProps {
   offer: Offer;
@@ -13,6 +15,7 @@ interface ReservedOfferCardProps {
 
 export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
   const router = useRouter();
+  const isReserved = offer.status === "RESERVED";
 
   const handlePress = () => {
     router.push({
@@ -36,9 +39,11 @@ export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
 
       <View style={styles.body}>
         <View style={styles.timerRow}>
-          {offer.reserved_to ? (
+          {offer.reserved_to && isReserved ? (
             <Countdown expiresAt={offer.reserved_to} interval="minutes" />
-          ) : null}
+          ) : (
+            <OfferSatusPill status={offer.status} />
+          )}
           <ChevronRight size={20} color={colors.text.muted} />
         </View>
 
