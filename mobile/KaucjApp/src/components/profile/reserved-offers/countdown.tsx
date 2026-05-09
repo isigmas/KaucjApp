@@ -73,7 +73,7 @@ export default function Countdown({
     >
       <Clock size={12} color={config.fg} />
       <Text style={[styles.pillText, { color: config.fg }]}>
-        Pozostały czas: {label}
+        Do końca rezerwacji: {label}
       </Text>
     </View>
   );
