@@ -11,6 +11,9 @@ export interface Offer {
   creator_id: number;
   collector_id: number | null;
   status: OfferStatus;
+  collector_confirmed: boolean;
+  creator_confirmed: boolean;
+  confirmation_deadline: string | null;
   latitude: number;
   longitude: number;
   pickup_address: string;
