@@ -11,13 +11,12 @@ import LoadingState from "@/src/components/states/loading-state";
 import { colors, spacing } from "@/src/theme";
 
 import BookingActions from "./booking-actions";
-import Countdown from "./countdown";
-import MiniMap from "./mini-map";
+
 import BookingStatusSummaryCard from "./booking-status-summary-card";
 import ContactCard from "../../ui/contact-card";
-import { OfferDetailsAccordion } from "../my-offers/offer-detail-screen";
+
 import ExpandableCard from "../../ui/expandable-card";
-import { MapPin, Package, Receipt } from "lucide-react-native";
+import { Package, Receipt } from "lucide-react-native";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -97,7 +96,7 @@ export default function BookingDetailsScreen({
         <OfferSummaryCard offer={offer} bare />
       </ExpandableCard>
 
-      {/* <BookingActions offerId={offer.offer_id} /> */}
+      <BookingActions offerId={offer.offer_id} offerStatus={offer.status} />
     </ScrollView>
   );
 }
