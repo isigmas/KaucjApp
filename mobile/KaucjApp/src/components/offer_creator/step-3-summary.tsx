@@ -1,78 +1,33 @@
 import React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
   ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import Animated, { Easing, FadeInUp } from "react-native-reanimated";
-import { colors } from "@/src/theme";
-import { OfferData } from "./create-offer";
-import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
-import { useRouter } from "expo-router";
-import { useLocationStore } from "@/src/state/location";
-import { useCreateOffer } from "@/src/api/hooks/use-offer";
-import { OfferItemPayload, OfferPayload } from "@/src/types";
+import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
+import { useFormContext, useWatch } from "react-hook-form";
+import { colors } from "@/src/theme";
+import { computeOfferTotals, type OfferFormValues } from "./offer-form-schema";
 
 interface Step3SummaryProps {
-  data: OfferData;
-  updateData: (newData: Partial<OfferData>) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
 }
 
-export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
-  const { clearLocation } = useLocationStore();
-  const router = useRouter();
-  const { mutate: createOffer, isPending } = useCreateOffer();
+export default function Step3Summary({
+  onSubmit,
+  isSubmitting,
+}: Step3SummaryProps) {
+  const { control } = useFormContext<OfferFormValues>();
+  const values = useWatch({ control }) as OfferFormValues;
+  const totals = computeOfferTotals(values);
 
-  // This will be derived from a mutation state
-
-  const handleSubmit = () => {
-    // API call goees here
-    const items: OfferItemPayload[] = [];
-    if (data.plasticBottles > 0) {
-      items.push({
-        bottleId: 1,
-        quantity: data.plasticBottles,
-        unitPrice: data.plasticPrice,
-      });
-    }
-    if (data.cans > 0) {
-      items.push({
-        bottleId: 2,
-        quantity: data.cans,
-        unitPrice: data.cansPrice,
-      });
-    }
-    const payload: OfferPayload = {
-      latitude: data.latitude!,
-      longitude: data.longitude!,
-      pickupAddress: data.address,
-      pickupInstructions: data.notes || "",
-      items,
-    };
-
-    createOffer(payload, {
-      onSuccess: () => {
-        router.replace(`/(app)/(tabs)/create/success-screen`);
-      },
-      onError: (error) => {
-        console.error("Failed to create offer:", error);
-      },
-    });
-  };
-
-  const totalDepositValue =
-    data.plasticBottles * 0.5 + data.glassBottles * 1 + data.cans * 0.5;
-
-  const totalValue =
-    data.plasticBottles * data.plasticPrice +
-    data.glassBottles * data.glassPrice +
-    data.cans * data.cansPrice;
-
-  const courierProfit = totalDepositValue - totalValue;
+  const hasLocation = values.latitude !== null && values.longitude !== null;
 
   return (
     <ScrollView
@@ -86,7 +41,6 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
         </Text>
       </View>
 
-      {/*  Quantity and Price */}
       <Animated.View
         entering={FadeInUp.delay(100).springify().damping(40)}
         style={styles.summaryCard}
@@ -97,66 +51,43 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
         </View>
 
         <View style={styles.cardContent}>
-          {data.plasticBottles > 0 && (
-            <View style={styles.lineItem}>
-              <Text style={styles.lineItemLabel}>
-                Butelki plastikowe ({data.plasticBottles} szt.)
-              </Text>
-              <Text style={styles.lineItemValue}>
-                {data.plasticPrice.toFixed(2)} zł/szt.
-              </Text>
-            </View>
+          {values.plasticBottles > 0 && (
+            <LineItem
+              label={`Butelki plastikowe (${values.plasticBottles} szt.)`}
+              value={`${values.plasticPrice.toFixed(2)} zł/szt.`}
+            />
           )}
 
-          {data.glassBottles > 0 && (
-            <View style={styles.lineItem}>
-              <Text style={styles.lineItemLabel}>
-                Butelki szklane ({data.glassBottles} szt.)
-              </Text>
-              <Text style={styles.lineItemValue}>
-                {data.glassPrice.toFixed(2)} zł/szt.
-              </Text>
-            </View>
+          {values.cans > 0 && (
+            <LineItem
+              label={`Metalowe puszki (${values.cans} szt.)`}
+              value={`${values.cansPrice.toFixed(2)} zł/szt.`}
+            />
           )}
 
-          {data.cans > 0 && (
-            <View style={styles.lineItem}>
-              <Text style={styles.lineItemLabel}>
-                Metalowe puszki ({data.cans} szt.)
-              </Text>
-              <Text style={styles.lineItemValue}>
-                {data.cansPrice.toFixed(2)} zł/szt.
-              </Text>
-            </View>
-          )}
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Łączna wartość kaucji:</Text>
             <Text style={styles.totalValue}>
-              {totalDepositValue.toFixed(2)} zł
+              {totals.totalDepositValue.toFixed(2)} zł
             </Text>
           </View>
 
           <View style={styles.divider} />
 
-          <View style={{ gap: 4 }}>
+          <View style={styles.totalsBlock}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabelSmall}>Zysk kuriera:</Text>
               <Text style={styles.totalValueSmall}>
-                {courierProfit.toFixed(2)} zł
+                {totals.courierProfit.toFixed(2)} zł
               </Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabelHighlight}>Ty otrzymasz:</Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
+              <View style={styles.highlightValueWrapper}>
                 <AnimatedRollingNumber
-                  value={totalValue}
+                  value={totals.userPrice}
                   toFixed={2}
-                  useGrouping={true}
+                  useGrouping
                   textStyle={styles.totalValueHighlight}
                   spinningAnimationConfig={{
                     duration: 1500,
@@ -170,7 +101,6 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
         </View>
       </Animated.View>
 
-      {/* Location and Notes  */}
       <Animated.View
         entering={FadeInUp.delay(200).springify().damping(40)}
         style={styles.summaryCard}
@@ -184,24 +114,20 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
           <View style={styles.lineItemColumn}>
             <Text style={styles.lineItemLabel}>Adres:</Text>
             <Text style={styles.lineItemValueText}>
-              {data.address ? data.address : "Nie podano dokładnego adresu"}
+              {values.pickupAddress
+                ? values.pickupAddress
+                : "Nie podano dokładnego adresu"}
             </Text>
           </View>
-          {data.latitude && data.longitude && (
-            <View
-              style={{
-                height: 100,
-                marginTop: 8,
-                borderRadius: 24,
-                overflow: "hidden",
-              }}
-            >
+
+          {hasLocation && (
+            <View style={styles.miniMapContainer}>
               <MapView
                 provider={PROVIDER_DEFAULT}
-                style={styles.mapThumbnail}
+                style={styles.miniMap}
                 region={{
-                  latitude: data.latitude,
-                  longitude: data.longitude,
+                  latitude: values.latitude as number,
+                  longitude: values.longitude as number,
                   latitudeDelta: 0.0007,
                   longitudeDelta: 0.0007,
                 }}
@@ -212,8 +138,8 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
               >
                 <Marker
                   coordinate={{
-                    latitude: data.latitude!,
-                    longitude: data.longitude!,
+                    latitude: values.latitude as number,
+                    longitude: values.longitude as number,
                   }}
                   pinColor={colors.primary.base}
                 />
@@ -221,16 +147,16 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
             </View>
           )}
 
-          {data.notes ? (
-            <View style={[styles.lineItemColumn, { marginTop: 16 }]}>
+          {values.pickupInstructions ? (
+            <View style={[styles.lineItemColumn, styles.notesBlock]}>
               <Text style={styles.lineItemLabel}>Wiadomość dla kuriera:</Text>
               <View style={styles.notesBox}>
-                <Text style={styles.notesText}>{data.notes}</Text>
+                <Text style={styles.notesText}>{values.pickupInstructions}</Text>
               </View>
             </View>
           ) : null}
 
-          {!data.latitude && (
+          {!hasLocation && (
             <View style={styles.warningBox}>
               <Text style={styles.warningText}>
                 ⚠️ Pamiętaj, że nie przypiąłeś dokładnej pinezki na mapie. Może
@@ -242,17 +168,31 @@ export default function Step3Summary({ data, updateData }: Step3SummaryProps) {
       </Animated.View>
 
       <Pressable
-        style={[styles.buttonPrimary, isPending && styles.buttonDisabled]}
-        onPress={handleSubmit}
-        disabled={isPending}
+        style={[styles.buttonPrimary, isSubmitting && styles.buttonDisabled]}
+        onPress={onSubmit}
+        disabled={isSubmitting}
       >
-        {isPending ? (
-          <ActivityIndicator color="#FFFFFF" />
+        {isSubmitting ? (
+          <ActivityIndicator color={colors.text.white} />
         ) : (
           <Text style={styles.buttonText}>Opublikuj</Text>
         )}
       </Pressable>
     </ScrollView>
+  );
+}
+
+interface LineItemProps {
+  label: string;
+  value: string;
+}
+
+function LineItem({ label, value }: LineItemProps) {
+  return (
+    <View style={styles.lineItem}>
+      <Text style={styles.lineItemLabel}>{label}</Text>
+      <Text style={styles.lineItemValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -286,18 +226,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  mapThumbnail: {
-    ...StyleSheet.absoluteFillObject,
-  },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.background.card,
     paddingTop: 20,
-
     paddingHorizontal: 20,
     paddingBottom: 16,
-
     gap: 8,
   },
   cardHeaderIcon: {
@@ -342,6 +277,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.status.border,
     marginVertical: 12,
   },
+  totalsBlock: {
+    gap: 4,
+  },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -375,6 +313,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: colors.accent.dark,
+  },
+  highlightValueWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  miniMapContainer: {
+    height: 100,
+    marginTop: 8,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  miniMap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  notesBlock: {
+    marginTop: 16,
   },
   notesBox: {
     backgroundColor: colors.background.subtle,
@@ -410,16 +364,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
   },
-  buttonSecondary: {
-    flex: 1,
-    backgroundColor: "#E5E7EB",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
   buttonDisabled: {
     backgroundColor: colors.primary.light,
   },
-  buttonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
-  buttonTextSecondary: { color: "#111827", fontWeight: "700", fontSize: 16 },
+  buttonText: {
+    color: colors.text.white,
+    fontWeight: "700",
+    fontSize: 16,
+  },
 });

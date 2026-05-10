@@ -1,26 +1,25 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   BounceIn,
   FadeInDown,
   FadeInUp,
   Layout,
 } from "react-native-reanimated";
-import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 
 const { width } = Dimensions.get("window");
 
-export default function OfferSuccessScreen() {
-  const router = useRouter();
+interface SuccessViewProps {
+  onGoHome: () => void;
+  onCreateAnother: () => void;
+}
 
-  const handleGoHome = () => {
-    router.navigate("/(app)/(tabs)/home");
-  };
-  const handleAddAnotherOffer = () => {
-    router.replace("/(app)/(tabs)/create");
-  };
-
+/**
+ * Confirmation view shown right after a successful offer creation. Rendered
+ * inline by the parent so we don't have to navigate to a dedicated route.
+ */
+export function SuccessView({ onGoHome, onCreateAnother }: SuccessViewProps) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -43,19 +42,17 @@ export default function OfferSuccessScreen() {
             Twojej okolicy mogą ją teraz zobaczyć i zarezerwować odbiór.
           </Text>
         </Animated.View>
+
         <Animated.View
           entering={FadeInUp.duration(600).delay(700).springify()}
           layout={Layout.springify()}
-          style={{ marginTop: 20, width: "100%" }}
+          style={styles.actions}
         >
-          <Pressable style={styles.primaryButton} onPress={handleGoHome}>
+          <Pressable style={styles.primaryButton} onPress={onGoHome}>
             <Text style={styles.primaryButtonText}>Wróć na stronę główną</Text>
           </Pressable>
 
-          <Pressable
-            style={styles.primaryButton}
-            onPress={handleAddAnotherOffer}
-          >
+          <Pressable style={styles.primaryButton} onPress={onCreateAnother}>
             <Text style={styles.primaryButtonText}>Dodaj kolejną ofertę</Text>
           </Pressable>
         </Animated.View>
@@ -115,10 +112,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: width * 0.8,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 90,
-    gap: 12,
+  actions: {
+    marginTop: 20,
+    width: "100%",
   },
   primaryButton: {
     backgroundColor: colors.primary.base,
@@ -136,18 +132,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
-  },
-  secondaryButton: {
-    backgroundColor: colors.background.subtle,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.status.border,
-  },
-  secondaryButtonText: {
-    color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
