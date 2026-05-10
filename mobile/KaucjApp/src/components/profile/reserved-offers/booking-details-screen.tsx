@@ -13,6 +13,8 @@ import { colors, spacing } from "@/src/theme";
 import BookingActions from "./booking-actions";
 import Countdown from "./countdown";
 import MiniMap from "./mini-map";
+import BookingStatusSummaryCard from "./booking-status-summary-card";
+import ContactCard from "../../ui/contact-card";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -62,11 +64,10 @@ export default function BookingDetailsScreen({
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
     >
-      {offer.reserved_to && (
-        <View style={styles.countdownWrapper}>
-          <Countdown expiresAt={offer.reserved_to} variant="block" />
-        </View>
-      )}
+      <BookingStatusSummaryCard offer={offer} />
+
+      <ContactCard userId={offer.creator_id} header="Wystawiający" />
+
       <MiniMap
         interactive={true}
         latitude={offer.latitude}

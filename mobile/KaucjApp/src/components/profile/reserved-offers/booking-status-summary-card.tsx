@@ -17,16 +17,17 @@ import {
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import OfferSatusPill from "@/src/components/ui/offer-status-pill";
-import ContactCard from "@/src/components/ui/contact-card";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
-import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
+import ContactCard from "../../ui/contact-card";
 
-interface OfferHeadlineProps {
+interface BookingStatusSummaryCardProps {
   offer: Offer;
 }
 
-export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
+export default function BookingStatusSummaryCard({
+  offer,
+}: BookingStatusSummaryCardProps) {
   const router = useRouter();
   const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
 
@@ -35,28 +36,21 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const isConfirmedByCreator = offer.creator_confirmed;
   const isComplaint = offer.status === "COMPLAINT";
 
-  const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
-  const showCourierDetails =
-    (isReserved && offer.reserved_to) ||
-    isPendingConfirmation ||
-    isComplaint ||
-    offer.collector_id;
-
   const handleComplete = () => {
-    Alert.alert(
-      "Potwierdź odbiór",
-      "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "default",
-          onPress: () => {
-            confirmOffer();
-          },
-        },
-      ],
-    );
+    // Alert.alert(
+    //   "Potwierdź odbiór",
+    //   "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
+    //   [
+    //     { text: "Anuluj", style: "cancel" },
+    //     {
+    //       text: "Potwierdź",
+    //       style: "default",
+    //       onPress: () => {
+    //         confirmOffer();
+    //       },
+    //     },
+    //   ],
+    // );
   };
 
   const handleComplaint = () => {
@@ -68,97 +62,12 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
 
   return (
     <SectionCard style={styles.card}>
-      {showStatusPill && <OfferSatusPill status={offer.status} />}
-
       <StatusHeader offer={offer} />
-
-      {showCourierDetails ? (
-        <>
-          <View style={styles.hairline} />
-          <ContactCard
-            asCard={false}
-            userId={offer.collector_id}
-            header="Kto odbiera tę ofertę?"
-          />
-          <View style={styles.hairline} />
-
-          {isReserved && offer.reserved_to && (
-            <ReservedState
-              expiresAt={offer.reserved_to}
-              onConfirm={handleComplete}
-              onComplaint={handleComplaint}
-              isPending={isPending}
-            />
-          )}
-
-          {isPendingConfirmation && !isConfirmedByCreator && (
-            <>
-              <ActionButton
-                onPress={handleComplete}
-                disabled={isPending}
-                isPending={isPending}
-                label="Potwierdź odbiór kuriera"
-                icon={<CheckCircle size={18} color={colors.text.white} />}
-              />
-              <Pressable onPress={handleComplaint}>
-                <Text style={styles.hintError}>Zgłoś problem</Text>
-              </Pressable>
-            </>
-          )}
-          {isComplaint && (
-            <>
-              <ActionButton
-                backgroundColor={colors.status.error}
-                onPress={handleComplaint}
-                disabled={isPending}
-                isPending={isPending}
-                label="Zobacz problem"
-                icon={<AlertTriangle size={18} color={colors.text.white} />}
-              />
-              <Text style={styles.hint}>
-                Potwierdzenie rozwiązania problemu zakończy ofertę.
-              </Text>
-            </>
-          )}
-        </>
-      ) : (
-        <DateRow offer={offer} />
-      )}
     </SectionCard>
   );
 }
 
-function ReservedState({
-  expiresAt,
-  onConfirm,
-  isPending,
-  onComplaint,
-}: {
-  expiresAt: string;
-  onConfirm: () => void;
-  isPending: boolean;
-  onComplaint: () => void;
-}) {
-  return (
-    <>
-      <View style={{ gap: spacing.sm }}>
-        <Countdown expiresAt={expiresAt} variant="block" showBorder={false} />
-        <ActionButton
-          onPress={onConfirm}
-          disabled={isPending}
-          isPending={isPending}
-          label="Potwierdź odbiór opakowań"
-          icon={<CheckCircle size={18} color={colors.text.white} />}
-        />
-      </View>
-      <Pressable onPress={onComplaint}>
-        <Text style={styles.hintError}>Zgłoś problem</Text>
-      </Pressable>
-    </>
-  );
-}
-
-function StatusHeader({ offer }: OfferHeadlineProps) {
+function StatusHeader({ offer }: { offer: Offer }) {
   const content = getStatusContent(offer);
   return (
     <>
@@ -186,7 +95,7 @@ function getStatusContent(offer: Offer) {
     case "RESERVED":
       return {
         title: "Oferta zarezerwowana",
-        description: `Przygotuj ${qty}, za które otrzymasz kwotę ${price} od kuriera.`,
+        description: `Udaj się do lokalizacji wskazanej w ofercie aby odebrać ${qty} za ${price}.`,
         icon: (
           <Truck
             size={22}
@@ -199,20 +108,20 @@ function getStatusContent(offer: Offer) {
       if (isConfirmedByCreator) {
         return {
           title: "Czeka na potwierdzenie",
-          description: `Potwierdziłeś odbiór opakowań. Oczekiwanie na potwierdzenie od kuriera.`,
+          description: `Wystawiający potwierdził odbiór ${qty} za ${price}. Potwierdź aby zakończyć rezerwację.`,
           icon: <CheckCircle size={18} color={colors.status.success} />,
         };
       }
       return {
         title: "Czeka na potwierdzenie",
-        description: `Kurier potwierdził odbiór ${qty} za ${price}. Potwierdź odbiór opakowań aby zakończyć ofertę.`,
+        description: `Potwierdziłeś odbiór ${qty} za ${price}. Oczekiwanie na potwierdzenie od wystawiającego.`,
         icon: <Hourglass size={18} color={colors.primary.base} />,
       };
 
     case "COMPLETED":
       return {
-        title: "Oferta zakończona",
-        description: `Kurier odebrał ${qty}. Otrzymano ${price}.`,
+        title: "Rezerwacja zakończona",
+        description: `Odebrałeś ${qty} za ${price}.`,
         icon: <CheckCircle2 size={18} color={colors.status.success} />,
       };
     case "CANCELED":
@@ -225,7 +134,7 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Kurier zgłosił problem z ofertą. Skontaktuj się z nim aby rozwiązać sprawę.`,
+        description: `Zgłoszono problem z rezerwacją. Skontaktuj się z wystawiającym aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }
