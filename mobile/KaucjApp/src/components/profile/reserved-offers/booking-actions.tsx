@@ -1,83 +1,112 @@
-import {
-  useChangeOfferStatus,
-  useComplaintOffer,
-  useConfirmOffer,
-} from "@/src/api/hooks/use-offer";
+import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
 import { colors, rounded, spacing } from "@/src/theme";
+import { OfferStatus } from "@/src/types";
 import { useRouter } from "expo-router";
-import { AlertCircle, Check, MessageCircle } from "lucide-react-native";
+import { XCircle } from "lucide-react-native";
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { LAYOUT_SPRING } from "../../ui/expandable-card";
+import Animated from "react-native-reanimated";
 
 interface BookingActionsProps {
+  offerStatus: OfferStatus;
   offerId: number;
 }
 
-export default function BookingActions({ offerId }: BookingActionsProps) {
+export default function BookingActions({
+  offerStatus,
+  offerId,
+}: BookingActionsProps) {
   const router = useRouter();
-  const { mutate: confirmOffer, isPending: isConfirmPending } =
-    useConfirmOffer(offerId);
-  const { mutate: complaintOffer, isPending: isComplaintPending } =
-    useComplaintOffer(offerId);
-  const isPending = isConfirmPending || isComplaintPending;
+  const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
 
-  const handleComplete = () => {
+  const isReserved = offerStatus === "RESERVED";
+
+  if (!isReserved) return null;
+
+  const handleCancel = () => {
     Alert.alert(
-      "Potwierdź odbiór",
-      "Potwierdzasz, że odebrałeś opakowania od sprzedającego?",
+      "Anuluj rezerwację",
+      "Czy na pewno chcesz anulować tę rezerwację?",
       [
-        { text: "anuluj", style: "cancel" },
+        { text: "Wróć", style: "cancel" },
         {
-          text: "Potwierdzam",
-          style: "default",
+          text: "Anuluj rezerwację",
+          style: "destructive",
           onPress: () => {
-            confirmOffer();
+            changeOfferStatus(
+              { offerId: offerId, newStatus: "OPEN" },
+              {
+                onSuccess: () => {
+                  router.back();
+                },
+                onError: (error) => {
+                  const message =
+                    error.response?.data?.message ||
+                    "Nie udało się anulować rezerwacji.";
+                  Alert.alert("Błąd", message);
+                },
+              },
+            );
           },
         },
       ],
     );
   };
 
-  const handleComplaint = () => {
-    router.push({
-      pathname: "/profile/bookings/complaint",
-      params: { id: offerId },
-    });
-  };
-
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} layout={LAYOUT_SPRING}>
       <Pressable
-        onPress={handleComplaint}
-        style={({ pressed }) => [
-          styles.secondaryButton,
-          pressed && styles.secondaryButtonPressed,
-        ]}
-        disabled={isComplaintPending}
-      >
-        <AlertCircle size={18} color={colors.status.warning} />
-        <Text style={styles.secondaryButtonText}>
-          {isComplaintPending ? "Zgłaszanie..." : "Zgłoś problem"}
-        </Text>
-      </Pressable>
-
-      <Pressable
-        onPress={handleComplete}
+        onPress={handleCancel}
         disabled={isPending}
         style={({ pressed }) => [
-          styles.primaryButton,
-          pressed && styles.primaryButtonPressed,
-          isPending && styles.primaryButtonDisabled,
+          styles.cancelButton,
+          pressed && styles.cancelButtonPressed,
+          isPending && styles.buttonDisabled,
         ]}
       >
-        <Check size={18} color={colors.text.white} />
-        <Text style={styles.primaryButtonText}>
-          {isConfirmPending ? "Potwierdzanie..." : "Potwierdź odbiór"}
-        </Text>
+        <XCircle size={18} color={colors.status.error} />
+        <Text style={styles.cancelButtonText}>Anuluj rezerwację</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
+
+interface ActionButtonProps {
+  onPress: () => void;
+  disabled: boolean;
+  isPending: boolean;
+  label: string;
+  backgroundColor?: string;
+  icon: React.ReactNode;
+}
+
+export const ActionButton = ({
+  onPress,
+  disabled,
+  isPending,
+  label,
+  icon,
+  backgroundColor = colors.primary.base,
+}: ActionButtonProps) => {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        { backgroundColor: backgroundColor },
+        styles.completeButton,
+        pressed && styles.completeButtonPressed,
+        isPending && styles.buttonDisabled,
+      ]}
+    >
+      {icon}
+      <Text style={styles.completeButtonText}>
+        {isPending ? "Zapisywanie..." : label}
+      </Text>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -85,7 +114,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
   },
-  secondaryButton: {
+  cancelButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -94,18 +123,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md - 2,
     borderRadius: rounded.xl,
     borderWidth: 1.5,
-    borderColor: colors.status.warning,
+    borderColor: colors.status.error,
     backgroundColor: colors.background.card,
   },
-  secondaryButtonPressed: {
-    backgroundColor: colors.primary.light,
+  cancelButtonPressed: {
+    backgroundColor: "#FEF2F2",
   },
-  secondaryButtonText: {
-    color: colors.status.warning,
+  cancelButtonText: {
+    color: colors.status.error,
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 14,
   },
-  primaryButton: {
+  completeButton: {
     flex: 1.4,
     flexDirection: "row",
     alignItems: "center",
@@ -113,22 +142,21 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: spacing.md - 2,
     borderRadius: rounded.xl,
-    backgroundColor: colors.primary.base,
     shadowColor: colors.primary.dark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  primaryButtonPressed: {
+  completeButtonPressed: {
     backgroundColor: colors.primary.dark,
   },
-  primaryButtonDisabled: {
-    opacity: 0.6,
+  buttonDisabled: {
+    opacity: 0.55,
   },
-  primaryButtonText: {
+  completeButtonText: {
     color: colors.text.white,
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 14,
   },
 });
