@@ -128,7 +128,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   );
 }
 
-function ReservedState({
+export function ReservedState({
   expiresAt,
   onConfirm,
   isPending,
