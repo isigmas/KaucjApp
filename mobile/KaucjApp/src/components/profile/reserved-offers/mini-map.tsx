@@ -74,7 +74,7 @@ export default function MiniMap({
 const styles = StyleSheet.create({
   wrapper: {
     width: "100%",
-    borderRadius: rounded.apple,
+    borderRadius: rounded.xl,
     overflow: "hidden",
     backgroundColor: colors.background.subtle,
     borderWidth: 1,

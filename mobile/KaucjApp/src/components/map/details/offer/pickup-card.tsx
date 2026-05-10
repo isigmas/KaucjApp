@@ -1,8 +1,9 @@
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SectionTitle from "../card-title";
 import SectionCard from "../section-card";
+import MiniMap from "@/src/components/profile/reserved-offers/mini-map";
 
 interface PickupCardProps {
   address: string;
@@ -12,12 +13,18 @@ interface PickupCardProps {
    * SectionCard wrapper or title.
    */
   bare?: boolean;
+  showMap?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export default function PickupCard({
   address,
   instructions,
   bare = false,
+  showMap = false,
+  latitude,
+  longitude,
 }: PickupCardProps) {
   const body = (
     <>
@@ -26,6 +33,16 @@ export default function PickupCard({
         <View style={styles.instructionBox}>
           <Text style={styles.instructionLabel}>Instrukcje</Text>
           <Text style={styles.secondaryText}>{instructions}</Text>
+        </View>
+      ) : null}
+      {showMap && latitude && longitude ? (
+        <View style={styles.mapContainer}>
+          <MiniMap
+            interactive
+            latitude={latitude}
+            longitude={longitude}
+            height={180}
+          />
         </View>
       ) : null}
     </>
@@ -67,5 +84,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.4,
     marginBottom: 2,
+  },
+  mapContainer: {
+    marginTop: spacing.sm,
   },
 });

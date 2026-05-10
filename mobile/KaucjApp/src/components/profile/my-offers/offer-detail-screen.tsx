@@ -11,7 +11,7 @@ import { Offer } from "@/src/types";
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import ExpandableCard from "./expandable-card";
+import ExpandableCard from "../../ui/expandable-card";
 import OfferActions from "./offer-actions";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
 
@@ -60,7 +60,7 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
   );
 }
 
-function OfferDetailsAccordion({ offer }: { offer: Offer }) {
+export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
   return (
     <>
       <ExpandableCard
