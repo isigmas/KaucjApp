@@ -223,24 +223,24 @@ public class OfferController {
     }
 
     @PostMapping("/complaint/{id}")
-    public ResponseEntity<Long> makeComplaint(
+    public ResponseEntity<Void> makeComplaint(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody ComplaintDTO complaintDTO
-            ){
-            Long newId = service.addComplaint(userId,id,complaintDTO);
-            log.info("Creating complaint for offer {} by user {}", id, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(newId);
+            ) {
+        service.addComplaint(userId, id, complaintDTO);
+        log.info("Creating complaint for offer {} by user {}", id, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/complaint/{id}")
-    public ResponseEntity<ComplaintResponseDTO> getComplaint(
-            @PathVariable Long id,
+    @GetMapping("/{offerId}/complaints")
+    public ResponseEntity<List<ComplaintResponseDTO>> listMyComplaintsForOffer(
+            @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId
-    ){
-        var complaint = service.getComplaint(id);
-        log.info("Getting complaint {} by user {}", id, userId);
-        return ResponseEntity.ok(complaint);
+    ) {
+        log.info("Listing my complaints for offer {} by user {}", offerId, userId);
+
+        return ResponseEntity.ok(service.getMyComplaintsForOffer(offerId, userId));
     }
 
 }
