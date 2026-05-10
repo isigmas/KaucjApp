@@ -7,6 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
+import pl.isigmas.kaucjapp.offers.DTO.ComplaintResponseDTO;
+import pl.isigmas.kaucjapp.offers.exception.ComplaintNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
@@ -64,10 +66,9 @@ class OfferServiceComplaintUnitTest {
         ComplaintDTO dto = new ComplaintDTO(ComplaintReason.OTHER, "Some message");
 
         // When
-        Long createdId = offerService.addComplaint(collectorId, offerId, dto);
+        offerService.addComplaint(collectorId, offerId, dto);
 
         // Then
-        assertThat(createdId).isEqualTo(999L);
         assertThat(offer.getStatus()).isEqualTo(OfferStatus.COMPLAINT);
         assertThat(offer.getConfirmationDeadline()).isNull();
 
@@ -104,10 +105,9 @@ class OfferServiceComplaintUnitTest {
         ComplaintDTO dto = new ComplaintDTO(ComplaintReason.TROUBLE_WITH_OTHER_USER, "No show");
 
         // When
-        Long createdId = offerService.addComplaint(creatorId, offerId, dto);
+        offerService.addComplaint(creatorId, offerId, dto);
 
         // Then
-        assertThat(createdId).isEqualTo(1000L);
         assertThat(offer.getStatus()).isEqualTo(OfferStatus.COMPLAINT);
         assertThat(offer.getConfirmationDeadline()).isNull();
 
@@ -174,6 +174,72 @@ class OfferServiceComplaintUnitTest {
         // When / Then
         assertThatThrownBy(() -> offerService.addComplaint(1L, offerId, new ComplaintDTO(ComplaintReason.OTHER, "x")))
                 .isInstanceOf(OfferNotFoundException.class);
+    }
+
+    @Test
+    void getMyComplaintForOffer_returnsLatestComplaintForRole() {
+        long offerId = 60L;
+        long creatorId = 61L;
+        long collectorId = 62L;
+
+        Offer offer = new Offer();
+        offer.setId(offerId);
+        offer.setCreatorId(creatorId);
+        offer.setCollectorId(collectorId);
+
+        OfferComplaint persisted = new OfferComplaint();
+        persisted.setId(501L);
+        persisted.setOffer(offer);
+        persisted.setComplainant(Complainant.CREATOR);
+        persisted.setComplaintReason(ComplaintReason.OTHER);
+        persisted.setMessage("hello");
+
+        when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+        when(complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+                .thenReturn(Optional.of(persisted));
+
+        ComplaintResponseDTO dto = offerService.getMyComplaintForOffer(offerId, creatorId);
+
+        assertThat(dto.getComplaintId()).isEqualTo(501L);
+        assertThat(dto.getOfferId()).isEqualTo(offerId);
+        assertThat(dto.getComplainant()).isEqualTo(Complainant.CREATOR);
+        assertThat(dto.getComplaintReason()).isEqualTo(ComplaintReason.OTHER);
+        assertThat(dto.getMessage()).isEqualTo("hello");
+    }
+
+    @Test
+    void getMyComplaintForOffer_whenNoComplaint_throwsComplaintNotFoundException() {
+        long offerId = 70L;
+        long creatorId = 71L;
+        long collectorId = 72L;
+
+        Offer offer = new Offer();
+        offer.setId(offerId);
+        offer.setCreatorId(creatorId);
+        offer.setCollectorId(collectorId);
+
+        when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+        when(complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> offerService.getMyComplaintForOffer(offerId, creatorId))
+                .isInstanceOf(ComplaintNotFoundException.class);
+    }
+
+    @Test
+    void getMyComplaintForOffer_byOutsider_throwsOfferForbiddenException() {
+        long offerId = 80L;
+
+        Offer offer = new Offer();
+        offer.setId(offerId);
+        offer.setCreatorId(81L);
+        offer.setCollectorId(82L);
+
+        when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+
+        assertThatThrownBy(() -> offerService.getMyComplaintForOffer(offerId, 99L))
+                .isInstanceOf(OfferForbiddenException.class);
+        verifyNoInteractions(complaintRepository);
     }
 }
 

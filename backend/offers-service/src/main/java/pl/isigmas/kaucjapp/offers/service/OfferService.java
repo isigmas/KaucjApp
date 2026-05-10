@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
+import pl.isigmas.kaucjapp.offers.exception.ComplaintNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
@@ -21,6 +22,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -338,7 +340,7 @@ public class OfferService {
     }
 
     @Transactional
-    public Long addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint){
+    public void addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint) {
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new OfferNotFoundException(offerId));
 
@@ -358,7 +360,7 @@ public class OfferService {
 
         OfferComplaint offerComplaint = new OfferComplaint();
         offerComplaint.setOffer(offer);
-        if(complainantId.equals(offer.getCollectorId())){
+        if (Objects.equals(complainantId, offer.getCollectorId())) {
             offerComplaint.setComplainant(Complainant.COLLECTOR);
         }
         else {
@@ -367,8 +369,7 @@ public class OfferService {
         offerComplaint.setComplaintReason(complaint.getComplaintReason());
         offerComplaint.setMessage(complaint.getMessage());
 
-        OfferComplaint createdComplaint= complaintRepository.save(offerComplaint);
-        return createdComplaint.getId();
+        complaintRepository.save(offerComplaint);
     }
 
 
@@ -389,9 +390,22 @@ public class OfferService {
                 .build();
     }
 
-    public ComplaintResponseDTO getComplaint(Long id) {
-        return complaintRepository.findById(id)
+    @Transactional(readOnly = true)
+    public ComplaintResponseDTO getMyComplaintForOffer(Long offerId, Long userId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        Complainant userRole;
+        if (userId.equals(offer.getCreatorId())) {
+            userRole = Complainant.CREATOR;
+        } else if (userId.equals(offer.getCollectorId())) {
+            userRole = Complainant.COLLECTOR;
+        } else {
+            throw new OfferForbiddenException("You are not a part of this offer");
+        }
+
+        return complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, userRole)
                 .map(this::mapToComplaintResponseDTO)
-                .orElseThrow(() -> new OfferNotFoundException(id));
+                .orElseThrow(() -> new ComplaintNotFoundException(offerId));
     }
 }
