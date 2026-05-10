@@ -15,6 +15,9 @@ import Countdown from "./countdown";
 import MiniMap from "./mini-map";
 import BookingStatusSummaryCard from "./booking-status-summary-card";
 import ContactCard from "../../ui/contact-card";
+import { OfferDetailsAccordion } from "../my-offers/offer-detail-screen";
+import ExpandableCard from "../../ui/expandable-card";
+import { MapPin, Package, Receipt } from "lucide-react-native";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -68,23 +71,33 @@ export default function BookingDetailsScreen({
 
       <ContactCard userId={offer.creator_id} header="Wystawiający" />
 
-      <MiniMap
-        interactive={true}
-        latitude={offer.latitude}
-        longitude={offer.longitude}
-        height={180}
-        style={styles.map}
-      />
       <PickupCard
         address={offer.pickup_address}
         instructions={offer.pickup_instructions}
+        showMap
+        latitude={offer.latitude}
+        longitude={offer.longitude}
       />
 
-      <OfferItemsCard offer={offer} />
+      <ExpandableCard
+        title="Zawartość"
+        subtitle={`${offer.total_quantity} szt. · butelki i puszki`}
+        icon={<Package size={18} color={colors.primary.dark} />}
+        defaultExpanded={true}
+      >
+        <OfferItemsCard offer={offer} bare />
+      </ExpandableCard>
 
-      <OfferSummaryCard offer={offer} />
+      <ExpandableCard
+        title="Finanse"
+        subtitle={`Należność ${offer.total_prize.toFixed(2).replace(".", ",")} zł`}
+        icon={<Receipt size={18} color={colors.primary.dark} />}
+        defaultExpanded
+      >
+        <OfferSummaryCard offer={offer} bare />
+      </ExpandableCard>
 
-      <BookingActions offerId={offer.offer_id} />
+      {/* <BookingActions offerId={offer.offer_id} /> */}
     </ScrollView>
   );
 }
