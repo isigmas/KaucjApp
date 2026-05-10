@@ -55,13 +55,19 @@ class OfferServiceComplaintUnitTest {
         offer.setConfirmationDeadline(java.time.Instant.now().plusSeconds(3600));
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+        when(complaintRepository.save(any(OfferComplaint.class))).thenAnswer(inv -> {
+            OfferComplaint c = inv.getArgument(0);
+            c.setId(999L);
+            return c;
+        });
 
         ComplaintDTO dto = new ComplaintDTO(ComplaintReason.OTHER, "Some message");
 
         // When
-        offerService.addComplaint(collectorId, offerId, dto);
+        Long createdId = offerService.addComplaint(collectorId, offerId, dto);
 
         // Then
+        assertThat(createdId).isEqualTo(999L);
         assertThat(offer.getStatus()).isEqualTo(OfferStatus.COMPLAINT);
         assertThat(offer.getConfirmationDeadline()).isNull();
 
@@ -89,13 +95,19 @@ class OfferServiceComplaintUnitTest {
         offer.setStatus(OfferStatus.RESERVED);
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+        when(complaintRepository.save(any(OfferComplaint.class))).thenAnswer(inv -> {
+            OfferComplaint c = inv.getArgument(0);
+            c.setId(1000L);
+            return c;
+        });
 
         ComplaintDTO dto = new ComplaintDTO(ComplaintReason.TROUBLE_WITH_OTHER_USER, "No show");
 
         // When
-        offerService.addComplaint(creatorId, offerId, dto);
+        Long createdId = offerService.addComplaint(creatorId, offerId, dto);
 
         // Then
+        assertThat(createdId).isEqualTo(1000L);
         assertThat(offer.getStatus()).isEqualTo(OfferStatus.COMPLAINT);
         assertThat(offer.getConfirmationDeadline()).isNull();
 

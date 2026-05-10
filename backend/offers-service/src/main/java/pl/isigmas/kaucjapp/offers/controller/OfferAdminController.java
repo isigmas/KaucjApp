@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth/admin")
+@RequestMapping("/api/offer/admin")
 @RequiredArgsConstructor
 public class OfferAdminController {
 

@@ -126,7 +126,7 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(complaintPayload))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         Offer complaint = offerRepository.findById(offerId).orElseThrow();
         assertThat(complaint.getStatus()).isEqualTo(OfferStatus.COMPLAINT);

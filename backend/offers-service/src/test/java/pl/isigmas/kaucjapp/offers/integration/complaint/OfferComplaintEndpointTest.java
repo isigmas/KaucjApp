@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 import pl.isigmas.kaucjapp.offers.support.BaseIntegrationTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,7 +35,8 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", creatorId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated())
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern("\\d+")));
     }
 
     @Test

@@ -33,6 +33,9 @@ public class OfferResponseDTO {
     @JsonProperty("created_at")
     private Instant createdAt;
 
+    @JsonProperty("updated_at")
+    private Instant updatedAt;
+
     @JsonProperty("reserved_at")
     private Instant reservedAt;
 

@@ -196,6 +196,7 @@ public class OfferService {
                 .pickupAddress(offer.getPickupAddress())
                 .pickupInstructions(offer.getPickupInstructions())
                 .createdAt(offer.getTimeCreated())
+                .updatedAt(offer.getUpdatedAt())
                 .reservedAt(offer.getReservedAt())
                 .reservedTo(offer.getReservedTo())
                 .creatorConfirmed(offer.getCreatorConfirmed())
@@ -337,7 +338,7 @@ public class OfferService {
     }
 
     @Transactional
-    public void addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint){
+    public Long addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint){
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new OfferNotFoundException(offerId));
 
@@ -366,7 +367,8 @@ public class OfferService {
         offerComplaint.setComplaintReason(complaint.getComplaintReason());
         offerComplaint.setMessage(complaint.getMessage());
 
-        complaintRepository.save(offerComplaint);
+        OfferComplaint createdComplaint= complaintRepository.save(offerComplaint);
+        return createdComplaint.getId();
     }
 
 
@@ -385,5 +387,11 @@ public class OfferService {
                 .complaintReason(complaint.getComplaintReason())
                 .message(complaint.getMessage())
                 .build();
+    }
+
+    public ComplaintResponseDTO getComplaint(Long id) {
+        return complaintRepository.findById(id)
+                .map(this::mapToComplaintResponseDTO)
+                .orElseThrow(() -> new OfferNotFoundException(id));
     }
 }
