@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
-import pl.isigmas.kaucjapp.offers.exception.ComplaintNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
@@ -391,7 +390,7 @@ public class OfferService {
     }
 
     @Transactional(readOnly = true)
-    public ComplaintResponseDTO getMyComplaintForOffer(Long offerId, Long userId) {
+    public List<ComplaintResponseDTO> getMyComplaintsForOffer(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new OfferNotFoundException(offerId));
 
@@ -404,8 +403,8 @@ public class OfferService {
             throw new OfferForbiddenException("You are not a part of this offer");
         }
 
-        return complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, userRole)
+        return complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, userRole).stream()
                 .map(this::mapToComplaintResponseDTO)
-                .orElseThrow(() -> new ComplaintNotFoundException(offerId));
+                .collect(Collectors.toList());
     }
 }

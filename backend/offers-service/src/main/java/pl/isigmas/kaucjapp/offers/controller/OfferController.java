@@ -233,14 +233,14 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/{offerId}/complaint")
-    public ResponseEntity<ComplaintResponseDTO> getComplaint(
+    @GetMapping("/{offerId}/complaints")
+    public ResponseEntity<List<ComplaintResponseDTO>> listMyComplaintsForOffer(
             @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId
     ) {
-        log.info("Getting complaint for offer {} by user {}", offerId, userId);
+        log.info("Listing my complaints for offer {} by user {}", offerId, userId);
 
-        return ResponseEntity.ok(service.getMyComplaintForOffer(offerId, userId));
+        return ResponseEntity.ok(service.getMyComplaintsForOffer(offerId, userId));
     }
 
 }

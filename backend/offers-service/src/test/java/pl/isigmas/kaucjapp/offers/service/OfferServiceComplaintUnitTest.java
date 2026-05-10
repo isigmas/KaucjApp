@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.offers.DTO.ComplaintDTO;
 import pl.isigmas.kaucjapp.offers.DTO.ComplaintResponseDTO;
-import pl.isigmas.kaucjapp.offers.exception.ComplaintNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
@@ -17,6 +16,7 @@ import pl.isigmas.kaucjapp.offers.repository.BottleTypeRepository;
 import pl.isigmas.kaucjapp.offers.repository.ComplaintRepository;
 import pl.isigmas.kaucjapp.offers.repository.OfferRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -177,7 +177,7 @@ class OfferServiceComplaintUnitTest {
     }
 
     @Test
-    void getMyComplaintForOffer_returnsLatestComplaintForRole() {
+    void getMyComplaintsForOffer_returnsAllComplaintsOrderedNewestFirst() {
         long offerId = 60L;
         long creatorId = 61L;
         long collectorId = 62L;
@@ -187,28 +187,35 @@ class OfferServiceComplaintUnitTest {
         offer.setCreatorId(creatorId);
         offer.setCollectorId(collectorId);
 
-        OfferComplaint persisted = new OfferComplaint();
-        persisted.setId(501L);
-        persisted.setOffer(offer);
-        persisted.setComplainant(Complainant.CREATOR);
-        persisted.setComplaintReason(ComplaintReason.OTHER);
-        persisted.setMessage("hello");
+        OfferComplaint older = new OfferComplaint();
+        older.setId(500L);
+        older.setOffer(offer);
+        older.setComplainant(Complainant.CREATOR);
+        older.setComplaintReason(ComplaintReason.OTHER);
+        older.setMessage("first");
+
+        OfferComplaint newer = new OfferComplaint();
+        newer.setId(502L);
+        newer.setOffer(offer);
+        newer.setComplainant(Complainant.CREATOR);
+        newer.setComplaintReason(ComplaintReason.TROUBLE_WITH_OTHER_USER);
+        newer.setMessage("second");
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
-        when(complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
-                .thenReturn(Optional.of(persisted));
+        when(complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+                .thenReturn(List.of(newer, older));
 
-        ComplaintResponseDTO dto = offerService.getMyComplaintForOffer(offerId, creatorId);
+        List<ComplaintResponseDTO> dto = offerService.getMyComplaintsForOffer(offerId, creatorId);
 
-        assertThat(dto.getComplaintId()).isEqualTo(501L);
-        assertThat(dto.getOfferId()).isEqualTo(offerId);
-        assertThat(dto.getComplainant()).isEqualTo(Complainant.CREATOR);
-        assertThat(dto.getComplaintReason()).isEqualTo(ComplaintReason.OTHER);
-        assertThat(dto.getMessage()).isEqualTo("hello");
+        assertThat(dto).hasSize(2);
+        assertThat(dto.get(0).getComplaintId()).isEqualTo(502L);
+        assertThat(dto.get(0).getMessage()).isEqualTo("second");
+        assertThat(dto.get(1).getComplaintId()).isEqualTo(500L);
+        assertThat(dto.get(1).getMessage()).isEqualTo("first");
     }
 
     @Test
-    void getMyComplaintForOffer_whenNoComplaint_throwsComplaintNotFoundException() {
+    void getMyComplaintsForOffer_whenNoComplaint_returnsEmptyList() {
         long offerId = 70L;
         long creatorId = 71L;
         long collectorId = 72L;
@@ -219,15 +226,14 @@ class OfferServiceComplaintUnitTest {
         offer.setCollectorId(collectorId);
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
-        when(complaintRepository.findFirstByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
-                .thenReturn(Optional.empty());
+        when(complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+                .thenReturn(List.of());
 
-        assertThatThrownBy(() -> offerService.getMyComplaintForOffer(offerId, creatorId))
-                .isInstanceOf(ComplaintNotFoundException.class);
+        assertThat(offerService.getMyComplaintsForOffer(offerId, creatorId)).isEmpty();
     }
 
     @Test
-    void getMyComplaintForOffer_byOutsider_throwsOfferForbiddenException() {
+    void getMyComplaintsForOffer_byOutsider_throwsOfferForbiddenException() {
         long offerId = 80L;
 
         Offer offer = new Offer();
@@ -237,7 +243,7 @@ class OfferServiceComplaintUnitTest {
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
 
-        assertThatThrownBy(() -> offerService.getMyComplaintForOffer(offerId, 99L))
+        assertThatThrownBy(() -> offerService.getMyComplaintsForOffer(offerId, 99L))
                 .isInstanceOf(OfferForbiddenException.class);
         verifyNoInteractions(complaintRepository);
     }

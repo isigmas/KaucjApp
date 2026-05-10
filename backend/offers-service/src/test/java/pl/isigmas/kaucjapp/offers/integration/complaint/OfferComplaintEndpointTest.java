@@ -39,7 +39,7 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
     }
 
     @Test
-    void getComplaint_afterPost_returnsComplaintForThatUser() throws Exception {
+    void listComplaints_afterPost_returnsArrayWithOneItem() throws Exception {
         Long creatorId = 53001L;
         Long collectorId = 53002L;
 
@@ -62,17 +62,19 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                         .content(payload))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/offer/" + offerId + "/complaint").header("X-User-Id", collectorId))
+        mockMvc.perform(get("/api/offer/" + offerId + "/complaints").header("X-User-Id", collectorId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.offerId").value(offerId))
-                .andExpect(jsonPath("$.complainant").value("COLLECTOR"))
-                .andExpect(jsonPath("$.complaintReason").value("OTHER"))
-                .andExpect(jsonPath("$.message").value("Handover dispute"))
-                .andExpect(jsonPath("$.complaintId").isNumber());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].offerId").value(offerId))
+                .andExpect(jsonPath("$[0].complainant").value("COLLECTOR"))
+                .andExpect(jsonPath("$[0].complaintReason").value("OTHER"))
+                .andExpect(jsonPath("$[0].message").value("Handover dispute"))
+                .andExpect(jsonPath("$[0].complaintId").isNumber());
     }
 
     @Test
-    void getComplaint_whenUserDidNotSubmitComplaint_returns404() throws Exception {
+    void listComplaints_whenEmpty_returns200EmptyArray() throws Exception {
         Long creatorId = 54001L;
         Long collectorId = 54002L;
 
@@ -82,13 +84,14 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", collectorId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/offer/" + offerId + "/complaint").header("X-User-Id", collectorId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("OFFER_CMP_001"));
+        mockMvc.perform(get("/api/offer/" + offerId + "/complaints").header("X-User-Id", collectorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
-    void getComplaint_asOutsider_returns403() throws Exception {
+    void listComplaints_asOutsider_returns403() throws Exception {
         Long creatorId = 55001L;
         Long collectorId = 55002L;
         Long outsiderId = 55003L;
@@ -99,7 +102,7 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", collectorId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/offer/" + offerId + "/complaint").header("X-User-Id", outsiderId))
+        mockMvc.perform(get("/api/offer/" + offerId + "/complaints").header("X-User-Id", outsiderId))
                 .andExpect(status().isForbidden());
     }
 

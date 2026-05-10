@@ -6,11 +6,10 @@ import pl.isigmas.kaucjapp.offers.model.Complainant;
 import pl.isigmas.kaucjapp.offers.model.OfferComplaint;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ComplaintRepository extends JpaRepository<OfferComplaint, Long> {
     List<OfferComplaint> findAllByOrderByIdDesc();
 
-    Optional<OfferComplaint> findFirstByOffer_IdAndComplainantOrderByIdDesc(Long offerId, Complainant complainant);
+    List<OfferComplaint> findAllByOffer_IdAndComplainantOrderByIdDesc(Long offerId, Complainant complainant);
 }
