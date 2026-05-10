@@ -16,7 +16,7 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
 
     List<Offer> findByCreatorId(Long creatorId);
 
-    List<Offer> findByCollectorIdAndStatus(Long collectorId, OfferStatus status);
+    List<Offer> findByCollectorIdAndStatusIn(Long collectorId, List<OfferStatus> statuses);
 
     @Query(value = "SELECT * FROM offers " +
             "WHERE status = 'OPEN' " +
