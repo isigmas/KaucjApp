@@ -51,7 +51,11 @@ export default function BookingsLayout() {
           headerTitle: "Zgłoś problem",
           headerLargeTitleEnabled: false,
           headerTransparent: true,
-          presentation: "modal",
+          headerBackButtonDisplayMode: "minimal",
+          presentation: "formSheet",
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [1],
+          contentStyle: { backgroundColor: "transparent" },
         }}
       />
     </Stack>

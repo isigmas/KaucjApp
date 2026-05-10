@@ -1,5 +1,4 @@
 import SectionCard from "@/src/components/map/details/section-card";
-import Countdown from "@/src/components/profile/reserved-offers/countdown";
 import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
@@ -20,6 +19,9 @@ import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { useRouter } from "expo-router";
 import ContactCard from "../../ui/contact-card";
+import { OfferDetailsAccordion } from "../my-offers/offer-detail-screen";
+import { ReservedState } from "../my-offers/offer-status-summary-card";
+import { ActionButton } from "../my-offers/offer-actions";
 
 interface BookingStatusSummaryCardProps {
   offer: Offer;
@@ -37,25 +39,32 @@ export default function BookingStatusSummaryCard({
   const isComplaint = offer.status === "COMPLAINT";
 
   const handleComplete = () => {
-    // Alert.alert(
-    //   "Potwierdź odbiór",
-    //   "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
-    //   [
-    //     { text: "Anuluj", style: "cancel" },
-    //     {
-    //       text: "Potwierdź",
-    //       style: "default",
-    //       onPress: () => {
-    //         confirmOffer();
-    //       },
-    //     },
-    //   ],
-    // );
+    Alert.alert(
+      "Potwierdź odbiór",
+      "Czy odebrałeś opakowania od sprzedającego? Potwierdzenie odbioru zakończy rezerwację.",
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Potwierdź",
+          style: "default",
+          onPress: () => {
+            confirmOffer(undefined, {
+              onSuccess: () => {
+                router.back();
+              },
+              onError: () => {
+                Alert.alert("Błąd", "Nie udało się potwierdzić odbioru");
+              },
+            });
+          },
+        },
+      ],
+    );
   };
 
   const handleComplaint = () => {
     router.push({
-      pathname: "/profile/offers/complaint",
+      pathname: "/profile/bookings/complaint",
       params: { id: offer.offer_id },
     });
   };
@@ -63,6 +72,44 @@ export default function BookingStatusSummaryCard({
   return (
     <SectionCard style={styles.card}>
       <StatusHeader offer={offer} />
+      <View style={styles.hairline} />
+      {isReserved && offer.reserved_to ? (
+        <ReservedState
+          expiresAt={offer.reserved_to}
+          onConfirm={handleComplete}
+          isPending={isPending}
+          onComplaint={handleComplaint}
+        />
+      ) : null}
+      {isPendingConfirmation && isConfirmedByCreator && (
+        <>
+          <ActionButton
+            onPress={handleComplete}
+            disabled={isPending}
+            isPending={isPending}
+            label="Potwierdź odbiór opakowań"
+            icon={<CheckCircle size={18} color={colors.text.white} />}
+          />
+          <Pressable onPress={handleComplaint}>
+            <Text style={styles.hintError}>Zgłoś problem</Text>
+          </Pressable>
+        </>
+      )}
+      {isComplaint && (
+        <>
+          <ActionButton
+            backgroundColor={colors.status.error}
+            onPress={handleComplaint}
+            disabled={isPending}
+            isPending={isPending}
+            label="Zobacz problem"
+            icon={<AlertTriangle size={18} color={colors.text.white} />}
+          />
+          <Text style={styles.hint}>
+            Potwierdzenie rozwiązania problemu zakończy ofertę.
+          </Text>
+        </>
+      )}
     </SectionCard>
   );
 }
