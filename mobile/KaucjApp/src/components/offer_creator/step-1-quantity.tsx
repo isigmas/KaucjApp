@@ -12,10 +12,10 @@ interface Step1QuantityProps {
   updateData: (newData: Partial<OfferData>) => void;
 }
 
-type ContainerType = "plastic" | "glass" | "cans";
+type ItemType = "plastic" | "cans";
 
 interface RowConfig {
-  id: ContainerType;
+  id: ItemType;
   title: string;
   icon: string;
   quantityKey: keyof OfferData;
@@ -46,11 +46,9 @@ export default function Step1Quantity({
   data,
   updateData,
 }: Step1QuantityProps) {
-  const [expandedRow, setExpandedRow] = useState<ContainerType | null>(
-    "plastic",
-  );
+  const [expandedRow, setExpandedRow] = useState<ItemType | null>("plastic");
 
-  const toggleRow = (id: ContainerType) => {
+  const toggleRow = (id: ItemType) => {
     setExpandedRow((prev) => (prev === id ? null : id));
   };
 

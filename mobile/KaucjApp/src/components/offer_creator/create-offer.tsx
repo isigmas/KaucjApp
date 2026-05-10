@@ -162,14 +162,6 @@ export default function CreateOfferScreen() {
       >
         {renderStep()}
       </Animated.View>
-
-      {/* navigatoin */}
-      {/* <StepNavigation
-        currentStep={currentStep}
-        totalSteps={3}
-        nextStep={nextStep}
-        prevStep={prevStep}
-      /> */}
     </SafeAreaView>
   );
 }

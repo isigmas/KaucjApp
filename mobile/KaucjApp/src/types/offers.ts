@@ -31,7 +31,7 @@ export interface Offer {
 }
 
 export interface OfferItemPayload {
-  bottleId: number; //notnull
+  bottleId: 1 | 2; //notnull plastic - 1, can - 2
   quantity: number; //notnull, min 1
   unitPrice: number; //notnull, min 0.0, max 0.5
 }
@@ -42,7 +42,7 @@ export interface OfferPayload {
   longitude: number; //notnull
   pickupAddress: string; //notnull
   pickupInstructions?: string; //nullable
-  items: OfferItemPayload[]; //notnull, min 1
+  items: OfferItemPayload[]; //notnull, min 1, max 2
 }
 
 // box parameters for the /api/offer/search endpoint.
