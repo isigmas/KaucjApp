@@ -1,306 +1,245 @@
-import { colors } from "@/src/theme";
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Pressable } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Animated, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
+import { colors } from "@/src/theme";
+import { useCreateOffer } from "@/src/api/hooks/use-offer";
+import {
+  buildOfferPayload,
+  defaultOfferFormValues,
+  offerFormSchema,
+  type OfferFormValues,
+} from "./offer-form-schema";
+import {
+  ProgressIndicator,
+  type ProgressStep,
+} from "./progress-indicator";
+import { SuccessView } from "./success-view";
+import {
+  LocationBottomSheet,
+  type LocationBottomSheetRef,
+  type PickedLocation,
+} from "./location-bottom-sheet";
 import Step1Quantity from "./step-1-quantity";
 import Step2Location from "./step-2-location";
 import Step3Summary from "./step-3-summary";
 
-export interface OfferData {
-  plasticBottles: number;
-  glassBottles: number;
-  cans: number;
-  latitude: number | null;
-  longitude: number | null;
-  plasticPrice: number;
-  glassPrice: number;
-  cansPrice: number;
-  address: string;
-  notes?: string;
-}
 const STEPS = [
   { number: 1, label: "Ilość i cena" },
   { number: 2, label: "Adres" },
   { number: 3, label: "Podgląd" },
-];
+] as const satisfies readonly ProgressStep[];
 
-const triggerSlideInAnimation = (animatedValue: Animated.Value) => {
+const TOTAL_STEPS = STEPS.length;
+const FIRST_STEP = STEPS[0].number;
+
+/**
+ * Top-level orchestrator of the offer creator flow.
+ *
+ * Responsibilities:
+ *  - Owns the multi-step form state via `react-hook-form` + `zod`.
+ *  - Tracks the active step and the success view.
+ *  - Hosts the location-picker bottom sheet and the create-offer mutation.
+ *
+ * Step components consume the form via `useFormContext`, which keeps the
+ * parent free of per-field prop drilling.
+ */
+export default function CreateOfferScreen() {
+  const router = useRouter();
+  const { mutate: createOffer, isPending } = useCreateOffer();
+
+  const form = useForm<OfferFormValues>({
+    resolver: zodResolver(offerFormSchema),
+    defaultValues: defaultOfferFormValues,
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  });
+
+  const [currentStep, setCurrentStep] = useState<number>(FIRST_STEP);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const locationSheetRef = useRef<LocationBottomSheetRef>(null);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isSuccess) return;
+    runSlideInAnimation(slideAnim);
+  }, [currentStep, isSuccess, slideAnim]);
+
+  const handleStepPress = useCallback((step: number) => {
+    setCurrentStep(step);
+  }, []);
+
+  const handleOpenLocationPicker = useCallback(() => {
+    const { latitude, longitude } = form.getValues();
+    const initial: PickedLocation | null =
+      latitude !== null && longitude !== null
+        ? { latitude, longitude }
+        : null;
+
+    locationSheetRef.current?.open(initial);
+  }, [form]);
+
+  const handleLocationConfirmed = useCallback(
+    (location: PickedLocation) => {
+      form.setValue("latitude", location.latitude, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      form.setValue("longitude", location.longitude, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
+    [form],
+  );
+
+  const handlePublish = useMemo(
+    () =>
+      form.handleSubmit(
+        (values) => {
+          createOffer(buildOfferPayload(values), {
+            onSuccess: () => setIsSuccess(true),
+            onError: (error) => {
+              const message =
+                error.response?.data?.message ??
+                "Nie udało się opublikować oferty. Spróbuj ponownie.";
+              Alert.alert("Błąd", message);
+            },
+          });
+        },
+        (errors) => {
+          // Surface the first blocking issue and route the user to the step
+          // where it can be fixed.
+          const firstMessage = collectFirstErrorMessage(errors);
+          if (firstMessage) {
+            Alert.alert("Sprawdź formularz", firstMessage);
+          }
+
+          if (errors.plasticBottles || errors.cans) {
+            setCurrentStep(1);
+          } else if (
+            errors.latitude ||
+            errors.longitude ||
+            errors.pickupAddress
+          ) {
+            setCurrentStep(2);
+          }
+        },
+      ),
+    [createOffer, form],
+  );
+
+  const handleGoHome = useCallback(() => {
+    setIsSuccess(false);
+    form.reset(defaultOfferFormValues);
+    setCurrentStep(FIRST_STEP);
+    router.navigate("/(app)/(tabs)/home");
+  }, [form, router]);
+
+  const handleCreateAnother = useCallback(() => {
+    form.reset(defaultOfferFormValues);
+    setCurrentStep(FIRST_STEP);
+    setIsSuccess(false);
+  }, [form]);
+
+  if (isSuccess) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SuccessView
+          onGoHome={handleGoHome}
+          onCreateAnother={handleCreateAnother}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <FormProvider {...form}>
+      <SafeAreaView style={styles.container}>
+        <ProgressIndicator
+          steps={STEPS}
+          currentStep={currentStep}
+          onStepPress={handleStepPress}
+        />
+
+        <Animated.View
+          style={[styles.animatedWrapper, getSlideInStyles(slideAnim)]}
+        >
+          {currentStep === 1 && <Step1Quantity />}
+          {currentStep === 2 && (
+            <Step2Location onOpenLocationPicker={handleOpenLocationPicker} />
+          )}
+          {currentStep === TOTAL_STEPS && (
+            <Step3Summary
+              onSubmit={handlePublish}
+              isSubmitting={isPending}
+            />
+          )}
+        </Animated.View>
+
+        <LocationBottomSheet
+          ref={locationSheetRef}
+          onConfirm={handleLocationConfirmed}
+        />
+      </SafeAreaView>
+    </FormProvider>
+  );
+}
+
+const runSlideInAnimation = (animatedValue: Animated.Value) => {
   animatedValue.setValue(0);
-
   Animated.spring(animatedValue, {
     toValue: 1,
     friction: 9,
-    tension: 60, //  speed
+    tension: 60,
     useNativeDriver: true,
   }).start();
 };
 
+const getSlideInStyles = (animatedValue: Animated.Value) => ({
+  opacity: animatedValue,
+  transform: [
+    {
+      translateX: animatedValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [50, 0],
+      }),
+    },
+  ],
+});
+
 /**
- * Generates the animated styles based on the animated value.
+ * Walks a react-hook-form `errors` tree depth-first and returns the first
+ * human-readable message found. Used to surface a single relevant error to
+ * the user when they hit "Opublikuj" with an invalid form.
  */
-const getSlideInStyles = (animatedValue: Animated.Value) => {
-  return {
-    opacity: animatedValue,
-    transform: [
-      {
-        translateX: animatedValue.interpolate({
-          inputRange: [0, 1],
-          outputRange: [50, 0],
-        }),
-      },
-    ],
-  };
+const collectFirstErrorMessage = (errors: unknown): string | null => {
+  if (!errors || typeof errors !== "object") return null;
+
+  for (const value of Object.values(errors as Record<string, unknown>)) {
+    if (!value) continue;
+    if (typeof value === "object") {
+      if ("message" in value && typeof (value as { message?: unknown }).message === "string") {
+        return (value as { message: string }).message;
+      }
+      const nested = collectFirstErrorMessage(value);
+      if (nested) return nested;
+    }
+  }
+
+  return null;
 };
 
-export default function CreateOfferScreen() {
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [offerData, setOfferData] = useState<OfferData>({
-    plasticBottles: 10,
-    glassBottles: 0,
-    cans: 0,
-    plasticPrice: 0.2,
-    glassPrice: 0.5,
-    cansPrice: 0.2,
-    address: "",
-    notes: "",
-    latitude: null,
-    longitude: null,
-  });
-
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  // Run the independent animation function every time the step changes
-  useEffect(() => {
-    triggerSlideInAnimation(slideAnim);
-  }, [currentStep, slideAnim]);
-
-  const handleUpdateData = (newData: Partial<OfferData>) => {
-    setOfferData((prev) => ({ ...prev, ...newData }));
-  };
-
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
-  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
-
-  // Dynamic component rendering
-  const renderStep = () => {
-    const props = {
-      data: offerData,
-      updateData: handleUpdateData,
-      onNext: nextStep,
-      onBack: prevStep,
-    };
-
-    switch (currentStep) {
-      case 1:
-        return <Step1Quantity {...props} />;
-      case 2:
-        return <Step2Location {...props} />;
-      case 3:
-        return <Step3Summary {...props} />;
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Progress Indicator */}
-      <View style={styles.progressOuter}>
-        {STEPS.map((step) => {
-          const isDone = step.number < currentStep;
-          const isActive = step.number === currentStep;
-          return (
-            <React.Fragment key={step.number}>
-              <Pressable
-                style={styles.stepNode}
-                onPress={() => setCurrentStep(step.number)}
-              >
-                <View
-                  style={[
-                    styles.stepDot,
-                    isActive && styles.stepDotActive,
-                    isDone && styles.stepDotDone,
-                  ]}
-                >
-                  {isDone ? (
-                    <Text style={styles.stepDotCheck}>✓</Text>
-                  ) : (
-                    <Text
-                      style={[
-                        styles.stepDotNumber,
-                        isActive && styles.stepDotNumberActive,
-                      ]}
-                    >
-                      {step.number}
-                    </Text>
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.stepLabel,
-                    isActive && styles.stepLabelActive,
-                    isDone && styles.stepLabelDone,
-                  ]}
-                >
-                  {step.label}
-                </Text>
-              </Pressable>
-              {step.number < STEPS.length && (
-                <View
-                  style={[styles.stepLine, isDone && styles.stepLineDone]}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </View>
-
-      {/* Animated Step Container */}
-      <Animated.View
-        style={[styles.animatedWrapper, getSlideInStyles(slideAnim)]}
-      >
-        {renderStep()}
-      </Animated.View>
-    </SafeAreaView>
-  );
-}
-
-// --- 5. Skeleton Styles ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.main },
-
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: colors.text.primary,
-    letterSpacing: -0.4,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: colors.text.secondary,
-    marginTop: 3,
-    fontWeight: "500",
-  },
-  // prgoress bar
-  progressOuter: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingHorizontal: 28,
-    marginBottom: 20,
-    marginTop: 45,
-  },
-  stepNode: {
-    alignItems: "center",
-    gap: 5,
-  },
-  stepDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.background.subtle,
-    borderWidth: 1.5,
-    borderColor: colors.status.border,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  stepDotActive: {
-    backgroundColor: colors.primary.base,
-    borderColor: colors.primary.base,
-    shadowColor: colors.primary.base,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  stepDotDone: {
-    backgroundColor: colors.primary.dark,
-    borderColor: colors.primary.dark,
-  },
-  stepDotNumber: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.text.muted,
-  },
-  stepDotNumberActive: {
-    color: colors.text.white,
-  },
-  stepDotCheck: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.text.white,
-  },
-  stepLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: colors.text.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-    textAlign: "center",
-    maxWidth: 64,
-  },
-  stepLabelActive: {
-    color: colors.primary.base,
-  },
-  stepLabelDone: {
-    color: colors.primary.dark,
-  },
-  stepLine: {
+  container: {
     flex: 1,
-    height: 1.5,
-    backgroundColor: colors.status.border,
-    marginHorizontal: 6,
-    marginTop: 14,
+    backgroundColor: colors.background.main,
   },
-  stepLineDone: {
-    backgroundColor: colors.primary.dark,
-  },
-
   animatedWrapper: {
     flex: 1,
     paddingHorizontal: 24,
-  },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: "auto",
-    marginBottom: 60,
-    paddingHorizontal: 20,
-  },
-  button: {
-    backgroundColor: "#10B981",
-    padding: 16,
-    borderRadius: 12,
-    flex: 1,
-    marginLeft: 8,
-    alignItems: "center",
-    width: 1 / 2,
-  },
-  buttonPlaceholder: {
-    width: 1 / 2,
-  },
-  buttonSecondary: {
-    backgroundColor: "#E5E7EB",
-    padding: 16,
-    borderRadius: 12,
-    flex: 1,
-    marginRight: 8,
-    alignItems: "center",
-  },
-  publishButton: { backgroundColor: "#047857" },
-  buttonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
-  buttonTextSecondary: { color: "#111827", fontWeight: "700", fontSize: 16 },
-  summaryBox: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
 });
