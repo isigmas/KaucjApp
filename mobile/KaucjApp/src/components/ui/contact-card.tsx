@@ -4,17 +4,19 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { MessageCircle, Phone, Star } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import ErrorState from "../../states/error-state";
+import ErrorState from "../states/error-state";
 
-interface CourierCardProps {
+interface ContactCardProps {
   asCard?: boolean;
   userId: number | null;
+  header?: string;
 }
 
-export default function CourierCard({
+export default function ContactCard({
   asCard = true,
   userId,
-}: CourierCardProps) {
+  header,
+}: ContactCardProps) {
   if (!userId) {
     return null;
   }
@@ -44,8 +46,8 @@ export default function CourierCard({
     );
   };
   const body = (
-    <>
-      <Text style={styles.sectionLabel}>Kto odbiera tę ofertę?</Text>
+    <View style={styles.courierSection}>
+      {header && <Text style={styles.sectionLabel}>{header}</Text>}
 
       <View style={styles.courierRow}>
         <View style={styles.avatar}>
@@ -100,10 +102,10 @@ export default function CourierCard({
           <Text style={styles.actionBtnFillLabel}>Napisz</Text>
         </Pressable>
       </View>
-    </>
+    </View>
   );
   if (!asCard) {
-    return <View style={styles.courierSection}>{body}</View>;
+    return body;
   }
 
   return <SectionCard>{body}</SectionCard>;
