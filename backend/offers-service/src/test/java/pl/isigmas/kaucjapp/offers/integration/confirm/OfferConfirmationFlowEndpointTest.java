@@ -115,9 +115,18 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
         assertThat(pending.getStatus()).isEqualTo(OfferStatus.PENDING_CONFIRMATION);
         assertThat(pending.getConfirmationDeadline()).isNotNull();
 
-        mockMvc.perform(post("/api/offer/" + offerId + "/status/COMPLAINT")
-                        .header("X-User-Id", creatorId))
-                .andExpect(status().isOk());
+        String complaintPayload = """
+                {
+                  "complaintReason": "OTHER",
+                  "message": "Issue during handover"
+                }
+                """;
+
+        mockMvc.perform(post("/api/offer/complaint/" + offerId)
+                        .header("X-User-Id", creatorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(complaintPayload))
+                .andExpect(status().isCreated());
 
         Offer complaint = offerRepository.findById(offerId).orElseThrow();
         assertThat(complaint.getStatus()).isEqualTo(OfferStatus.COMPLAINT);
