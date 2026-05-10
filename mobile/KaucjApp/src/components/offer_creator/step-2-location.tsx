@@ -99,7 +99,7 @@ export default function Step2Location({
       </View>
 
       {/* BLURRED MAP THUMBNAIL  */}
-      <Link href="/(tabs)/create/map-sheet" asChild>
+      <Link href="/(app)/(tabs)/create/map-sheet" asChild>
         <Pressable style={styles.mapThumbnailContainer}>
           <View pointerEvents="none" style={styles.mapThumbnailWrapper}>
             <MapView
