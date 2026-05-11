@@ -42,7 +42,6 @@ export default function OffersLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
-      <Stack.Screen name="confirmation" options={{ headerShown: false }} />
 
       <Stack.Screen
         name="complaint"

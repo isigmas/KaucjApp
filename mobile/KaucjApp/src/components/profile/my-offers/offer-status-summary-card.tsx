@@ -47,20 +47,28 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
     : "Kto odbiera opakowania?";
 
   const handleComplete = () => {
-    Alert.alert(
-      "Potwierdź odbiór",
-      "Czy kurier odebrał już opakowania? Potwierdzenie odbioru zakończy ofertę.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "default",
-          onPress: () => {
-            confirmOffer();
-          },
+    const alertDescription = isPendingConfirmation
+      ? "Kurier potwierdził odbiór opakowań. Również potwierdź odbiór opakowań aby zakończyć ofertę."
+      : "Czy kurier odebrał już opakowania?";
+    Alert.alert("Potwierdź odbiór", alertDescription, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Potwierdź",
+        style: "default",
+        onPress: () => {
+          confirmOffer(undefined, {
+            onSuccess: () => {
+              if (isPendingConfirmation) {
+                router.push({
+                  pathname: "/profile/offers/confirmation",
+                  params: { type: "success" },
+                });
+              }
+            },
+          });
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const handleComplaint = () => {

@@ -38,7 +38,10 @@ export default function BookingActions({
               { offerId: offerId, newStatus: "OPEN" },
               {
                 onSuccess: () => {
-                  router.back();
+                  router.push({
+                    pathname: "/profile/bookings/confirmation",
+                    params: { type: "cancel" },
+                  });
                 },
                 onError: (error) => {
                   const message =
