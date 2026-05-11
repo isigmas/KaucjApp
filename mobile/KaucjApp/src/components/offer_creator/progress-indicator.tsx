@@ -1,11 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/src/theme";
-
-export interface ProgressStep {
-  number: number;
-  label: string;
-}
+import type { ProgressStep } from "./use-offer-creator";
 
 interface ProgressIndicatorProps {
   steps: readonly ProgressStep[];
