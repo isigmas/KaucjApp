@@ -1,25 +1,28 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/src/theme";
-import type { ProgressStep } from "./use-offer-creator";
+
+const STEPS = [
+  { number: 1, label: "Ilość i cena" },
+  { number: 2, label: "Adres" },
+  { number: 3, label: "Podgląd" },
+] as const;
 
 interface ProgressIndicatorProps {
-  steps: readonly ProgressStep[];
   currentStep: number;
   onStepPress: (step: number) => void;
 }
 
 export function ProgressIndicator({
-  steps,
   currentStep,
   onStepPress,
 }: ProgressIndicatorProps) {
   return (
     <View style={styles.progressOuter}>
-      {steps.map((step, index) => {
+      {STEPS.map((step, index) => {
         const isDone = step.number < currentStep;
         const isActive = step.number === currentStep;
-        const isLast = index === steps.length - 1;
+        const isLast = index === STEPS.length - 1;
 
         return (
           <React.Fragment key={step.number}>

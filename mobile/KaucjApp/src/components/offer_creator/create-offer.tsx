@@ -9,7 +9,7 @@ import LocationBottomSheet from "./location-bottom-sheet";
 import Step1Quantity from "./step-1-quantity";
 import Step2Location from "./step-2-location";
 import Step3Summary from "./step-3-summary";
-import { STEPS, useOfferCreator } from "./use-offer-creator";
+import { useOfferCreator } from "@/src/hooks/use-offer-creator";
 
 export default function CreateOfferScreen() {
   const creator = useOfferCreator();
@@ -29,7 +29,6 @@ export default function CreateOfferScreen() {
     <FormProvider {...creator.form}>
       <SafeAreaView style={styles.container}>
         <ProgressIndicator
-          steps={STEPS}
           currentStep={creator.currentStep}
           onStepPress={creator.goToStep}
         />
