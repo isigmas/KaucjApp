@@ -191,6 +191,9 @@ services:
       args:
         SERVICE_NAME: notification-service
     environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://deposit-db:5432/notification_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - BASE_URL=http://localhost:8080
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
