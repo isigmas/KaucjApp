@@ -53,11 +53,21 @@ export default function Step2Location({
       <Controller
         control={control}
         name="pickupAddress"
-        render={({ field: { value, onChange, onBlur } }) => (
+        render={({
+          field: { value, onChange, onBlur },
+          fieldState: { error },
+        }) => (
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Adres odbioru (ulica i numer)</Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  borderColor: error
+                    ? colors.status.error
+                    : colors.status.border,
+                },
+              ]}
               placeholder="ul. Studencka 4"
               placeholderTextColor={colors.text.muted}
               value={value ?? ""}
