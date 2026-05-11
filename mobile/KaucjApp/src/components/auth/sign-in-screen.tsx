@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 
-import { signInSchema, SignInValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 
 import { AuthHeader } from "@/src/components/auth/auth-header";
@@ -13,6 +12,7 @@ import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignInForm } from "@/src/components/auth/sign-in-form";
 import ForgotPassword from "./forgot-password-link";
 import { TestFooter } from "./onboarding-tester";
+import { signInSchema, SignInValues } from "@/src/validation";
 
 export default function SignInScreen() {
   const { signIn, isSigningIn, signInError } = useAuth();

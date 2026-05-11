@@ -35,7 +35,7 @@ export default function Step2Location({
     <ScrollView
       style={styles.stepContainer}
       showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets={true}
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Gdzie odbiór?</Text>
