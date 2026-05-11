@@ -37,3 +37,6 @@ build/
 
 ### Docker ###
 compose.override.yaml
+
+### Http client ###
+.workflows/http-client.private.env.json
