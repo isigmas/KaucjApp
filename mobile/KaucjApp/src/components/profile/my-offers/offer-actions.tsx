@@ -35,7 +35,10 @@ export default function OfferActions({ offer }: OfferActionsProps) {
               { offerId: offer.offer_id, newStatus: "CANCELED" },
               {
                 onSuccess: () => {
-                  router.back();
+                  router.push({
+                    pathname: "/profile/offers/confirmation",
+                    params: { type: "cancel" },
+                  });
                 },
                 onError: (error) => {
                   const message =
