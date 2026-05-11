@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -9,26 +9,28 @@ import {
 } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
-import * as Location from "expo-location";
 import { BlurView } from "expo-blur";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { colors } from "@/src/theme";
 import type { OfferFormValues } from "./offer-form-schema";
+import type { PickedLocation } from "./location-bottom-sheet";
 
 interface Step2LocationProps {
+  selectedLocation: PickedLocation | null;
+  /** `null` while the user's location is still being resolved upstream. */
+  defaultLocation: PickedLocation | null;
   onOpenLocationPicker: () => void;
 }
 
 export default function Step2Location({
+  selectedLocation,
+  defaultLocation,
   onOpenLocationPicker,
 }: Step2LocationProps) {
   const { control } = useFormContext<OfferFormValues>();
   const initialNotes = useWatch({ control, name: "pickupInstructions" });
-  const latitude = useWatch({ control, name: "latitude" });
-  const longitude = useWatch({ control, name: "longitude" });
 
-  const [isNotesExpanded, setIsNotesExpanded] = useState(!!initialNotes);
-  const hasSelectedLocation = latitude !== null && longitude !== null;
+  const [isNotesExpanded, setIsNotesExpanded] = useState(() => !!initialNotes);
 
   return (
     <ScrollView
@@ -44,9 +46,8 @@ export default function Step2Location({
       </View>
 
       <MapThumbnail
-        latitude={latitude}
-        longitude={longitude}
-        hasSelectedLocation={hasSelectedLocation}
+        selectedLocation={selectedLocation}
+        defaultLocation={defaultLocation}
         onPress={onOpenLocationPicker}
       />
 
@@ -117,94 +118,61 @@ export default function Step2Location({
 }
 
 interface MapThumbnailProps {
-  latitude: number | null;
-  longitude: number | null;
-  hasSelectedLocation: boolean;
+  selectedLocation: PickedLocation | null;
+  defaultLocation: PickedLocation | null;
   onPress: () => void;
 }
 
-const FALLBACK_THUMBNAIL_REGION = {
-  latitude: 50.0647,
-  longitude: 19.945,
-  latitudeDelta: 0.01,
-  longitudeDelta: 0.01,
-};
-
+/**
+ * Read-only mini-map that previews the pickup pin. Uses
+ * `selectedLocation ?? defaultLocation` so the preview is always meaningful,
+ * and reflects the same single source of truth as the picker.
+ *
+ * While `defaultLocation` is still resolving and there is no selection yet,
+ * we render the thumbnail without an inner map — the blurred placeholder
+ * matches the "no selection" UX without showing a misleading region.
+ */
 function MapThumbnail({
-  latitude,
-  longitude,
-  hasSelectedLocation,
+  selectedLocation,
+  defaultLocation,
   onPress,
 }: MapThumbnailProps) {
-  const [previewRegion, setPreviewRegion] = useState(() => ({
-    latitude: latitude ?? FALLBACK_THUMBNAIL_REGION.latitude,
-    longitude: longitude ?? FALLBACK_THUMBNAIL_REGION.longitude,
-    latitudeDelta: hasSelectedLocation ? 0.003 : 0.01,
-    longitudeDelta: hasSelectedLocation ? 0.003 : 0.01,
-  }));
+  const hasSelected = selectedLocation !== null;
+  const pin = selectedLocation ?? defaultLocation;
 
-  // Keep the thumbnail region in sync with the latest picked coordinates and,
-  // when nothing is picked yet, opportunistically center on the user's
-  // location (no permission prompt — read-only).
-  useEffect(() => {
-    if (latitude !== null && longitude !== null) {
-      setPreviewRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.003,
-        longitudeDelta: 0.003,
-      });
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== "granted" || cancelled) return;
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        if (cancelled) return;
-
-        setPreviewRegion({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-      } catch (error) {
-        console.warn("Could not fetch location for thumbnail preview", error);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [latitude, longitude]);
+  const region = useMemo(
+    () =>
+      pin
+        ? {
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+            latitudeDelta: hasSelected ? 0.003 : 0.01,
+            longitudeDelta: hasSelected ? 0.003 : 0.01,
+          }
+        : null,
+    [pin, hasSelected],
+  );
 
   return (
     <Pressable style={styles.mapThumbnailContainer} onPress={onPress}>
       <View pointerEvents="none" style={styles.mapThumbnailWrapper}>
-        <MapView
-          provider={PROVIDER_DEFAULT}
-          style={styles.mapThumbnail}
-          region={previewRegion}
-          pitchEnabled={false}
-          rotateEnabled={false}
-          scrollEnabled={false}
-          zoomEnabled={false}
-        >
-          {hasSelectedLocation && latitude !== null && longitude !== null && (
-            <Marker
-              coordinate={{ latitude, longitude }}
-              pinColor={colors.primary.base}
-            />
-          )}
-        </MapView>
+        {region && (
+          <MapView
+            provider={PROVIDER_DEFAULT}
+            style={styles.mapThumbnail}
+            region={region}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={false}
+            zoomEnabled={false}
+          >
+            {hasSelected && pin && (
+              <Marker coordinate={pin} pinColor={colors.primary.base} />
+            )}
+          </MapView>
+        )}
 
-        {!hasSelectedLocation && (
+        {!hasSelected && (
           <BlurView
             intensity={5}
             tint="dark"
@@ -215,7 +183,7 @@ function MapThumbnail({
 
       <View
         style={
-          hasSelectedLocation
+          hasSelected
             ? styles.thumbnailOverlaySelected
             : styles.thumbnailOverlay
         }
@@ -223,12 +191,12 @@ function MapThumbnail({
         <View
           style={[
             styles.thumbnailPill,
-            hasSelectedLocation && styles.thumbnailPillFaded,
+            hasSelected && styles.thumbnailPillFaded,
           ]}
         >
           <Text style={styles.thumbnailPillIcon}>📍</Text>
           <Text style={styles.thumbnailPillText}>
-            {hasSelectedLocation ? "Zmień lokalizację" : "Wybierz na mapie"}
+            {hasSelected ? "Zmień lokalizację" : "Wybierz na mapie"}
           </Text>
         </View>
       </View>

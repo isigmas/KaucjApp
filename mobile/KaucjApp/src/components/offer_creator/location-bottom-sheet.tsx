@@ -1,13 +1,19 @@
-import React, { forwardRef, useMemo, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import type { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { colors, rounded, spacing } from "@/src/theme";
 
-const KRAKOW: PickedLocation = { latitude: 50.0647, longitude: 19.945 };
 const ZOOM_DELTA = { latitudeDelta: 0.01, longitudeDelta: 0.01 };
 const INITIAL_DELTA = { latitudeDelta: 0.05, longitudeDelta: 0.05 };
+const RECENTER_DURATION = 200;
 
 export interface PickedLocation {
   latitude: number;
@@ -15,38 +21,57 @@ export interface PickedLocation {
 }
 
 interface LocationBottomSheetProps {
-  initialLocation: PickedLocation | null;
+  /** The user's confirmed selection (form value). `null` until they tap "Potwierdź". */
+  selectedLocation: PickedLocation | null;
+  /** Fallback used as the starting pin position before the user confirms. */
+  defaultLocation: PickedLocation;
   onConfirm: (location: PickedLocation) => void;
-  onChange?: (index: number) => void;
 }
 
+/**
+ * Full-screen map picker. The pin always reflects the parent's "current
+ * location" (selectedLocation ?? defaultLocation). Internally we keep a local
+ * `draft` so map taps update the marker without touching the form — the form
+ * is only updated when the user taps "Potwierdź".
+ *
+ * The map uses `initialRegion` (uncontrolled) so user pans/zooms aren't fought
+ * by React state. We explicitly recentre via `animateToRegion` on every open,
+ * which gives a predictable, jump-free experience.
+ */
 const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
-  ({ initialLocation, onConfirm, onChange }, ref) => {
+  ({ selectedLocation, defaultLocation, onConfirm }, ref) => {
     const snapPoints = useMemo(() => ["80%"], []);
     const mapRef = useRef<MapView>(null);
 
-    const [draft, setDraft] = useState<PickedLocation>(
-      initialLocation ?? KRAKOW,
+    const initialPin = selectedLocation ?? defaultLocation;
+    const [draft, setDraft] = useState<PickedLocation>(initialPin);
+
+    // Reset the draft and recentre the map every time the sheet opens, so
+    // the user always starts from the confirmed/default location — never from
+    // a stale tap left over from a previous session.
+    const handleSheetChange = useCallback(
+      (index: number) => {
+        if (index < 0) return;
+        const pin = selectedLocation ?? defaultLocation;
+        setDraft(pin);
+        mapRef.current?.animateToRegion(
+          { ...pin, ...ZOOM_DELTA },
+          RECENTER_DURATION,
+        );
+      },
+      [selectedLocation, defaultLocation],
     );
 
-    const handleSheetChange = (index: number) => {
-      if (index >= 0 && initialLocation) {
-        setDraft(initialLocation);
-        mapRef.current?.animateToRegion(
-          { ...initialLocation, ...ZOOM_DELTA },
-          250,
-        );
-      }
-      onChange?.(index);
-    };
-
-    const renderBackdrop = (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-      />
+    const renderBackdrop = useCallback(
+      (props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop
+          {...props}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+          pressBehavior="close"
+        />
+      ),
+      [],
     );
 
     return (
@@ -68,7 +93,7 @@ const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
             ref={mapRef}
             provider={PROVIDER_DEFAULT}
             style={StyleSheet.absoluteFillObject}
-            initialRegion={{ ...draft, ...INITIAL_DELTA }}
+            initialRegion={{ ...initialPin, ...INITIAL_DELTA }}
             showsUserLocation
             showsMyLocationButton
             mapPadding={{ top: 100, right: 16, bottom: 80, left: 16 }}

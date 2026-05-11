@@ -107,7 +107,7 @@ export default function Step3Summary({
       >
         <View style={styles.cardHeader}>
           <Text style={styles.cardHeaderIcon}>📍</Text>
-          <Text style={styles.cardHeaderTitle}>Miejsce odboiru</Text>
+          <Text style={styles.cardHeaderTitle}>Miejsce odbioru</Text>
         </View>
 
         <View style={styles.cardContent}>
