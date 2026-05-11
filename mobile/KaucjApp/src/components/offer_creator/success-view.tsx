@@ -6,7 +6,7 @@ import Animated, {
   FadeInUp,
   Layout,
 } from "react-native-reanimated";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -48,8 +48,8 @@ export function SuccessView({ onGoHome, onCreateAnother }: SuccessViewProps) {
             <Text style={styles.primaryButtonText}>Wróć na stronę główną</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryButton} onPress={onCreateAnother}>
-            <Text style={styles.primaryButtonText}>Dodaj kolejną ofertę</Text>
+          <Pressable style={styles.secondaryButton} onPress={onCreateAnother}>
+            <Text style={styles.secondaryButtonText}>Dodaj kolejną ofertę</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
   actions: {
     marginTop: 20,
     width: "100%",
+    gap: spacing.sm,
   },
   primaryButton: {
     backgroundColor: colors.primary.base,
@@ -125,6 +126,20 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: colors.text.white,
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  secondaryButton: {
+    backgroundColor: colors.background.card,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.status.border,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    color: colors.text.secondary,
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,

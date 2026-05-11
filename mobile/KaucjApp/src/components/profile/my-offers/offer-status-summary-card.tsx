@@ -34,6 +34,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
   const isConfirmedByCreator = offer.creator_confirmed;
   const isComplaint = offer.status === "COMPLAINT";
+  const isCompleted = offer.status === "COMPLETED";
 
   const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
   const showCourierDetails =
@@ -41,6 +42,9 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
     isPendingConfirmation ||
     isComplaint ||
     offer.collector_id;
+  const courierHeaderText = isCompleted
+    ? "Kto odebrał opakowania?"
+    : "Kto odbiera opakowania?";
 
   const handleComplete = () => {
     Alert.alert(
@@ -78,7 +82,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
           <ContactCard
             asCard={false}
             userId={offer.collector_id}
-            header="Kto odbiera tę ofertę?"
+            header={courierHeaderText}
           />
           <View style={styles.hairline} />
 
