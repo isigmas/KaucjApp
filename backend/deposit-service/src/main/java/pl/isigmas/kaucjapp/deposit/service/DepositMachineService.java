@@ -149,4 +149,11 @@ public class DepositMachineService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public DepositMachineResponseDTO getDepositMachine(Long id) {
+        DepositMachine depositMachine = depositMachineRepository.findById(id)
+                                        .orElseThrow(() -> new DepositMachineNotFoundException(id));
+        return mapToResponseDTO(depositMachine);
+    }
 }
