@@ -6,9 +6,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 export default function TabsLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NativeTabs minimizeBehavior="automatic">
+      <NativeTabs>
         <NativeTabs.Trigger name="home">
-          <Label>Mapa</Label>
+          <Label selectedStyle={{ color: colors.primary.base }}>Mapa</Label>
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "map", selected: "map.fill" }}
@@ -16,7 +16,7 @@ export default function TabsLayout() {
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="create">
-          <Label>Dodaj</Label>
+          <Label selectedStyle={{ color: colors.primary.base }}>Dodaj</Label>
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
@@ -24,7 +24,7 @@ export default function TabsLayout() {
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="profile">
-          <Label>Profil</Label>
+          <Label selectedStyle={{ color: colors.primary.base }}>Profil</Label>
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "person", selected: "person.fill" }}
