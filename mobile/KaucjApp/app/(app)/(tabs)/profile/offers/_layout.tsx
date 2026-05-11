@@ -57,6 +57,14 @@ export default function OffersLayout() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       />
+
+      <Stack.Screen
+        name="confirmation"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+        }}
+      />
     </Stack>
   );
 }
