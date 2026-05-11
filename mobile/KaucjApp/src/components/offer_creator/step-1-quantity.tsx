@@ -10,11 +10,8 @@ import Animated, {
 import Slider from "@react-native-community/slider";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { colors } from "@/src/theme";
-import {
-  computeOfferTotals,
-  PRICE_MAX,
-  type OfferFormValues,
-} from "./offer-form-schema";
+import { OfferFormValues, PRICE_MAX } from "@/src/validation";
+import { computeOfferTotals } from "@/src/hooks/use-offer-creator";
 
 type ItemKey = "plastic" | "cans";
 

@@ -12,7 +12,8 @@ import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import { useFormContext, useWatch } from "react-hook-form";
 import { colors } from "@/src/theme";
-import { computeOfferTotals, type OfferFormValues } from "./offer-form-schema";
+import { OfferFormValues } from "@/src/validation";
+import { computeOfferTotals } from "@/src/hooks/use-offer-creator";
 
 interface Step3SummaryProps {
   onSubmit: () => void;
@@ -151,7 +152,9 @@ export default function Step3Summary({
             <View style={[styles.lineItemColumn, styles.notesBlock]}>
               <Text style={styles.lineItemLabel}>Wiadomość dla kuriera:</Text>
               <View style={styles.notesBox}>
-                <Text style={styles.notesText}>{values.pickupInstructions}</Text>
+                <Text style={styles.notesText}>
+                  {values.pickupInstructions}
+                </Text>
               </View>
             </View>
           ) : null}

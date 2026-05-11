@@ -21,23 +21,11 @@ export interface PickedLocation {
 }
 
 interface LocationBottomSheetProps {
-  /** The user's confirmed selection (form value). `null` until they tap "Potwierdź". */
   selectedLocation: PickedLocation | null;
-  /** Fallback used as the starting pin position before the user confirms. */
   defaultLocation: PickedLocation;
   onConfirm: (location: PickedLocation) => void;
 }
 
-/**
- * Full-screen map picker. The pin always reflects the parent's "current
- * location" (selectedLocation ?? defaultLocation). Internally we keep a local
- * `draft` so map taps update the marker without touching the form — the form
- * is only updated when the user taps "Potwierdź".
- *
- * The map uses `initialRegion` (uncontrolled) so user pans/zooms aren't fought
- * by React state. We explicitly recentre via `animateToRegion` on every open,
- * which gives a predictable, jump-free experience.
- */
 const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
   ({ selectedLocation, defaultLocation, onConfirm }, ref) => {
     const snapPoints = useMemo(() => ["80%"], []);
@@ -46,9 +34,7 @@ const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
     const initialPin = selectedLocation ?? defaultLocation;
     const [draft, setDraft] = useState<PickedLocation>(initialPin);
 
-    // Reset the draft and recentre the map every time the sheet opens, so
-    // the user always starts from the confirmed/default location — never from
-    // a stale tap left over from a previous session.
+    //  recentre the map every time the sheet opens
     const handleSheetChange = useCallback(
       (index: number) => {
         if (index < 0) return;
@@ -102,22 +88,7 @@ const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
             <Marker coordinate={draft} pinColor={colors.primary.base} />
           </MapView>
 
-          {/* Floating Pill Header with Shadow */}
-          <View style={styles.floatingHeader}>
-            <Text style={styles.headerTitle} pointerEvents="none">
-              Zaznacz lokalizację
-            </Text>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.confirmButton,
-                pressed && styles.confirmButtonPressed,
-              ]}
-              onPress={() => onConfirm(draft)}
-            >
-              <Text style={styles.confirmButtonText}>Potwierdź</Text>
-            </Pressable>
-          </View>
+          <FloatingHeader onConfirm={() => onConfirm(draft)} />
         </View>
       </BottomSheet>
     );
@@ -127,6 +98,26 @@ const LocationBottomSheet = forwardRef<BottomSheet, LocationBottomSheetProps>(
 LocationBottomSheet.displayName = "LocationBottomSheet";
 
 export default LocationBottomSheet;
+
+function FloatingHeader({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <View style={styles.floatingHeader}>
+      <Text style={styles.headerTitle} pointerEvents="none">
+        Zaznacz lokalizację
+      </Text>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.confirmButton,
+          pressed && styles.confirmButtonPressed,
+        ]}
+        onPress={onConfirm}
+      >
+        <Text style={styles.confirmButtonText}>Potwierdź</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   sheetBackground: {

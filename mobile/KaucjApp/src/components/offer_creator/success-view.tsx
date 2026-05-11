@@ -15,10 +15,6 @@ interface SuccessViewProps {
   onCreateAnother: () => void;
 }
 
-/**
- * Confirmation view shown right after a successful offer creation. Rendered
- * inline by the parent so we don't have to navigate to a dedicated route.
- */
 export function SuccessView({ onGoHome, onCreateAnother }: SuccessViewProps) {
   return (
     <View style={styles.container}>

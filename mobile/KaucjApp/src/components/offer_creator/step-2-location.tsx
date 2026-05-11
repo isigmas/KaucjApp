@@ -12,12 +12,11 @@ import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { colors } from "@/src/theme";
-import type { OfferFormValues } from "./offer-form-schema";
 import type { PickedLocation } from "./location-bottom-sheet";
+import { OfferFormValues } from "@/src/validation";
 
 interface Step2LocationProps {
   selectedLocation: PickedLocation | null;
-  /** `null` while the user's location is still being resolved upstream. */
   defaultLocation: PickedLocation | null;
   onOpenLocationPicker: () => void;
 }
@@ -56,9 +55,7 @@ export default function Step2Location({
         name="pickupAddress"
         render={({ field: { value, onChange, onBlur } }) => (
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              Adres odbioru (ulica i numer)
-            </Text>
+            <Text style={styles.inputLabel}>Adres odbioru (ulica i numer)</Text>
             <TextInput
               style={styles.textInput}
               placeholder="ul. Studencka 4"
@@ -173,11 +170,7 @@ function MapThumbnail({
         )}
 
         {!hasSelected && (
-          <BlurView
-            intensity={5}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
+          <BlurView intensity={5} tint="dark" style={StyleSheet.absoluteFill} />
         )}
       </View>
 
