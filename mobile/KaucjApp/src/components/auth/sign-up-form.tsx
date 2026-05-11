@@ -3,11 +3,11 @@ import { Control, FieldErrors, useWatch } from "react-hook-form";
 import { useRef } from "react";
 
 import { spacing } from "@/src/theme";
-import { SignUpValues } from "@/src/types";
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import PasswordChecklist from "./password-checklist";
+import { SignUpValues } from "@/src/validation";
 
 type Props = {
   control: Control<SignUpValues>;

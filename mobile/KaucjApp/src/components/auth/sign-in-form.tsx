@@ -2,10 +2,9 @@ import { View, Keyboard, TextInput, StyleSheet } from "react-native";
 import { Control, FieldErrors } from "react-hook-form";
 import { useRef } from "react";
 
-import { SignInValues } from "@/src/types";
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
-import ForgotPassword from "./forgot-password-link";
+import { SignInValues } from "@/src/validation";
 
 type Props = {
   control: Control<SignInValues>;
