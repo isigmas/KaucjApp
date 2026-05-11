@@ -58,6 +58,14 @@ export default function BookingsLayout() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       />
+
+      <Stack.Screen
+        name="confirmation"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+        }}
+      />
     </Stack>
   );
 }
