@@ -5,16 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing } from "@/src/theme";
-import {
-  ComplaintFormValues,
-  ComplaintPayload,
-  complaintSchema,
-} from "@/src/types";
+import { ComplaintPayload } from "@/src/types";
 import ComplaintSection from "./components/complaint-section";
 import ComplaintReasonDropdown from "./components/dropdown";
 import ComplainMessageField from "./components/message-field";
 import ComplaintFooter from "./components/complaint-footer";
 import { useComplaintOffer } from "@/src/api/hooks/use-offer";
+import { ComplaintFormValues, complaintSchema } from "@/src/validation";
 
 interface ComplaintScreenProps {
   offerId: string;

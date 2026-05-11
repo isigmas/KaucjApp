@@ -53,10 +53,10 @@ po 2 godzinach.`}
       {/* Przycisk na samym dole */}
       <View style={styles.footer}>
         <Pressable
-          onPress={() => router.push("/(app)/(tabs)/profile/bookings")}
+          onPress={() => router.push("/(app)/(tabs)/profile")}
           style={styles.button}
         >
-          <Text style={styles.buttonText}>Moje rezerwacje</Text>
+          <Text style={styles.buttonText}>Klasa!</Text>
         </Pressable>
       </View>
     </View>
