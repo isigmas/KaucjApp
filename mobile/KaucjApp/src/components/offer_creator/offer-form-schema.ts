@@ -27,7 +27,7 @@ export const offerFormSchema = z
     cansPrice: z.number().min(PRICE_MIN).max(PRICE_MAX),
     latitude: z.number().min(-90).max(90).nullable(),
     longitude: z.number().min(-180).max(180).nullable(),
-    pickupAddress: z.string().trim().min(1, "Adres odbioru jest wymagany"),
+    pickupAddress: z.string().trim(),
     pickupInstructions: z.string().optional(),
   })
   .superRefine((values, ctx) => {
@@ -44,6 +44,13 @@ export const offerFormSchema = z
         code: "custom",
         message: "Wskaż lokalizację odbioru na mapie",
         path: ["latitude"],
+      });
+    }
+    if (values.pickupAddress.trim() === "") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Wprowadź adres odbioru",
+        path: ["pickupAddress"],
       });
     }
   });

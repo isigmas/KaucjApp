@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Animated } from "react-native";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import type BottomSheet from "@gorhom/bottom-sheet";
+import { useUserLocation } from "@/src/hooks/use-user-location";
 import { useCreateOffer } from "@/src/api/hooks/use-offer";
 import {
   buildOfferPayload,
@@ -34,6 +35,8 @@ const FIRST_STEP = STEPS[0].number;
  *  - step navigation (`currentStep`, `goToStep`)
  *  - the success-screen toggle (`isSuccess`)
  *  - the location picker bottom-sheet ref + commit callback
+ *  - the single, resolved {selectedLocation, defaultLocation} pair used by
+ *    every map view (thumbnail + picker)
  *  - the submit / reset / go-home actions
  *  - the slide-in animation style for the active step
  *
@@ -53,29 +56,86 @@ export function useOfferCreator() {
 
   const [currentStep, setCurrentStep] = useState<number>(FIRST_STEP);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [pickerInitialLocation, setPickerInitialLocation] =
-    useState<PickedLocation | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Location
+  //
+  // Two derived values, single source of truth in this hook:
+  //
+  //  - `defaultLocation`: where the picker pin should sit before the user
+  //    confirms anything. Sourced from the shared `useUserLocation` hook so
+  //    the offer creator and the map screen share one location-fetching
+  //    pipeline (and one permission prompt). `null` while still loading.
+  //
+  //  - `selectedLocation`: the user's confirmed selection, taken straight
+  //    from the form's lat/lng. `null` until they tap "Potwierdź".
+  //
+  // The picker map only mounts once `defaultLocation` is non-null, which
+  // guarantees its `initialRegion` is the final answer — no Kraków → GPS
+  // jump on first open.
+  // ---------------------------------------------------------------------------
+
+  const { initialRegion } = useUserLocation();
+
+  const defaultLocation = useMemo<PickedLocation | null>(
+    () =>
+      initialRegion
+        ? {
+            latitude: initialRegion.latitude,
+            longitude: initialRegion.longitude,
+          }
+        : null,
+    [initialRegion],
+  );
+
+  const latitude = useWatch({ control: form.control, name: "latitude" });
+  const longitude = useWatch({ control: form.control, name: "longitude" });
+  const selectedLocation = useMemo<PickedLocation | null>(
+    () =>
+      typeof latitude === "number" && typeof longitude === "number"
+        ? { latitude, longitude }
+        : null,
+    [latitude, longitude],
+  );
 
   const locationSheetRef = useRef<BottomSheet>(null);
+  const pendingOpenRef = useRef(false);
 
-  // ---------------------------------------------------------------------------
-  // Location picker
-  // ---------------------------------------------------------------------------
+  const openLocationPicker = useCallback(() => {
+    // The sheet is only mounted once `defaultLocation` is ready. If the user
+    // taps the button before that, remember the intent and fire as soon as
+    // the sheet renders — usually a frame or two later.
+    if (defaultLocation) {
+      locationSheetRef.current?.snapToIndex(0);
+    } else {
+      pendingOpenRef.current = true;
+    }
+  }, [defaultLocation]);
 
-  const openLocationPicker = () => {
-    const { latitude, longitude } = form.getValues();
-    setPickerInitialLocation(
-      latitude !== null && longitude !== null ? { latitude, longitude } : null,
+  useEffect(() => {
+    if (!defaultLocation || !pendingOpenRef.current) return;
+    pendingOpenRef.current = false;
+    // Give the BottomSheet one paint to mount before we try to open it.
+    const handle = requestAnimationFrame(() =>
+      locationSheetRef.current?.snapToIndex(0),
     );
-    locationSheetRef.current?.snapToIndex(0);
-  };
+    return () => cancelAnimationFrame(handle);
+  }, [defaultLocation]);
 
-  const applyPickedLocation = (location: PickedLocation) => {
-    console.log("applyPickedLocation", location);
-    form.setValue("latitude", location.latitude, { shouldValidate: true });
-    form.setValue("longitude", location.longitude, { shouldValidate: true });
-    locationSheetRef.current?.close();
-  };
+  const applyPickedLocation = useCallback(
+    (location: PickedLocation) => {
+      form.setValue("latitude", location.latitude, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      form.setValue("longitude", location.longitude, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      locationSheetRef.current?.close();
+    },
+    [form],
+  );
 
   // ---------------------------------------------------------------------------
   // Submission
@@ -111,16 +171,16 @@ export function useOfferCreator() {
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  const reset = () => {
+  const reset = useCallback(() => {
     form.reset(defaultOfferFormValues);
     setCurrentStep(FIRST_STEP);
     setIsSuccess(false);
-  };
+  }, [form]);
 
-  const goHome = () => {
+  const goHome = useCallback(() => {
     reset();
     router.navigate("/(app)/(tabs)/home");
-  };
+  }, [reset, router]);
 
   // ---------------------------------------------------------------------------
   // Slide-in animation between steps
@@ -161,7 +221,8 @@ export function useOfferCreator() {
     isSuccess,
     isSubmitting: isPending,
     locationSheetRef,
-    pickerInitialLocation,
+    selectedLocation,
+    defaultLocation,
     openLocationPicker,
     applyPickedLocation,
     submit,

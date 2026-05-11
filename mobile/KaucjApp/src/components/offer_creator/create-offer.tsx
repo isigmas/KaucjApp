@@ -37,7 +37,11 @@ export default function CreateOfferScreen() {
         <Animated.View style={[styles.animatedWrapper, creator.slideStyle]}>
           {creator.currentStep === 1 && <Step1Quantity />}
           {creator.currentStep === 2 && (
-            <Step2Location onOpenLocationPicker={creator.openLocationPicker} />
+            <Step2Location
+              selectedLocation={creator.selectedLocation}
+              defaultLocation={creator.defaultLocation}
+              onOpenLocationPicker={creator.openLocationPicker}
+            />
           )}
           {creator.currentStep === 3 && (
             <Step3Summary
@@ -47,11 +51,14 @@ export default function CreateOfferScreen() {
           )}
         </Animated.View>
 
-        <LocationBottomSheet
-          ref={creator.locationSheetRef}
-          initialLocation={creator.pickerInitialLocation}
-          onConfirm={creator.applyPickedLocation}
-        />
+        {creator.defaultLocation && (
+          <LocationBottomSheet
+            ref={creator.locationSheetRef}
+            selectedLocation={creator.selectedLocation}
+            defaultLocation={creator.defaultLocation}
+            onConfirm={creator.applyPickedLocation}
+          />
+        )}
       </SafeAreaView>
     </FormProvider>
   );
