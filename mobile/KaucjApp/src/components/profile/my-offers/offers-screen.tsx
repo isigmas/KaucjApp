@@ -1,98 +1,62 @@
-import React from "react";
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
-
-import { colors } from "@/src/theme";
-import { useRouter } from "expo-router";
-import { useChangeOfferStatus, useMyOffers } from "@/src/api/hooks/use-offer";
-import OfferCard from "./my-offer-card";
 import EmptyState from "@/src/components/states/empty-state";
-import LoadingState from "@/src/components/states/loading-state";
 import ErrorState from "@/src/components/states/error-state";
+import LoadingState from "@/src/components/states/loading-state";
+import { useMyOffers } from "@/src/api/hooks/use-offer";
+import { colors, spacing } from "@/src/theme";
+import React from "react";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import MyOfferCard from "./my-offer-card";
 
-export default function MyOffers() {
+export default function MyOffersScreen() {
   const {
     data: offers,
-    isPending: isOfferPending,
+    isLoading,
     isError,
     error,
     refetch,
+    isRefetching,
   } = useMyOffers();
 
-  const { mutate: changeOfferStatus, isPending: isChangeStatusPending } =
-    useChangeOfferStatus();
+  if (isLoading) {
+    return <LoadingState title="Ładowanie twoich ofert" />;
+  }
 
-  const isPending = isOfferPending || isChangeStatusPending;
-
-  const router = useRouter();
-
-  const markAsCompleted = (offerId: number) => {
-    console.log("Marking offer as completed, id: ", offerId);
-
-    changeOfferStatus(
-      { offerId, newStatus: "COMPLETED" },
-      {
-        onSuccess: () => {
-          router.push("/profile/offers/confirmation");
-        },
-        onError: (error) => {
-          const errorMessage =
-            error.response?.data?.message || "Nie udało się zakończyć oferty.";
-          Alert.alert("Błąd", errorMessage);
-        },
-      },
-    );
-  };
-
-  const markAsCanceled = (offerId: number) => {
-    console.log("Marking offer as canceled, id: ", offerId);
-
-    changeOfferStatus(
-      { offerId, newStatus: "CANCELED" },
-      {
-        onSuccess: () => {
-          router.push("/profile/offers/confirmation");
-        },
-        onError: (error) => {
-          const errorMessage =
-            error.response?.data?.message || "Nie udało się zakończyć oferty.";
-          Alert.alert("Błąd", errorMessage);
-        },
-      },
-    );
-  };
-
-  if (isPending) return <LoadingState title="Ładowanie twoich ofert" />;
-  if (isError)
+  if (isError) {
+    const message =
+      error?.response?.data?.message || "Nie udało się pobrać ofert.";
     return (
       <ErrorState
-        title="Ops! coś poszło nie tak podczas ładowania twoich ofert."
-        message={error.message}
+        title="Ops! coś poszło nie tak podczas ładowania twoich ofert"
+        message={message}
         onRetry={refetch}
       />
     );
+  }
+
+  if (!offers || offers.length === 0) {
+    return (
+      <EmptyState title="Nie masz jeszcze żadnych ofert." onRefresh={refetch} />
+    );
+  }
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior={"automatic"}
+      contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.primary.base}
+          colors={[colors.primary.base]}
+        />
+      }
     >
-      {offers.length === 0 && (
-        <EmptyState title="Nie masz jeszcze zadnych ofert." />
-      )}
-
-      <View style={styles.listContainer}>
-        {offers.map((offer, index) => (
-          <OfferCard
-            key={offer.offer_id}
-            offer={offer}
-            index={index}
-            onComplete={markAsCompleted}
-            onCancel={markAsCanceled}
-          />
-        ))}
-      </View>
+      {offers.map((offer) => (
+        <MyOfferCard key={offer.offer_id.toString()} offer={offer} />
+      ))}
     </ScrollView>
   );
 }
@@ -103,11 +67,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.main,
   },
   contentContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.md,
     paddingTop: 24,
     paddingBottom: 40,
-  },
-  listContainer: {
-    gap: 16,
   },
 });

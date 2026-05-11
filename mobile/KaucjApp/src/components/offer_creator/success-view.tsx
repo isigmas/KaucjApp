@@ -1,23 +1,21 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   BounceIn,
   FadeInDown,
   FadeInUp,
   Layout,
 } from "react-native-reanimated";
-import { useRouter } from "expo-router";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 
 const { width } = Dimensions.get("window");
 
-export default function OfferSuccessScreen() {
-  const router = useRouter();
+interface SuccessViewProps {
+  onGoHome: () => void;
+  onCreateAnother: () => void;
+}
 
-  const handleGoHome = () => {
-    router.replace("/(app)/(tabs)/home"); // Replace with the actual path to your home screen
-  };
-
+export function SuccessView({ onGoHome, onCreateAnother }: SuccessViewProps) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -40,13 +38,18 @@ export default function OfferSuccessScreen() {
             Twojej okolicy mogą ją teraz zobaczyć i zarezerwować odbiór.
           </Text>
         </Animated.View>
+
         <Animated.View
           entering={FadeInUp.duration(600).delay(700).springify()}
           layout={Layout.springify()}
-          style={{ marginTop: 20, width: "100%" }}
+          style={styles.actions}
         >
-          <Pressable style={styles.primaryButton} onPress={handleGoHome}>
+          <Pressable style={styles.primaryButton} onPress={onGoHome}>
             <Text style={styles.primaryButtonText}>Wróć na stronę główną</Text>
+          </Pressable>
+
+          <Pressable style={styles.secondaryButton} onPress={onCreateAnother}>
+            <Text style={styles.secondaryButtonText}>Dodaj kolejną ofertę</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -105,10 +108,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: width * 0.8,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 90,
-    gap: 12,
+  actions: {
+    marginTop: 20,
+    width: "100%",
+    gap: spacing.sm,
   },
   primaryButton: {
     backgroundColor: colors.primary.base,
@@ -128,16 +131,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   secondaryButton: {
-    backgroundColor: colors.background.subtle,
+    backgroundColor: colors.background.card,
     paddingVertical: 16,
     borderRadius: 16,
-    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.status.border,
+    alignItems: "center",
   },
   secondaryButtonText: {
-    color: colors.text.primary,
+    color: colors.text.secondary,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
 });

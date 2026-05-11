@@ -2,23 +2,30 @@ import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
 
-const API_URL = "http://192.168.100.7:8080/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 5000,
+  timeout: 10000,
 });
 
 // Injecting the Access Token
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+  console.log(
+    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
+  );
+
+  if (config.data) {
+    console.log(
+      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
+    );
+  }
 
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.debug(`[Auth] Injected Access Token into request header.`);
-    console.debug(`[Auth] Current Access Token: ${token}`);
+    // console.debug(`[Auth] Current Access Token: ${token}`);
   } else {
     console.debug(`[Auth] No Access Token found in memory for this request.`);
   }
@@ -41,7 +48,12 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response Interceptor
 apiClient.interceptors.response.use(
-  (response) => response, // 200 OK
+  (response) => {
+    console.log(
+      `[API] ◄ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
+    );
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 

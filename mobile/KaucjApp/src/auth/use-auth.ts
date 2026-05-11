@@ -93,9 +93,8 @@ export const useAuth = () => {
   const resetPassword = useMutation<void, AuthError, string>({
     mutationFn: async (email) => {
       try {
-        await apiClient.post("/auth/resetpassword", email, {
-          headers: { "Content-Type": "text/plain" },
-        });
+        const payload = { emailTo: email };
+        await apiClient.post("/auth/resetpassword", payload);
       } catch (error) {
         throw parseAuthError(error);
       }

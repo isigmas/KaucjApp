@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 
 import { spacing } from "@/src/theme";
-import { signUpSchema, SignUpValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 
 import { AuthHeader } from "@/src/components/auth/auth-header";
@@ -13,6 +12,7 @@ import { AuthFooter } from "@/src/components/auth/auth-footer";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignUpForm } from "@/src/components/auth/sign-up-form";
 import { useEffect } from "react";
+import { signUpSchema, SignUpValues } from "@/src/validation";
 
 export default function SignUpScreen() {
   const { signUp, isSigningUp, signUpError } = useAuth();

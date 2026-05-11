@@ -1,18 +1,20 @@
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  keepPreviousData,
-} from "@tanstack/react-query";
-import { AxiosError } from "axios";
-import { apiClient } from "../api-client";
-import {
+  ApiErrorResponse,
+  ComplaintPayload,
   Offer,
   OfferPayload,
-  OfferStatus,
   OfferSearchBBox,
-  ApiErrorResponse,
+  OfferStatus,
 } from "@/src/types";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { router } from "expo-router";
+import { apiClient } from "../api-client";
 
 export const offerKeys = {
   all: () => ["offers"] as const,
@@ -42,6 +44,7 @@ export const useMyOffers = () => {
     queryKey: offerKeys.mine(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my");
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
   });
@@ -53,6 +56,7 @@ export const useMyReservedOffers = () => {
     queryKey: offerKeys.reserved(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my/reserved");
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
   });
@@ -95,7 +99,7 @@ export const useCreateOffer = () => {
   });
 };
 
-// PUT /offer/{id} - update an existing offer
+// PATCH /offer/{id} - update an existing offer
 export const useUpdateOffer = () => {
   const queryClient = useQueryClient();
 
@@ -141,6 +145,50 @@ export const useChangeOfferStatus = () => {
     },
     onSuccess: async (_, { offerId }) => {
       await queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+// POST /offer/{id}/status/RESERVED - reserve an offer
+export const useReserveOffer = (offerId: number, totalIncome: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>>({
+    mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
+    onSuccess: () => {
+      router.push({
+        pathname: "/(app)/success-screen",
+        params: { totalIncome },
+      });
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+// POST /offer/{id}/status/COMPLAINT - complaint an offer
+export const useComplaintOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
+    mutationFn: async (complaintData) => {
+      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+// POST /offer/confirm/{offerId} - confirm an offer
+export const useConfirmOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>>({
+    mutationFn: async () => {
+      await apiClient.post(`/offer/confirm/${offerId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
     },
   });
 };

@@ -5,10 +5,10 @@ import MapView, { Region } from "react-native-maps";
 import { Offer, DepositMachine } from "@/src/types";
 import { OfferMarker } from "./markers/offer-marker";
 import { MachineMarker } from "./markers/machine-marker";
-import { useUserLocation } from "./use-user-location";
+import { useUserLocation } from "@/src/hooks/use-user-location";
 import { SelectedMapItem } from "./map-container";
-import { useDebounce } from "./use-debounce";
-import { useAccumulatedMapData } from "./use-accumulate-map";
+import { useDebounce } from "@/src/hooks/use-debounce";
+import { useAccumulatedMapData } from "@/src/hooks/use-accumulate-map";
 import MapFetchIndicator from "./map-fetch-indicator";
 
 import { useSearchOffers } from "@/src/api/hooks/use-offer";
@@ -134,12 +134,6 @@ export default function MapScreen({
       />
     );
   }
-
-  console.log(` MAP STATE UPDATE:
-    - Accumulated Offers in Memory: ${offers.length}
-    - Accumulated Machines in Memory: ${depositMachines.length}
-    - Map is currently rendering: ${offers.length + depositMachines.length} total markers.
-    `);
 
   return (
     <View style={styles.container}>

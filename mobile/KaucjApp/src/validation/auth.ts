@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-// AUTH
 export const signUpSchema = z.object({
   firstName: z.string().trim().min(2, "Podaj swoje imię."),
   lastName: z.string().trim().min(2, "Podaj swoje nazwisko."),
