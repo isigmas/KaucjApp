@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View, Text } from "react-native";
 
 import { useMyReservedOffers } from "@/src/api/hooks/use-offer";
 import OfferItemsCard from "@/src/components/map/details/offer/offer-items-card";
@@ -17,6 +17,7 @@ import ContactCard from "../../ui/contact-card";
 
 import ExpandableCard from "../../ui/expandable-card";
 import { Package, Receipt } from "lucide-react-native";
+import { router } from "expo-router";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -67,6 +68,9 @@ export default function BookingDetailsScreen({
       showsVerticalScrollIndicator={false}
     >
       <BookingStatusSummaryCard offer={offer} />
+      <Pressable onPress={() => router.push("/profile/bookings/confirmation")}>
+        <Text>Zakończ rezerwację</Text>
+      </Pressable>
 
       <ContactCard userId={offer.creator_id} header="Wystawiający" />
 
