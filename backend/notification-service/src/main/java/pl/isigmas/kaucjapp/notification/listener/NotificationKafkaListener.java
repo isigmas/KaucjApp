@@ -3,8 +3,10 @@ package pl.isigmas.kaucjapp.notification.listener;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import pl.isigmas.kaucjapp.common.dto.WarningDTO;
 import pl.isigmas.kaucjapp.notification.dto.MailRequest;
 import pl.isigmas.kaucjapp.notification.service.MailService;
+import pl.isigmas.kaucjapp.notification.service.WarningService;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
 
 @Component
@@ -12,6 +14,7 @@ import pl.isigmas.kaucjapp.notification.util.TemplateType;
 public class NotificationKafkaListener {
 
     private final MailService mailService;
+    private final WarningService warningService;
 
     @KafkaListener(topics = "notification.mail.welcome", groupId = "notification-group")
     public void handleWelcomeEmail(MailRequest mailRequest) {
@@ -33,5 +36,10 @@ public class NotificationKafkaListener {
                 mailRequest.getMessage(),
                 TemplateType.RESET_PASSWORD
         );
+    }
+
+    @KafkaListener(topics = "notification.admin", groupId = "notification-group")
+    public void handleAdminNotification(WarningDTO warning) {
+        warningService.saveWarning(warning);
     }
 }
