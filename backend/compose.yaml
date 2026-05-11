@@ -198,6 +198,8 @@ services:
       - BASE_URL=http://localhost:8080
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
+      notification-db:
+        condition: service_healthy
       kafka:
         condition: service_healthy
     healthcheck:
