@@ -28,6 +28,7 @@
 		<module>auth</module>
         <module>deposit-service</module>
         <module>notification-service</module>
+        <module>common</module>
     </modules>
 	<scm>
 		<connection/>

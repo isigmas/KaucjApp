@@ -1,0 +1,88 @@
+### Create account
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "phone": "{{phone}}",
+  "firstName": "{{firstName}}",
+  "lastName": "{{lastName}}"
+}
+
+> {%
+    if (response.status == 201) {
+        client.log("Account created successfully, check your email address for account activation before next steps")
+    } else {
+        client.log("Account creation failed: " + response.body.message);
+    }
+ %}
+
+### Login with created account
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+    if (response.status == 200) {
+        client.global.set("refresh_token_user", response.body);
+        client.test("Received user refresh token", function() {
+            client.assert(client.global.get("refresh_token_user") !== undefined, "No token!");
+        });
+        client.log("Received user refresh token: " + client.global.get("refresh_token_user"));
+    }
+%}
+
+### Get JWT token
+POST http://localhost:8080/api/auth/refresh
+
+{{refresh_token_user}}
+
+> {%
+    if (response.status == 200) {
+        client.global.set("JWT_token_user", response.body);
+        client.test("Received user JWT token", function() {
+            client.assert(client.global.get("JWT_token_user") !== undefined, "No token!");
+        });
+        client.log("Received user JWT token: " + client.global.get("JWT_token_user"));
+    }
+%}
+
+### Login as admin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "{{adminUsername}}",
+  "password": "{{adminPassword}}"
+}
+
+> {%
+ if (response.status == 200) {
+     client.global.set("refresh_token_admin", response.body);
+     client.test("Received admin refresh token", function() {
+         client.assert(client.global.get("refresh_token_admin") !== undefined, "No token!");
+     });
+     client.log("Received admin refresh token: " + client.global.get("refresh_token_admin"));
+ }
+ %}
+
+### Get JWT token for admin
+POST http://localhost:8080/api/auth/refresh
+
+{{refresh_token_admin}}
+
+> {%
+    if (response.status == 200) {
+        client.global.set("JWT_token_admin", response.body);
+        client.test("Received admin JWT token", function() {
+            client.assert(client.global.get("JWT_token_admin") !== undefined, "No token!");
+        });
+        client.log("Received admin JWT token: " + client.global.get("JWT_token_admin"));
+    }
+%}
