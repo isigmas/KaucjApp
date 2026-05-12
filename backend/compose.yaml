@@ -58,7 +58,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 90s
 
   users-db:
     image: postgres:latest
@@ -97,7 +97,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 90s
 
   auth-db:
     image: postgres:latest
@@ -174,7 +174,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 90s
 
   notification-db:
     image: postgres:latest
