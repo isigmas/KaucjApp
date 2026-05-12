@@ -83,4 +83,5 @@ public class DepositMachineController {
         DepositMachineResponseDTO depositMachineResponseDTO = depositMachineService.getDepositMachine(id);
         return ResponseEntity.ok(depositMachineResponseDTO);
     }
+
 }
