@@ -165,20 +165,6 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
   });
 };
 
-// POST /offer/{id}/status/COMPLAINT - complaint an offer
-export const useComplaintOffer = (offerId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
-    mutationFn: async (complaintData) => {
-      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
-    },
-  });
-};
-
 // POST /offer/confirm/{offerId} - confirm an offer
 export const useConfirmOffer = (offerId: number) => {
   const queryClient = useQueryClient();
@@ -186,6 +172,21 @@ export const useConfirmOffer = (offerId: number) => {
   return useMutation<void, AxiosError<ApiErrorResponse>>({
     mutationFn: async () => {
       await apiClient.post(`/offer/confirm/${offerId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+//-------------------------------- COMPLAINTS --------------------------------
+// POST /offer/complaint/{id} - complaint an offer
+export const useComplaintOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
+    mutationFn: async (complaintData) => {
+      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
