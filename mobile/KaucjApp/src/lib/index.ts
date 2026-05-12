@@ -1,4 +1,5 @@
 import {
+  Complainant,
   ComplaintReason,
   DepositMachineStatus,
   Offer,
@@ -95,13 +96,13 @@ export const getPolishPackageQuantity = (
 
 export const getComplaintReasonLabel = (
   reason: ComplaintReason,
-  complainiant: "collector" | "creator",
+  complainiant: Complainant,
 ): string => {
   switch (reason) {
     case "INVALID_OFFER_CONTENT":
       return "Nieprawidłowa treść oferty";
     case "TROUBLE_WITH_OTHER_USER":
-      return complainiant === "collector"
+      return complainiant === "COLLECTOR"
         ? "Problem z wystawiającym ofertę"
         : "Problem z kurierem";
     case "OTHER":

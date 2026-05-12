@@ -84,6 +84,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
       {showStatusPill && <OfferSatusPill status={offer.status} />}
 
       <StatusHeader offer={offer} />
+      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
 
       {showCourierDetails ? (
         <>
@@ -99,7 +100,6 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             <ReservedState
               expiresAt={offer.reserved_to}
               onConfirm={handleComplete}
-              onComplaint={handleComplaint}
               isPending={isPending}
             />
           )}
@@ -118,22 +118,10 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               </Pressable>
             </>
           )}
-          {isComplaint && (
-            <>
-              <ActionButton
-                backgroundColor={colors.status.error}
-                onPress={handleComplaint}
-                disabled={isPending}
-                isPending={isPending}
-                label="Zobacz problem"
-                icon={<AlertTriangle size={18} color={colors.text.white} />}
-              />
-              <Text style={styles.hint}>
-                Potwierdzenie rozwiązania problemu zakończy ofertę.
-              </Text>
-              <ComplaintCard offerId={offer.offer_id} />
-            </>
-          )}
+
+          <Pressable onPress={handleComplaint}>
+            <Text style={styles.hintError}>Zgłoś problem</Text>
+          </Pressable>
         </>
       ) : (
         <DateRow offer={offer} />
@@ -146,12 +134,10 @@ export function ReservedState({
   expiresAt,
   onConfirm,
   isPending,
-  onComplaint,
 }: {
   expiresAt: string;
   onConfirm: () => void;
   isPending: boolean;
-  onComplaint: () => void;
 }) {
   return (
     <>
@@ -165,9 +151,6 @@ export function ReservedState({
           icon={<CheckCircle size={18} color={colors.text.white} />}
         />
       </View>
-      <Pressable onPress={onComplaint}>
-        <Text style={styles.hintError}>Zgłoś problem</Text>
-      </Pressable>
     </>
   );
 }

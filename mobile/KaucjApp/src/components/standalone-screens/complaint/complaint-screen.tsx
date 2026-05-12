@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing } from "@/src/theme";
-import { ComplaintPayload } from "@/src/types";
+import { Complainant, ComplaintPayload } from "@/src/types";
 import ComplaintSection from "./components/complaint-section";
 import ComplaintReasonDropdown from "./components/dropdown";
 import ComplainMessageField from "./components/message-field";
@@ -16,7 +16,7 @@ import ComplaintSuccessView from "./components/succeess-view";
 
 interface ComplaintScreenProps {
   offerId: string;
-  complainiant: "collector" | "creator";
+  complainiant: Complainant;
 }
 
 export default function ComplaintScreen({

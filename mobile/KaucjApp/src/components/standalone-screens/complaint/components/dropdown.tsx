@@ -11,7 +11,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, rounded, spacing } from "@/src/theme";
-import { COMPLAINT_REASONS, ComplaintReason } from "@/src/types";
+import { Complainant, COMPLAINT_REASONS, ComplaintReason } from "@/src/types";
 import { Control, useController } from "react-hook-form";
 import { ComplaintFormValues } from "@/src/validation";
 import { getComplaintReasonLabel } from "@/src/lib";
@@ -25,7 +25,7 @@ interface TriggerLayout {
 
 interface ComplainReasonDropdownProps {
   control: Control<ComplaintFormValues>;
-  complainiant: "collector" | "creator";
+  complainiant: Complainant;
 }
 
 export default function ComplainReasonDropdown({

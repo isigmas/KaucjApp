@@ -7,10 +7,10 @@ export type ComplaintReason = (typeof COMPLAINT_REASONS)[number];
 export type Complainant = "CREATOR" | "COLLECTOR";
 
 export interface Complaint {
-  complaint_id: number;
-  offer_id: number;
+  complaintId: number;
+  offerId: number;
   complainant: Complainant;
-  complaint_reason: ComplaintReason;
+  complaintReason: ComplaintReason;
   message: string;
 }
 

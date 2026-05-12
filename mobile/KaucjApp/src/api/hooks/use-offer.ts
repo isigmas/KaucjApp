@@ -205,6 +205,7 @@ export const useComplaintOffer = (offerId: number) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+      queryClient.invalidateQueries({ queryKey: ["complaint", offerId] });
     },
   });
 };
