@@ -46,10 +46,8 @@ public class UsersKafkaListener {
     @KafkaListener(topics = "offers.completed", groupId = "users-group")
     @Transactional
     public void handleOfferCompleted(String eventJson) {
-        log.info("RAW JSON FROM KAFKA: {}", eventJson);
         try {
             OfferCompletedEventDTO event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
-            log.info("PARSED DTO: {}", event);
             log.info("Received stats update for offerId: {}", event.getOfferId());
 
             userStatsRepository.incrementReturnedStats(
