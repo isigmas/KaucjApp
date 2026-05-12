@@ -55,10 +55,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/offer/test"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 90s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   users-db:
     image: postgres:latest
@@ -94,10 +94,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 90s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   auth-db:
     image: postgres:latest
@@ -136,10 +136,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/auth/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   deposit-db:
     image: postgres:latest
@@ -171,10 +171,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/deposit/test" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 90s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   notification-db:
     image: postgres:latest
@@ -208,10 +208,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/notification/status" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   api-gateway:
     build:
