@@ -7,7 +7,6 @@ export const useUserDetails = () => {
     queryKey: ["userDetails"],
     queryFn: async () => {
       const { data } = await apiClient.get("/user/me");
-      console.log("Fetched user details:", JSON.stringify(data, null, 2));
       return data as User;
     },
   });

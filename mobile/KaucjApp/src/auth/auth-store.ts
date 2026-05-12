@@ -1,12 +1,7 @@
 import { create } from "zustand";
-import { tokenStorage } from "./secure-storage";
-import { apiClient } from "../api/api-client";
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { authStorage, tokenStorage } from "./secure-storage";
+import { User } from "@/src/types/user";
+import { AxiosInstance } from "axios";
 
 interface AuthState {
   user: User | null;
@@ -22,7 +17,7 @@ interface AuthState {
     newRefreshToken: string,
   ) => Promise<void>;
   purgeAuth: () => Promise<void>;
-  hydrate: () => Promise<void>;
+  hydrate: (apiClient: AxiosInstance) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -32,6 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setAuth: async (user, accessToken, refreshToken) => {
     await tokenStorage.setTokens(accessToken, refreshToken);
+    await authStorage.setUserData(user);
     console.log("[Auth Store] User authenticated, tokens stored securely.");
     set({ user, accessToken, isHydrating: false });
     console.log("[Auth Store] State updated with user and access token.");
@@ -44,23 +40,43 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   purgeAuth: async () => {
     await tokenStorage.clearTokens();
+    await authStorage.clearUserData();
     set({ user: null, accessToken: null, isHydrating: false });
   },
 
   // On app startup, check if we have tokens in SecureStore and validate them
-  hydrate: async () => {
+  hydrate: async (apiClient) => {
     try {
       const token = await tokenStorage.getAccessToken();
-      if (token) {
+      const cachedUser = await authStorage.getUserData();
+
+      if (token && cachedUser) {
         set({
-          user: {
-            id: "1",
-            email: "user@test.com",
-            name: "Zalogowany Użytkownik",
-          },
+          user: cachedUser,
           accessToken: token,
           isHydrating: false,
         });
+
+        // in the background we verify the user data by fetching it from the API
+        apiClient
+          .get("/user/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then(({ data: userData }) => {
+            const freshUser: User = {
+              user_id: userData.user_id,
+              username: userData.username,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              phone: userData.phone,
+              addresses: userData.addresses,
+            };
+            set({ user: freshUser });
+            authStorage.setUserData(freshUser);
+          })
+          .catch((err) => {
+            console.warn("Background /me fetch failed", err);
+          });
       } else {
         set({ isHydrating: false });
       }

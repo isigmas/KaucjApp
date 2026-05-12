@@ -19,7 +19,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
-import { useUserDetails } from "@/src/api/hooks/use-user";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -112,7 +111,7 @@ const ProfileMenuItem = ({
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
-  const { data: user } = useUserDetails();
+  const { user } = useAuth();
 
   const userRating = 4.8;
   const reviewCount = 24;
