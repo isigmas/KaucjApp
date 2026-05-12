@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,9 +37,20 @@ public class UserDTO {
     @JsonProperty("phone")
     private String phone;
 
-    @NotBlank(message = "Email cannot be blank")
-    @Email(message = "Invalid email format")
-    private String email;
+    @JsonProperty("created_at")
+    private Instant createdAt;
+
+    @JsonProperty("collected_bottle_count")
+    private Integer collectedPlasticCount;
+
+    @JsonProperty("collected_can_count")
+    private Integer collectedCanCount;
+
+    @JsonProperty("returned_bottle_count")
+    private Integer returnedPlasticCount;
+
+    @JsonProperty("returned_can_count")
+    private Integer returnedCanCount;
 
     @Valid
     private List<UserAddressDTO> addresses = new ArrayList<>();

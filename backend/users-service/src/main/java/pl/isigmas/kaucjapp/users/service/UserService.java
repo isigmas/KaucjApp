@@ -13,7 +13,9 @@ import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserAddress;
+import pl.isigmas.kaucjapp.users.model.UserStats;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
+import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserStatsRepository userStatsRepository;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -58,6 +61,10 @@ public class UserService {
         user.setRating(initialRating);
 
         userRepository.save(user);
+
+        UserStats stats = new UserStats();
+        stats.setUserId(user.getId());
+        userStatsRepository.save(stats);
     }
 
     @Transactional
@@ -99,14 +106,20 @@ public class UserService {
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
 
+        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
+
         return UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .email(user.getEmail())
                 .phone(user.getPhone())
                 .addresses(addressDTOs)
+                .createdAt(user.getTimeCreated())
+                .collectedCanCount(userStats.getCollectedCanCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
+                .returnedCanCount(userStats.getReturnedCanCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
                 .build();
     }
 

@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
 import pl.isigmas.kaucjapp.offers.exception.OfferValidationException;
 import pl.isigmas.kaucjapp.offers.model.*;
+import pl.isigmas.kaucjapp.offers.publisher.OfferKafkaPublisher;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
 import java.math.BigDecimal;
@@ -36,6 +37,7 @@ public class OfferService {
     private final BottleTypeRepository bottleTypeRepository;
     private final ComplaintRepository complaintRepository;
     private final GeoValidationService geoValidationService;
+    private final OfferKafkaPublisher offerKafkaPublisher;
 
     @Transactional
     public Long create(Long creatorId, OfferDTO dto) {
@@ -336,15 +338,40 @@ public class OfferService {
             offer.setStatus(OfferStatus.COMPLETED);
             offer.setConfirmationDeadline(null);
             offer.setTimeCompleted(Instant.now());
-        } else {
-            if (offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
-                offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
-                offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
-            }
-        }
-        offerRepository.save(offer);
-    }
+            if (offer.getCreatorConfirmed() && offer.getCollectorConfirmed()) {
 
+                offer.setStatus(OfferStatus.COMPLETED);
+                offer.setConfirmationDeadline(null);
+                offer.setTimeCompleted(Instant.now());
+
+                int plasticQty = 0;
+                int canQty = 0;
+                for (OfferItem item : offer.getItems()) {
+                    if ("plastic".equalsIgnoreCase(item.getBottleType().getName())) {
+                        plasticQty += item.getQuantity();
+                    } else if ("can".equalsIgnoreCase(item.getBottleType().getName())) {
+                        canQty += item.getQuantity();
+                    }
+                }
+
+                OfferCompletedEventDTO event = OfferCompletedEventDTO.builder()
+                        .offerId(offer.getId())
+                        .creatorId(offer.getCreatorId())
+                        .collectorId(offer.getCollectorId())
+                        .plasticQuantity(plasticQty)
+                        .canQuantity(canQty)
+                        .build();
+
+                offerKafkaPublisher.sendOfferCompleted(event);
+            } else {
+                if (offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
+                    offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
+                    offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
+                }
+            }
+            offerRepository.save(offer);
+        }
+    }
     @Transactional
     public void remove(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
