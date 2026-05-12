@@ -40,3 +40,11 @@ CREATE TABLE offer_items (
                              unit_price  NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0),
                              PRIMARY KEY (offer_id, bottle_id)
 );
+
+CREATE TABLE offer_complaints (
+                            complaint_id BIGSERIAL PRIMARY KEY,
+                            offer_id    BIGINT NOT NULL REFERENCES offers(offer_id) ON DELETE CASCADE,
+                            complainant VARCHAR(32) NOT NULL,
+                            complaint_reason VARCHAR(32) NOT NULL,
+                            message TEXT
+);

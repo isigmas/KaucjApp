@@ -15,6 +15,7 @@ import pl.isigmas.kaucjapp.auth.exception.*;
 import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.repository.*;
 import pl.isigmas.kaucjapp.auth.security.Encoder;
+import pl.isigmas.kaucjapp.common.dto.WarningDTO;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,7 +35,6 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ActivationTokenRepository activationTokenRepository;
     private final DeletionScheduleRepository deletionScheduleRepository;
-    private final WarningRepository warningRepository;
     private final PasswordTokenRepository passwordTokenRepository;
 
     private final AuthKafkaPublisher kafkaPublisher;
@@ -170,11 +170,13 @@ public class AuthService {
         if (account.getStatus() == AccountStatus.SUSPENDED) {
             log.warn("Attempt to delete a suspended account");
 
-            Warning warning = Warning.builder()
-                    .message("Attempt to delete a suspended account, id: " + id)
-                    .build();
+            WarningDTO warning = new WarningDTO(
+                    UUID.randomUUID(),
+                    Instant.now(),
+                    "Attempt to delete a suspended account, id: " + id
+            );
 
-            warningRepository.save(warning);
+            kafkaPublisher.sendWarning(warning);
         }
 
         // Logout from all devices

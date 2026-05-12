@@ -1,29 +1,31 @@
-package pl.isigmas.kaucjapp.auth.entity;
+package pl.isigmas.kaucjapp.notification.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "warnings")
+@Getter
+@Setter
 @Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Warning {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "warning_id")
     @EqualsAndHashCode.Include
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Column(name = "time")
-    private Instant time =  Instant.now();
+    @Builder.Default
+    private Instant time = Instant.now();
 
     @NotNull
     @Column(name = "message")

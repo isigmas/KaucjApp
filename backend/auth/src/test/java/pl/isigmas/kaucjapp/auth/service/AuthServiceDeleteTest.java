@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.DeletionSchedule;
 import pl.isigmas.kaucjapp.auth.entity.RefreshToken;
-import pl.isigmas.kaucjapp.auth.entity.Warning;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountStatus;
 import pl.isigmas.kaucjapp.auth.exception.AccountAlreadyDeleted;
 import pl.isigmas.kaucjapp.auth.exception.AccountNotFoundException;
@@ -18,7 +17,7 @@ import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
 import pl.isigmas.kaucjapp.auth.repository.DeletionScheduleRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
-import pl.isigmas.kaucjapp.auth.repository.WarningRepository;
+import pl.isigmas.kaucjapp.common.dto.WarningDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,8 +38,6 @@ class AuthServiceDeleteTest {
     @Mock
     private DeletionScheduleRepository deletionScheduleRepository;
     @Mock
-    private WarningRepository warningRepository;
-    @Mock
     private AuthKafkaPublisher authKafkaPublisher;
 
     @InjectMocks
@@ -49,7 +46,7 @@ class AuthServiceDeleteTest {
     @Captor
     private ArgumentCaptor<DeletionSchedule> deletionScheduleCaptor;
     @Captor
-    private ArgumentCaptor<Warning> warningCaptor;
+    private ArgumentCaptor<WarningDTO> warningCaptor;
 
     @Test
     void delete_ShouldSuccessfullyInitiateDeletion_WhenAccountIsActive() {
@@ -82,7 +79,7 @@ class AuthServiceDeleteTest {
         assertThat(savedSchedule.getBackupUsername()).isEqualTo("testuser");
         assertThat(savedSchedule.getScheduledDeletionDate()).isNotNull();
 
-        verify(warningRepository, never()).save(any());
+        verify(authKafkaPublisher, never()).sendWarning(any());
     }
 
     @Test
@@ -109,7 +106,7 @@ class AuthServiceDeleteTest {
     }
 
     @Test
-    void delete_ShouldSaveWarning_WhenAccountIsSuspended() {
+    void delete_ShouldSendWarning_WhenAccountIsSuspended() {
         Long accountId = 1L;
         Account account = new Account();
         account.setId(accountId);
@@ -121,9 +118,9 @@ class AuthServiceDeleteTest {
 
         authService.delete(accountId);
 
-        verify(warningRepository).save(warningCaptor.capture());
-        Warning savedWarning = warningCaptor.getValue();
-        assertThat(savedWarning.getMessage()).contains("Attempt to delete a suspended account");
+        verify(authKafkaPublisher).sendWarning(warningCaptor.capture());
+        WarningDTO savedWarning = warningCaptor.getValue();
+        assertThat(savedWarning.message()).contains("Attempt to delete a suspended account");
         
         assertThat(account.getStatus()).isEqualTo(AccountStatus.PENDING_DELETION);
     }

@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.offers.DTO.OfferDTO;
-import pl.isigmas.kaucjapp.offers.DTO.OfferResponseDTO;
-import pl.isigmas.kaucjapp.offers.DTO.UpdateOfferDTO;
+import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
 import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
@@ -22,6 +20,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,6 +34,7 @@ public class OfferService {
 
     private final OfferRepository offerRepository;
     private final BottleTypeRepository bottleTypeRepository;
+    private final ComplaintRepository complaintRepository;
     private final GeoValidationService geoValidationService;
 
     @Transactional
@@ -140,7 +141,12 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getReservedOffersByUserId(Long userId) {
-        return offerRepository.findByCollectorIdAndStatus(userId, OfferStatus.RESERVED).stream()
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.RESERVED,
+                OfferStatus.PENDING_CONFIRMATION,
+                OfferStatus.COMPLAINT
+        );
+        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -191,6 +197,7 @@ public class OfferService {
                 .pickupAddress(offer.getPickupAddress())
                 .pickupInstructions(offer.getPickupInstructions())
                 .createdAt(offer.getTimeCreated())
+                .updatedAt(offer.getUpdatedAt())
                 .reservedAt(offer.getReservedAt())
                 .reservedTo(offer.getReservedTo())
                 .creatorConfirmed(offer.getCreatorConfirmed())
@@ -234,6 +241,9 @@ public class OfferService {
             if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
+            if (currentStatus != OfferStatus.OPEN) {
+                throw new OfferAlreadyClaimedException("Only OPEN offers can be reserved");
+            }
             offer.setCollectorId(userId);
             offer.setReservedAt(Instant.now());
             offer.setReservedTo(Instant.now().plus(Duration.ofHours(2)));
@@ -271,15 +281,7 @@ public class OfferService {
         }
 
         if (targetStatus == OfferStatus.COMPLAINT) {
-            if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION) {
-                throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION offers can be complaint");
-            }
-
-            if (!offer.getCreatorId().equals(userId) && !offer.getCollectorId().equals(userId)) {
-                throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
-            }
-
-            offer.setConfirmationDeadline(null);
+            throw new OfferForbiddenException("Offer complaint can be done only by specific endpoint with a message");
         }
 
         offer.setStatus(targetStatus);
@@ -336,5 +338,73 @@ public class OfferService {
         }
     }
 
+    @Transactional
+    public void addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
 
+        OfferStatus currentStatus = offer.getStatus();
+
+        if (!Objects.equals(offer.getCreatorId(), complainantId)
+                && !Objects.equals(offer.getCollectorId(), complainantId)) {
+            throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
+        }
+
+        if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION && currentStatus != OfferStatus.COMPLAINT) {
+            throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION or already COMPLAINT offers can be complaint");
+        }
+
+        offer.setConfirmationDeadline(null);
+        offer.setStatus(OfferStatus.COMPLAINT);
+
+        OfferComplaint offerComplaint = new OfferComplaint();
+        offerComplaint.setOffer(offer);
+        if (Objects.equals(complainantId, offer.getCollectorId())) {
+            offerComplaint.setComplainant(Complainant.COLLECTOR);
+        }
+        else {
+            offerComplaint.setComplainant(Complainant.CREATOR);
+        }
+        offerComplaint.setComplaintReason(complaint.getComplaintReason());
+        offerComplaint.setMessage(complaint.getMessage());
+
+        complaintRepository.save(offerComplaint);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDTO> getAllComplaints() {
+        return complaintRepository.findAllByOrderByIdDesc().stream()
+                .map(this::mapToComplaintResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private ComplaintResponseDTO mapToComplaintResponseDTO(OfferComplaint complaint) {
+        return ComplaintResponseDTO.builder()
+                .complaintId(complaint.getId())
+                .offerId(complaint.getOffer().getId())
+                .complainant(complaint.getComplainant())
+                .complaintReason(complaint.getComplaintReason())
+                .message(complaint.getMessage())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComplaintResponseDTO> getMyComplaintsForOffer(Long offerId, Long userId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        Complainant userRole;
+        if (userId.equals(offer.getCreatorId())) {
+            userRole = Complainant.CREATOR;
+        } else if (userId.equals(offer.getCollectorId())) {
+            userRole = Complainant.COLLECTOR;
+        } else {
+            throw new OfferForbiddenException("You are not a part of this offer");
+        }
+
+        return complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, userRole).stream()
+                .map(this::mapToComplaintResponseDTO)
+                .collect(Collectors.toList());
+    }
 }
