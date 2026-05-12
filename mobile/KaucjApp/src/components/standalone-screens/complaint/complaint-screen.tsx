@@ -1,24 +1,30 @@
-import React from "react";
-import { StyleSheet, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, ScrollView, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing } from "@/src/theme";
-import { ComplaintPayload } from "@/src/types";
+import { Complainant, ComplaintPayload } from "@/src/types";
 import ComplaintSection from "./components/complaint-section";
 import ComplaintReasonDropdown from "./components/dropdown";
 import ComplainMessageField from "./components/message-field";
 import ComplaintFooter from "./components/complaint-footer";
 import { useComplaintOffer } from "@/src/api/hooks/use-offer";
 import { ComplaintFormValues, complaintSchema } from "@/src/validation";
+import ComplaintSuccessView from "./components/succeess-view";
 
 interface ComplaintScreenProps {
   offerId: string;
+  complainiant: Complainant;
 }
 
-export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
+export default function ComplaintScreen({
+  offerId,
+  complainiant,
+}: ComplaintScreenProps) {
   const router = useRouter();
+  const [isSuccess, setIsSuccess] = useState(false);
   const { mutate: createComplaint, isPending } = useComplaintOffer(
     Number(offerId),
   );
@@ -35,10 +41,23 @@ export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
     } as ComplaintPayload;
     createComplaint(body, {
       onSuccess: () => {
-        router.back();
+        setIsSuccess(true);
       },
     });
   };
+
+  if (isSuccess) {
+    return (
+      <ComplaintScreenWrapper>
+        <ComplaintSuccessView
+          onClose={() => {
+            setIsSuccess(false);
+            router.back();
+          }}
+        />
+      </ComplaintScreenWrapper>
+    );
+  }
 
   return (
     <ComplaintScreenWrapper>
@@ -46,7 +65,10 @@ export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
         title="Powód zgłoszenia"
         hint="Wybierz kategorię, która najlepiej opisuje problem"
       >
-        <ComplaintReasonDropdown control={control} />
+        <ComplaintReasonDropdown
+          control={control}
+          complainiant={complainiant}
+        />
       </ComplaintSection>
 
       <ComplaintSection

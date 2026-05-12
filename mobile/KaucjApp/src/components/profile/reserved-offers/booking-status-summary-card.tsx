@@ -15,13 +15,11 @@ import {
 } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { useRouter } from "expo-router";
-import ContactCard from "../../ui/contact-card";
-import { OfferDetailsAccordion } from "../my-offers/offer-detail-screen";
 import { ReservedState } from "../my-offers/offer-status-summary-card";
 import { ActionButton } from "../my-offers/offer-actions";
+import ComplaintCard from "../my-offers/complaint-card";
 
 interface BookingStatusSummaryCardProps {
   offer: Offer;
@@ -36,30 +34,33 @@ export default function BookingStatusSummaryCard({
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
   const isConfirmedByCreator = offer.creator_confirmed;
+  const isConfirmedByCollector = offer.collector_confirmed;
   const isComplaint = offer.status === "COMPLAINT";
+  const isCompleted = offer.status === "COMPLETED";
 
   const handleComplete = () => {
-    Alert.alert(
-      "Potwierdź odbiór",
-      "Czy odebrałeś opakowania od sprzedającego? Potwierdzenie odbioru zakończy rezerwację.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "default",
-          onPress: () => {
-            confirmOffer(undefined, {
-              onSuccess: () => {
-                router.back();
-              },
-              onError: () => {
-                Alert.alert("Błąd", "Nie udało się potwierdzić odbioru");
-              },
-            });
-          },
+    const alertDescription = offer.creator_confirmed
+      ? "Wystawiający potwierdził odbiór opakowań. Również potwierdź odbiór opakowań aby zakończyć rezerwację."
+      : "Potwierdź odbiór opakowań.";
+    Alert.alert("Potwierdź odbiór", alertDescription, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Potwierdź",
+        style: "default",
+        onPress: () => {
+          confirmOffer(undefined, {
+            onSuccess: () => {
+              if (isPendingConfirmation) {
+                router.push({
+                  pathname: "/profile/bookings/confirmation",
+                  params: { type: "success" },
+                });
+              }
+            },
+          });
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const handleComplaint = () => {
@@ -78,7 +79,6 @@ export default function BookingStatusSummaryCard({
           expiresAt={offer.reserved_to}
           onConfirm={handleComplete}
           isPending={isPending}
-          onComplaint={handleComplaint}
         />
       ) : null}
       {isPendingConfirmation && isConfirmedByCreator && (
@@ -90,25 +90,13 @@ export default function BookingStatusSummaryCard({
             label="Potwierdź odbiór opakowań"
             icon={<CheckCircle size={18} color={colors.text.white} />}
           />
-          <Pressable onPress={handleComplaint}>
-            <Text style={styles.hintError}>Zgłoś problem</Text>
-          </Pressable>
         </>
       )}
-      {isComplaint && (
-        <>
-          <ActionButton
-            backgroundColor={colors.status.error}
-            onPress={handleComplaint}
-            disabled={isPending}
-            isPending={isPending}
-            label="Zobacz problem"
-            icon={<AlertTriangle size={18} color={colors.text.white} />}
-          />
-          <Text style={styles.hint}>
-            Potwierdzenie rozwiązania problemu zakończy ofertę.
-          </Text>
-        </>
+      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
+      {!isConfirmedByCollector && !isCompleted && (
+        <Pressable onPress={handleComplaint}>
+          <Text style={styles.hintError}>Zgłoś problem</Text>
+        </Pressable>
       )}
     </SectionCard>
   );
@@ -181,55 +169,10 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Zgłoszono problem z rezerwacją. Skontaktuj się z wystawiającym aby rozwiązać sprawę.`,
+        description: `Otrzymano złoszenie o problemie dotyczącym tej oferty. Skontaktuj się z wystawiającym aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }
-}
-
-interface DateRowProps {
-  offer: Offer;
-}
-
-function DateRow({ offer }: DateRowProps) {
-  const showReservedAt = !!offer.reserved_at && offer.status !== "OPEN";
-  const reservedAccent =
-    offer.status === "RESERVED" ? colors.status.warning : colors.text.muted;
-
-  return (
-    <View style={styles.datesRow}>
-      <DateChip
-        icon={<Clock3 size={12} color={colors.text.muted} />}
-        label="Utworzono"
-        value={formatDate(offer.created_at)}
-      />
-      {showReservedAt ? (
-        <DateChip
-          icon={<Calendar size={12} color={reservedAccent} />}
-          label="Zarezerwowano"
-          value={formatDate(offer.reserved_at!)}
-        />
-      ) : null}
-    </View>
-  );
-}
-
-interface DateChipProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}
-
-function DateChip({ icon, label, value }: DateChipProps) {
-  return (
-    <View style={styles.dateChip}>
-      <View style={styles.dateChipHeader}>
-        {icon}
-        <Text style={styles.dateChipLabel}>{label}</Text>
-      </View>
-      <Text style={styles.dateChipValue}>{value}</Text>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

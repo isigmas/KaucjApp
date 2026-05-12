@@ -18,19 +18,25 @@ export default function OfferItemsCard({
   offer,
   bare = false,
 }: OfferItemsCardProps) {
+  const hasBottles = offer.plastic_quantity > 0;
+  const hasCans = offer.can_quantity > 0;
   const body = (
     <View style={bare ? styles.bareContainer : undefined}>
-      <ItemRow
-        label="Butelki plastikowe"
-        quantity={offer.plastic_quantity}
-        price={offer.plastic_price}
-      />
-      <View style={styles.rowDivider} />
-      <ItemRow
-        label="Puszki"
-        quantity={offer.can_quantity}
-        price={offer.can_price}
-      />
+      {hasBottles && (
+        <ItemRow
+          label="Butelki plastikowe"
+          quantity={offer.plastic_quantity}
+          price={offer.plastic_price}
+        />
+      )}
+      {hasBottles && hasCans && <View style={styles.rowDivider} />}
+      {hasCans && (
+        <ItemRow
+          label="Puszki"
+          quantity={offer.can_quantity}
+          price={offer.can_price}
+        />
+      )}
     </View>
   );
 

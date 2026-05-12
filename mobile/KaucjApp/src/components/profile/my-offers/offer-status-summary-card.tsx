@@ -21,6 +21,7 @@ import ContactCard from "@/src/components/ui/contact-card";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
+import ComplaintCard from "./complaint-card";
 
 interface OfferHeadlineProps {
   offer: Offer;
@@ -36,7 +37,8 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const isComplaint = offer.status === "COMPLAINT";
   const isCompleted = offer.status === "COMPLETED";
 
-  const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
+  const showStatusPill =
+    !isReserved && !isPendingConfirmation && !isComplaint && !isCompleted;
   const showCourierDetails =
     (isReserved && offer.reserved_to) ||
     isPendingConfirmation ||
@@ -83,6 +85,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
       {showStatusPill && <OfferSatusPill status={offer.status} />}
 
       <StatusHeader offer={offer} />
+      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
 
       {showCourierDetails ? (
         <>
@@ -98,39 +101,24 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             <ReservedState
               expiresAt={offer.reserved_to}
               onConfirm={handleComplete}
-              onComplaint={handleComplaint}
               isPending={isPending}
             />
           )}
 
           {isPendingConfirmation && !isConfirmedByCreator && (
-            <>
-              <ActionButton
-                onPress={handleComplete}
-                disabled={isPending}
-                isPending={isPending}
-                label="Potwierdź odbiór kuriera"
-                icon={<CheckCircle size={18} color={colors.text.white} />}
-              />
-              <Pressable onPress={handleComplaint}>
-                <Text style={styles.hintError}>Zgłoś problem</Text>
-              </Pressable>
-            </>
+            <ActionButton
+              onPress={handleComplete}
+              disabled={isPending}
+              isPending={isPending}
+              label="Potwierdź odbiór kuriera"
+              icon={<CheckCircle size={18} color={colors.text.white} />}
+            />
           )}
-          {isComplaint && (
-            <>
-              <ActionButton
-                backgroundColor={colors.status.error}
-                onPress={handleComplaint}
-                disabled={isPending}
-                isPending={isPending}
-                label="Zobacz problem"
-                icon={<AlertTriangle size={18} color={colors.text.white} />}
-              />
-              <Text style={styles.hint}>
-                Potwierdzenie rozwiązania problemu zakończy ofertę.
-              </Text>
-            </>
+
+          {!isCompleted && !isConfirmedByCreator && (
+            <Pressable onPress={handleComplaint}>
+              <Text style={styles.hintError}>Zgłoś problem</Text>
+            </Pressable>
           )}
         </>
       ) : (
@@ -144,12 +132,10 @@ export function ReservedState({
   expiresAt,
   onConfirm,
   isPending,
-  onComplaint,
 }: {
   expiresAt: string;
   onConfirm: () => void;
   isPending: boolean;
-  onComplaint: () => void;
 }) {
   return (
     <>
@@ -163,9 +149,6 @@ export function ReservedState({
           icon={<CheckCircle size={18} color={colors.text.white} />}
         />
       </View>
-      <Pressable onPress={onComplaint}>
-        <Text style={styles.hintError}>Zgłoś problem</Text>
-      </Pressable>
     </>
   );
 }
@@ -225,7 +208,13 @@ function getStatusContent(offer: Offer) {
       return {
         title: "Oferta zakończona",
         description: `Kurier odebrał ${qty}. Otrzymano ${price}.`,
-        icon: <CheckCircle2 size={18} color={colors.status.success} />,
+        icon: (
+          <CheckCircle2
+            size={18}
+            absoluteStrokeWidth={true}
+            color={colors.status.success}
+          />
+        ),
       };
     case "CANCELED":
       return {
@@ -237,7 +226,7 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Kurier zgłosił problem z ofertą. Skontaktuj się z nim aby rozwiązać sprawę.`,
+        description: `Otrzymano złoszenie o problemie dotyczącym tej oferty. Skontaktuj się z kurierem aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }

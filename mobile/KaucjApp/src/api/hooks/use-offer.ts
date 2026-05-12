@@ -1,5 +1,6 @@
 import {
   ApiErrorResponse,
+  Complaint,
   ComplaintPayload,
   Offer,
   OfferPayload,
@@ -165,20 +166,6 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
   });
 };
 
-// POST /offer/{id}/status/COMPLAINT - complaint an offer
-export const useComplaintOffer = (offerId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
-    mutationFn: async (complaintData) => {
-      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
-    },
-  });
-};
-
 // POST /offer/confirm/{offerId} - confirm an offer
 export const useConfirmOffer = (offerId: number) => {
   const queryClient = useQueryClient();
@@ -189,6 +176,36 @@ export const useConfirmOffer = (offerId: number) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+    },
+  });
+};
+
+//-------------------------------- COMPLAINTS --------------------------------
+// GET /offer/{offerId}/complaints - get a complaint for an offer
+export const useGetOfferComplaints = (offerId: number) => {
+  return useQuery<Complaint[], AxiosError<ApiErrorResponse>>({
+    queryKey: ["complaint", offerId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<Complaint[]>(
+        `/offer/${offerId}/complaints`,
+      );
+      return data;
+    },
+    enabled: !!offerId,
+  });
+};
+
+// POST /offer/complaint/{id} - complaint an offer
+export const useComplaintOffer = (offerId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, AxiosError<ApiErrorResponse>, ComplaintPayload>({
+    mutationFn: async (complaintData) => {
+      await apiClient.post(`/offer/complaint/${offerId}`, complaintData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: offerKeys.all() });
+      queryClient.invalidateQueries({ queryKey: ["complaint", offerId] });
     },
   });
 };

@@ -40,10 +40,10 @@ export default function ComplaintSuccessView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    alignItems: "center",
+    padding: spacing.xl,
+    paddingTop: 170,
     backgroundColor: colors.background.card,
     gap: spacing.md,
   },
