@@ -52,6 +52,12 @@ public class UserDTO {
     @JsonProperty("returned_can_count")
     private Integer returnedCanCount;
 
+    @JsonProperty("returned_total_count")
+    private Integer returnedTotalCount;
+
+    @JsonProperty("collected_total_count")
+    private Integer collectedTotalCount;
+
     @Valid
     private List<UserAddressDTO> addresses = new ArrayList<>();
 }

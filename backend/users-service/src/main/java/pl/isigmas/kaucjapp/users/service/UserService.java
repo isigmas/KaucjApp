@@ -117,6 +117,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -140,6 +142,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
                 .build();
     }
 
