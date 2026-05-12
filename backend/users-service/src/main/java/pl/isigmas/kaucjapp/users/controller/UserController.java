@@ -36,7 +36,7 @@ public class UserController {
             summary = "List all users",
             description = "Returns all users located in db"
     )
-    public ResponseEntity<List<UserDTO>> getAllUsers(){
+    public ResponseEntity<List<UserAdminDTO>> getAllUsers(){
         log.info("Getting all users");
         return ResponseEntity.ok(userService.getAll());
     }

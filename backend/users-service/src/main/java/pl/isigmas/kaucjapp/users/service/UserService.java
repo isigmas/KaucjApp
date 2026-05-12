@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
-import pl.isigmas.kaucjapp.users.DTO.UpdateUserDTO;
-import pl.isigmas.kaucjapp.users.DTO.UserAddressDTO;
-import pl.isigmas.kaucjapp.users.DTO.UserDTO;
+import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.UserAlreadyExistsException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
@@ -123,6 +120,29 @@ public class UserService {
                 .build();
     }
 
+    private UserAdminDTO mapToAdminDTO(User user) {
+        List<UserAddressDTO> addressDTOs = user.getAddresses().stream()
+                .map(this::mapAddressToDTO)
+                .collect(Collectors.toList());
+
+        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
+
+        return UserAdminDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .addresses(addressDTOs)
+                .createdAt(user.getTimeCreated())
+                .collectedCanCount(userStats.getCollectedCanCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
+                .returnedCanCount(userStats.getReturnedCanCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .build();
+    }
+
     private UserAddressDTO mapAddressToDTO(UserAddress addr) {
         UserAddressDTO dto = new UserAddressDTO();
         dto.setAddressLabel(addr.getAddressLabel());
@@ -143,9 +163,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDTO> getAll() {
+    public List<UserAdminDTO> getAll() {
         return userRepository.findAll().stream()
-                .map(this::mapToDTO)
+                .map(this::mapToAdminDTO)
                 .collect(Collectors.toList());
     }
 
