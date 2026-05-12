@@ -28,6 +28,7 @@ export interface Offer {
   total_income: number; //co kurier zarobi na ofercie
   plastic_price: number | null;
   can_price: number | null;
+  updated_at: string;
 }
 
 export interface OfferItemPayload {

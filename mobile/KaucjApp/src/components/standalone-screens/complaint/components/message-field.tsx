@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TextInput } from "react-native";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Control, useController } from "react-hook-form";
-import { ComplaintFormValues } from "@/src/types";
+import { ComplaintFormValues } from "@/src/validation";
 
 const MAX_LENGTH = 500;
 const NEAR_LIMIT_THRESHOLD = 450;

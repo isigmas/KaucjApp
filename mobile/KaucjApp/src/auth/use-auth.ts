@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useAuthStore, User } from "./auth-store";
+import { useAuthStore } from "./auth-store";
 import { apiClient } from "@/src/api/api-client";
-import { SignInValues, SignUpValues } from "@/src/types";
+
 import { tokenStorage } from "./secure-storage";
 import { AuthError, parseAuthError } from "@/src/api/api-error";
+import { SignInValues, SignUpValues } from "../validation";
+import { User } from "@/src/types/user";
 
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
@@ -32,8 +34,17 @@ export const useAuth = () => {
         });
         const newAccessToken: string = refreshRes.data;
 
-        // TODO: replace with a real /auth/me call once the endpoint exists
-        const user: User = { id: "1", email: credentials.email, name: "Aska" };
+        const { data: userData } = await apiClient.get("/user/me", {
+          headers: { Authorization: `Bearer ${newAccessToken}` },
+        });
+        const user: User = {
+          user_id: userData.user_id,
+          username: userData.username,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone,
+          addresses: userData.addresses,
+        };
 
         return { accessToken: newAccessToken, refreshToken, user };
       } catch (error) {

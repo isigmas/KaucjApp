@@ -38,7 +38,6 @@ export default function OffersLayout() {
         options={{
           headerTitle: "Szczegóły oferty",
           headerLargeTitleEnabled: false,
-          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
         }}
       />

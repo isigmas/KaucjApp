@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuthStore } from "./auth-store";
 import { useAppStore } from "../state/app-store";
+import { apiClient } from "../api/api-client";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,7 +17,7 @@ export const useAppBootstrap = () => {
 
   // 1. Kick off hydration for both stores on mount
   useEffect(() => {
-    hydrateAuth();
+    hydrateAuth(apiClient);
     hydrateApp();
   }, [hydrateAuth, hydrateApp]);
 

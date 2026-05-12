@@ -40,7 +40,6 @@ export default function BookingsLayout() {
         options={{
           headerTitle: "Szczegóły rezerwacji",
           headerLargeTitleEnabled: false,
-          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
         }}
       />
