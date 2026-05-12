@@ -18,10 +18,3 @@ export interface ComplaintPayload {
   complaintReason: ComplaintReason;
   message: string;
 }
-
-// UI
-export const REASON_LABELS: Record<ComplaintReason, string> = {
-  INVALID_OFFER_CONTENT: "Nieprawidłowa treść oferty",
-  TROUBLE_WITH_OTHER_USER: "Problem z innym użytkownikiem",
-  OTHER: "Inne",
-};

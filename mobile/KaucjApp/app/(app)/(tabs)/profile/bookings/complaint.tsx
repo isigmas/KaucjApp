@@ -4,5 +4,5 @@ import { useLocalSearchParams } from "expo-router";
 export default function Complaint() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  return <ComplaintScreen offerId={id} />;
+  return <ComplaintScreen offerId={id} complainiant="collector" />;
 }

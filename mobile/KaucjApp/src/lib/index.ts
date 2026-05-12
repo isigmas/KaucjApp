@@ -1,4 +1,9 @@
-import { DepositMachineStatus, Offer, OfferStatus } from "@/src/types";
+import {
+  ComplaintReason,
+  DepositMachineStatus,
+  Offer,
+  OfferStatus,
+} from "@/src/types";
 import { colors } from "../theme";
 export * from "./map-box";
 export * from "./countdown";
@@ -86,4 +91,20 @@ export const getPolishPackageQuantity = (
     return showNumber ? n + " opakowania kaucyjne" : "opakowania kaucyjne";
   }
   return showNumber ? n + " opakowań kaucyjnych" : "opakowań kaucyjnych";
+};
+
+export const getComplaintReasonLabel = (
+  reason: ComplaintReason,
+  complainiant: "collector" | "creator",
+): string => {
+  switch (reason) {
+    case "INVALID_OFFER_CONTENT":
+      return "Nieprawidłowa treść oferty";
+    case "TROUBLE_WITH_OTHER_USER":
+      return complainiant === "collector"
+        ? "Problem z wystawiającym ofertę"
+        : "Problem z kurierem";
+    case "OTHER":
+      return "Inne";
+  }
 };

@@ -16,9 +16,13 @@ import ComplaintSuccessView from "./components/succeess-view";
 
 interface ComplaintScreenProps {
   offerId: string;
+  complainiant: "collector" | "creator";
 }
 
-export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
+export default function ComplaintScreen({
+  offerId,
+  complainiant,
+}: ComplaintScreenProps) {
   const router = useRouter();
   const [isSuccess, setIsSuccess] = useState(false);
   const { mutate: createComplaint, isPending } = useComplaintOffer(
@@ -59,7 +63,10 @@ export default function ComplaintScreen({ offerId }: ComplaintScreenProps) {
         title="Powód zgłoszenia"
         hint="Wybierz kategorię, która najlepiej opisuje problem"
       >
-        <ComplaintReasonDropdown control={control} />
+        <ComplaintReasonDropdown
+          control={control}
+          complainiant={complainiant}
+        />
       </ComplaintSection>
 
       <ComplaintSection
