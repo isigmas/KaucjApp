@@ -1,15 +1,26 @@
-export type OfferStatus = "OPEN" | "RESERVED" | "COMPLETED" | "CANCELED";
+export type OfferStatus =
+  | "OPEN"
+  | "RESERVED"
+  | "COMPLETED"
+  | "CANCELED"
+  | "PENDING_CONFIRMATION"
+  | "COMPLAINT";
 
 export interface Offer {
   offer_id: number;
   creator_id: number;
   collector_id: number | null;
   status: OfferStatus;
+  collector_confirmed: boolean;
+  creator_confirmed: boolean;
+  confirmation_deadline: string | null;
   latitude: number;
   longitude: number;
   pickup_address: string;
   pickup_instructions: string | null;
   created_at: string;
+  reserved_at: string | null;
+  reserved_to: string | null;
   plastic_quantity: number;
   can_quantity: number;
   total_quantity: number;
@@ -20,7 +31,7 @@ export interface Offer {
 }
 
 export interface OfferItemPayload {
-  bottleId: number; //notnull
+  bottleId: 1 | 2; //notnull plastic - 1, can - 2
   quantity: number; //notnull, min 1
   unitPrice: number; //notnull, min 0.0, max 0.5
 }
@@ -31,7 +42,7 @@ export interface OfferPayload {
   longitude: number; //notnull
   pickupAddress: string; //notnull
   pickupInstructions?: string; //nullable
-  items: OfferItemPayload[]; //notnull, min 1
+  items: OfferItemPayload[]; //notnull, min 1, max 2
 }
 
 // box parameters for the /api/offer/search endpoint.

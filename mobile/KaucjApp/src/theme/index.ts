@@ -1,39 +1,42 @@
 export const colors = {
   primary: {
-    base: "#10B981", // Emerald Green (Primary Actions & Seller Pins)
-    dark: "#047857", // Forest Green (Pressed states & Dark Text)
-    light: "#D1FAE5", // Mint Tint (Badge backgrounds & Highlight)
+    base: "#589469", // Sage Green (Primary Actions & Seller Pins)
+    dark: "#3A5A46", // Deep Pine (Pressed states & Dark Text)
+    light: "#EAF0EC", // Morning Dew (Badge backgrounds & Highlight)
   },
 
   accent: {
-    base: "#0EA5E9", // Ocean Blue (Deposit Points & Informational icons)
-    dark: "#0369A1", // Deep Water (Navigation focus)
-    light: "#E0F2FE", // Sky (Subtle UI borders)
+    base: "#7393A7", // Lake Slate Blue (Deposit Points & Informational icons)
+    dark: "#4A6678", // Deep Water (Navigation focus)
+    light: "#EDF2F5", // Mist (Subtle UI borders)
   },
 
   background: {
-    main: "#F8FAF8", // Eco Off-White (The canvas of the app)
-    card: "#FFFFFF", // Pure White (Cards, Bottom Sheets, Modals)
-    subtle: "#F3F4F6", // Light Gray (Input backgrounds)
+    main: "#F6F7F4", // Oat/Birch Off-White (The warm, natural canvas of the app)
+    card: "#FFFFFF", // Pure White (Cards, Bottom Sheets, Modals to maintain contrast)
+    subtle: "#EAECE850", // Light Stone (Input backgrounds)
   },
+
   black: {
-    default: "#0F172A", // premium slate (Primary text & Icons)
+    default: "#1F2924", // Deep Canopy Green-Black (Primary text & Icons - softer than pure black)
   },
 
   text: {
-    primary: "#111827", // Charcoal (High readability)
-    secondary: "#6B7280", // Slate Gray (Captions & Distances)
-    muted: "#9CA3AF", // Light Gray (Placeholders)
+    primary: "#2C3631", // Dark Bark (High readability, less eye strain)
+    secondary: "#707A74", // Mossy Gray (Captions & Distances)
+    muted: "#A3ACA7", // Lichen Gray (Placeholders)
     white: "#FFFFFF", // Text on Primary buttons
   },
 
   status: {
-    success: "#10B981",
+    success: "#5B8266", // Matches Primary Sage
     error: "#EF4444", // Soft Red (Cancelations/Alerts)
     warning: "#F59E0B", // Amber (Low stock / Pending payment)
-    border: "#E5E7EB", // Hairline dividers
+    border: "#DCE0DA", // Subtle Twig Gray (Hairline dividers)
   },
 } as const;
+
+//#606342 - ciekawy kolor gdzieś znalazłem
 
 export type AppColors = typeof colors;
 

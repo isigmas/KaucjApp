@@ -22,6 +22,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { colors } from "@/src/theme";
 
+// THIS COMPONENT IS NOT USED ANYMORE, IT WAS USED FOR THE OLD CONFIRMATION SCREEN DURIN HACKATHON - IT INCLUDES THE REVIEW FIELD
+
 // --- Animated Star Component ---
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
