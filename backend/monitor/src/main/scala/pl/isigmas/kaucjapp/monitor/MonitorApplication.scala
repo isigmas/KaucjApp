@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.monitor
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import pl.isigmas.kaucjapp.monitor.worker.{KafkaMonitorWorker, KafkaWorkerCommand}
 
 enum MonitorCommand:
   case CheckAllServices
@@ -10,17 +11,16 @@ enum MonitorCommand:
 
 object MonitorGuardian:
   def apply(): Behavior[MonitorCommand] = Behaviors.setup { context =>
-    context.log.info("System monitorowania Pekko wystartował!")
 
-    // Tu moglibyśmy stworzyć aktorów-pracowników (workers)
-    // val checker = context.spawn(ServiceChecker(), "checker")
+    val kafkaWorker = context.spawn(KafkaMonitorWorker(), "kafka-worker")
 
     Behaviors.receiveMessage {
       case MonitorCommand.CheckAllServices =>
-        context.log.info("Rozpoczynam sprawdzanie wszystkich usług...")
+        context.log.info("Checking all services...")
+        kafkaWorker ! KafkaWorkerCommand.StartChecking
         Behaviors.same
       case MonitorCommand.ServiceUp(name) =>
-        context.log.info(s"Otrzymano potwierdzenie: $name działa!")
+        context.log.info(s"Received confirmation: $name working")
         Behaviors.same
     }
   }
