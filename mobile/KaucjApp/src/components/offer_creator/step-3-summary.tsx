@@ -366,6 +366,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     alignItems: "center",
+    marginBottom: 100,
   },
   buttonDisabled: {
     backgroundColor: colors.primary.light,

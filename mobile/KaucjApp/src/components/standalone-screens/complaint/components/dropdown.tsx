@@ -11,13 +11,10 @@ import {
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, rounded, spacing } from "@/src/theme";
-import {
-  COMPLAINT_REASONS,
-  ComplaintFormValues,
-  ComplaintReason,
-  REASON_LABELS,
-} from "@/src/types";
+import { Complainant, COMPLAINT_REASONS, ComplaintReason } from "@/src/types";
 import { Control, useController } from "react-hook-form";
+import { ComplaintFormValues } from "@/src/validation";
+import { getComplaintReasonLabel } from "@/src/lib";
 
 interface TriggerLayout {
   x: number;
@@ -28,10 +25,12 @@ interface TriggerLayout {
 
 interface ComplainReasonDropdownProps {
   control: Control<ComplaintFormValues>;
+  complainiant: Complainant;
 }
 
 export default function ComplainReasonDropdown({
   control,
+  complainiant,
 }: ComplainReasonDropdownProps) {
   const { field, fieldState } = useController({
     name: "complaintReason",
@@ -89,7 +88,7 @@ export default function ComplainReasonDropdown({
           numberOfLines={1}
         >
           {field.value
-            ? REASON_LABELS[field.value]
+            ? getComplaintReasonLabel(field.value, complainiant)
             : "Wybierz powód zgłoszenia"}
         </Text>
         <Feather
@@ -113,7 +112,7 @@ export default function ComplainReasonDropdown({
             style={[
               styles.optionsList,
               {
-                top: layout.y + layout.height - 1,
+                top: layout.y + layout.height - 6,
                 left: layout.x,
                 width: layout.width,
               },
@@ -138,7 +137,7 @@ export default function ComplainReasonDropdown({
                       isSelected && styles.optionTextSelected,
                     ]}
                   >
-                    {REASON_LABELS[reason]}
+                    {getComplaintReasonLabel(reason, complainiant)}
                   </Text>
                   {isSelected && (
                     <Feather
@@ -199,8 +198,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderColor: colors.primary.base,
     borderTopColor: colors.status.border,
-    borderBottomLeftRadius: rounded.xl,
-    borderBottomRightRadius: rounded.xl,
+    borderRadius: rounded.xl,
     backgroundColor: "#FFFFFF",
     overflow: "hidden",
     ...Platform.select({

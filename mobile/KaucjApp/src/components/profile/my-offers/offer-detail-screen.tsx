@@ -14,6 +14,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
 import OfferActions from "./offer-actions";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
+import ComplaintCard from "./complaint-card";
 
 interface OfferDetailScreenProps {
   offerId: number;
