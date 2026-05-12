@@ -18,8 +18,8 @@ public class UserAdminTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "anowak",
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
+                    "first_name": "Anna",
+                    "last_name": "Nowak",
                     "phone": "123456789",
                     "email": "anna@example.com"
                 }
@@ -28,8 +28,8 @@ public class UserAdminTest extends BaseIntegrationTest {
                 {
                     "user_id": 1006,
                     "username": "stasiekk",
-                    "firstName": "Stas",
-                    "lastName": "Nowak",
+                    "first_name": "Stas",
+                    "last_name": "Nowak",
                     "phone": "123456799",
                     "email": "stac@example.com"
                 }
@@ -49,8 +49,8 @@ public class UserAdminTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "anowak",
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
+                    "first_name": "Anna",
+                    "last_name": "Nowak",
                     "phone": "123456789",
                     "email": "anna@example.com"
                 }

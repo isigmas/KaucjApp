@@ -56,13 +56,13 @@ public class DepositMachineOpeningHoursEndpointTest extends BaseIntegrationTest 
 
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].openingHours[0].dayOfWeek").value(1))
-                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
-                .andExpect(jsonPath("$[0].openingHours[0].openTime").value("07:00:00"))
-                .andExpect(jsonPath("$[0].openingHours[0].closeTime").value("21:00:00"))
-                .andExpect(jsonPath("$[0].openingHours[1].isClosed").value(false))
-                .andExpect(jsonPath("$[0].openingHours[1].openTime").value("06:00:00"))
-                .andExpect(jsonPath("$[0].openingHours[1].closeTime").value("23:00:00"))
-                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
+                .andExpect(jsonPath("$[0].opening_hours[0].day_of_week").value(1))
+                .andExpect(jsonPath("$[0].opening_hours[0].is_closed").value(false))
+                .andExpect(jsonPath("$[0].opening_hours[0].open_time").value("07:00:00"))
+                .andExpect(jsonPath("$[0].opening_hours[0].close_time").value("21:00:00"))
+                .andExpect(jsonPath("$[0].opening_hours[1].is_closed").value(false))
+                .andExpect(jsonPath("$[0].opening_hours[1].open_time").value("06:00:00"))
+                .andExpect(jsonPath("$[0].opening_hours[1].close_time").value("23:00:00"))
+                .andExpect(jsonPath("$[0].opening_hours.length()").value(7));
     }
 }
