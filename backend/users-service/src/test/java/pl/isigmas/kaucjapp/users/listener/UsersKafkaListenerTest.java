@@ -32,7 +32,7 @@ class UsersKafkaListenerTest {
     void handleOfferCompleted_validJson_parsesAndIncrementsStatsWithExpectedArguments() {
         // Given
         String eventJson = """
-                {"offerId":1,"creatorId":10,"collectorId":20,"plasticQuantity":3,"canQuantity":2}
+                {"offer_id":1,"creator_id":10,"collector_id":20,"plastic_quantity":3,"can_quantity":2}
                 """;
 
         // When
