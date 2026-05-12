@@ -1,5 +1,6 @@
 import {
   ApiErrorResponse,
+  Complaint,
   ComplaintPayload,
   Offer,
   OfferPayload,
@@ -180,6 +181,20 @@ export const useConfirmOffer = (offerId: number) => {
 };
 
 //-------------------------------- COMPLAINTS --------------------------------
+// GET /offer/{offerId}/complaints - get a complaint for an offer
+export const useGetOfferComplaints = (offerId: number) => {
+  return useQuery<Complaint[], AxiosError<ApiErrorResponse>>({
+    queryKey: ["complaint", offerId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<Complaint[]>(
+        `/offer/${offerId}/complaints`,
+      );
+      return data;
+    },
+    enabled: !!offerId,
+  });
+};
+
 // POST /offer/complaint/{id} - complaint an offer
 export const useComplaintOffer = (offerId: number) => {
   const queryClient = useQueryClient();

@@ -21,6 +21,7 @@ import ContactCard from "@/src/components/ui/contact-card";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
+import ComplaintCard from "./complaint-card";
 
 interface OfferHeadlineProps {
   offer: Offer;
@@ -130,6 +131,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               <Text style={styles.hint}>
                 Potwierdzenie rozwiązania problemu zakończy ofertę.
               </Text>
+              <ComplaintCard offerId={offer.offer_id} />
             </>
           )}
         </>
