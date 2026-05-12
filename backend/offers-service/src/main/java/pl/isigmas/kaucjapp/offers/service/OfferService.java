@@ -134,7 +134,13 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getAllByCreatorId(Long userId) {
-        return offerRepository.findByCreatorId(userId).stream()
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.OPEN,
+                OfferStatus.RESERVED,
+                OfferStatus.PENDING_CONFIRMATION,
+                OfferStatus.COMPLAINT
+        );
+        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
