@@ -34,7 +34,9 @@ export default function BookingStatusSummaryCard({
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
   const isConfirmedByCreator = offer.creator_confirmed;
+  const isConfirmedByCollector = offer.collector_confirmed;
   const isComplaint = offer.status === "COMPLAINT";
+  const isCompleted = offer.status === "COMPLETED";
 
   const handleComplete = () => {
     const alertDescription = offer.creator_confirmed
@@ -91,9 +93,11 @@ export default function BookingStatusSummaryCard({
         </>
       )}
       {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
-      <Pressable onPress={handleComplaint}>
-        <Text style={styles.hintError}>Zgłoś problem</Text>
-      </Pressable>
+      {!isConfirmedByCollector && !isCompleted && (
+        <Pressable onPress={handleComplaint}>
+          <Text style={styles.hintError}>Zgłoś problem</Text>
+        </Pressable>
+      )}
     </SectionCard>
   );
 }
@@ -169,51 +173,6 @@ function getStatusContent(offer: Offer) {
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }
-}
-
-interface DateRowProps {
-  offer: Offer;
-}
-
-function DateRow({ offer }: DateRowProps) {
-  const showReservedAt = !!offer.reserved_at && offer.status !== "OPEN";
-  const reservedAccent =
-    offer.status === "RESERVED" ? colors.status.warning : colors.text.muted;
-
-  return (
-    <View style={styles.datesRow}>
-      <DateChip
-        icon={<Clock3 size={12} color={colors.text.muted} />}
-        label="Utworzono"
-        value={formatDate(offer.created_at)}
-      />
-      {showReservedAt ? (
-        <DateChip
-          icon={<Calendar size={12} color={reservedAccent} />}
-          label="Zarezerwowano"
-          value={formatDate(offer.reserved_at!)}
-        />
-      ) : null}
-    </View>
-  );
-}
-
-interface DateChipProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}
-
-function DateChip({ icon, label, value }: DateChipProps) {
-  return (
-    <View style={styles.dateChip}>
-      <View style={styles.dateChipHeader}>
-        {icon}
-        <Text style={styles.dateChipLabel}>{label}</Text>
-      </View>
-      <Text style={styles.dateChipValue}>{value}</Text>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

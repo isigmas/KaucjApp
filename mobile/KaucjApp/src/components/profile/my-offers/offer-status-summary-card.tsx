@@ -37,7 +37,8 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const isComplaint = offer.status === "COMPLAINT";
   const isCompleted = offer.status === "COMPLETED";
 
-  const showStatusPill = !isReserved && !isPendingConfirmation && !isComplaint;
+  const showStatusPill =
+    !isReserved && !isPendingConfirmation && !isComplaint && !isCompleted;
   const showCourierDetails =
     (isReserved && offer.reserved_to) ||
     isPendingConfirmation ||
@@ -105,23 +106,20 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
           )}
 
           {isPendingConfirmation && !isConfirmedByCreator && (
-            <>
-              <ActionButton
-                onPress={handleComplete}
-                disabled={isPending}
-                isPending={isPending}
-                label="Potwierdź odbiór kuriera"
-                icon={<CheckCircle size={18} color={colors.text.white} />}
-              />
-              <Pressable onPress={handleComplaint}>
-                <Text style={styles.hintError}>Zgłoś problem</Text>
-              </Pressable>
-            </>
+            <ActionButton
+              onPress={handleComplete}
+              disabled={isPending}
+              isPending={isPending}
+              label="Potwierdź odbiór kuriera"
+              icon={<CheckCircle size={18} color={colors.text.white} />}
+            />
           )}
 
-          <Pressable onPress={handleComplaint}>
-            <Text style={styles.hintError}>Zgłoś problem</Text>
-          </Pressable>
+          {!isCompleted && !isConfirmedByCreator && (
+            <Pressable onPress={handleComplaint}>
+              <Text style={styles.hintError}>Zgłoś problem</Text>
+            </Pressable>
+          )}
         </>
       ) : (
         <DateRow offer={offer} />
@@ -210,7 +208,13 @@ function getStatusContent(offer: Offer) {
       return {
         title: "Oferta zakończona",
         description: `Kurier odebrał ${qty}. Otrzymano ${price}.`,
-        icon: <CheckCircle2 size={18} color={colors.status.success} />,
+        icon: (
+          <CheckCircle2
+            size={18}
+            absoluteStrokeWidth={true}
+            color={colors.status.success}
+          />
+        ),
       };
     case "CANCELED":
       return {

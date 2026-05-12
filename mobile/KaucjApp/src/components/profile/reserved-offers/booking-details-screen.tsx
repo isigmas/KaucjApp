@@ -68,9 +68,6 @@ export default function BookingDetailsScreen({
       showsVerticalScrollIndicator={false}
     >
       <BookingStatusSummaryCard offer={offer} />
-      <Pressable onPress={() => router.push("/profile/bookings/confirmation")}>
-        <Text>Zakończ rezerwację</Text>
-      </Pressable>
 
       <ContactCard userId={offer.creator_id} header="Wystawiający" />
 
