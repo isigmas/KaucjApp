@@ -38,7 +38,7 @@ export default function ComplaintCard({
 
   return (
     <View style={[styles.complaintSection, asCard && styles.card]}>
-      <Text style={styles.sectionLabel}>Zgłoszone problemy</Text>
+      <Text style={styles.sectionLabel}>Moje zgłoszenia</Text>
       <View style={styles.listContainer}>
         {complaints.map((complaint) => (
           <React.Fragment key={complaint.complaintId}>

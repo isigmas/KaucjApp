@@ -90,22 +90,7 @@ export default function BookingStatusSummaryCard({
           />
         </>
       )}
-      {isComplaint && (
-        <>
-          <ComplaintCard offerId={offer.offer_id} />
-          {/* <ActionButton
-            backgroundColor={colors.status.error}
-            onPress={handleComplaint}
-            disabled={isPending}
-            isPending={isPending}
-            label="Zobacz problem"
-            icon={<AlertTriangle size={18} color={colors.text.white} />}
-          />
-          <Text style={styles.hint}>
-            Potwierdzenie rozwiązania problemu zakończy ofertę.
-          </Text> */}
-        </>
-      )}
+      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
       <Pressable onPress={handleComplaint}>
         <Text style={styles.hintError}>Zgłoś problem</Text>
       </Pressable>
@@ -180,7 +165,7 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Zgłoszono problem z rezerwacją. Skontaktuj się z wystawiającym aby rozwiązać sprawę.`,
+        description: `Otrzymano złoszenie o problemie dotyczącym tej oferty. Skontaktuj się z wystawiającym aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }

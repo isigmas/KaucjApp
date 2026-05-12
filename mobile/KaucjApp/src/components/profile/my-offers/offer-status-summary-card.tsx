@@ -222,7 +222,7 @@ function getStatusContent(offer: Offer) {
     case "COMPLAINT":
       return {
         title: "Zgłoszono problem",
-        description: `Kurier zgłosił problem z ofertą. Skontaktuj się z nim aby rozwiązać sprawę.`,
+        description: `Otrzymano złoszenie o problemie dotyczącym tej oferty. Skontaktuj się z kurierem aby rozwiązać sprawę.`,
         icon: <AlertCircle size={18} color={colors.status.error} />,
       };
   }

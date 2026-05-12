@@ -48,12 +48,14 @@ export default function ComplaintScreen({
 
   if (isSuccess) {
     return (
-      <ComplaintSuccessView
-        onClose={() => {
-          setIsSuccess(false);
-          router.back();
-        }}
-      />
+      <ComplaintScreenWrapper>
+        <ComplaintSuccessView
+          onClose={() => {
+            setIsSuccess(false);
+            router.back();
+          }}
+        />
+      </ComplaintScreenWrapper>
     );
   }
 
