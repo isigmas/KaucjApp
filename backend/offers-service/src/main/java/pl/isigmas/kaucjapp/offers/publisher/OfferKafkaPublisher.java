@@ -11,10 +11,10 @@ import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 @RequiredArgsConstructor
 public class OfferKafkaPublisher {
 
-    private final KafkaTemplate<String, OfferCompletedEventDTO> offerCompletedTemplate;
+    private final KafkaTemplate<String, OfferCompletedEventDTO> kafkaTemplate;
 
     public void sendOfferCompleted(OfferCompletedEventDTO event) {
         log.info("Sending OfferCompletedEvent for offerId: {}", event.getOfferId());
-        offerCompletedTemplate.send("offers.completed", event.getOfferId().toString(), event);
+        kafkaTemplate.send("offers.completed", event.getOfferId().toString(), event);
     }
 }

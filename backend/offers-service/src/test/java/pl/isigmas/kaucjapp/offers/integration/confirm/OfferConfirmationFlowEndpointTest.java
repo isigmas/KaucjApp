@@ -156,6 +156,7 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
 
         completingPendingOffersService.completePendingOffers();
 
+        entityManager.flush();
         entityManager.clear();
         Offer completed = offerRepository.findById(offerId).orElseThrow();
         assertThat(completed.getStatus()).isEqualTo(OfferStatus.COMPLETED);

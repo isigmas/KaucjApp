@@ -28,7 +28,6 @@ public class UsersKafkaListener {
             log.info("New user created, ID: {}", newUser.getId());
         } catch (Exception e) {
             log.error("Failed to parse user sync message: {}", newUserJson, e);
-            throw new RuntimeException("Error parsing users.sync message", e);
         }
     }
 
@@ -46,21 +45,27 @@ public class UsersKafkaListener {
 
     @KafkaListener(topics = "offers.completed", groupId = "users-group")
     @Transactional
-    public void handleOfferCompleted(OfferCompletedEventDTO event) {
-        log.info("Received stats update for offerId: {}", event.getOfferId());
+    public void handleOfferCompleted(String eventJson) {
+        try {
+            OfferCompletedEventDTO event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
+            log.info("Received stats update for offerId: {}", event.getOfferId());
 
-        userStatsRepository.incrementReturnedStats(
-                event.getCreatorId(),
-                event.getPlasticQuantity(),
-                event.getCanQuantity()
-        );
+            userStatsRepository.incrementReturnedStats(
+                    event.getCreatorId(),
+                    event.getPlasticQuantity(),
+                    event.getCanQuantity()
+            );
 
-        userStatsRepository.incrementCollectedStats(
-                event.getCollectorId(),
-                event.getPlasticQuantity(),
-                event.getCanQuantity()
-        );
+            userStatsRepository.incrementCollectedStats(
+                    event.getCollectorId(),
+                    event.getPlasticQuantity(),
+                    event.getCanQuantity()
+            );
 
-        log.info("Successfully updated stats for creator {} and collector {}", event.getCreatorId(), event.getCollectorId());
+            log.info("Successfully updated stats for creator {} and collector {}", event.getCreatorId(), event.getCollectorId());
+
+        } catch (Exception e) {
+            log.error("Failed to parse offer completed message: {}", eventJson, e);
+        }
     }
 }

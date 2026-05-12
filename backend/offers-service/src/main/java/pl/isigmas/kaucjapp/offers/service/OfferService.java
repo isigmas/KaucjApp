@@ -334,43 +334,57 @@ public class OfferService {
             throw new OfferForbiddenException("You are not part of this offer");
         }
 
-        if (offer.getCreatorConfirmed() && offer.getCollectorConfirmed()) {
-            offer.setStatus(OfferStatus.COMPLETED);
-            offer.setConfirmationDeadline(null);
-            offer.setTimeCompleted(Instant.now());
-            if (offer.getCreatorConfirmed() && offer.getCollectorConfirmed()) {
+        if (Boolean.TRUE.equals(offer.getCreatorConfirmed()) && Boolean.TRUE.equals(offer.getCollectorConfirmed())) {
+            completeOfferAndPublish(offer, Instant.now());
+        } else if (offer.getStatus() == OfferStatus.RESERVED) {
+            offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
+            offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
+        }
 
-                offer.setStatus(OfferStatus.COMPLETED);
-                offer.setConfirmationDeadline(null);
-                offer.setTimeCompleted(Instant.now());
+        offerRepository.save(offer);
+    }
 
-                int plasticQty = 0;
-                int canQty = 0;
-                for (OfferItem item : offer.getItems()) {
-                    if ("plastic".equalsIgnoreCase(item.getBottleType().getName())) {
-                        plasticQty += item.getQuantity();
-                    } else if ("can".equalsIgnoreCase(item.getBottleType().getName())) {
-                        canQty += item.getQuantity();
-                    }
-                }
-
-                OfferCompletedEventDTO event = OfferCompletedEventDTO.builder()
-                        .offerId(offer.getId())
-                        .creatorId(offer.getCreatorId())
-                        .collectorId(offer.getCollectorId())
-                        .plasticQuantity(plasticQty)
-                        .canQuantity(canQty)
-                        .build();
-
-                offerKafkaPublisher.sendOfferCompleted(event);
-            } else {
-                if (offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
-                    offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
-                    offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
-                }
-            }
+    /**
+     * Completes offers whose confirmation window expired without mutual confirm (same stats semantics as a completed deal).
+     * Loads items so Kafka payloads match {@link #confirmOffer}.
+     */
+    @Transactional
+    public int completeExpiredPendingOffers(Instant now) {
+        List<Offer> expired = offerRepository.findAllPendingOffersPastDeadline(OfferStatus.PENDING_CONFIRMATION, now);
+        for (Offer offer : expired) {
+            offer.setCreatorConfirmed(true);
+            offer.setCollectorConfirmed(true);
+            completeOfferAndPublish(offer, now);
             offerRepository.save(offer);
         }
+        return expired.size();
+    }
+
+    private void completeOfferAndPublish(Offer offer, Instant completedAt) {
+        offer.setStatus(OfferStatus.COMPLETED);
+        offer.setConfirmationDeadline(null);
+        offer.setTimeCompleted(completedAt);
+        offerKafkaPublisher.sendOfferCompleted(buildOfferCompletedEvent(offer));
+    }
+
+    private OfferCompletedEventDTO buildOfferCompletedEvent(Offer offer) {
+        int plasticQty = 0;
+        int canQty = 0;
+        for (OfferItem item : offer.getItems()) {
+            String typeName = item.getBottleType().getName();
+            if (PLASTIC_TYPE.equalsIgnoreCase(typeName)) {
+                plasticQty += item.getQuantity();
+            } else if (CAN_TYPE.equalsIgnoreCase(typeName)) {
+                canQty += item.getQuantity();
+            }
+        }
+        return OfferCompletedEventDTO.builder()
+                .offerId(offer.getId())
+                .creatorId(offer.getCreatorId())
+                .collectorId(offer.getCollectorId())
+                .plasticQuantity(plasticQty)
+                .canQuantity(canQty)
+                .build();
     }
     @Transactional
     public void remove(Long offerId, Long userId) {
