@@ -18,6 +18,8 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
 
     List<Offer> findByCollectorIdAndStatusIn(Long collectorId, List<OfferStatus> statuses);
 
+    List<Offer> findByCreatorIdAndStatusIn(Long creatorId, List<OfferStatus> statuses);
+
     @Query(value = "SELECT * FROM offers " +
             "WHERE status = 'OPEN' " +
             "AND point(longitude, latitude) <@ box(point(:swLon, :swLat), point(:neLon, :neLat))",

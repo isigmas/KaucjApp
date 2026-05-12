@@ -158,6 +158,28 @@ public class OfferService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<OfferResponseDTO> getMyOffersHistory(Long userId) {
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.COMPLETED,
+                OfferStatus.CANCELED
+        );
+        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OfferResponseDTO> getMyCollectedOffersHistory(Long userId) {
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.COMPLETED
+        );
+        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
         int plasticQty = 0;
         int canQty = 0;
