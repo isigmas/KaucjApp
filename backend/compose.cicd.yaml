@@ -1,0 +1,8 @@
+services:
+  kafka:
+    healthcheck:
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
+
