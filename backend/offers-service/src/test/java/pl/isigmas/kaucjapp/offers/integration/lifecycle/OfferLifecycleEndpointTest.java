@@ -24,11 +24,11 @@ public class OfferLifecycleEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Zadzwonic po przybyciu",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Zadzwonic po przybyciu",
                     "items": [
-                      { "bottleId": %d, "quantity": 10, "unitPrice": 0.50 },
-                      { "bottleId": %d, "quantity": 5,  "unitPrice": 0.30 }
+                      { "bottle_id": %d, "quantity": 10, "unit_price": 0.50 },
+                      { "bottle_id": %d, "quantity": 5,  "unit_price": 0.30 }
                     ]
                 }
                 """.formatted(plasticBottleId, canBottleId);
@@ -59,11 +59,11 @@ public class OfferLifecycleEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Zmieniona 10",
-                    "pickupInstructions": "Odbior po 18:00",
+                    "pickup_address": "ul. Zmieniona 10",
+                    "pickup_instructions": "Odbior po 18:00",
                     "items": [
-                      { "bottleId": %d, "quantity": 8, "unitPrice": 0.50 },
-                      { "bottleId": %d, "quantity": 3, "unitPrice": 0.25 }
+                      { "bottle_id": %d, "quantity": 8, "unit_price": 0.50 },
+                      { "bottle_id": %d, "quantity": 3, "unit_price": 0.25 }
                     ]
                 }
                 """.formatted(plasticBottleId, canBottleId);
@@ -111,10 +111,10 @@ public class OfferLifecycleEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -130,6 +130,6 @@ public class OfferLifecycleEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(delete("/api/offer/" + offerId)
                         .header("X-User-Id", otherUserId))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errorCode").value("OFFER_007"));
+                .andExpect(jsonPath("$.error_code").value("OFFER_007"));
     }
 }

@@ -4,16 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
-import pl.isigmas.kaucjapp.users.DTO.UpdateUserDTO;
-import pl.isigmas.kaucjapp.users.DTO.UserAddressDTO;
-import pl.isigmas.kaucjapp.users.DTO.UserDTO;
+import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.UserAlreadyExistsException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserAddress;
+import pl.isigmas.kaucjapp.users.model.UserStats;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
+import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserStatsRepository userStatsRepository;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -58,6 +58,10 @@ public class UserService {
         user.setRating(initialRating);
 
         userRepository.save(user);
+
+        UserStats stats = new UserStats();
+        stats.setUserId(user.getId());
+        userStatsRepository.save(stats);
     }
 
     @Transactional
@@ -99,14 +103,47 @@ public class UserService {
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
 
+        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
+
         return UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .email(user.getEmail())
                 .phone(user.getPhone())
                 .addresses(addressDTOs)
+                .createdAt(user.getTimeCreated())
+                .collectedCanCount(userStats.getCollectedCanCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
+                .returnedCanCount(userStats.getReturnedCanCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
+                .build();
+    }
+
+    private UserAdminDTO mapToAdminDTO(User user) {
+        List<UserAddressDTO> addressDTOs = user.getAddresses().stream()
+                .map(this::mapAddressToDTO)
+                .collect(Collectors.toList());
+
+        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
+
+        return UserAdminDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .addresses(addressDTOs)
+                .createdAt(user.getTimeCreated())
+                .collectedCanCount(userStats.getCollectedCanCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
+                .returnedCanCount(userStats.getReturnedCanCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -130,9 +167,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDTO> getAll() {
+    public List<UserAdminDTO> getAll() {
         return userRepository.findAll().stream()
-                .map(this::mapToDTO)
+                .map(this::mapToAdminDTO)
                 .collect(Collectors.toList());
     }
 

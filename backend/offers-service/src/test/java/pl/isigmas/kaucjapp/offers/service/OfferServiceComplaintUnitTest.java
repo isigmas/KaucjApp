@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.offers.exception.OfferForbiddenException;
 import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
 import pl.isigmas.kaucjapp.offers.model.*;
+import pl.isigmas.kaucjapp.offers.publisher.OfferKafkaPublisher;
 import pl.isigmas.kaucjapp.offers.repository.BottleTypeRepository;
 import pl.isigmas.kaucjapp.offers.repository.ComplaintRepository;
 import pl.isigmas.kaucjapp.offers.repository.OfferRepository;
@@ -38,6 +39,9 @@ class OfferServiceComplaintUnitTest {
 
     @Mock
     private ComplaintRepository complaintRepository;
+
+    @Mock
+    private OfferKafkaPublisher offerKafkaPublisher;
 
     @InjectMocks
     private OfferService offerService;

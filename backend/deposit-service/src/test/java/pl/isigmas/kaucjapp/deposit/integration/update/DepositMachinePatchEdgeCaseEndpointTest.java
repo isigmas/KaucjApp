@@ -49,7 +49,7 @@ public class DepositMachinePatchEdgeCaseEndpointTest extends BaseIntegrationTest
                         .content(objectMapper.writeValueAsString(patch)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errorCode").value("DEP_002"));
+                .andExpect(jsonPath("$.error_code").value("DEP_002"));
     }
 
     @Test
@@ -85,9 +85,9 @@ public class DepositMachinePatchEdgeCaseEndpointTest extends BaseIntegrationTest
                 .andExpect(jsonPath("$[0].address").value("ul. Zachowana 42, 00-001 Warszawa"))
                 .andExpect(jsonPath("$[0].latitude").value(52.229700))
                 .andExpect(jsonPath("$[0].longitude").value(21.012200))
-                .andExpect(jsonPath("$[0].networkName").value("Lidl"))
-                .andExpect(jsonPath("$[0].openingHours.length()").value(7))
-                .andExpect(jsonPath("$[0].openingHours[0].openTime").value("06:00:00"));
+                .andExpect(jsonPath("$[0].network_name").value("Lidl"))
+                .andExpect(jsonPath("$[0].opening_hours.length()").value(7))
+                .andExpect(jsonPath("$[0].opening_hours[0].open_time").value("06:00:00"));
     }
 
     @Test
@@ -108,11 +108,11 @@ public class DepositMachinePatchEdgeCaseEndpointTest extends BaseIntegrationTest
 
         Long id = depositMachineRepository.findAll().getFirst().getId();
 
-        Map<String, String> body = Map.of("networkName", "   ");
+        Map<String, String> body = Map.of("network_name", "   ");
         mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("DEP_003"));
+                .andExpect(jsonPath("$.error_code").value("DEP_003"));
     }
 }

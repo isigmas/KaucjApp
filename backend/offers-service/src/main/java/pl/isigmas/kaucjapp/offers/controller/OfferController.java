@@ -180,6 +180,7 @@ public class OfferController {
             @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyOffers(@RequestHeader("X-User-Id") Long userId) {
+        log.info("Listing my offers by user {}", userId);
         return ResponseEntity.ok(service.getAllByCreatorId(userId));
     }
 
@@ -197,6 +198,7 @@ public class OfferController {
             @ApiResponse(responseCode = "500", description = "INTERNAL_ERR — unexpected error.")
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@RequestHeader("X-User-Id") Long userId) {
+        log.info("Listing my reserved offers by user {}", userId);
         return ResponseEntity.ok(service.getReservedOffersByUserId(userId));
     }
 
@@ -242,5 +244,25 @@ public class OfferController {
 
         return ResponseEntity.ok(service.getMyComplaintsForOffer(offerId, userId));
     }
+
+    @GetMapping("/my/history")
+    public ResponseEntity<List<OfferResponseDTO>> listMyOffersHistory(
+            @RequestHeader("X-User-Id") Long userId
+    ) {
+        log.info("Listing my offers history by user {}", userId);
+
+        return ResponseEntity.ok(service.getMyOffersHistory(userId));
+    }
+
+    @GetMapping("/my/reserved/history")
+    public ResponseEntity<List<OfferResponseDTO>> listMyReservedOffersHistory(
+            @RequestHeader("X-User-Id") Long userId
+    ) {
+        log.info("Listing my collected offers history by user {}", userId);
+
+        return ResponseEntity.ok(service.getMyCollectedOffersHistory(userId));
+    }
+
+
 
 }

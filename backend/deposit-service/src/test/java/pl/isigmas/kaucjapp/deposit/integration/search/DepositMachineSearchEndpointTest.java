@@ -66,7 +66,7 @@ public class DepositMachineSearchEndpointTest extends BaseIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(zabkaId))
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].networkName").value("Zabka"))
+                .andExpect(jsonPath("$[0].network_name").value("Zabka"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000));
 
@@ -79,7 +79,7 @@ public class DepositMachineSearchEndpointTest extends BaseIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(biedronkaId))
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].networkName").value("Biedronka"))
+                .andExpect(jsonPath("$[0].network_name").value("Biedronka"))
                 .andExpect(jsonPath("$[0].latitude").value(54.352000))
                 .andExpect(jsonPath("$[0].longitude").value(18.646000));
     }

@@ -31,17 +31,6 @@ public class UserController {
     private final RatingService ratingService;
 
 
-    @GetMapping("/admin/users")
-    @Operation(
-            summary = "List all users",
-            description = "Returns all users located in db"
-    )
-    public ResponseEntity<List<UserDTO>> getAllUsers(){
-        log.info("Getting all users");
-        return ResponseEntity.ok(userService.getAll());
-    }
-
-
 
     @GetMapping("/me/addresses")
     @Operation(
@@ -66,7 +55,8 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(
             summary = "Get user by id",
-            description = "Returns UserDTO: user_id, username, names, phone, email, and nested addresses.")
+            description = "Returns UserDTO: user_id, username, names, phone, bottle/can stats, and nested addresses. "
+                    + "Email is not included; use admin user listing for email.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")

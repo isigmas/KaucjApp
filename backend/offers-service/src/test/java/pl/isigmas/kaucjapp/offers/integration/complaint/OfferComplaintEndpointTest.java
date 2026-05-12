@@ -25,7 +25,7 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
 
         String payload = """
                 {
-                  "complaintReason": "OTHER",
+                  "complaint_reason": "OTHER",
                   "message": "Something went wrong"
                 }
                 """;
@@ -51,7 +51,7 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
 
         String payload = """
                 {
-                  "complaintReason": "OTHER",
+                  "complaint_reason": "OTHER",
                   "message": "Handover dispute"
                 }
                 """;
@@ -66,11 +66,11 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].offerId").value(offerId))
+                .andExpect(jsonPath("$[0].offer_id").value(offerId))
                 .andExpect(jsonPath("$[0].complainant").value("COLLECTOR"))
-                .andExpect(jsonPath("$[0].complaintReason").value("OTHER"))
+                .andExpect(jsonPath("$[0].complaint_reason").value("OTHER"))
                 .andExpect(jsonPath("$[0].message").value("Handover dispute"))
-                .andExpect(jsonPath("$[0].complaintId").isNumber());
+                .andExpect(jsonPath("$[0].complaint_id").isNumber());
     }
 
     @Test
@@ -130,7 +130,7 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERR"));
+                .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"));
     }
 
     private Long createOpenOffer(Long creatorId) throws Exception {
@@ -138,10 +138,10 @@ public class OfferComplaintEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);

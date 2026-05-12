@@ -26,10 +26,10 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                 "latitude": 52.2297,
                 "longitude": 21.0122,
-                  "pickupAddress": "ul. Odbiorcza 1",
-                  "pickupInstructions": "Test",
+                  "pickup_address": "ul. Odbiorcza 1",
+                  "pickup_instructions": "Test",
                   "items": [
-                    { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                    { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                   ]
                 }
                 """.formatted(plasticBottleId);
@@ -46,10 +46,10 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                 "latitude": 52.2497,
                 "longitude": 21.0122,
-                  "pickupAddress": "ul. Zmieniona 10",
-                  "pickupInstructions": "Odbior po 18:00",
+                  "pickup_address": "ul. Zmieniona 10",
+                  "pickup_instructions": "Odbior po 18:00",
                   "items": [
-                    { "bottleId": %d, "quantity": 2, "unitPrice": 0.20 }
+                    { "bottle_id": %d, "quantity": 2, "unit_price": 0.20 }
                   ]
                 }
                 """.formatted(plasticBottleId);
@@ -70,10 +70,10 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -94,10 +94,10 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Zmieniona 10",
-                    "pickupInstructions": "Odbior po 18:00",
+                    "pickup_address": "ul. Zmieniona 10",
+                    "pickup_instructions": "Odbior po 18:00",
                     "items": [
-                      { "bottleId": %d, "quantity": 2, "unitPrice": 0.20 }
+                      { "bottle_id": %d, "quantity": 2, "unit_price": 0.20 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -121,10 +121,10 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -159,18 +159,18 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 Arguments.of("""
                 {
                     "longitude": 22.0122,
-                    "pickupAddress": "ul. Odbiorcza 2",
-                    "pickupInstructions": "Test2",
-                    "items": [ { "bottleId": %d, "quantity": 2, "unitPrice": 0.10 } ]
+                    "pickup_address": "ul. Odbiorcza 2",
+                    "pickup_instructions": "Test2",
+                    "items": [ { "bottle_id": %d, "quantity": 2, "unit_price": 0.10 } ]
                 }
                 """, "missing latitude keeps previous latitude", 200, 52.2297, 22.0122, "ul. Odbiorcza 2"),
 
                 Arguments.of("""
                 {
                     "latitude": 51.2297,
-                    "pickupAddress": "ul. Odbiorcza 2",
-                    "pickupInstructions": "Test2",
-                    "items": [ { "bottleId": %d, "quantity": 2, "unitPrice": 0.10 } ]
+                    "pickup_address": "ul. Odbiorcza 2",
+                    "pickup_instructions": "Test2",
+                    "items": [ { "bottle_id": %d, "quantity": 2, "unit_price": 0.10 } ]
                 }
                 """, "missing longitude keeps previous longitude", 200, 51.2297, 21.0122, "ul. Odbiorcza 2"),
 
@@ -178,8 +178,8 @@ public class OfferPatchEndpointTest extends BaseIntegrationTest {
                 {
                     "longitude": 22.0122,
                     "latitude": 51.2297,
-                    "pickupInstructions": "Test2",
-                    "items": [ { "bottleId": %d, "quantity": 2, "unitPrice": 0.10 } ]
+                    "pickup_instructions": "Test2",
+                    "items": [ { "bottle_id": %d, "quantity": 2, "unit_price": 0.10 } ]
                 }
                 """, "missing pickupAddress keeps previous address", 200, 51.2297, 22.0122, "ul. Odbiorcza 1")
         );

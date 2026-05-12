@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class UserAdminDTO {
 
     @JsonProperty("user_id")
     private Long id;
@@ -36,6 +36,10 @@ public class UserDTO {
     @Pattern(regexp = "^[0-9]{9,15}$", message = "Phone number must consist of 9-15 digits")
     @JsonProperty("phone")
     private String phone;
+
+    @NotBlank(message = "email cannot be blank")
+    @Email
+    private String email;
 
     @JsonProperty("created_at")
     private Instant createdAt;

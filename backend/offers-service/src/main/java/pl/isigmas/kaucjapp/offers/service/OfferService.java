@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.offers.exception.OfferNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferStateException;
 import pl.isigmas.kaucjapp.offers.exception.OfferValidationException;
 import pl.isigmas.kaucjapp.offers.model.*;
+import pl.isigmas.kaucjapp.offers.publisher.OfferKafkaPublisher;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
 import java.math.BigDecimal;
@@ -36,6 +37,7 @@ public class OfferService {
     private final BottleTypeRepository bottleTypeRepository;
     private final ComplaintRepository complaintRepository;
     private final GeoValidationService geoValidationService;
+    private final OfferKafkaPublisher offerKafkaPublisher;
 
     @Transactional
     public Long create(Long creatorId, OfferDTO dto) {
@@ -134,7 +136,13 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getAllByCreatorId(Long userId) {
-        return offerRepository.findByCreatorId(userId).stream()
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.OPEN,
+                OfferStatus.RESERVED,
+                OfferStatus.PENDING_CONFIRMATION,
+                OfferStatus.COMPLAINT
+        );
+        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -157,6 +165,28 @@ public class OfferService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<OfferResponseDTO> getMyOffersHistory(Long userId) {
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.COMPLETED,
+                OfferStatus.CANCELED
+        );
+        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OfferResponseDTO> getMyCollectedOffersHistory(Long userId) {
+        List<OfferStatus> statuses = List.of(
+                OfferStatus.COMPLETED
+        );
+        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 
     private OfferResponseDTO mapToResponseDTO(Offer offer) {
         int plasticQty = 0;
@@ -304,19 +334,58 @@ public class OfferService {
             throw new OfferForbiddenException("You are not part of this offer");
         }
 
-        if (offer.getCreatorConfirmed() && offer.getCollectorConfirmed()) {
-            offer.setStatus(OfferStatus.COMPLETED);
-            offer.setConfirmationDeadline(null);
-            offer.setTimeCompleted(Instant.now());
-        } else {
-            if (offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
-                offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
-                offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
-            }
+        if (Boolean.TRUE.equals(offer.getCreatorConfirmed()) && Boolean.TRUE.equals(offer.getCollectorConfirmed())) {
+            completeOfferAndPublish(offer, Instant.now());
+        } else if (offer.getStatus() == OfferStatus.RESERVED) {
+            offer.setStatus(OfferStatus.PENDING_CONFIRMATION);
+            offer.setConfirmationDeadline(Instant.now().plus(Duration.ofHours(24)));
         }
+
         offerRepository.save(offer);
     }
 
+    /**
+     * Completes offers whose confirmation window expired without mutual confirm (same stats semantics as a completed deal).
+     * Loads items so Kafka payloads match {@link #confirmOffer}.
+     */
+    @Transactional
+    public int completeExpiredPendingOffers(Instant now) {
+        List<Offer> expired = offerRepository.findAllPendingOffersPastDeadline(OfferStatus.PENDING_CONFIRMATION, now);
+        for (Offer offer : expired) {
+            offer.setCreatorConfirmed(true);
+            offer.setCollectorConfirmed(true);
+            completeOfferAndPublish(offer, now);
+            offerRepository.save(offer);
+        }
+        return expired.size();
+    }
+
+    private void completeOfferAndPublish(Offer offer, Instant completedAt) {
+        offer.setStatus(OfferStatus.COMPLETED);
+        offer.setConfirmationDeadline(null);
+        offer.setTimeCompleted(completedAt);
+        offerKafkaPublisher.sendOfferCompleted(buildOfferCompletedEvent(offer));
+    }
+
+    private OfferCompletedEventDTO buildOfferCompletedEvent(Offer offer) {
+        int plasticQty = 0;
+        int canQty = 0;
+        for (OfferItem item : offer.getItems()) {
+            String typeName = item.getBottleType().getName();
+            if (PLASTIC_TYPE.equalsIgnoreCase(typeName)) {
+                plasticQty += item.getQuantity();
+            } else if (CAN_TYPE.equalsIgnoreCase(typeName)) {
+                canQty += item.getQuantity();
+            }
+        }
+        return OfferCompletedEventDTO.builder()
+                .offerId(offer.getId())
+                .creatorId(offer.getCreatorId())
+                .collectorId(offer.getCollectorId())
+                .plasticQuantity(plasticQty)
+                .canQuantity(canQty)
+                .build();
+    }
     @Transactional
     public void remove(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)

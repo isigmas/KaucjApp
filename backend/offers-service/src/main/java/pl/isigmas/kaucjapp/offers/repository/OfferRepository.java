@@ -18,6 +18,8 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
 
     List<Offer> findByCollectorIdAndStatusIn(Long collectorId, List<OfferStatus> statuses);
 
+    List<Offer> findByCreatorIdAndStatusIn(Long creatorId, List<OfferStatus> statuses);
+
     @Query(value = "SELECT * FROM offers " +
             "WHERE status = 'OPEN' " +
             "AND point(longitude, latitude) <@ box(point(:swLon, :swLat), point(:neLon, :neLat))",
@@ -38,12 +40,10 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
             @Param("now") Instant now
     );
 
-    @Modifying
-    @Query("UPDATE Offer o SET o.status = :completedStatus, o.timeCompleted = :now, o.confirmationDeadline = null " +
+    @Query("SELECT DISTINCT o FROM Offer o JOIN FETCH o.items i JOIN FETCH i.bottleType " +
             "WHERE o.status = :pendingStatus AND o.confirmationDeadline IS NOT NULL AND o.confirmationDeadline < :now")
-    int completePendingOffers(
+    List<Offer> findAllPendingOffersPastDeadline(
             @Param("pendingStatus") OfferStatus pendingStatus,
-            @Param("completedStatus") OfferStatus completedStatus,
             @Param("now") Instant now
     );
 }
