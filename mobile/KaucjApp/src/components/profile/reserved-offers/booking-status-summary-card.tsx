@@ -19,6 +19,7 @@ import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { useRouter } from "expo-router";
 import { ReservedState } from "../my-offers/offer-status-summary-card";
 import { ActionButton } from "../my-offers/offer-actions";
+import ComplaintCard from "../my-offers/complaint-card";
 
 interface BookingStatusSummaryCardProps {
   offer: Offer;
@@ -76,7 +77,6 @@ export default function BookingStatusSummaryCard({
           expiresAt={offer.reserved_to}
           onConfirm={handleComplete}
           isPending={isPending}
-          onComplaint={handleComplaint}
         />
       ) : null}
       {isPendingConfirmation && isConfirmedByCreator && (
@@ -88,14 +88,12 @@ export default function BookingStatusSummaryCard({
             label="Potwierdź odbiór opakowań"
             icon={<CheckCircle size={18} color={colors.text.white} />}
           />
-          <Pressable onPress={handleComplaint}>
-            <Text style={styles.hintError}>Zgłoś problem</Text>
-          </Pressable>
         </>
       )}
       {isComplaint && (
         <>
-          <ActionButton
+          <ComplaintCard offerId={offer.offer_id} />
+          {/* <ActionButton
             backgroundColor={colors.status.error}
             onPress={handleComplaint}
             disabled={isPending}
@@ -105,9 +103,12 @@ export default function BookingStatusSummaryCard({
           />
           <Text style={styles.hint}>
             Potwierdzenie rozwiązania problemu zakończy ofertę.
-          </Text>
+          </Text> */}
         </>
       )}
+      <Pressable onPress={handleComplaint}>
+        <Text style={styles.hintError}>Zgłoś problem</Text>
+      </Pressable>
     </SectionCard>
   );
 }
