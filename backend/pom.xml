@@ -29,6 +29,7 @@
         <module>deposit-service</module>
         <module>notification-service</module>
         <module>common</module>
+		<module>monitor</module>
     </modules>
 	<scm>
 		<connection/>
