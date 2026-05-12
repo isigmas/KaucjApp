@@ -15,11 +15,8 @@ import {
 } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import OfferSatusPill from "@/src/components/ui/offer-status-pill";
 import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { useRouter } from "expo-router";
-import ContactCard from "../../ui/contact-card";
-import { OfferDetailsAccordion } from "../my-offers/offer-detail-screen";
 import { ReservedState } from "../my-offers/offer-status-summary-card";
 import { ActionButton } from "../my-offers/offer-actions";
 
@@ -39,27 +36,28 @@ export default function BookingStatusSummaryCard({
   const isComplaint = offer.status === "COMPLAINT";
 
   const handleComplete = () => {
-    Alert.alert(
-      "Potwierdź odbiór",
-      "Czy odebrałeś opakowania od sprzedającego? Potwierdzenie odbioru zakończy rezerwację.",
-      [
-        { text: "Anuluj", style: "cancel" },
-        {
-          text: "Potwierdź",
-          style: "default",
-          onPress: () => {
-            confirmOffer(undefined, {
-              onSuccess: () => {
-                router.back();
-              },
-              onError: () => {
-                Alert.alert("Błąd", "Nie udało się potwierdzić odbioru");
-              },
-            });
-          },
+    const alertDescription = offer.creator_confirmed
+      ? "Wystawiający potwierdził odbiór opakowań. Również potwierdź odbiór opakowań aby zakończyć rezerwację."
+      : "Potwierdź odbiór opakowań.";
+    Alert.alert("Potwierdź odbiór", alertDescription, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Potwierdź",
+        style: "default",
+        onPress: () => {
+          confirmOffer(undefined, {
+            onSuccess: () => {
+              if (isPendingConfirmation) {
+                router.push({
+                  pathname: "/profile/bookings/confirmation",
+                  params: { type: "success" },
+                });
+              }
+            },
+          });
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const handleComplaint = () => {
