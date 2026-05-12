@@ -27,6 +27,18 @@ CREATE TABLE user_addresses (
                                 updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE user_stats (
+                            user_id                 BIGINT PRIMARY KEY,
+                            returned_plastic_count  INTEGER NOT NULL DEFAULT 0,
+                            returned_can_count      INTEGER NOT NULL DEFAULT 0,
+                            collected_plastic_count INTEGER NOT NULL DEFAULT 0,
+                            collected_can_count     INTEGER NOT NULL DEFAULT 0,
+
+                            CONSTRAINT fk_user_stats_account FOREIGN KEY (user_id)
+                                REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_user_stats_returned ON user_stats(returned_plastic_count DESC);
 CREATE INDEX idx_user_addresses_user_id ON user_addresses(user_id);
 CREATE UNIQUE INDEX idx_only_one_default_address
     ON user_addresses(user_id)

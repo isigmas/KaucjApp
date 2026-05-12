@@ -18,9 +18,9 @@ public class OfferGeoValidationEndpointTest extends BaseIntegrationTest {
                     {
                         "latitude": 55.2297,
                         "longitude": 24.0122,
-                        "pickupAddress": "ul. Daleko 1",
+                        "pickup_address": "ul. Daleko 1",
                         "items": [
-                            { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                            { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                             ]
                     }
                     """;
@@ -29,7 +29,7 @@ public class OfferGeoValidationEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson.formatted(plasticBottleId)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("OFFER_003"));
+                .andExpect(jsonPath("$.error_code").value("OFFER_003"));
     }
 
     @Test
@@ -40,10 +40,10 @@ public class OfferGeoValidationEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -68,6 +68,6 @@ public class OfferGeoValidationEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(moveOutsidePoland))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("OFFER_003"));
+                .andExpect(jsonPath("$.error_code").value("OFFER_003"));
     }
 }

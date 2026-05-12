@@ -44,8 +44,10 @@ public abstract class BaseIntegrationTest {
         CreateUserDTO user = CreateUserDTO.builder()
                 .id(node.get("user_id").asLong())
                 .username(node.get("username").asText())
-                .firstName(node.has("firstName") ? node.get("firstName").asText() : null)
-                .lastName(node.has("lastName") ? node.get("lastName").asText() : null)
+                .firstName(node.has("first_name") ? node.get("first_name").asText()
+                        : node.has("firstName") ? node.get("firstName").asText() : null)
+                .lastName(node.has("last_name") ? node.get("last_name").asText()
+                        : node.has("lastName") ? node.get("lastName").asText() : null)
                 .phone(node.has("phone") ? node.get("phone").asText() : null)
                 .email(node.get("email").asText())
                 .build();
