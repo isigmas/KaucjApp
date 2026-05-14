@@ -14,16 +14,6 @@ export const apiClient = axios.create({
 // Injecting the Access Token
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-  console.log(
-    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
-  );
-
-  if (config.data) {
-    console.log(
-      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
-    );
-  }
-
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
     // console.debug(`[Auth] Current Access Token: ${token}`);
@@ -34,9 +24,17 @@ apiClient.interceptors.request.use((config) => {
   if (config.data && typeof config.data === "object") {
     config.data = decamelizeKeys(config.data);
   }
-  if (config.params && typeof config.params === "object") {
-    config.params = decamelizeKeys(config.params);
+
+  //logging
+  console.log(
+    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
+  );
+  if (config.data) {
+    console.log(
+      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
+    );
   }
+
   return config;
 });
 
