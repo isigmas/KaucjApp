@@ -75,9 +75,9 @@ export function parseAuthError(error: unknown): AuthError {
       }); // (b)
     }
 
-    const body = error.response.data as ApiErrorResponse | undefined;
+    const body = error.response.data;
     const httpStatus = error.response.status;
-    const errorCode = body?.errorCode;
+    const errorCode = body?.error_code;
 
     if (errorCode === AUTH_ERROR_CODES.VALIDATION_ERROR) {
       return new AuthError({
