@@ -18,20 +18,20 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
     <View style={styles.container}>
       <DetailHeader
         title="Szczegóły oferty"
-        subtitle={formatDate(offer.created_at)}
+        subtitle={formatDate(offer.createdAt)}
         rightSlot={<StatusBadge status={offer.status} />}
       />
 
       <OfferItemsCard offer={offer} />
 
       <PickupCard
-        address={offer.pickup_address}
-        instructions={offer.pickup_instructions}
+        address={offer.pickupAddress}
+        instructions={offer.pickupInstructions}
       />
 
       <OfferSummaryCard offer={offer} />
 
-      <ReserveOffer offerId={offer.offer_id} totalIncome={offer.total_income} />
+      <ReserveOffer offerId={offer.offerId} totalIncome={offer.totalIncome} />
     </View>
   );
 }

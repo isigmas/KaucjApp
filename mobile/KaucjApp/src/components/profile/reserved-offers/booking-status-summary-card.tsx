@@ -29,17 +29,17 @@ export default function BookingStatusSummaryCard({
   offer,
 }: BookingStatusSummaryCardProps) {
   const router = useRouter();
-  const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
+  const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offerId);
 
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
-  const isConfirmedByCreator = offer.creator_confirmed;
-  const isConfirmedByCollector = offer.collector_confirmed;
+  const isConfirmedByCreator = offer.creatorConfirmed;
+  const isConfirmedByCollector = offer.collectorConfirmed;
   const isComplaint = offer.status === "COMPLAINT";
   const isCompleted = offer.status === "COMPLETED";
 
   const handleComplete = () => {
-    const alertDescription = offer.creator_confirmed
+    const alertDescription = offer.creatorConfirmed
       ? "Wystawiający potwierdził odbiór opakowań. Również potwierdź odbiór opakowań aby zakończyć rezerwację."
       : "Potwierdź odbiór opakowań.";
     Alert.alert("Potwierdź odbiór", alertDescription, [
@@ -66,7 +66,7 @@ export default function BookingStatusSummaryCard({
   const handleComplaint = () => {
     router.push({
       pathname: "/profile/bookings/complaint",
-      params: { id: offer.offer_id },
+      params: { id: offer.offerId },
     });
   };
 
@@ -74,9 +74,9 @@ export default function BookingStatusSummaryCard({
     <SectionCard style={styles.card}>
       <StatusHeader offer={offer} />
       <View style={styles.hairline} />
-      {isReserved && offer.reserved_to ? (
+      {isReserved && offer.reservedTo ? (
         <ReservedState
-          expiresAt={offer.reserved_to}
+          expiresAt={offer.reservedTo}
           onConfirm={handleComplete}
           isPending={isPending}
         />
@@ -92,7 +92,7 @@ export default function BookingStatusSummaryCard({
           />
         </>
       )}
-      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
+      {isComplaint && <ComplaintCard offerId={offer.offerId} />}
       {!isConfirmedByCollector && !isCompleted && (
         <Pressable onPress={handleComplaint}>
           <Text style={styles.hintError}>Zgłoś problem</Text>
@@ -116,9 +116,9 @@ function StatusHeader({ offer }: { offer: Offer }) {
 }
 
 function getStatusContent(offer: Offer) {
-  const qty = getPolishPackageQuantity(offer.total_quantity, true);
-  const price = formatPrice(offer.total_prize);
-  const isConfirmedByCreator = offer.creator_confirmed;
+  const qty = getPolishPackageQuantity(offer.totalQuantity, true);
+  const price = formatPrice(offer.totalPrize);
+  const isConfirmedByCreator = offer.creatorConfirmed;
 
   switch (offer.status) {
     case "OPEN":

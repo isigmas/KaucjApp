@@ -20,7 +20,7 @@ export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
   const handlePress = () => {
     router.push({
       pathname: "/profile/bookings/[id]",
-      params: { id: offer.offer_id },
+      params: { id: offer.offerId },
     });
   };
 
@@ -39,8 +39,8 @@ export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
 
       <View style={styles.body}>
         <View style={styles.timerRow}>
-          {offer.reserved_to && isReserved ? (
-            <Countdown expiresAt={offer.reserved_to} interval="minutes" />
+          {offer.reservedTo && isReserved ? (
+            <Countdown expiresAt={offer.reservedTo} interval="minutes" />
           ) : (
             <OfferSatusPill status={offer.status} />
           )}
@@ -51,13 +51,13 @@ export default function ReservedOfferCard({ offer }: ReservedOfferCardProps) {
           <Stat
             icon={<Package size={16} color={colors.text.secondary} />}
             label="Opakowania"
-            value={`${offer.total_quantity} szt.`}
+            value={`${offer.totalQuantity} szt.`}
           />
           <View style={styles.statDivider} />
           <Stat
             icon={<Wallet size={16} color={colors.primary.dark} />}
             label="Zarobisz"
-            value={`+${offer.total_income.toFixed(2)} zł`}
+            value={`+${offer.totalIncome.toFixed(2)} zł`}
             highlight
           />
         </View>

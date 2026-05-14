@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
+import { camelizeKeys, decamelizeKeys } from "humps";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -13,22 +14,27 @@ export const apiClient = axios.create({
 // Injecting the Access Token
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-  console.log(
-    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
-  );
-
-  if (config.data) {
-    console.log(
-      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
-    );
-  }
-
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
     // console.debug(`[Auth] Current Access Token: ${token}`);
   } else {
     console.debug(`[Auth] No Access Token found in memory for this request.`);
   }
+
+  if (config.data && typeof config.data === "object") {
+    config.data = decamelizeKeys(config.data);
+  }
+
+  //logging
+  console.log(
+    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
+  );
+  if (config.data) {
+    console.log(
+      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
+    );
+  }
+
   return config;
 });
 
@@ -52,6 +58,9 @@ apiClient.interceptors.response.use(
     console.log(
       `[API] ◄ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
     );
+    if (response.data && typeof response.data === "object") {
+      response.data = camelizeKeys(response.data);
+    }
     return response;
   },
   async (error: AxiosError) => {

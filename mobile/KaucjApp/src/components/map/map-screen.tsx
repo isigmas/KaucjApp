@@ -67,7 +67,7 @@ export default function MapScreen({
     refetch: refetchMachines,
   } = useSearchMachines(searchBBox!, isSearchEnabled);
 
-  const offers = useAccumulatedMapData(latestOffers, (o) => o.offer_id);
+  const offers = useAccumulatedMapData(latestOffers, (o) => o.offerId);
   const depositMachines = useAccumulatedMapData(latestMachines, (m) => m.id);
 
   const isFetching =
@@ -149,7 +149,7 @@ export default function MapScreen({
       >
         {offers.map((offer) => (
           <OfferMarker
-            key={`offer-${offer.offer_id}`}
+            key={`offer-${offer.offerId}`}
             offer={offer}
             onPress={onOfferPress}
           />

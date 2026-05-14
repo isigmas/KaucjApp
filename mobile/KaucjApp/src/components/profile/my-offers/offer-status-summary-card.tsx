@@ -29,21 +29,21 @@ interface OfferHeadlineProps {
 
 export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const router = useRouter();
-  const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offer_id);
+  const { mutate: confirmOffer, isPending } = useConfirmOffer(offer.offerId);
 
   const isReserved = offer.status === "RESERVED";
   const isPendingConfirmation = offer.status === "PENDING_CONFIRMATION";
-  const isConfirmedByCreator = offer.creator_confirmed;
+  const isConfirmedByCreator = offer.creatorConfirmed;
   const isComplaint = offer.status === "COMPLAINT";
   const isCompleted = offer.status === "COMPLETED";
 
   const showStatusPill =
     !isReserved && !isPendingConfirmation && !isComplaint && !isCompleted;
   const showCourierDetails =
-    (isReserved && offer.reserved_to) ||
+    (isReserved && offer.reservedTo) ||
     isPendingConfirmation ||
     isComplaint ||
-    offer.collector_id;
+    offer.collectorId;
   const courierHeaderText = isCompleted
     ? "Kto odebrał opakowania?"
     : "Kto odbiera opakowania?";
@@ -76,7 +76,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   const handleComplaint = () => {
     router.push({
       pathname: "/profile/offers/complaint",
-      params: { id: offer.offer_id },
+      params: { id: offer.offerId },
     });
   };
 
@@ -85,21 +85,21 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
       {showStatusPill && <OfferSatusPill status={offer.status} />}
 
       <StatusHeader offer={offer} />
-      {isComplaint && <ComplaintCard offerId={offer.offer_id} />}
+      {isComplaint && <ComplaintCard offerId={offer.offerId} />}
 
       {showCourierDetails ? (
         <>
           <View style={styles.hairline} />
           <ContactCard
             asCard={false}
-            userId={offer.collector_id}
+            userId={offer.collectorId}
             header={courierHeaderText}
           />
           <View style={styles.hairline} />
 
-          {isReserved && offer.reserved_to && (
+          {isReserved && offer.reservedTo && (
             <ReservedState
-              expiresAt={offer.reserved_to}
+              expiresAt={offer.reservedTo}
               onConfirm={handleComplete}
               isPending={isPending}
             />
@@ -167,9 +167,9 @@ function StatusHeader({ offer }: OfferHeadlineProps) {
 }
 
 function getStatusContent(offer: Offer) {
-  const qty = getPolishPackageQuantity(offer.total_quantity, true);
-  const price = formatPrice(offer.total_prize);
-  const isConfirmedByCreator = offer.creator_confirmed;
+  const qty = getPolishPackageQuantity(offer.totalQuantity, true);
+  const price = formatPrice(offer.totalPrize);
+  const isConfirmedByCreator = offer.creatorConfirmed;
 
   switch (offer.status) {
     case "OPEN":
@@ -237,7 +237,7 @@ interface DateRowProps {
 }
 
 function DateRow({ offer }: DateRowProps) {
-  const showReservedAt = !!offer.reserved_at && offer.status !== "OPEN";
+  const showReservedAt = !!offer.reservedAt && offer.status !== "OPEN";
   const reservedAccent =
     offer.status === "RESERVED" ? colors.status.warning : colors.text.muted;
 
@@ -246,13 +246,13 @@ function DateRow({ offer }: DateRowProps) {
       <DateChip
         icon={<Clock3 size={12} color={colors.text.muted} />}
         label="Utworzono"
-        value={formatDate(offer.created_at)}
+        value={formatDate(offer.createdAt)}
       />
       {showReservedAt ? (
         <DateChip
           icon={<Calendar size={12} color={reservedAccent} />}
           label="Zarezerwowano"
-          value={formatDate(offer.reserved_at!)}
+          value={formatDate(offer.reservedAt!)}
         />
       ) : null}
     </View>

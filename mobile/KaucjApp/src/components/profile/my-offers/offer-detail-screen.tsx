@@ -37,7 +37,7 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
     );
   }
 
-  const offer = offers?.find((o) => o.offer_id === offerId);
+  const offer = offers?.find((o) => o.offerId === offerId);
 
   if (!offer) {
     return (
@@ -66,7 +66,7 @@ export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
     <>
       <ExpandableCard
         title="Zawartość"
-        subtitle={`${offer.total_quantity} szt. · butelki i puszki`}
+        subtitle={`${offer.totalQuantity} szt. · butelki i puszki`}
         icon={<Package size={18} color={colors.primary.dark} />}
       >
         <OfferItemsCard offer={offer} bare />
@@ -74,7 +74,7 @@ export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
 
       <ExpandableCard
         title="Finanse"
-        subtitle={`Należność ${offer.total_prize.toFixed(2).replace(".", ",")} zł`}
+        subtitle={`Należność ${offer.totalPrize.toFixed(2).replace(".", ",")} zł`}
         icon={<Receipt size={18} color={colors.primary.dark} />}
       >
         <OfferSummaryCard offer={offer} bare />
@@ -82,13 +82,13 @@ export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
 
       <ExpandableCard
         title="Lokalizacja"
-        subtitle={offer.pickup_address}
+        subtitle={offer.pickupAddress}
         icon={<MapPin size={18} color={colors.accent.dark} />}
       >
         <View style={styles.pickupBody}>
           <PickupCard
-            address={offer.pickup_address}
-            instructions={offer.pickup_instructions}
+            address={offer.pickupAddress}
+            instructions={offer.pickupInstructions}
             bare
           />
           <MiniMap

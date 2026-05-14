@@ -55,7 +55,7 @@ export default function MyOffersScreen() {
       }
     >
       {offers.map((offer) => (
-        <MyOfferCard key={offer.offer_id.toString()} offer={offer} />
+        <MyOfferCard key={offer.offerId.toString()} offer={offer} />
       ))}
     </ScrollView>
   );
