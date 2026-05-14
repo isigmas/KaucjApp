@@ -7,28 +7,28 @@ export type OfferStatus =
   | "COMPLAINT";
 
 export interface Offer {
-  offer_id: number;
-  creator_id: number;
-  collector_id: number | null;
+  offerId: number;
+  creatorId: number;
+  collectorId: number | null;
   status: OfferStatus;
-  collector_confirmed: boolean;
-  creator_confirmed: boolean;
-  confirmation_deadline: string | null;
+  collectorConfirmed: boolean;
+  creatorConfirmed: boolean;
+  confirmationDeadline: string | null;
   latitude: number;
   longitude: number;
-  pickup_address: string;
-  pickup_instructions: string | null;
-  created_at: string;
-  reserved_at: string | null;
-  reserved_to: string | null;
-  plastic_quantity: number;
-  can_quantity: number;
-  total_quantity: number;
-  total_prize: number; //co kurier zapłaci za całość oferty
-  total_income: number; //co kurier zarobi na ofercie
-  plastic_price: number | null;
-  can_price: number | null;
-  updated_at: string;
+  pickupAddress: string;
+  pickupInstructions: string | null;
+  createdAt: string;
+  reservedAt: string | null;
+  reservedTo: string | null;
+  plasticQuantity: number;
+  canQuantity: number;
+  totalQuantity: number;
+  totalPrize: number; //co kurier zapłaci za całość oferty
+  totalIncome: number; //co kurier zarobi na ofercie
+  plasticPrice: number | null;
+  canPrice: number | null;
+  updatedAt: string;
 }
 
 export interface OfferItemPayload {
