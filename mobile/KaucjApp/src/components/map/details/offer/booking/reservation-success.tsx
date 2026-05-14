@@ -73,7 +73,7 @@ export default function ReservationSuccess({
             }}
           >
             <AnimatedRollingNumber
-              value={offer.total_income}
+              value={offer.totalIncome}
               toFixed={2}
               useGrouping={true}
               textStyle={styles.totalAmount}

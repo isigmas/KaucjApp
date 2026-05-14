@@ -17,15 +17,15 @@ export default function MyOfferCard({ offer }: MyOfferCardProps) {
   const handlePress = () => {
     router.push({
       pathname: "/profile/offers/[id]",
-      params: { id: offer.offer_id },
+      params: { id: offer.offerId },
     });
   };
 
   const pillLabel = () => {
     if (offer.status === "OPEN") {
-      return `${label} ${formatDate(offer.created_at)}`;
-    } else if (offer.status === "RESERVED" && offer.reserved_at) {
-      return `${label} ${formatDate(offer.reserved_at)}`;
+      return `${label} ${formatDate(offer.createdAt)}`;
+    } else if (offer.status === "RESERVED" && offer.reservedAt) {
+      return `${label} ${formatDate(offer.reservedAt)}`;
     }
     return label;
   };
@@ -50,7 +50,7 @@ export default function MyOfferCard({ offer }: MyOfferCardProps) {
         <View style={styles.addressRow}>
           <MapPin size={14} color={colors.text.secondary} />
           <Text style={styles.addressText} numberOfLines={1}>
-            {offer.pickup_address}
+            {offer.pickupAddress}
           </Text>
         </View>
 
@@ -58,13 +58,13 @@ export default function MyOfferCard({ offer }: MyOfferCardProps) {
           <StatItem
             icon={<Package size={16} color={colors.text.secondary} />}
             label="Opakowania"
-            value={`${offer.total_quantity} szt.`}
+            value={`${offer.totalQuantity} szt.`}
           />
           <View style={styles.statDivider} />
           <StatItem
             icon={<Wallet size={16} color={colors.primary.dark} />}
             label="Należność"
-            value={`${offer.total_prize.toFixed(2)} zł`}
+            value={`${offer.totalPrize.toFixed(2)} zł`}
             highlight
           />
         </View>

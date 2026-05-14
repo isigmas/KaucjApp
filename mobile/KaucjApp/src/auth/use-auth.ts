@@ -38,7 +38,7 @@ export const useAuth = () => {
           headers: { Authorization: `Bearer ${newAccessToken}` },
         });
         const user: User = {
-          user_id: userData.user_id,
+          userId: userData.userId,
           username: userData.username,
           firstName: userData.firstName,
           lastName: userData.lastName,

@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           })
           .then(({ data: userData }) => {
             const freshUser: User = {
-              user_id: userData.user_id,
+              userId: userData.userId,
               username: userData.username,
               firstName: userData.firstName,
               lastName: userData.lastName,

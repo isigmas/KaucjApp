@@ -32,7 +32,7 @@ export default function OfferActions({ offer }: OfferActionsProps) {
           style: "destructive",
           onPress: () => {
             changeOfferStatus(
-              { offerId: offer.offer_id, newStatus: "CANCELED" },
+              { offerId: offer.offerId, newStatus: "CANCELED" },
               {
                 onSuccess: () => {
                   router.push({

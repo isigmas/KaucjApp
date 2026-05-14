@@ -17,7 +17,6 @@ import ContactCard from "../../ui/contact-card";
 
 import ExpandableCard from "../../ui/expandable-card";
 import { Package, Receipt } from "lucide-react-native";
-import { router } from "expo-router";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -49,7 +48,7 @@ export default function BookingDetailsScreen({
   }
 
   //TODO: This screen should fetch /reserved/${offerId} to get the offer details
-  const offer = offers?.find((o) => o.offer_id === offerId);
+  const offer = offers?.find((o) => o.offerId === offerId);
 
   if (!offer) {
     return (
@@ -69,11 +68,11 @@ export default function BookingDetailsScreen({
     >
       <BookingStatusSummaryCard offer={offer} />
 
-      <ContactCard userId={offer.creator_id} header="Wystawiający" />
+      <ContactCard userId={offer.creatorId} header="Wystawiający" />
 
       <PickupCard
-        address={offer.pickup_address}
-        instructions={offer.pickup_instructions}
+        address={offer.pickupAddress}
+        instructions={offer.pickupInstructions}
         showMap
         latitude={offer.latitude}
         longitude={offer.longitude}
@@ -81,7 +80,7 @@ export default function BookingDetailsScreen({
 
       <ExpandableCard
         title="Zawartość"
-        subtitle={`${offer.total_quantity} szt. · butelki i puszki`}
+        subtitle={`${offer.totalQuantity} szt. · butelki i puszki`}
         icon={<Package size={18} color={colors.primary.dark} />}
         defaultExpanded={true}
       >
@@ -90,14 +89,14 @@ export default function BookingDetailsScreen({
 
       <ExpandableCard
         title="Finanse"
-        subtitle={`Należność ${offer.total_prize.toFixed(2).replace(".", ",")} zł`}
+        subtitle={`Należność ${offer.totalPrize.toFixed(2).replace(".", ",")} zł`}
         icon={<Receipt size={18} color={colors.primary.dark} />}
         defaultExpanded
       >
         <OfferSummaryCard offer={offer} bare />
       </ExpandableCard>
 
-      <BookingActions offerId={offer.offer_id} offerStatus={offer.status} />
+      <BookingActions offerId={offer.offerId} offerStatus={offer.status} />
     </ScrollView>
   );
 }
