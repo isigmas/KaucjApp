@@ -1,5 +1,5 @@
 import { useUserById } from "@/src/api/hooks/use-user";
-import SectionCard from "@/src/components/map/details/section-card";
+import SectionCard from "@/src/components/ui/section-card";
 import { colors, rounded, spacing } from "@/src/theme";
 import { MessageCircle, Phone, Star } from "lucide-react-native";
 import React from "react";

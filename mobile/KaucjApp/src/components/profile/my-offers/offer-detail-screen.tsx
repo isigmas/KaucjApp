@@ -10,11 +10,12 @@ import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
 import OfferActions from "./offer-actions";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
 import ComplaintCard from "./complaint-card";
+import { router } from "expo-router";
 
 interface OfferDetailScreenProps {
   offerId: number;
@@ -54,16 +55,17 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
     >
       <OfferStatusSummaryCard offer={offer} />
 
-      <OfferDetailsAccordion offer={offer} />
+      <Pressable
+        onPress={() => {
+          router.push({
+            pathname: "/profile/offers/confirmation",
+            params: { type: "success" },
+          });
+        }}
+      >
+        <Text>Podgląd sukcesu</Text>
+      </Pressable>
 
-      <OfferActions offer={offer} />
-    </ScrollView>
-  );
-}
-
-export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
-  return (
-    <>
       <ExpandableCard
         title="Zawartość"
         subtitle={`${offer.totalQuantity} szt. · butelki i puszki`}
@@ -99,7 +101,7 @@ export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
           />
         </View>
       </ExpandableCard>
-    </>
+    </ScrollView>
   );
 }
 

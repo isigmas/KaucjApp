@@ -43,7 +43,7 @@ export default function ActionConfirmationLayout({
 
           {description && <Text style={styles.description}>{description}</Text>}
 
-          {/* Slot for custom cards (e.g., Earnings, Cancelation fees, etc.) */}
+          {/* Slot for custom cards */}
           {children && <View style={styles.childrenWrapper}>{children}</View>}
 
           {warningText && (

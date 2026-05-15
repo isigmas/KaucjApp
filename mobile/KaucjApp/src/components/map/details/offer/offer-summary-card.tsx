@@ -2,7 +2,7 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 
 interface OfferSummaryCardProps {
   offer: Offer;

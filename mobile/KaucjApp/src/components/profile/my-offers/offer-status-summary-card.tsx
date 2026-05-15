@@ -1,4 +1,4 @@
-import SectionCard from "@/src/components/map/details/section-card";
+import SectionCard from "@/src/components/ui/section-card";
 import Countdown from "@/src/components/profile/reserved-offers/countdown";
 import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";

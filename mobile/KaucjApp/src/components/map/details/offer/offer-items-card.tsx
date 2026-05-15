@@ -3,7 +3,7 @@ import { Offer } from "@/src/types";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import CardTitle from "../card-title";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 
 interface OfferItemsCardProps {
   offer: Offer;

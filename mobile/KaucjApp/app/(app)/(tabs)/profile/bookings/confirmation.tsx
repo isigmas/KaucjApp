@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-screen";
+import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-layout";
 
 export default function ConfirmationScreen() {
   const router = useRouter();

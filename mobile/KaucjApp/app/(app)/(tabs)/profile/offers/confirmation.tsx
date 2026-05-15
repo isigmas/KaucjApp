@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-screen";
+import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-layout";
+import ReviewSection from "@/src/components/ui/review-section";
 
 export default function ConfirmationScreen() {
   const router = useRouter();
@@ -34,6 +35,11 @@ export default function ConfirmationScreen() {
       description={activeContent.description}
       buttonText={activeContent.buttonText}
       onButtonPress={activeContent.action}
-    />
+    >
+      <ReviewSection
+        userToReview={{ firstName: "Jan", lastName: "Kowalski" }}
+        roleLabel="Kurier"
+      />
+    </ActionConfirmationLayout>
   );
 }

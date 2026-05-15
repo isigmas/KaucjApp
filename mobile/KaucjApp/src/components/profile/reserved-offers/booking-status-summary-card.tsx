@@ -1,4 +1,4 @@
-import SectionCard from "@/src/components/map/details/section-card";
+import SectionCard from "@/src/components/ui/section-card";
 import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
