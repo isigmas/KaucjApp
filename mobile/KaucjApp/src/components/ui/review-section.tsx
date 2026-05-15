@@ -8,6 +8,7 @@ import * as Haptics from "expo-haptics";
 import { useUserById } from "@/src/api/hooks/use-user";
 import LoadingState from "../states/loading-state";
 import { useUserRating } from "@/src/api/hooks/use-rating";
+import UserProfileInfo from "./user-profile-info";
 
 export interface ReviewSectionProps {
   userToReviewId: number;
@@ -50,12 +51,10 @@ export default function ReviewSection({
       <Text style={styles.sectionTitle}>Oceń współpracę</Text>
 
       <SectionCard style={styles.card}>
-        <UserReviewHeader
-          firstName={userToReview.firstName}
-          lastName={userToReview.lastName}
-          roleLabel={roleLabel}
+        <UserProfileInfo
+          user={userToReview}
           rating={userRating.avgScore}
-          feedbackCount={userRating.feedbackCount}
+          ratingCount={userRating.feedbackCount}
         />
 
         <View style={styles.divider} />

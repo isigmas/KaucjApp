@@ -5,6 +5,7 @@ import { MessageCircle, Phone, Star } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import ErrorState from "../states/error-state";
+import UserProfileInfo from "./user-profile-info";
 
 interface ContactCardProps {
   asCard?: boolean;
@@ -49,29 +50,7 @@ export default function ContactCard({
     <View style={styles.courierSection}>
       {header && <Text style={styles.sectionLabel}>{header}</Text>}
 
-      <View style={styles.courierRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user.firstName.charAt(0)}
-            {user.lastName.charAt(0)}
-          </Text>
-        </View>
-
-        <View style={styles.courierInfo}>
-          <Text style={styles.courierName}>
-            {user.firstName} {user.lastName}
-          </Text>
-          <Text style={styles.courierUsername}>{user.username}</Text>
-          <View style={styles.ratingRow}>
-            <Star
-              size={12}
-              color={colors.status.warning}
-              fill={colors.status.warning}
-            />
-            <Text style={styles.ratingText}>4.6 · 142 odbiorów</Text>
-          </View>
-        </View>
-      </View>
+      <UserProfileInfo user={user} rating={4.6} pickupsCount={142} />
 
       <View style={styles.courierActions}>
         <Pressable

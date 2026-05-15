@@ -28,6 +28,9 @@ export default function ActionConfirmationLayout({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
       >
         <View style={styles.imageContainer}>
           <LottieView

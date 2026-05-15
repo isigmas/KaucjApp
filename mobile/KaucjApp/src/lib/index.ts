@@ -94,6 +94,26 @@ export const getPolishPackageQuantity = (
   return showNumber ? n + " opakowań kaucyjnych" : "opakowań kaucyjnych";
 };
 
+export const getPolishPickupsCount = (n: number) => {
+  if (n === 1) return "jeden odbiór";
+  const last = n % 10;
+  const lastTwo = n % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return n + " odbiory";
+  }
+  return n + " odbiorów";
+};
+
+export const getPolishRatingCount = (n: number) => {
+  if (n === 1) return "jedna opinia";
+  const last = n % 10;
+  const lastTwo = n % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return n + " opinie";
+  }
+  return n + " opinii";
+};
+
 export const getComplaintReasonLabel = (
   reason: ComplaintReason,
   complainiant: Complainant,
