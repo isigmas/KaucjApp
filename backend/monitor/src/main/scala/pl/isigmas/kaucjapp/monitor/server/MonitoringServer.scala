@@ -42,20 +42,24 @@ object MonitoringServer {
       sharedKafkaStream.map(logText => TextMessage(logText))
     )
 
-    val route = concat(
-      path("status") {
-        get {
-          complete("Ready")
-        }
-      },
-      path("ws" / "logs") {
-        handleWebSocketMessages(websocketFlow)
+    val route = {
+      pathPrefix("api" / "monitor") {
+        concat(
+          path("status") {
+            get {
+              complete("Ready")
+            }
+          },
+          path("admin" / "ws" / "logs") {
+            handleWebSocketMessages(websocketFlow)
+          }
+        )
       }
-    )
+    }
 
     Http().newServerAt(serverHost, serverPort).bind(route).onComplete {
       case Success(binding) =>
-        system.log.info(s"WebSocket server working at ws://$serverHost:$serverPort/ws/logs")
+        system.log.info(s"WebSocket server working at ws://$serverHost:$serverPort/api/monitor/admin/ws/logs")
       case Failure(ex) =>
         system.log.error(s"Failed to start server", ex)
     }
