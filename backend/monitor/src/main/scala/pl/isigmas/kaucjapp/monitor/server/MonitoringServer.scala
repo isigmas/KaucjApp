@@ -42,10 +42,16 @@ object MonitoringServer {
       sharedKafkaStream.map(logText => TextMessage(logText))
     )
 
-    val route =
+    val route = concat(
+      path("status") {
+        get {
+          complete("Ready")
+        }
+      },
       path("ws" / "logs") {
         handleWebSocketMessages(websocketFlow)
       }
+    )
 
     Http().newServerAt(serverHost, serverPort).bind(route).onComplete {
       case Success(binding) =>
