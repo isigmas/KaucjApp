@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.monitor
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import pl.isigmas.kaucjapp.monitor.server.MonitoringServer
 import pl.isigmas.kaucjapp.monitor.worker.{KafkaMonitorWorker, KafkaWorkerCommand}
 
 enum MonitorCommand:
@@ -11,6 +12,8 @@ enum MonitorCommand:
 
 object MonitorGuardian:
   def apply(): Behavior[MonitorCommand] = Behaviors.setup { context =>
+
+    MonitoringServer.start(using context.system)
 
     val kafkaWorker = context.spawn(KafkaMonitorWorker(), "kafka-worker")
 
