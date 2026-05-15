@@ -78,7 +78,10 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
     });
   };
   const handleOnUserProfileInfoPress = () => {
-    console.log("handleOnUserProfileInfoPress");
+    router.push({
+      pathname: "/profile/offers/profile-details-sheet",
+      params: { userId: offer.collectorId },
+    });
   };
 
   return (

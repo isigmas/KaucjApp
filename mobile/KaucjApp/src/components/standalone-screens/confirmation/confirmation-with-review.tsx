@@ -7,6 +7,7 @@ import ReviewSection from "@/src/components/ui/review-section";
 import { useAddRating } from "@/src/api/hooks/use-rating";
 import { RatingPayload } from "@/src/types";
 import { ratingSchema, RatingFormValues } from "@/src/validation/rating";
+import * as Haptics from "expo-haptics";
 
 interface ConfirmationWithReviewProps {
   userId: number;
@@ -38,9 +39,11 @@ export default function ConfirmationWithReview({
     const payload: RatingPayload = { score: data.score };
     addRating(payload, {
       onSuccess: () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onSuccess();
       },
       onError: (error) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         console.error("Error submitting review:", error);
         Alert.alert("Błąd", "Nie udało się dodać oceny.");
         methods.reset();

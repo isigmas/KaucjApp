@@ -35,7 +35,10 @@ export default function MyOffersScreen() {
 
   if (!offers || offers.length === 0) {
     return (
-      <EmptyState title="Nie masz jeszcze żadnych ofert." onRefresh={refetch} />
+      <EmptyState
+        title="Aktualnie nie masz żadnych aktywnych ofert."
+        onRefresh={refetch}
+      />
     );
   }
 

@@ -17,6 +17,7 @@ import ContactCard from "../../ui/contact-card";
 
 import ExpandableCard from "../../ui/expandable-card";
 import { Package, Receipt } from "lucide-react-native";
+import { useRouter } from "expo-router";
 
 interface BookingDetailsScreenProps {
   offerId: number;
@@ -32,6 +33,7 @@ export default function BookingDetailsScreen({
     error,
     refetch,
   } = useMyReservedOffers();
+  const router = useRouter();
 
   if (isLoading) {
     return <LoadingState title="Ładowanie rezerwacji" />;
@@ -60,7 +62,10 @@ export default function BookingDetailsScreen({
   }
 
   const handleOnUserProfileInfoPress = () => {
-    console.log("handleOnUserProfileInfoPress");
+    router.push({
+      pathname: "/profile/bookings/profile-details-sheet",
+      params: { userId: offer.creatorId },
+    });
   };
 
   return (
