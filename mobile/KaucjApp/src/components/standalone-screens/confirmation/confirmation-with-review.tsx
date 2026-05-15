@@ -4,13 +4,16 @@ import ReviewSection from "@/src/components/ui/review-section";
 import { useAddRating } from "@/src/api/hooks/use-rating";
 import { RatingPayload } from "@/src/types";
 import { useRouter } from "expo-router";
+import { Alert } from "react-native";
 
 interface ConfirmationWithReviewProps {
   userId: number;
+  onSuccess: () => void;
 }
 
 export default function ConfirmationWithReview({
   userId,
+  onSuccess,
 }: ConfirmationWithReviewProps) {
   const router = useRouter();
 
@@ -25,7 +28,15 @@ export default function ConfirmationWithReview({
     const payload: RatingPayload = {
       score: 5,
     };
-    router.back();
+    addRating(payload, {
+      onSuccess: () => {
+        onSuccess();
+      },
+      onError: (error) => {
+        console.error("Error submitting review:", error);
+        Alert.alert("Błąd", "Nie udało się dodać oceny.");
+      },
+    });
   };
 
   return (

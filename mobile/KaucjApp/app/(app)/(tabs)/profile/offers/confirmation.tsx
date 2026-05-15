@@ -20,7 +20,12 @@ export default function ConfirmationScreen() {
         />
       );
     }
-    return <ConfirmationWithReview userId={Number(userId)} />;
+    return (
+      <ConfirmationWithReview
+        userId={Number(userId)}
+        onSuccess={() => router.dismissTo("/profile/offers")}
+      />
+    );
   }
   return <CancelConfirmation />;
 }
