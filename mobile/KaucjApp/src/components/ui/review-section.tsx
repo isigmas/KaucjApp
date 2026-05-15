@@ -1,24 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { Star } from "lucide-react-native";
+import { Controller, useFormContext } from "react-hook-form";
 import { colors, rounded, spacing } from "@/src/theme";
-import { User } from "@/src/types/user";
 import SectionCard from "./section-card";
 import * as Haptics from "expo-haptics";
 import { useUserById } from "@/src/api/hooks/use-user";
 import LoadingState from "../states/loading-state";
 import { useUserRating } from "@/src/api/hooks/use-rating";
 import UserProfileInfo from "./user-profile-info";
+import { RatingFormValues } from "@/src/validation/rating";
 
 export interface ReviewSectionProps {
   userToReviewId: number;
-  roleLabel?: string;
 }
 
-export default function ReviewSection({
-  userToReviewId,
-  roleLabel = "Użytkownik",
-}: ReviewSectionProps) {
+export default function ReviewSection({ userToReviewId }: ReviewSectionProps) {
   const {
     data: userToReview,
     isLoading: isLoadingUserToReview,
@@ -30,14 +27,10 @@ export default function ReviewSection({
     isError: isErrorRating,
   } = useUserRating(userToReviewId);
 
-  const [rating, setRating] = useState<number>(0);
-  const [reviewText, setReviewText] = useState<string>("");
-
-  const handleStarSelect = (selectedRating: number) => {
-    if (selectedRating === rating) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setRating(selectedRating);
-  };
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<RatingFormValues>();
 
   if (isLoadingUserToReview || isLoadingRating) {
     return <LoadingState title="Ładowanie informacji o użytkowniku..." />;
@@ -60,9 +53,38 @@ export default function ReviewSection({
 
         <View style={styles.divider} />
 
-        <StarSelector rating={rating} onSelect={handleStarSelect} />
+        <Controller
+          control={control}
+          name="score"
+          render={({ field }) => (
+            <StarSelector
+              rating={field.value}
+              onSelect={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                if (val === field.value) {
+                  field.onChange(0);
+                  return;
+                }
+                field.onChange(val);
+              }}
+            />
+          )}
+        />
 
-        <ReviewTextInput value={reviewText} onChangeText={setReviewText} />
+        {errors.score && (
+          <Text style={styles.errorText}>Wybierz ocenę przed wysłaniem</Text>
+        )}
+
+        <Controller
+          control={control}
+          name="comment"
+          render={({ field }) => (
+            <ReviewTextInput
+              value={field.value ?? ""}
+              onChangeText={field.onChange}
+            />
+          )}
+        />
       </SectionCard>
     </View>
   );
@@ -75,38 +97,6 @@ interface UserReviewHeaderProps {
   rating: number;
   feedbackCount: number;
 }
-
-const UserReviewHeader = ({
-  firstName,
-  lastName,
-  roleLabel,
-  rating,
-  feedbackCount,
-}: UserReviewHeaderProps) => {
-  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-
-  return (
-    <View style={headerStyles.container}>
-      <View style={headerStyles.avatar}>
-        <Text style={headerStyles.initials}>{initials}</Text>
-      </View>
-      <View style={headerStyles.info}>
-        <Text style={headerStyles.name}>
-          {firstName} {lastName}
-        </Text>
-        <Text style={headerStyles.role}>{roleLabel} od 2026</Text>
-
-        {feedbackCount > 0 ? (
-          <Text style={headerStyles.rating}>
-            średnia ocena: {rating} ({feedbackCount} opinii)
-          </Text>
-        ) : (
-          <Text style={headerStyles.rating}>brak opinii. Bądź pierwszym!</Text>
-        )}
-      </View>
-    </View>
-  );
-};
 
 interface StarSelectorProps {
   rating: number;
@@ -188,58 +178,12 @@ const styles = StyleSheet.create({
     width: "100%",
     opacity: 0.6,
   },
-});
-
-const headerStyles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: rounded.pill,
-    backgroundColor: colors.accent.light,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: `${colors.accent.base}40`, // 40 represents opacity in hex
-  },
-  initials: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.accent.dark,
-    letterSpacing: 0.5,
-  },
-  info: {
-    flex: 1,
-  },
-  role: {
-    fontSize: 12,
+  errorText: {
+    fontSize: 13,
     fontWeight: "500",
-    color: colors.text.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  date: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: colors.text.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  rating: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: colors.text.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: colors.status.error,
+    textAlign: "center",
+    marginTop: -spacing.xs,
   },
 });
 
@@ -249,7 +193,7 @@ const starStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   starButton: {
     padding: spacing.xs,

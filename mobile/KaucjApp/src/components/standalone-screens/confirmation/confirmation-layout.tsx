@@ -9,6 +9,7 @@ export interface ActionConfirmationLayoutProps {
   description?: string;
   buttonText: string;
   onButtonPress: () => void;
+  isLoading?: boolean;
   warningText?: string;
   children?: React.ReactNode;
 }
@@ -19,6 +20,7 @@ export default function ActionConfirmationLayout({
   description,
   buttonText,
   onButtonPress,
+  isLoading = false,
   warningText,
   children,
 }: ActionConfirmationLayoutProps) {
@@ -61,9 +63,11 @@ export default function ActionConfirmationLayout({
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            pressed && styles.buttonPressed,
+            pressed && !isLoading && styles.buttonPressed,
+            isLoading && styles.buttonLoading,
           ]}
-          onPress={onButtonPress}
+          onPress={isLoading ? undefined : onButtonPress}
+          disabled={isLoading}
         >
           <Text style={styles.buttonText}>{buttonText}</Text>
         </Pressable>
@@ -152,6 +156,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
+  },
+  buttonLoading: {
+    opacity: 0.6,
   },
   buttonText: {
     color: colors.text.white,
