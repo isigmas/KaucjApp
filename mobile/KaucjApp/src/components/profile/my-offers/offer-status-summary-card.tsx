@@ -77,6 +77,9 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
       params: { id: offer.offerId },
     });
   };
+  const handleOnUserProfileInfoPress = () => {
+    console.log("handleOnUserProfileInfoPress");
+  };
 
   return (
     <SectionCard style={styles.card}>
@@ -93,6 +96,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             userId={offer.collectorId}
             header={courierHeaderText}
             isTheUserCourier={true}
+            onUserProfileInfoPress={handleOnUserProfileInfoPress}
           />
           <View style={styles.hairline} />
 

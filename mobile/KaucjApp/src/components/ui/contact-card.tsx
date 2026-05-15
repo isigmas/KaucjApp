@@ -13,6 +13,7 @@ interface ContactCardProps {
   userId: number | null;
   header?: string;
   isTheUserCourier?: boolean;
+  onUserProfileInfoPress?: () => void;
 }
 
 export default function ContactCard({
@@ -20,6 +21,7 @@ export default function ContactCard({
   userId,
   header,
   isTheUserCourier = false,
+  onUserProfileInfoPress,
 }: ContactCardProps) {
   if (!userId) {
     return null;
@@ -70,6 +72,7 @@ export default function ContactCard({
         //pickupsCount={0}
         ratingCount={userRating?.feedbackCount || 0}
         showCourierFrom={isTheUserCourier}
+        onPress={onUserProfileInfoPress}
       />
 
       <View style={styles.courierActions}>

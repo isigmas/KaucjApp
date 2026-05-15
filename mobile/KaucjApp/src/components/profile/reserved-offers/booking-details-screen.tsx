@@ -59,6 +59,10 @@ export default function BookingDetailsScreen({
     );
   }
 
+  const handleOnUserProfileInfoPress = () => {
+    console.log("handleOnUserProfileInfoPress");
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -68,7 +72,11 @@ export default function BookingDetailsScreen({
     >
       <BookingStatusSummaryCard offer={offer} />
 
-      <ContactCard userId={offer.creatorId} header="Wystawiający" />
+      <ContactCard
+        userId={offer.creatorId}
+        header="Wystawiający"
+        onUserProfileInfoPress={handleOnUserProfileInfoPress}
+      />
 
       <PickupCard
         address={offer.pickupAddress}
