@@ -62,14 +62,21 @@ export const getDayName = (dayOfWeek: number) => {
   ][dayOfWeek - 1];
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (
+  dateString: string,
+  getOnlyYear: boolean = false,
+) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("pl-PL", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  if (getOnlyYear) {
+    return date.getFullYear();
+  } else {
+    return date.toLocaleDateString("pl-PL", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 };
 
 export const formatHour = (time: string) => {

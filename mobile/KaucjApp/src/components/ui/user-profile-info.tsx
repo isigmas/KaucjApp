@@ -3,14 +3,18 @@ import React from "react";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Star } from "lucide-react-native";
 import { User } from "@/src/types/user";
-import { getPolishPickupsCount, getPolishRatingCount } from "@/src/lib";
+import {
+  formatDate,
+  getPolishPickupsCount,
+  getPolishRatingCount,
+} from "@/src/lib";
 
 interface UserProfileInfoProps {
   user: User;
   rating: number;
   pickupsCount?: number;
   ratingCount?: number;
-  courierFrom?: string;
+  showCourierFrom?: boolean;
 }
 
 export default function UserProfileInfo({
@@ -18,7 +22,7 @@ export default function UserProfileInfo({
   rating,
   pickupsCount,
   ratingCount,
-  courierFrom,
+  showCourierFrom = false,
 }: UserProfileInfoProps) {
   return (
     <View style={styles.courierRow}>
@@ -33,9 +37,9 @@ export default function UserProfileInfo({
         <Text style={styles.courierName}>
           {user.firstName} {user.lastName}
         </Text>
-        <Text style={styles.courierUsername}>
-          {courierFrom ? `kurier od ${courierFrom}` : user.username}
-        </Text>
+        {!showCourierFrom && (
+          <Text style={styles.courierUsername}>{user.username}</Text>
+        )}
         <View style={styles.ratingRow}>
           <Star
             size={12}
@@ -49,6 +53,11 @@ export default function UserProfileInfo({
               : ratingCount && ` · ${getPolishRatingCount(ratingCount)}`}
           </Text>
         </View>
+        {showCourierFrom && (
+          <Text style={styles.courierUsername}>
+            kurier od {formatDate(user.createdAt, true)}
+          </Text>
+        )}
       </View>
     </View>
   );

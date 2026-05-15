@@ -55,6 +55,7 @@ export default function ReviewSection({
           user={userToReview}
           rating={userRating.avgScore}
           ratingCount={userRating.feedbackCount}
+          showCourierFrom={true}
         />
 
         <View style={styles.divider} />
