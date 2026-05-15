@@ -1,0 +1,5 @@
+### Read logs
+WEBSOCKET ws://localhost:8080/api/monitor/admin/logs
+Authorization: Bearer {{JWT_token_admin}}
+
+###
