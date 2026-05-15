@@ -3,3 +3,8 @@ export interface Rating {
   avgScore: number;
   feedbackCount: number;
 }
+
+export interface RatingPayload {
+  score: number;
+  // message: string;
+}
