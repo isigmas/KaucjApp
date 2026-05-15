@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 .bsp/
 .env
+dependency-reduced-pom.xml
 
 ### STS ###
 .apt_generated
