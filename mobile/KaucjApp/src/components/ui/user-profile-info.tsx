@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Star } from "lucide-react-native";
@@ -15,6 +15,7 @@ interface UserProfileInfoProps {
   pickupsCount?: number;
   ratingCount?: number;
   showCourierFrom?: boolean;
+  onPress?: () => void;
 }
 
 export default function UserProfileInfo({
@@ -22,10 +23,10 @@ export default function UserProfileInfo({
   rating,
   pickupsCount,
   ratingCount,
-
+  onPress,
   showCourierFrom = false,
 }: UserProfileInfoProps) {
-  return (
+  const body = (
     <View style={styles.courierRow}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
@@ -66,6 +67,8 @@ export default function UserProfileInfo({
       </View>
     </View>
   );
+  if (onPress) return <Pressable onPress={onPress}>{body}</Pressable>;
+  return body;
 }
 
 const styles = StyleSheet.create({
