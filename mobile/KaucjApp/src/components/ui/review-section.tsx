@@ -13,9 +13,13 @@ import { RatingFormValues } from "@/src/validation/rating";
 
 export interface ReviewSectionProps {
   userToReviewId: number;
+  isTheUserCourier?: boolean;
 }
 
-export default function ReviewSection({ userToReviewId }: ReviewSectionProps) {
+export default function ReviewSection({
+  userToReviewId,
+  isTheUserCourier = false,
+}: ReviewSectionProps) {
   const {
     data: userToReview,
     isLoading: isLoadingUserToReview,
@@ -48,7 +52,7 @@ export default function ReviewSection({ userToReviewId }: ReviewSectionProps) {
           user={userToReview}
           rating={userRating.avgScore}
           ratingCount={userRating.feedbackCount}
-          showCourierFrom={true}
+          showCourierFrom={isTheUserCourier}
         />
 
         <View style={styles.divider} />

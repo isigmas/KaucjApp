@@ -7,15 +7,12 @@ import EmptyState from "@/src/components/states/empty-state";
 import ErrorState from "@/src/components/states/error-state";
 import LoadingState from "@/src/components/states/loading-state";
 import { colors, spacing } from "@/src/theme";
-import { Offer } from "@/src/types";
+
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
-import OfferActions from "./offer-actions";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
-import ComplaintCard from "./complaint-card";
-import { router } from "expo-router";
 
 interface OfferDetailScreenProps {
   offerId: number;
@@ -54,17 +51,6 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
       showsVerticalScrollIndicator={false}
     >
       <OfferStatusSummaryCard offer={offer} />
-
-      <Pressable
-        onPress={() => {
-          router.push({
-            pathname: "/profile/offers/confirmation",
-            params: { type: "success", userId: 3 },
-          });
-        }}
-      >
-        <Text>Podgląd sukcesu</Text>
-      </Pressable>
 
       <ExpandableCard
         title="Zawartość"

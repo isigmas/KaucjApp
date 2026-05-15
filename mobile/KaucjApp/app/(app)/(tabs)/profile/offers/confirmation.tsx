@@ -24,6 +24,7 @@ export default function ConfirmationScreen() {
       <ConfirmationWithReview
         userId={Number(userId)}
         onSuccess={() => router.dismissTo("/profile/offers")}
+        isTheUserToReviewCourier={true}
       />
     );
   }

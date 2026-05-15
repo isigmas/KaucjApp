@@ -11,11 +11,13 @@ import { ratingSchema, RatingFormValues } from "@/src/validation/rating";
 interface ConfirmationWithReviewProps {
   userId: number;
   onSuccess: () => void;
+  isTheUserToReviewCourier?: boolean;
 }
 
 export default function ConfirmationWithReview({
   userId,
   onSuccess,
+  isTheUserToReviewCourier = false,
 }: ConfirmationWithReviewProps) {
   const { mutate: addRating, isPending } = useAddRating(userId);
 
@@ -64,7 +66,10 @@ export default function ConfirmationWithReview({
         onButtonPress={handleButtonPress}
         isLoading={isPending}
       >
-        <ReviewSection userToReviewId={userId} />
+        <ReviewSection
+          userToReviewId={userId}
+          isTheUserCourier={isTheUserToReviewCourier}
+        />
       </ActionConfirmationLayout>
     </FormProvider>
   );

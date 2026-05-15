@@ -53,7 +53,7 @@ export default function BookingStatusSummaryCard({
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/bookings/confirmation",
-                  params: { type: "success" },
+                  params: { type: "success", userId: offer.creatorId },
                 });
               }
             },

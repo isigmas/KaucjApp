@@ -6,22 +6,35 @@ import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import ErrorState from "../states/error-state";
 import UserProfileInfo from "./user-profile-info";
+import { useUserRating } from "@/src/api/hooks/use-rating";
 
 interface ContactCardProps {
   asCard?: boolean;
   userId: number | null;
   header?: string;
+  isTheUserCourier?: boolean;
 }
 
 export default function ContactCard({
   asCard = true,
   userId,
   header,
+  isTheUserCourier = false,
 }: ContactCardProps) {
   if (!userId) {
     return null;
   }
-  const { data: user, isError, error, refetch } = useUserById(userId);
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+    isError,
+    error,
+    refetch,
+  } = useUserById(userId);
+  const { data: userRating, isLoading: isLoadingUserRating } =
+    useUserRating(userId);
+
+  if (isLoadingUser) return null;
 
   if (isError || !user) {
     return (
@@ -50,7 +63,14 @@ export default function ContactCard({
     <View style={styles.courierSection}>
       {header && <Text style={styles.sectionLabel}>{header}</Text>}
 
-      <UserProfileInfo user={user} rating={4.6} pickupsCount={142} />
+      <UserProfileInfo
+        user={user}
+        rating={userRating?.avgScore || 0}
+        // TODO: add pickups count isted of rating count in this place
+        //pickupsCount={0}
+        ratingCount={userRating?.feedbackCount || 0}
+        showCourierFrom={isTheUserCourier}
+      />
 
       <View style={styles.courierActions}>
         <Pressable

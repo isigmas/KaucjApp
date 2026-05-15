@@ -5,8 +5,6 @@ import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   AlertCircle,
-  AlertTriangle,
-  Calendar,
   CheckCircle,
   CheckCircle2,
   Clock3,
@@ -63,7 +61,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/offers/confirmation",
-                  params: { type: "success" },
+                  params: { type: "success", userId: offer.collectorId },
                 });
               }
             },
@@ -94,6 +92,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             asCard={false}
             userId={offer.collectorId}
             header={courierHeaderText}
+            isTheUserCourier={true}
           />
           <View style={styles.hairline} />
 
@@ -237,10 +236,6 @@ interface DateRowProps {
 }
 
 function DateRow({ offer }: DateRowProps) {
-  const showReservedAt = !!offer.reservedAt && offer.status !== "OPEN";
-  const reservedAccent =
-    offer.status === "RESERVED" ? colors.status.warning : colors.text.muted;
-
   return (
     <View style={styles.datesRow}>
       <DateChip
@@ -248,13 +243,6 @@ function DateRow({ offer }: DateRowProps) {
         label="Utworzono"
         value={formatDate(offer.createdAt)}
       />
-      {showReservedAt ? (
-        <DateChip
-          icon={<Calendar size={12} color={reservedAccent} />}
-          label="Zarezerwowano"
-          value={formatDate(offer.reservedAt!)}
-        />
-      ) : null}
     </View>
   );
 }

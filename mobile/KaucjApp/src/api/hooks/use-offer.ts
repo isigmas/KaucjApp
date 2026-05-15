@@ -166,7 +166,7 @@ export const useReserveOffer = (offerId: number, totalIncome: string) => {
     mutationFn: () => apiClient.post(`/offer/${offerId}/status/RESERVED`),
     onSuccess: () => {
       router.push({
-        pathname: "/(app)/success-screen",
+        pathname: "/(app)/(tabs)/home/success-screen",
         params: { totalIncome },
       });
       queryClient.invalidateQueries({ queryKey: offerKeys.all() });

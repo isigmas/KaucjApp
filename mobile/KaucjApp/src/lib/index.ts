@@ -68,7 +68,7 @@ export const formatDate = (
 ) => {
   const date = new Date(dateString);
   if (getOnlyYear) {
-    return date.getFullYear();
+    return date.getFullYear().toString();
   } else {
     return date.toLocaleDateString("pl-PL", {
       day: "numeric",
@@ -112,6 +112,7 @@ export const getPolishPickupsCount = (n: number) => {
 };
 
 export const getPolishRatingCount = (n: number) => {
+  if (n === 0) return "brak opinii";
   if (n === 1) return "jedna opinia";
   const last = n % 10;
   const lastTwo = n % 100;

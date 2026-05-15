@@ -22,6 +22,7 @@ export default function UserProfileInfo({
   rating,
   pickupsCount,
   ratingCount,
+
   showCourierFrom = false,
 }: UserProfileInfoProps) {
   return (
@@ -44,14 +45,18 @@ export default function UserProfileInfo({
           <Star
             size={12}
             color={colors.status.warning}
-            fill={colors.status.warning}
+            fill={rating > 0 ? colors.status.warning : colors.background.card}
           />
-          <Text style={styles.ratingText}>
-            {rating.toFixed(1)}
-            {pickupsCount
-              ? ` · ${getPolishPickupsCount(pickupsCount)}`
-              : ratingCount && ` · ${getPolishRatingCount(ratingCount)}`}
-          </Text>
+          {rating > 0 ? (
+            <Text style={styles.ratingText}>
+              {rating.toFixed(1)}
+              {pickupsCount
+                ? ` · ${getPolishPickupsCount(pickupsCount)}`
+                : ratingCount && ` · ${getPolishRatingCount(ratingCount)}`}
+            </Text>
+          ) : (
+            <Text style={styles.ratingText}>Brak opinii. Bądź pierwszym!</Text>
+          )}
         </View>
         {showCourierFrom && (
           <Text style={styles.courierUsername}>
