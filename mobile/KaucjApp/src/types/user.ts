@@ -4,6 +4,13 @@ export interface User {
   firstName: string;
   lastName: string;
   phone: string;
+  createdAt: string;
+  collectedBottleCount: number;
+  collectedCanCount: number;
+  returnedBottleCount: number;
+  returnedCanCount: number;
+  returnedTotalCount: number;
+  collectedTotalCount: number;
   addresses: UserAddress[];
 }
 
