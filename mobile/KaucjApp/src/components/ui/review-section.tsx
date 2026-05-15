@@ -5,16 +5,30 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { User } from "@/src/types/user";
 import SectionCard from "./section-card";
 import * as Haptics from "expo-haptics";
+import { useUserById } from "@/src/api/hooks/use-user";
+import LoadingState from "../states/loading-state";
+import { useUserRating } from "@/src/api/hooks/use-rating";
 
 export interface ReviewSectionProps {
-  userToReview: Pick<User, "firstName" | "lastName">;
+  userToReviewId: number;
   roleLabel?: string;
 }
 
 export default function ReviewSection({
-  userToReview,
+  userToReviewId,
   roleLabel = "Użytkownik",
 }: ReviewSectionProps) {
+  const {
+    data: userToReview,
+    isLoading: isLoadingUserToReview,
+    isError: isErrorUserToReview,
+  } = useUserById(userToReviewId);
+  const {
+    data: userRating,
+    isLoading: isLoadingRating,
+    isError: isErrorRating,
+  } = useUserRating(userToReviewId);
+
   const [rating, setRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState<string>("");
 
@@ -24,12 +38,25 @@ export default function ReviewSection({
     setRating(selectedRating);
   };
 
+  if (isLoadingUserToReview || isLoadingRating) {
+    return <LoadingState title="Ładowanie informacji o użytkowniku..." />;
+  }
+  if (!userToReview || isErrorUserToReview || !userRating || isErrorRating) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Oceń współpracę</Text>
 
       <SectionCard style={styles.card}>
-        <UserReviewHeader user={userToReview} role={roleLabel} />
+        <UserReviewHeader
+          firstName={userToReview.firstName}
+          lastName={userToReview.lastName}
+          roleLabel={roleLabel}
+          rating={userRating.avgScore}
+          feedbackCount={userRating.feedbackCount}
+        />
 
         <View style={styles.divider} />
 
@@ -42,13 +69,21 @@ export default function ReviewSection({
 }
 
 interface UserReviewHeaderProps {
-  user: Pick<User, "firstName" | "lastName">;
-  role: string;
+  firstName: string;
+  lastName: string;
+  roleLabel: string;
+  rating: number;
+  feedbackCount: number;
 }
 
-const UserReviewHeader = ({ user, role }: UserReviewHeaderProps) => {
-  const initials =
-    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+const UserReviewHeader = ({
+  firstName,
+  lastName,
+  roleLabel,
+  rating,
+  feedbackCount,
+}: UserReviewHeaderProps) => {
+  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
   return (
     <View style={headerStyles.container}>
@@ -57,9 +92,17 @@ const UserReviewHeader = ({ user, role }: UserReviewHeaderProps) => {
       </View>
       <View style={headerStyles.info}>
         <Text style={headerStyles.name}>
-          {user.firstName} {user.lastName}
+          {firstName} {lastName}
         </Text>
-        <Text style={headerStyles.role}>{role} od 2026</Text>
+        <Text style={headerStyles.role}>{roleLabel} od 2026</Text>
+
+        {feedbackCount > 0 ? (
+          <Text style={headerStyles.rating}>
+            średnia ocena: {rating} ({feedbackCount} opinii)
+          </Text>
+        ) : (
+          <Text style={headerStyles.rating}>brak opinii. Bądź pierwszym!</Text>
+        )}
       </View>
     </View>
   );
@@ -188,6 +231,13 @@ const headerStyles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "500",
     color: colors.text.secondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  rating: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.text.muted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },

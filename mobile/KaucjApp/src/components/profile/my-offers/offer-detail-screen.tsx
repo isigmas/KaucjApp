@@ -59,7 +59,7 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
         onPress={() => {
           router.push({
             pathname: "/profile/offers/confirmation",
-            params: { type: "success" },
+            params: { type: "success", userId: 3 },
           });
         }}
       >
