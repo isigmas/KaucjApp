@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.users.DTO.*;
@@ -115,7 +116,7 @@ public class UserController {
                     + "Username, email, and phone cannot be updated via this API (not present on UpdateUserDTO). "
                     + "Each address: latitude ∈ [-90, 90], longitude ∈ [-180, 180], address length limits per UserAddressDTO.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Profile updated."),
+            @ApiResponse(responseCode = "204", description = "Profile updated."),
             @ApiResponse(responseCode = "400", description = "Validation (VALIDATION_ERR, field details in validationErrors), "
                     + "malformed JSON (MALFORMED_JSON), or DB range/length mapped to client error."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
@@ -126,7 +127,7 @@ public class UserController {
 
         userService.updateUser(loggedInUserId, updateUserDTO);
         log.info("User updated, ID: {}", loggedInUserId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -136,7 +137,7 @@ public class UserController {
             summary = "Delete my account",
             description = "Deletes the user (and dependent data per JPA cascade) for id from `X-User-Id`.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User deleted."),
+            @ApiResponse(responseCode = "204", description = "User deleted."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id (BAD_REQUEST)."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
@@ -145,7 +146,7 @@ public class UserController {
 
         userService.deleteUser(loggedInUserId);
         log.info("User deleted, ID: {}", loggedInUserId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -172,7 +173,7 @@ public class UserController {
                     + "Path `id` is the reviewed user; header `X-User-Id` is the reviewer. "
                     + "Creates an individual review and updates the denormalized rating aggregate. Self-review is rejected.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Review recorded; running average updated."),
+            @ApiResponse(responseCode = "200", description = "Review recorded; running average updated."),
             @ApiResponse(responseCode = "400", description = "Invalid score or body (VALIDATION_ERR)."),
             @ApiResponse(responseCode = "403", description = "Cannot review yourself (USER_004)."),
             @ApiResponse(responseCode = "404", description = "Reviewed user not found (USER_001).")
@@ -184,9 +185,53 @@ public class UserController {
 
         ratingService.addReview(id, currentUserId, request);
         log.info("User {} added review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PatchMapping("/reviews/{id}")
+    @Operation(summary = "Update own review", description = "Partial update of score and/or comment. Only the original reviewer may edit.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Review updated; aggregate recalculated when score changes."),
+            @ApiResponse(responseCode = "400", description = "Invalid score (VALIDATION_ERR)."),
+            @ApiResponse(responseCode = "403", description = "Not the review author (USER_007)."),
+            @ApiResponse(responseCode = "404", description = "Review not found (USER_006).")
+    })
+    public ResponseEntity<Void> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateReviewDTO request,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        ratingService.updateReview(id, currentUserId, request);
+        log.info("User {} updated review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
         return ResponseEntity.noContent().build();
     }
-    
+
+    @DeleteMapping("/reviews/{id}")
+    @Operation(summary = "Delete own review", description = "Removes the review and updates the denormalized rating aggregate. Only the original reviewer may delete.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Review deleted; aggregate recalculated."),
+            @ApiResponse(responseCode = "403", description = "Not the review author (USER_007)."),
+            @ApiResponse(responseCode = "404", description = "Review not found (USER_006).")
+    })
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        ratingService.deleteReview(id, currentUserId);
+        log.info("User {} deleted review for user ID: {}", currentUserId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponseDTO> getReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        var review = ratingService.getReview(id);
+        log.info("Getting review {} for user ID: {}", id, currentUserId);
+        return ResponseEntity.ok(review);
+    }
+
 
     @GetMapping("/{id}/reviews")
     @Operation(

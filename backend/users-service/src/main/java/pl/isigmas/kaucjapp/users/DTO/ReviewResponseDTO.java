@@ -23,4 +23,5 @@ public class ReviewResponseDTO {
     private BigDecimal score;
     private String comment;
     private Instant createdAt;
+    private Instant updatedAt;
 }
