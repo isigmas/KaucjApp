@@ -1,12 +1,11 @@
 import React from "react";
 
-import ContactCard from "../ui/contact-card";
 import { ScrollView, StyleSheet } from "react-native";
 import { colors, rounded, spacing } from "@/src/theme";
 import { router } from "expo-router";
-import SectionCard from "../ui/section-card";
 import UserProfile from "@/src/components/ui/user-profile";
 import { useUserById } from "@/src/api/hooks/use-user";
+import ReviewsSection from "../ui/user-reviews-section";
 
 interface ProfileDetailsScreenProps {
   userId: string;
@@ -38,6 +37,8 @@ export default function ProfileDetailsScreen({
         showStats={false}
         color="accent"
       />
+
+      <ReviewsSection userId={userIdNumber} />
     </ScrollView>
   );
 }

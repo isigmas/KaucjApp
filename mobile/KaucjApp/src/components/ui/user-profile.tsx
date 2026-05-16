@@ -52,7 +52,7 @@ export default function UserProfile({
 const styles = StyleSheet.create({
   headerSection: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 20,
   },
 
   capOuter: {

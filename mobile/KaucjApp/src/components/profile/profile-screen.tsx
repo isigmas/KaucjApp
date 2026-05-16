@@ -213,6 +213,7 @@ const styles = StyleSheet.create({
 
   // Menu Styles
   menuSection: {
+    marginTop: 20,
     marginBottom: 16,
   },
   sectionTitle: {
