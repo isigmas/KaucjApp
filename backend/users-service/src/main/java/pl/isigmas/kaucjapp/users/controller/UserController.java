@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.users.DTO.*;
@@ -162,27 +165,44 @@ public class UserController {
     }
 
 
-    
-
     @PostMapping("/{id}/rating")
     @Operation(
-            summary = "Submit rating for user",
-            description = "Body: integer score between 1 and 5 (RatingRequestDTO). "
-                    + "Path `id` is the rated user; header `X-User-Id` is the rater. Self-rating is rejected.")
+            summary = "Submit review for user",
+            description = "Body: ReviewRequestDTO with score (1–5) and optional comment. "
+                    + "Path `id` is the reviewed user; header `X-User-Id` is the reviewer. "
+                    + "Creates an individual review and updates the denormalized rating aggregate. Self-review is rejected.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Rating recorded; running average updated."),
+            @ApiResponse(responseCode = "204", description = "Review recorded; running average updated."),
             @ApiResponse(responseCode = "400", description = "Invalid score or body (VALIDATION_ERR)."),
-            @ApiResponse(responseCode = "403", description = "Cannot rate yourself (USER_004)."),
-            @ApiResponse(responseCode = "404", description = "Rated user / rating row not found (USER_001).")
+            @ApiResponse(responseCode = "403", description = "Cannot review yourself (USER_004)."),
+            @ApiResponse(responseCode = "404", description = "Reviewed user not found (USER_001).")
     })
-    public ResponseEntity<Void> addRating(
+    public ResponseEntity<Void> rateUser(
             @PathVariable Long id,
-            @Valid @RequestBody RatingRequestDTO ratingRequest,
-            @RequestHeader("X-User-Id") Long raterId) {
+            @Valid @RequestBody ReviewRequestDTO request,
+            @RequestHeader("X-User-Id") Long currentUserId) {
 
-        ratingService.addRating(id, ratingRequest.getScore(), raterId);
-        log.info("User {} added rating {} for user ID: {}", raterId, ratingRequest.getScore(), id);
+        ratingService.addReview(id, currentUserId, request);
+        log.info("User {} added review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
         return ResponseEntity.noContent().build();
+    }
+    
+
+    @GetMapping("/{id}/reviews")
+    @Operation(
+            summary = "List reviews for user",
+            description = "Returns a paginated list of individual reviews for the given user id, newest first. "
+                    + "Query params: page (default 0), size (default 20), sort (optional).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page of ReviewResponseDTO."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<Page<ReviewResponseDTO>> getUserReviews(
+            @PathVariable Long id,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        log.info("Fetching reviews for user ID: {}, page {}", id, pageable.getPageNumber());
+        return ResponseEntity.ok(ratingService.getUserReviews(id, pageable));
     }
 
 
