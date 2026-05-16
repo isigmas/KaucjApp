@@ -108,6 +108,13 @@ export default function ProfileScreen() {
       <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Twoja aktywność</Text>
         <ProfileMenuItem
+          icon="list"
+          title="Moje ogłoszenia"
+          subtitle="Aktywne i zakończone"
+          delay={500}
+          onPress={() => router.push("/profile/offers")}
+        />
+        <ProfileMenuItem
           icon="calendar"
           title="Moje rezerwacje"
           subtitle="Oczekujące odbiory"
