@@ -10,31 +10,41 @@ import StarRating from "./star-rating";
 
 interface UserProfileProps {
   user: User;
+  showRating?: boolean;
+  showStats?: boolean;
+  color?: "primary" | "accent";
 }
 
-export default function UserProfile({ user }: UserProfileProps) {
+export default function UserProfile({
+  user,
+  showRating = true,
+  showStats = true,
+  color = "primary",
+}: UserProfileProps) {
   const { data: userRating } = useUserRating(user.userId);
 
   return (
     <View style={styles.headerSection}>
-      <BottleCapAvatar />
+      <BottleCapAvatar color={color} />
 
       <Animated.Text
-        entering={FadeInDown.delay(500).springify()}
+        entering={FadeInDown.delay(100).springify()}
         style={styles.userName}
       >
         {user.firstName + " " + user.lastName}
       </Animated.Text>
 
-      <StarRating rating={userRating} />
+      {showRating && <StarRating rating={userRating} />}
 
-      <Animated.View
-        entering={FadeInDown.delay(300).springify()}
-        style={styles.statsBadge}
-      >
-        <Ionicons name="leaf" size={16} color={colors.primary.dark} />
-        <Text style={styles.statsText}>Zwrócono 120 opakowań PET</Text>
-      </Animated.View>
+      {showStats && (
+        <Animated.View
+          entering={FadeInDown.delay(300).springify()}
+          style={styles.statsBadge}
+        >
+          <Ionicons name="leaf" size={16} color={colors.primary.dark} />
+          <Text style={styles.statsText}>Zwrócono 120 opakowań PET</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }

@@ -5,6 +5,8 @@ import { ScrollView, StyleSheet } from "react-native";
 import { colors, rounded, spacing } from "@/src/theme";
 import { router } from "expo-router";
 import SectionCard from "../ui/section-card";
+import UserProfile from "@/src/components/ui/user-profile";
+import { useUserById } from "@/src/api/hooks/use-user";
 
 interface ProfileDetailsScreenProps {
   userId: string;
@@ -17,6 +19,11 @@ export default function ProfileDetailsScreen({
     router.back();
     return null;
   }
+  const { data: user } = useUserById(userIdNumber);
+  if (!user) {
+    router.back();
+    return null;
+  }
 
   return (
     <ScrollView
@@ -25,15 +32,12 @@ export default function ProfileDetailsScreen({
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-      <SectionCard style={styles.card}>
-        <ContactCard
-          asCard={false}
-          userId={userIdNumber}
-          header="Profil użytkownika"
-          isTheUserCourier={false}
-          onUserProfileInfoPress={() => {}}
-        />
-      </SectionCard>
+      <UserProfile
+        user={user}
+        showRating={true}
+        showStats={false}
+        color="accent"
+      />
     </ScrollView>
   );
 }
