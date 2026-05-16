@@ -6,7 +6,7 @@ import { colors } from "@/src/theme";
 import BottleCapAvatar from "./user-avatar";
 import { User } from "@/src/types/user";
 import { useUserRating } from "@/src/api/hooks/use-rating";
-import { getPolishRatingCount } from "@/src/lib";
+import StarRating from "./star-rating";
 
 interface UserProfileProps {
   user: User;
@@ -26,31 +26,7 @@ export default function UserProfile({ user }: UserProfileProps) {
         {user.firstName + " " + user.lastName}
       </Animated.Text>
 
-      <Animated.View
-        entering={FadeInDown.delay(200).springify()}
-        style={styles.ratingContainer}
-      >
-        <View style={styles.starsRow}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Ionicons
-              key={star}
-              name={
-                star <= Math.round(userRating?.avgScore || 0)
-                  ? "star"
-                  : "star-outline"
-              }
-              size={16}
-              color={colors.status.warning}
-            />
-          ))}
-        </View>
-        <Text style={styles.ratingText}>
-          {userRating?.avgScore || 0}{" "}
-          <Text style={styles.ratingCount}>
-            ({getPolishRatingCount(userRating?.feedbackCount || 0)})
-          </Text>
-        </Text>
-      </Animated.View>
+      <StarRating rating={userRating} />
 
       <Animated.View
         entering={FadeInDown.delay(300).springify()}
@@ -113,25 +89,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 6,
   },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  starsRow: {
-    flexDirection: "row",
-    gap: 2,
-  },
-  ratingText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  ratingCount: {
-    fontWeight: "400",
-    color: colors.text.secondary,
-  },
+
   statsBadge: {
     flexDirection: "row",
     alignItems: "center",
