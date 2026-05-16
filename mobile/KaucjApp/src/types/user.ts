@@ -1,3 +1,5 @@
+export type UserRole = "collector" | "creator";
+
 export interface User {
   userId: number;
   username: string;

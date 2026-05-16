@@ -103,7 +103,7 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {user && <UserProfile user={user} />}
+      {user && <UserProfile user={user} role="creator" />}
 
       <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Twoja aktywność</Text>

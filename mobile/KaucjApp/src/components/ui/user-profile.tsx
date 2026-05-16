@@ -4,12 +4,13 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme";
 import BottleCapAvatar from "./user-avatar";
-import { User } from "@/src/types/user";
+import { User, UserRole } from "@/src/types/user";
 import { useUserRating } from "@/src/api/hooks/use-rating";
 import StarRating from "./star-rating";
 
 interface UserProfileProps {
   user: User;
+  role: UserRole;
   showRating?: boolean;
   showStats?: boolean;
   color?: "primary" | "accent";
@@ -17,6 +18,7 @@ interface UserProfileProps {
 
 export default function UserProfile({
   user,
+  role,
   showRating = true,
   showStats = true,
   color = "primary",
@@ -36,16 +38,32 @@ export default function UserProfile({
 
       {showRating && <StarRating rating={userRating} />}
 
-      {showStats && (
-        <Animated.View
-          entering={FadeInDown.delay(300).springify()}
-          style={styles.statsBadge}
-        >
-          <Ionicons name="leaf" size={16} color={colors.primary.dark} />
-          <Text style={styles.statsText}>Zwrócono 120 opakowań PET</Text>
-        </Animated.View>
-      )}
+      {showStats && <StatsBadge user={user} role={role} color={color} />}
     </View>
+  );
+}
+
+interface StatsBadgeProps {
+  user: User;
+  role: UserRole;
+  color: "primary" | "accent";
+}
+
+function StatsBadge({ user, role, color }: StatsBadgeProps) {
+  const backgroundColor = colors[color].light;
+  const textColor = colors[color].dark;
+  const text = role === "collector" ? "Odebrano" : "Wystawiono";
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(300).springify()}
+      style={[styles.statsBadge, { backgroundColor }]}
+    >
+      <Ionicons name="leaf" size={16} color={textColor} />
+      <Text style={[styles.statsText, { color: textColor }]}>
+        {text} {user.returnedTotalCount} opakowań PET
+      </Text>
+    </Animated.View>
   );
 }
 
@@ -103,7 +121,6 @@ const styles = StyleSheet.create({
   statsBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.primary.light,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -112,6 +129,5 @@ const styles = StyleSheet.create({
   statsText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.primary.dark,
   },
 });

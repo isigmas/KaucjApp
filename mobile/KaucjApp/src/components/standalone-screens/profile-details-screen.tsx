@@ -6,12 +6,15 @@ import { router } from "expo-router";
 import UserProfile from "@/src/components/ui/user-profile";
 import { useUserById } from "@/src/api/hooks/use-user";
 import ReviewsSection from "../ui/user-reviews-section";
+import { UserRole } from "@/src/types/user";
 
 interface ProfileDetailsScreenProps {
   userId: string;
+  role: UserRole;
 }
 export default function ProfileDetailsScreen({
   userId,
+  role,
 }: ProfileDetailsScreenProps) {
   const userIdNumber = Number(userId);
   if (!Number.isFinite(userIdNumber)) {
@@ -33,8 +36,9 @@ export default function ProfileDetailsScreen({
     >
       <UserProfile
         user={user}
+        role={role}
         showRating={true}
-        showStats={false}
+        showStats={true}
         color="accent"
       />
 

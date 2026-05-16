@@ -84,37 +84,6 @@ interface ReviewsSectionProps {
   userId: number;
 }
 
-const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(400 + index * 100).springify()}
-      style={styles.card}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.reviewerName} numberOfLines={1}>
-          {review.reviewerName}
-        </Text>
-        <Text style={styles.dateText}>{review.createdAt}</Text>
-      </View>
-
-      <View style={styles.starsRow}>
-        {[...Array(5)].map((_, i) => (
-          <Ionicons
-            key={i}
-            name={i < review.rating ? "star" : "star-outline"}
-            size={14}
-            color={colors.status?.warning || "#FFB800"}
-          />
-        ))}
-      </View>
-
-      {review.message ? (
-        <Text style={styles.messageText}>{review.message}</Text>
-      ) : null}
-    </Animated.View>
-  );
-};
-
 export default function ReviewsSection({ userId }: ReviewsSectionProps) {
   const { data: reviews, isLoading } = useUserReviews(userId);
 
@@ -151,6 +120,37 @@ export default function ReviewsSection({ userId }: ReviewsSectionProps) {
   );
 }
 
+const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(400 + index * 100).springify()}
+      style={styles.card}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.reviewerName} numberOfLines={1}>
+          {review.reviewerName}
+        </Text>
+        <Text style={styles.dateText}>{review.createdAt}</Text>
+      </View>
+
+      <View style={styles.starsRow}>
+        {[...Array(5)].map((_, i) => (
+          <Ionicons
+            key={i}
+            name={i < review.rating ? "star" : "star-outline"}
+            size={14}
+            color={colors.status?.warning || "#FFB800"}
+          />
+        ))}
+      </View>
+
+      {review.message ? (
+        <Text style={styles.messageText}>{review.message}</Text>
+      ) : null}
+    </Animated.View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {},
   sectionTitle: {
@@ -167,7 +167,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card || "#FFFFFF",
     borderRadius: rounded.apple || 16,
     padding: spacing.md,
-    // Soft Apple-like elevation shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

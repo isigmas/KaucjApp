@@ -6,5 +6,5 @@ import { useLocalSearchParams } from "expo-router";
 export default function ProfileDetailsSheet() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
 
-  return <ProfileDetailsScreen userId={userId} />;
+  return <ProfileDetailsScreen userId={userId} role="collector" />;
 }
