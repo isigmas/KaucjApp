@@ -7,9 +7,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -236,18 +233,14 @@ public class UserController {
     @GetMapping("/{id}/reviews")
     @Operation(
             summary = "List reviews for user",
-            description = "Returns a paginated list of individual reviews for the given user id, newest first. "
-                    + "Query params: page (default 0), size (default 20), sort (optional).")
+            description = "Returns all individual reviews for the given user id, newest first.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Page of ReviewResponseDTO."),
+            @ApiResponse(responseCode = "200", description = "JSON array of ReviewResponseDTO."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
-    public ResponseEntity<Page<ReviewResponseDTO>> getUserReviews(
-            @PathVariable Long id,
-            @PageableDefault(size = 20) Pageable pageable) {
-
-        log.info("Fetching reviews for user ID: {}, page {}", id, pageable.getPageNumber());
-        return ResponseEntity.ok(ratingService.getUserReviews(id, pageable));
+    public ResponseEntity<List<ReviewResponseDTO>> getUserReviews(@PathVariable Long id) {
+        log.info("Fetching reviews for user ID: {}", id);
+        return ResponseEntity.ok(ratingService.getUserReviews(id));
     }
 
 

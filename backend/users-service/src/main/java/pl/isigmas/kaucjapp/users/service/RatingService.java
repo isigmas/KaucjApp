@@ -2,8 +2,6 @@ package pl.isigmas.kaucjapp.users.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.users.DTO.RatingDTO;
@@ -20,6 +18,7 @@ import pl.isigmas.kaucjapp.users.repository.UserReviewRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -69,14 +68,14 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDTO> getUserReviews(Long userId, Pageable pageable) {
+    public List<ReviewResponseDTO> getUserReviews(Long userId) {
         if (!ratingRepository.existsById(userId)) {
             throw new UserNotFoundException(userId);
         }
 
-        Page<UserReview> page = userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(userId, pageable);
+        List<UserReview> reviews = userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(userId);
 
-        Set<Long> reviewerIds = page.getContent().stream()
+        Set<Long> reviewerIds = reviews.stream()
                 .map(UserReview::getReviewerId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
@@ -86,7 +85,9 @@ public class RatingService {
                 : userRepository.findAllById(reviewerIds).stream()
                         .collect(Collectors.toMap(User::getId, User::getUsername));
 
-        return page.map(review -> mapReviewToDTO(review, usernamesById));
+        return reviews.stream()
+                .map(review -> mapReviewToDTO(review, usernamesById))
+                .toList();
     }
 
     @Transactional

@@ -142,7 +142,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     // ---------- GET /api/user/{id}/reviews ----------
 
     @Test
-    void getUserReviews_returnsPagedListWithUsernames_newestFirst() throws Exception {
+    void getUserReviews_returnsListWithUsernames_newestFirst() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
         Long carol = createUser(2003L, "carol", "carol@example.com");
@@ -152,9 +152,8 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
 
         mockMvc.perform(get("/api/user/{id}/reviews", bob))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total_elements").value(2))
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[*].reviewer_username",
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].reviewer_username",
                         org.hamcrest.Matchers.containsInAnyOrder("alice", "carol")));
 
         assertThat(userReviewRepository.findAll())
@@ -163,13 +162,12 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     }
 
     @Test
-    void getUserReviews_noReviews_returnsEmptyPage() throws Exception {
+    void getUserReviews_noReviews_returnsEmptyList() throws Exception {
         Long bob = createUser(2002L, "bob", "bob@example.com");
 
         mockMvc.perform(get("/api/user/{id}/reviews", bob))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total_elements").value(0))
-                .andExpect(jsonPath("$.content.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

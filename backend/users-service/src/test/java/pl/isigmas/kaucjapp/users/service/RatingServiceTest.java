@@ -6,10 +6,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import pl.isigmas.kaucjapp.users.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.users.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.users.DTO.ReviewResponseDTO;
@@ -131,10 +127,9 @@ class RatingServiceTest {
     // ---------- getUserReviews ----------
 
     @Test
-    void getUserReviews_returnsPageMappedWithUsernames_usingBatchLookup() {
+    void getUserReviews_returnsListMappedWithUsernames_usingBatchLookup() {
         // Given
         Long revieweeId = 100L;
-        Pageable pageable = PageRequest.of(0, 20);
 
         UserReview r1 = buildReview(1L, revieweeId, 11L, new BigDecimal("5"), "great");
         UserReview r2 = buildReview(2L, revieweeId, 12L, new BigDecimal("3"), "meh");
@@ -145,16 +140,16 @@ class RatingServiceTest {
         User u12 = userOf(12L, "bob");
 
         when(ratingRepository.existsById(revieweeId)).thenReturn(true);
-        when(userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(revieweeId, pageable))
-                .thenReturn(new PageImpl<>(List.of(r1, r2, r3), pageable, 3));
+        when(userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(revieweeId))
+                .thenReturn(List.of(r1, r2, r3));
         when(userRepository.findAllById(anySet())).thenReturn(List.of(u11, u12));
 
         // When
-        Page<ReviewResponseDTO> page = ratingService.getUserReviews(revieweeId, pageable);
+        List<ReviewResponseDTO> result = ratingService.getUserReviews(revieweeId);
 
         // Then
-        assertThat(page.getTotalElements()).isEqualTo(3);
-        assertThat(page.getContent())
+        assertThat(result).hasSize(3);
+        assertThat(result)
                 .extracting(ReviewResponseDTO::getReviewId, ReviewResponseDTO::getReviewerUsername)
                 .containsExactly(
                         org.assertj.core.groups.Tuple.tuple(1L, "alice"),
@@ -174,8 +169,7 @@ class RatingServiceTest {
         when(ratingRepository.existsById(404L)).thenReturn(false);
 
         // When / Then
-        assertThatThrownBy(() ->
-                ratingService.getUserReviews(404L, PageRequest.of(0, 5)))
+        assertThatThrownBy(() -> ratingService.getUserReviews(404L))
                 .isInstanceOf(UserNotFoundException.class);
 
         verifyNoInteractions(userReviewRepository, userRepository);
@@ -185,18 +179,17 @@ class RatingServiceTest {
     void getUserReviews_reviewWithNullReviewerId_mapsUsernameAsNull_andSkipsLookupBatch() {
         // Given
         Long revieweeId = 100L;
-        Pageable pageable = PageRequest.of(0, 5);
         UserReview anonymized = buildReview(7L, revieweeId, null, new BigDecimal("2"), "ghost");
 
         when(ratingRepository.existsById(revieweeId)).thenReturn(true);
-        when(userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(revieweeId, pageable))
-                .thenReturn(new PageImpl<>(List.of(anonymized), pageable, 1));
+        when(userReviewRepository.findByRevieweeIdOrderByCreatedAtDesc(revieweeId))
+                .thenReturn(List.of(anonymized));
 
         // When
-        Page<ReviewResponseDTO> page = ratingService.getUserReviews(revieweeId, pageable);
+        List<ReviewResponseDTO> result = ratingService.getUserReviews(revieweeId);
 
         // Then
-        assertThat(page.getContent()).singleElement()
+        assertThat(result).singleElement()
                 .satisfies(dto -> {
                     assertThat(dto.getReviewerId()).isNull();
                     assertThat(dto.getReviewerUsername()).isNull();
