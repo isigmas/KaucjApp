@@ -476,4 +476,17 @@ public class OfferService {
                 .map(this::mapToComplaintResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public OfferResponseDTO getOffer(Long offerId, Long userId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        if (!Objects.equals(offer.getCreatorId(), userId)
+                && !Objects.equals(offer.getCollectorId(), userId)) {
+            throw new OfferForbiddenException("Only offer creator or collector can get offer");
+        }
+
+        return mapToResponseDTO(offer);
+    }
 }

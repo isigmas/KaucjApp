@@ -116,6 +116,15 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<OfferResponseDTO> getOffer(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        OfferResponseDTO offer = service.getOffer(id, userId);
+        log.info("Fetched offer with ID: {} for user: {}", id, userId);
+        return ResponseEntity.ok(offer);
+    }
+
 
 
     @PostMapping("/{offerId}/status/{newStatus}")
