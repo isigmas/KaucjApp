@@ -36,7 +36,11 @@ export default function ConfirmationWithReview({
       : "Zakończ";
 
   const onSubmit = (data: RatingFormValues) => {
-    const payload: RatingPayload = { score: data.score };
+    const payload: RatingPayload = {
+      score: data.score,
+      ...(data.comment &&
+        data.comment.trim() !== "" && { comment: data.comment }),
+    };
     addRating(payload, {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

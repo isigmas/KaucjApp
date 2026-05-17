@@ -6,5 +6,15 @@ export interface Rating {
 
 export interface RatingPayload {
   score: number;
-  // message: string;
+  comment?: string;
+}
+
+export interface Review {
+  reviewId: number;
+  reviewerId: number;
+  reviewerUsername: string;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

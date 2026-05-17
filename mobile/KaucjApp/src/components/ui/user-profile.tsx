@@ -53,6 +53,8 @@ function StatsBadge({ user, role, color }: StatsBadgeProps) {
   const backgroundColor = colors[color].light;
   const textColor = colors[color].dark;
   const text = role === "collector" ? "Odebrano" : "Wystawiono";
+  const count =
+    role === "collector" ? user.collectedTotalCount : user.returnedTotalCount;
 
   return (
     <Animated.View
@@ -61,7 +63,7 @@ function StatsBadge({ user, role, color }: StatsBadgeProps) {
     >
       <Ionicons name="leaf" size={16} color={textColor} />
       <Text style={[styles.statsText, { color: textColor }]}>
-        {text} {user.returnedTotalCount} opakowań PET
+        {text} {count} opakowań PET
       </Text>
     </Animated.View>
   );

@@ -3,92 +3,19 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, rounded, spacing } from "@/src/theme";
-
-export interface Review {
-  id: string;
-  reviewerName: string;
-  rating: number;
-  message: string;
-  createdAt: string;
-}
-
-const useUserReviews = (userId: number) => {
-  return {
-    data: [
-      {
-        id: "1",
-        reviewerName: "Aśka Kurwisko",
-        rating: 2,
-        message: "Kurier to chuj",
-        createdAt: "2 dni temu",
-      },
-      {
-        id: "2",
-        reviewerName: "Michał Cwel",
-        rating: 4,
-        message:
-          "Wszystko w porządku, punktualnie i bez problemów. Szybka wymiana.",
-        createdAt: "1 tydzień temu",
-      },
-      {
-        id: "3",
-        reviewerName: "Aśka Kurwisko",
-        rating: 2,
-        message: "Kurier to chuj",
-        createdAt: "2 dni temu",
-      },
-      {
-        id: "4",
-        reviewerName: "Michał Cwel",
-        rating: 4,
-        message:
-          "Wszystko w porządku, punktualnie i bez problemów. Szybka wymiana.",
-        createdAt: "1 tydzień temu",
-      },
-      {
-        id: "5",
-        reviewerName: "Aśka Kurwisko",
-        rating: 2,
-        message: "Kurier to chuj",
-        createdAt: "2 dni temu",
-      },
-      {
-        id: "6",
-        reviewerName: "Michał Cwel",
-        rating: 4,
-        message:
-          "Wszystko w porządku, punktualnie i bez problemów. Szybka wymiana.",
-        createdAt: "1 tydzień temu",
-      },
-      {
-        id: "7",
-        reviewerName: "Aśka Kurwisko",
-        rating: 2,
-        message: "Kurier to chuj",
-        createdAt: "2 dni temu",
-      },
-      {
-        id: "8",
-        reviewerName: "Michał Cwel",
-        rating: 4,
-        message:
-          "Wszystko w porządku, punktualnie i bez problemów. Szybka wymiana.",
-        createdAt: "1 tydzień temu",
-      },
-    ] as Review[],
-    isLoading: false,
-  };
-};
+import { useReviews } from "@/src/api/hooks/use-rating";
+import LoadingState from "../states/loading-state";
+import { Review } from "@/src/types";
 
 interface ReviewsSectionProps {
   userId: number;
 }
 
 export default function ReviewsSection({ userId }: ReviewsSectionProps) {
-  const { data: reviews, isLoading } = useUserReviews(userId);
+  const { data: reviews, isLoading } = useReviews(userId);
 
   if (isLoading) {
-    return null;
+    return <LoadingState title="Ładowanie opinii" />;
   }
 
   if (!reviews || reviews.length === 0) {
@@ -113,7 +40,7 @@ export default function ReviewsSection({ userId }: ReviewsSectionProps) {
 
       <View style={styles.listContainer}>
         {reviews.map((review, index) => (
-          <ReviewCard key={review.id} review={review} index={index} />
+          <ReviewCard key={review.reviewId} review={review} index={index} />
         ))}
       </View>
     </View>
@@ -128,7 +55,7 @@ const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
     >
       <View style={styles.cardHeader}>
         <Text style={styles.reviewerName} numberOfLines={1}>
-          {review.reviewerName}
+          {review.reviewerUsername}
         </Text>
         <Text style={styles.dateText}>{review.createdAt}</Text>
       </View>
@@ -137,15 +64,15 @@ const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
         {[...Array(5)].map((_, i) => (
           <Ionicons
             key={i}
-            name={i < review.rating ? "star" : "star-outline"}
+            name={i < review.score ? "star" : "star-outline"}
             size={14}
             color={colors.status?.warning || "#FFB800"}
           />
         ))}
       </View>
 
-      {review.message ? (
-        <Text style={styles.messageText}>{review.message}</Text>
+      {review.comment ? (
+        <Text style={styles.messageText}>{review.comment}</Text>
       ) : null}
     </Animated.View>
   );
