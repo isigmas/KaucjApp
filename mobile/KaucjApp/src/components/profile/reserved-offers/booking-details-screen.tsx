@@ -1,7 +1,7 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, View, Text } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 
-import { useMyReservedOffers } from "@/src/api/hooks/use-offer";
+import { useGetOffer } from "@/src/api/hooks/use-offer";
 import OfferItemsCard from "@/src/components/map/details/offer/offer-items-card";
 import { OfferSummaryCard } from "@/src/components/map/details/offer/offer-summary-card";
 import PickupCard from "@/src/components/map/details/offer/pickup-card";
@@ -27,12 +27,13 @@ export default function BookingDetailsScreen({
   offerId,
 }: BookingDetailsScreenProps) {
   const {
-    data: offers,
+    data: offer,
     isLoading,
     isError,
     error,
     refetch,
-  } = useMyReservedOffers();
+    isRefetching,
+  } = useGetOffer(offerId);
   const router = useRouter();
 
   if (isLoading) {
@@ -48,9 +49,6 @@ export default function BookingDetailsScreen({
       />
     );
   }
-
-  //TODO: This screen should fetch /reserved/${offerId} to get the offer details
-  const offer = offers?.find((o) => o.offerId === offerId);
 
   if (!offer) {
     return (
@@ -74,6 +72,16 @@ export default function BookingDetailsScreen({
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.primary.base}
+          colors={[colors.primary.base]}
+          progressBackgroundColor={colors.background.main}
+          progressViewOffset={10}
+        />
+      }
     >
       <BookingStatusSummaryCard offer={offer} />
 

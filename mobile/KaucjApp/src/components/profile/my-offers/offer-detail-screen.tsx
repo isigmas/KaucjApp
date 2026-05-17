@@ -1,4 +1,4 @@
-import { useMyOffers } from "@/src/api/hooks/use-offer";
+import { useGetOffer } from "@/src/api/hooks/use-offer";
 import OfferItemsCard from "@/src/components/map/details/offer/offer-items-card";
 import { OfferSummaryCard } from "@/src/components/map/details/offer/offer-summary-card";
 import PickupCard from "@/src/components/map/details/offer/pickup-card";
@@ -10,7 +10,7 @@ import { colors, spacing } from "@/src/theme";
 
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
 
@@ -19,7 +19,14 @@ interface OfferDetailScreenProps {
 }
 
 export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
-  const { data: offers, isLoading, isError, error, refetch } = useMyOffers();
+  const {
+    data: offer,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useGetOffer(offerId);
 
   if (isLoading) {
     return <LoadingState title="Ładowanie oferty" />;
@@ -35,8 +42,6 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
     );
   }
 
-  const offer = offers?.find((o) => o.offerId === offerId);
-
   if (!offer) {
     return (
       <EmptyState title="Ta oferta jest już niedostępna." onRefresh={refetch} />
@@ -49,6 +54,16 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.primary.base}
+          colors={[colors.primary.base]}
+          progressBackgroundColor={colors.background.main}
+          progressViewOffset={10}
+        />
+      }
     >
       <OfferStatusSummaryCard offer={offer} />
 
