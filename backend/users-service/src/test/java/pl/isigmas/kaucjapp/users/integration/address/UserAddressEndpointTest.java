@@ -50,7 +50,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 1005L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateUserJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses")
                         .header("X-User-Id", 1005L))
@@ -98,7 +98,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(setAddressesJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2001L))
                 .andExpect(status().isOk())
@@ -113,7 +113,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchFirstNameOnly))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/2001"))
                 .andExpect(status().isOk())
@@ -193,7 +193,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2002L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(setAddressesJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2002L))
                 .andExpect(status().isOk())
@@ -203,7 +203,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2002L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"addresses\": []}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2002L))
                 .andExpect(status().isOk())

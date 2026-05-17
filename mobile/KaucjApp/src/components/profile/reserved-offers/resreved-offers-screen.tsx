@@ -58,7 +58,7 @@ export default function ReservedOffersScreen() {
       }
     >
       {offers.map((offer) => (
-        <ReservedOfferCard key={offer.offer_id.toString()} offer={offer} />
+        <ReservedOfferCard key={offer.offerId.toString()} offer={offer} />
       ))}
     </ScrollView>
   );

@@ -19,12 +19,12 @@ export function OfferSummaryCard({
     <View style={bare ? styles.bareInner : undefined}>
       <SummaryRow
         label="Łączna liczba opakowań kaucyjnych"
-        value={String(offer.total_quantity)}
+        value={String(offer.totalQuantity)}
       />
       <View style={styles.divider} />
       <SummaryRow
         label="Cena oferty"
-        value={`${offer.total_prize.toFixed(2)} zł`}
+        value={`${offer.totalPrize.toFixed(2)} zł`}
         isBold
       />
 
@@ -32,13 +32,13 @@ export function OfferSummaryCard({
         <>
           <SummaryRow
             label="Wartość kaucji"
-            value={`${(offer.total_quantity * 0.5).toFixed(2)} zł`}
+            value={`${(offer.totalQuantity * 0.5).toFixed(2)} zł`}
             isBold
           />
 
           <SummaryRow
             label="Zysk kuriera"
-            value={`${offer.total_income.toFixed(2)} zł`}
+            value={`${offer.totalIncome.toFixed(2)} zł`}
             isBold
           />
         </>

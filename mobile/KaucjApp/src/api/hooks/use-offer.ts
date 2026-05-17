@@ -45,8 +45,12 @@ export const useMyOffers = () => {
     queryKey: offerKeys.mine(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my");
-      console.log(JSON.stringify(data, null, 2));
-      return data;
+      const sortedData = data.sort((a, b) => {
+        return (
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      });
+      return sortedData;
     },
   });
 };
@@ -57,8 +61,12 @@ export const useMyReservedOffers = () => {
     queryKey: offerKeys.reserved(),
     queryFn: async () => {
       const { data } = await apiClient.get<Offer[]>("/offer/my/reserved");
-      console.log(JSON.stringify(data, null, 2));
-      return data;
+      const sortedData = data.sort((a, b) => {
+        return (
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      });
+      return sortedData;
     },
   });
 };

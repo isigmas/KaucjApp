@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors, rounded, spacing } from "@/src/theme";
+import { rounded, spacing } from "@/src/theme";
 import { OfferStatus } from "@/src/types";
 import { getOfferStatusConfig } from "@/src/lib";
 

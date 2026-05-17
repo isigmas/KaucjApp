@@ -12,6 +12,7 @@ export default function TabsLayout() {
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "map", selected: "map.fill" }}
+            drawable="map.fill"
           />
         </NativeTabs.Trigger>
 
@@ -20,6 +21,7 @@ export default function TabsLayout() {
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "plus.circle", selected: "plus.circle.fill" }}
+            drawable="plus.circle.fill"
           />
         </NativeTabs.Trigger>
 
@@ -28,6 +30,7 @@ export default function TabsLayout() {
           <Icon
             selectedColor={colors.primary.base}
             sf={{ default: "person", selected: "person.fill" }}
+            drawable="person.fill"
           />
         </NativeTabs.Trigger>
       </NativeTabs>

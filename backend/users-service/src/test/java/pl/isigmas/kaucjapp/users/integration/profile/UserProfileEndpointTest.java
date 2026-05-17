@@ -63,11 +63,11 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateUserJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(delete("/api/user/me")
                 .header("X-User-Id", userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         var deletedUser = userRepository.findById(userId).orElseThrow();
 
