@@ -102,7 +102,12 @@ export const useMyReservedOffersHistory = () => {
       const { data } = await apiClient.get<Offer[]>(
         "/offer/my/reserved/history",
       );
-      return data;
+      const sortedData = data.sort((a, b) => {
+        return (
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      });
+      return sortedData;
     },
   });
 };

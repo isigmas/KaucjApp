@@ -1,4 +1,4 @@
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded } from "@/src/theme";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -8,23 +8,26 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-export type OffersTab = "active" | "history";
-
-interface OffersTabSwitcherProps {
-  active: OffersTab;
-  onChange: (tab: OffersTab) => void;
-  activeCount?: number;
-  historyCount?: number;
+export interface SegmentedTab<T extends string> {
+  id: T;
+  label: string;
 }
 
-export default function OffersTabSwitcher({
+interface ActiveTabSelectorProps<T extends string> {
+  tabs: readonly SegmentedTab<T>[];
+  active: T;
+  onChange: (id: T) => void;
+  counts?: Partial<Record<T, number | undefined>>;
+}
+
+export default function ActiveTabSelector<T extends string>({
+  tabs,
   active,
   onChange,
-  activeCount,
-  historyCount,
-}: OffersTabSwitcherProps) {
+  counts,
+}: ActiveTabSelectorProps<T>) {
   const [innerWidth, setInnerWidth] = useState(0);
-  const activeIndex = TABS.findIndex((t) => t.id === active);
+  const activeIndex = tabs.findIndex((t) => t.id === active);
   const offset = useSharedValue(activeIndex);
 
   useEffect(() => {
@@ -35,22 +38,17 @@ export default function OffersTabSwitcher({
     });
   }, [activeIndex, offset]);
 
-  const segmentWidth = innerWidth / TABS.length;
+  const segmentWidth = tabs.length > 0 ? innerWidth / tabs.length : 0;
 
   const thumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value * segmentWidth }],
     opacity: innerWidth > 0 ? 1 : 0,
   }));
 
-  const handlePress = (tab: OffersTab) => {
-    if (tab === active) return;
+  const handlePress = (id: T) => {
+    if (id === active) return;
     Haptics.selectionAsync();
-    onChange(tab);
-  };
-
-  const counts: Record<OffersTab, number | undefined> = {
-    active: activeCount,
-    history: historyCount,
+    onChange(id);
   };
 
   return (
@@ -65,9 +63,9 @@ export default function OffersTabSwitcher({
         style={[styles.thumb, { width: segmentWidth }, thumbStyle]}
       />
 
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab.id === active;
-        const count = counts[tab.id];
+        const count = counts?.[tab.id];
         return (
           <Pressable
             key={tab.id}
@@ -112,12 +110,7 @@ export default function OffersTabSwitcher({
   );
 }
 
-const TABS: { id: OffersTab; label: string }[] = [
-  { id: "active", label: "Aktywne" },
-  { id: "history", label: "Historia" },
-];
-
-const TRACK_PADDING = spacing.xs; //this is defined here because the layout uses absolute positioning so it has to be consistent
+const TRACK_PADDING = 4; //this is defined here because the layout uses absolute positioning so it has to be consistent
 
 const styles = StyleSheet.create({
   track: {

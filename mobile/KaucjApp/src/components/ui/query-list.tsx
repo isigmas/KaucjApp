@@ -2,32 +2,38 @@ import EmptyState from "@/src/components/states/empty-state";
 import ErrorState from "@/src/components/states/error-state";
 import LoadingState from "@/src/components/states/loading-state";
 import { spacing } from "@/src/theme";
-import { ApiErrorResponse, Offer } from "@/src/types";
+import { ApiErrorResponse } from "@/src/types";
 import { UseQueryResult } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import MyOfferCard from "./my-offer-card";
 
-export interface FallbackStates {
+export interface QueryListCopy {
   loadingTitle: string;
   errorTitle: string;
   errorMessage: string;
   emptyTitle: string;
 }
 
-interface OffersListProps {
-  query: UseQueryResult<Offer[], AxiosError<ApiErrorResponse>>;
-  fallbackStates: FallbackStates;
+interface QueryListProps<T> {
+  query: UseQueryResult<T[], AxiosError<ApiErrorResponse>>;
+  fallbackStates: QueryListCopy;
+  renderItem: (item: T) => React.ReactNode;
+  keyExtractor: (item: T) => string;
 }
 
-export default function OffersList({ query, fallbackStates }: OffersListProps) {
-  const { data: offers, isLoading, isError, error, refetch } = query;
+function QueryList<T>({
+  query,
+  fallbackStates,
+  renderItem,
+  keyExtractor,
+}: QueryListProps<T>) {
+  const { data, isLoading, isError, error, refetch } = query;
 
   if (isLoading) {
     return (
-      <View style={styles.stateContainer}>
+      <View>
         <LoadingState title={fallbackStates.loadingTitle} />
       </View>
     );
@@ -37,7 +43,7 @@ export default function OffersList({ query, fallbackStates }: OffersListProps) {
     const message =
       error?.response?.data?.message || fallbackStates.errorMessage;
     return (
-      <View style={styles.stateContainer}>
+      <View>
         <ErrorState
           title={fallbackStates.errorTitle}
           message={message}
@@ -47,28 +53,28 @@ export default function OffersList({ query, fallbackStates }: OffersListProps) {
     );
   }
 
-  if (!offers || offers.length === 0) {
+  if (!data || data.length === 0) {
     return (
-      <View style={styles.stateContainer}>
-        <EmptyState title={fallbackStates.emptyTitle} onRefresh={refetch} />
+      <View>
+        <EmptyState title={fallbackStates.emptyTitle} />
       </View>
     );
   }
 
   return (
     <Animated.View entering={FadeIn.duration(180)} style={styles.list}>
-      {offers.map((offer) => (
-        <MyOfferCard key={offer.offerId.toString()} offer={offer} />
+      {data.map((item) => (
+        <React.Fragment key={keyExtractor(item)}>
+          {renderItem(item)}
+        </React.Fragment>
       ))}
     </Animated.View>
   );
 }
 
+export default QueryList;
+
 const styles = StyleSheet.create({
-  stateContainer: {
-    flex: 1,
-    minHeight: 360,
-  },
   list: {
     paddingTop: spacing.sm,
   },

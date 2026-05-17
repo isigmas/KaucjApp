@@ -1,15 +1,29 @@
 import { useMyOffers, useMyOffersHistory } from "@/src/api/hooks/use-offer";
+import QueryList, { QueryListCopy } from "@/src/components/ui/query-list";
+import ActiveTabSelector, {
+  SegmentedTab,
+} from "@/src/components/ui/active-tab-selector";
 import { colors, spacing } from "@/src/theme";
+import { Offer } from "@/src/types";
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import OffersList, { FallbackStates } from "./offers-list";
-import OffersTabSwitcher, { OffersTab } from "./offers-tab-switcher";
+import MyOfferCard from "./my-offer-card";
+
+type OffersTab = "active" | "history";
+
+const TABS: readonly SegmentedTab<OffersTab>[] = [
+  { id: "active", label: "Aktywne" },
+  { id: "history", label: "Historia" },
+];
+
+const keyExtractor = (offer: Offer) => offer.offerId.toString();
+const renderItem = (offer: Offer) => <MyOfferCard offer={offer} />;
 
 export default function MyOffersScreen() {
   const [activeTab, setActiveTab] = useState<OffersTab>("active");
-
   const activeOffers = useMyOffers();
   const offersHistory = useMyOffersHistory();
+
   const currentQuery = activeTab === "active" ? activeOffers : offersHistory;
 
   return (
@@ -31,23 +45,29 @@ export default function MyOffersScreen() {
       }
     >
       <View style={styles.switcherWrap}>
-        <OffersTabSwitcher
+        <ActiveTabSelector
+          tabs={TABS}
           active={activeTab}
           onChange={setActiveTab}
-          activeCount={activeOffers.data?.length}
-          historyCount={offersHistory.data?.length}
+          counts={{
+            active: activeOffers.data?.length,
+            history: offersHistory.data?.length,
+          }}
         />
       </View>
 
-      <OffersList
+      <QueryList
         key={activeTab}
         query={currentQuery}
         fallbackStates={fallbackStates[activeTab]}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
       />
     </ScrollView>
   );
 }
-const fallbackStates: Record<OffersTab, FallbackStates> = {
+
+const fallbackStates: Record<OffersTab, QueryListCopy> = {
   active: {
     loadingTitle: "Ładowanie twoich ofert",
     errorTitle: "Ops! coś poszło nie tak podczas ładowania twoich ofert",
