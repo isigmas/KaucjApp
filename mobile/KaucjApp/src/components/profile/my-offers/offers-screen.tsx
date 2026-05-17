@@ -1,68 +1,67 @@
-import EmptyState from "@/src/components/states/empty-state";
-import ErrorState from "@/src/components/states/error-state";
-import LoadingState from "@/src/components/states/loading-state";
-import { useMyOffers } from "@/src/api/hooks/use-offer";
+import { useMyOffers, useMyOffersHistory } from "@/src/api/hooks/use-offer";
 import { colors, spacing } from "@/src/theme";
-import React from "react";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
-import MyOfferCard from "./my-offer-card";
+import React, { useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import OffersList, { FallbackStates } from "./offers-list";
+import OffersTabSwitcher, { OffersTab } from "./offers-tab-switcher";
 
 export default function MyOffersScreen() {
-  const {
-    data: offers,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isRefetching,
-  } = useMyOffers();
+  const [activeTab, setActiveTab] = useState<OffersTab>("active");
 
-  if (isLoading) {
-    return <LoadingState title="Ładowanie twoich ofert" />;
-  }
-
-  if (isError) {
-    const message =
-      error?.response?.data?.message || "Nie udało się pobrać ofert.";
-    return (
-      <ErrorState
-        title="Ops! coś poszło nie tak podczas ładowania twoich ofert"
-        message={message}
-        onRetry={refetch}
-      />
-    );
-  }
-
-  if (!offers || offers.length === 0) {
-    return (
-      <EmptyState
-        title="Aktualnie nie masz żadnych aktywnych ofert."
-        onRefresh={refetch}
-      />
-    );
-  }
+  const activeOffers = useMyOffers();
+  const offersHistory = useMyOffersHistory();
+  const currentQuery = activeTab === "active" ? activeOffers : offersHistory;
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
+      stickyHeaderIndices={[0]}
       showsVerticalScrollIndicator={false}
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={refetch}
+          refreshing={currentQuery.isRefetching}
+          onRefresh={currentQuery.refetch}
           tintColor={colors.primary.base}
           colors={[colors.primary.base]}
+          progressBackgroundColor={colors.background.main}
+          progressViewOffset={10}
         />
       }
     >
-      {offers.map((offer) => (
-        <MyOfferCard key={offer.offerId.toString()} offer={offer} />
-      ))}
+      <View style={styles.switcherWrap}>
+        <OffersTabSwitcher
+          active={activeTab}
+          onChange={setActiveTab}
+          activeCount={activeOffers.data?.length}
+          historyCount={offersHistory.data?.length}
+        />
+      </View>
+
+      <OffersList
+        key={activeTab}
+        query={currentQuery}
+        fallbackStates={fallbackStates[activeTab]}
+      />
     </ScrollView>
   );
 }
+const fallbackStates: Record<OffersTab, FallbackStates> = {
+  active: {
+    loadingTitle: "Ładowanie twoich ofert",
+    errorTitle: "Ops! coś poszło nie tak podczas ładowania twoich ofert",
+    errorMessage: "Nie udało się pobrać ofert.",
+    emptyTitle: "Aktualnie nie masz żadnych aktywnych ofert.",
+  },
+  history: {
+    loadingTitle: "Ładowanie historii ofert",
+    errorTitle: "Ops! coś poszło nie tak podczas ładowania historii",
+    errorMessage: "Nie udało się pobrać historii ofert.",
+    emptyTitle:
+      "Twoja historia ofert jest pusta. Zakończone oferty pojawią się tutaj.",
+  },
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -71,7 +70,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: spacing.md,
-    paddingTop: 24,
     paddingBottom: 40,
+    flexGrow: 1,
+  },
+  switcherWrap: {
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.background.main,
   },
 });
