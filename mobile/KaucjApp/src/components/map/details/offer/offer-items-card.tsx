@@ -3,14 +3,11 @@ import { Offer } from "@/src/types";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import CardTitle from "../card-title";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 
 interface OfferItemsCardProps {
   offer: Offer;
-  /**
-   * When true, renders only the inner rows without a SectionCard wrapper or
-   * title. Useful when embedding inside another card (e.g. an expandable one).
-   */
+
   bare?: boolean;
 }
 

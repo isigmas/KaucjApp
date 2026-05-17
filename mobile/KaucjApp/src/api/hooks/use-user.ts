@@ -17,6 +17,7 @@ export const useUserById = (userId: number) => {
     queryKey: ["userById", userId],
     queryFn: async () => {
       const { data } = await apiClient.get(`/user/${userId}`);
+      console.log("data", JSON.stringify(data, null, 2));
       return data as User;
     },
   });

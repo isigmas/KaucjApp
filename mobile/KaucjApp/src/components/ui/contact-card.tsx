@@ -1,26 +1,42 @@
 import { useUserById } from "@/src/api/hooks/use-user";
-import SectionCard from "@/src/components/map/details/section-card";
+import SectionCard from "@/src/components/ui/section-card";
 import { colors, rounded, spacing } from "@/src/theme";
 import { MessageCircle, Phone, Star } from "lucide-react-native";
 import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import ErrorState from "../states/error-state";
+import UserProfileInfo from "./user-profile-info";
+import { useUserRating } from "@/src/api/hooks/use-rating";
 
 interface ContactCardProps {
   asCard?: boolean;
   userId: number | null;
   header?: string;
+  isTheUserCourier?: boolean;
+  onUserProfileInfoPress?: () => void;
 }
 
 export default function ContactCard({
   asCard = true,
   userId,
   header,
+  isTheUserCourier = false,
+  onUserProfileInfoPress,
 }: ContactCardProps) {
   if (!userId) {
     return null;
   }
-  const { data: user, isError, error, refetch } = useUserById(userId);
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+    isError,
+    error,
+    refetch,
+  } = useUserById(userId);
+  const { data: userRating, isLoading: isLoadingUserRating } =
+    useUserRating(userId);
+
+  if (isLoadingUser) return null;
 
   if (isError || !user) {
     return (
@@ -49,29 +65,15 @@ export default function ContactCard({
     <View style={styles.courierSection}>
       {header && <Text style={styles.sectionLabel}>{header}</Text>}
 
-      <View style={styles.courierRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user.firstName.charAt(0)}
-            {user.lastName.charAt(0)}
-          </Text>
-        </View>
-
-        <View style={styles.courierInfo}>
-          <Text style={styles.courierName}>
-            {user.firstName} {user.lastName}
-          </Text>
-          <Text style={styles.courierUsername}>{user.username}</Text>
-          <View style={styles.ratingRow}>
-            <Star
-              size={12}
-              color={colors.status.warning}
-              fill={colors.status.warning}
-            />
-            <Text style={styles.ratingText}>4.6 · 142 odbiorów</Text>
-          </View>
-        </View>
-      </View>
+      <UserProfileInfo
+        user={user}
+        rating={userRating?.avgScore || 0}
+        // TODO: add pickups count isted of rating count in this place
+        //pickupsCount={0}
+        ratingCount={userRating?.feedbackCount || 0}
+        showCourierFrom={isTheUserCourier}
+        onPress={onUserProfileInfoPress}
+      />
 
       <View style={styles.courierActions}>
         <Pressable

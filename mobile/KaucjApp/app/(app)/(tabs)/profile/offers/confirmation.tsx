@@ -1,39 +1,46 @@
 import React from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-screen";
+import { router, useLocalSearchParams, useRouter } from "expo-router";
+import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-layout";
+import ConfirmationWithReview from "@/src/components/standalone-screens/confirmation/confirmation-with-review";
+import ErrorState from "@/src/components/states/error-state";
 
 export default function ConfirmationScreen() {
-  const router = useRouter();
+  const { type, userId } = useLocalSearchParams<{
+    type: "success" | "cancel";
+    userId?: string;
+  }>();
 
-  const { type } = useLocalSearchParams<{ type: "success" | "cancel" }>();
+  if (type === "success") {
+    if (!userId || !Number.isFinite(Number(userId))) {
+      return (
+        <ErrorState
+          title="Wystąpił błąd"
+          message="Nie udało się załadować danych."
+          onRetry={() => router.back()}
+        />
+      );
+    }
+    return (
+      <ConfirmationWithReview
+        userId={Number(userId)}
+        onSuccess={() => router.dismissTo("/profile/offers")}
+        isTheUserToReviewCourier={true}
+      />
+    );
+  }
+  return <CancelConfirmation />;
+}
 
-  const contentMap = {
-    success: {
-      animationSource: require("@/assets/animations/email-sent.json"),
-      title: "Pomyślnie zakończono!",
-      description: "Ten odbiór został pomyślnie zakończony. Dziękujemy!",
-      buttonText: "Klasa!",
-      action: () => router.dismissTo("/profile/offers"),
-    },
-    cancel: {
-      animationSource: require("@/assets/animations/email-sent.json"),
-      title: "Anulowano!",
-      description:
-        "Twoja oferta została pomyślnie anulowana. Nie będzie już widoczna dla kurierów.",
-      buttonText: "Rozumiem!",
-      action: () => router.dismissTo("/profile/offers"),
-    },
-  };
-
-  const activeContent = contentMap[type] || contentMap.success;
-
+const CancelConfirmation = () => {
   return (
     <ActionConfirmationLayout
-      animationSource={activeContent.animationSource}
-      title={activeContent.title}
-      description={activeContent.description}
-      buttonText={activeContent.buttonText}
-      onButtonPress={activeContent.action}
+      animationSource={require("@/assets/animations/email-sent.json")}
+      title={"Anulowano!"}
+      description={
+        "Twoja oferta została pomyślnie anulowana. Nie będzie już widoczna dla kurierów."
+      }
+      buttonText={"Rozumiem!"}
+      onButtonPress={() => router.dismissTo("/profile/offers")}
     />
   );
-}
+};

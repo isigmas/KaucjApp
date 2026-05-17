@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    paddingRight: spacing.md,
   },
   title: {
     fontWeight: "700",

@@ -3,3 +3,4 @@ export * from "./machines";
 export * from "./api-error";
 export * from "./onboarding";
 export * from "./complaint";
+export * from "./rating";

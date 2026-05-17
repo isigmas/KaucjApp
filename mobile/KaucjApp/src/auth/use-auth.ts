@@ -44,6 +44,13 @@ export const useAuth = () => {
           lastName: userData.lastName,
           phone: userData.phone,
           addresses: userData.addresses,
+          createdAt: userData.createdAt,
+          collectedBottleCount: userData.collectedBottleCount,
+          collectedCanCount: userData.collectedCanCount,
+          returnedBottleCount: userData.returnedBottleCount,
+          returnedCanCount: userData.returnedCanCount,
+          returnedTotalCount: userData.returnedTotalCount,
+          collectedTotalCount: userData.collectedTotalCount,
         };
 
         return { accessToken: newAccessToken, refreshToken, user };

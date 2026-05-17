@@ -1,4 +1,7 @@
-import { useMyOffers, useMyOffersHistory } from "@/src/api/hooks/use-offer";
+import {
+  useMyReservedOffers,
+  useMyReservedOffersHistory,
+} from "@/src/api/hooks/use-offer";
 import QueryList, { QueryListCopy } from "@/src/components/ui/query-list";
 import ActiveTabSelector, {
   SegmentedTab,
@@ -7,24 +10,24 @@ import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import MyOfferCard from "./my-offer-card";
+import ReservedOfferCard from "./reserved-offer-card";
 
-type OffersTab = "active" | "history";
-
-const TABS: readonly SegmentedTab<OffersTab>[] = [
+type ReservationsTab = "active" | "history";
+const TABS: readonly SegmentedTab<ReservationsTab>[] = [
   { id: "active", label: "Aktywne" },
   { id: "history", label: "Historia" },
 ];
 
 const keyExtractor = (offer: Offer) => offer.offerId.toString();
-const renderItem = (offer: Offer) => <MyOfferCard offer={offer} />;
+const renderItem = (offer: Offer) => <ReservedOfferCard offer={offer} />;
 
-export default function MyOffersScreen() {
-  const [activeTab, setActiveTab] = useState<OffersTab>("active");
-  const activeOffers = useMyOffers();
-  const offersHistory = useMyOffersHistory();
+export default function ReservedOffersScreen() {
+  const [activeTab, setActiveTab] = useState<ReservationsTab>("active");
+  const activeReservations = useMyReservedOffers();
+  const reservationsHistory = useMyReservedOffersHistory();
 
-  const currentQuery = activeTab === "active" ? activeOffers : offersHistory;
+  const currentQuery =
+    activeTab === "active" ? activeReservations : reservationsHistory;
 
   return (
     <ScrollView
@@ -50,8 +53,8 @@ export default function MyOffersScreen() {
           active={activeTab}
           onChange={setActiveTab}
           counts={{
-            active: activeOffers.data?.length,
-            history: offersHistory.data?.length,
+            active: activeReservations.data?.length,
+            history: reservationsHistory.data?.length,
           }}
         />
       </View>
@@ -67,19 +70,19 @@ export default function MyOffersScreen() {
   );
 }
 
-const fallbackStates: Record<OffersTab, QueryListCopy> = {
+const fallbackStates: Record<ReservationsTab, QueryListCopy> = {
   active: {
-    loadingTitle: "Ładowanie twoich ofert",
-    errorTitle: "Ops! coś poszło nie tak podczas ładowania twoich ofert",
-    errorMessage: "Nie udało się pobrać ofert.",
-    emptyTitle: "Aktualnie nie masz żadnych aktywnych ofert.",
+    loadingTitle: "Ładowanie twoich rezerwacji",
+    errorTitle: "Ops! coś poszło nie tak podczas ładowania twoich rezerwacji",
+    errorMessage: "Nie udało się pobrać rezerwacji.",
+    emptyTitle: "Obecnie nie rezerwujesz żadnych ofert.",
   },
   history: {
-    loadingTitle: "Ładowanie historii ofert",
+    loadingTitle: "Ładowanie historii rezerwacji",
     errorTitle: "Ops! coś poszło nie tak podczas ładowania historii",
-    errorMessage: "Nie udało się pobrać historii ofert.",
+    errorMessage: "Nie udało się pobrać historii rezerwacji.",
     emptyTitle:
-      "Twoja historia ofert jest pusta. Zakończone oferty pojawią się tutaj.",
+      "Twoja historia rezerwacji jest pusta. Zakończone rezerwacje pojawią się tutaj.",
   },
 };
 

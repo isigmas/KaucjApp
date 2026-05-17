@@ -1,4 +1,4 @@
-import { useMyOffers } from "@/src/api/hooks/use-offer";
+import { useGetOffer } from "@/src/api/hooks/use-offer";
 import OfferItemsCard from "@/src/components/map/details/offer/offer-items-card";
 import { OfferSummaryCard } from "@/src/components/map/details/offer/offer-summary-card";
 import PickupCard from "@/src/components/map/details/offer/pickup-card";
@@ -7,21 +7,26 @@ import EmptyState from "@/src/components/states/empty-state";
 import ErrorState from "@/src/components/states/error-state";
 import LoadingState from "@/src/components/states/loading-state";
 import { colors, spacing } from "@/src/theme";
-import { Offer } from "@/src/types";
+
 import { MapPin, Package, Receipt } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
-import OfferActions from "./offer-actions";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
-import ComplaintCard from "./complaint-card";
 
 interface OfferDetailScreenProps {
   offerId: number;
 }
 
 export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
-  const { data: offers, isLoading, isError, error, refetch } = useMyOffers();
+  const {
+    data: offer,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useGetOffer(offerId);
 
   if (isLoading) {
     return <LoadingState title="Ładowanie oferty" />;
@@ -37,8 +42,6 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
     );
   }
 
-  const offer = offers?.find((o) => o.offerId === offerId);
-
   if (!offer) {
     return (
       <EmptyState title="Ta oferta jest już niedostępna." onRefresh={refetch} />
@@ -51,19 +54,19 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.primary.base}
+          colors={[colors.primary.base]}
+          progressBackgroundColor={colors.background.main}
+          progressViewOffset={10}
+        />
+      }
     >
       <OfferStatusSummaryCard offer={offer} />
 
-      <OfferDetailsAccordion offer={offer} />
-
-      <OfferActions offer={offer} />
-    </ScrollView>
-  );
-}
-
-export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
-  return (
-    <>
       <ExpandableCard
         title="Zawartość"
         subtitle={`${offer.totalQuantity} szt. · butelki i puszki`}
@@ -99,7 +102,7 @@ export function OfferDetailsAccordion({ offer }: { offer: Offer }) {
           />
         </View>
       </ExpandableCard>
-    </>
+    </ScrollView>
   );
 }
 

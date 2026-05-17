@@ -65,6 +65,17 @@ export default function BookingsLayout() {
           presentation: "transparentModal",
         }}
       />
+
+      <Stack.Screen
+        name="profile-details-sheet"
+        options={{
+          headerShown: false,
+          headerTransparent: true,
+          presentation: "formSheet",
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [0.8, 1],
+        }}
+      />
     </Stack>
   );
 }

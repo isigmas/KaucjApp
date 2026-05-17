@@ -13,6 +13,12 @@ export default function EmailSentScreen() {
 
   const animation = require("@/assets/animations/email-sent.json");
 
+  const handleDone = () => {
+    console.log("handleDone");
+
+    router.dismissTo("/(app)/(tabs)/home");
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
@@ -52,10 +58,7 @@ po 2 godzinach.`}
 
       {/* Przycisk na samym dole */}
       <View style={styles.footer}>
-        <Pressable
-          onPress={() => router.push("/(app)/(tabs)/profile")}
-          style={styles.button}
-        >
+        <Pressable onPress={handleDone} style={styles.button}>
           <Text style={styles.buttonText}>Klasa!</Text>
         </Pressable>
       </View>

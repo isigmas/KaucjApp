@@ -9,6 +9,7 @@ export interface ActionConfirmationLayoutProps {
   description?: string;
   buttonText: string;
   onButtonPress: () => void;
+  isLoading?: boolean;
   warningText?: string;
   children?: React.ReactNode;
 }
@@ -19,6 +20,7 @@ export default function ActionConfirmationLayout({
   description,
   buttonText,
   onButtonPress,
+  isLoading = false,
   warningText,
   children,
 }: ActionConfirmationLayoutProps) {
@@ -28,6 +30,9 @@ export default function ActionConfirmationLayout({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
       >
         <View style={styles.imageContainer}>
           <LottieView
@@ -43,7 +48,7 @@ export default function ActionConfirmationLayout({
 
           {description && <Text style={styles.description}>{description}</Text>}
 
-          {/* Slot for custom cards (e.g., Earnings, Cancelation fees, etc.) */}
+          {/* Slot for custom cards */}
           {children && <View style={styles.childrenWrapper}>{children}</View>}
 
           {warningText && (
@@ -58,9 +63,11 @@ export default function ActionConfirmationLayout({
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            pressed && styles.buttonPressed,
+            pressed && !isLoading && styles.buttonPressed,
+            isLoading && styles.buttonLoading,
           ]}
-          onPress={onButtonPress}
+          onPress={isLoading ? undefined : onButtonPress}
+          disabled={isLoading}
         >
           <Text style={styles.buttonText}>{buttonText}</Text>
         </Pressable>
@@ -149,6 +156,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
+  },
+  buttonLoading: {
+    opacity: 0.6,
   },
   buttonText: {
     color: colors.text.white,

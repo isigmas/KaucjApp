@@ -73,7 +73,7 @@ apiClient.interceptors.response.use(
 
     if (error.response) {
       console.warn(
-        `[API Error] ${error.response.status} - ${originalRequest?.url} - ${JSON.stringify(error.response.data, null, 2)}`,
+        `[API Error]${error.response.status} - ${error.response.config.method?.toUpperCase()} ${originalRequest?.url} - ${JSON.stringify(error.response.data, null, 2)}`,
       );
     } else {
       console.error(`[API Error] Client Setup Error - ${error.message}`);
