@@ -52,7 +52,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", firstUserId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":5}"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/user/{id}/rating", secondUserId)
                         .header("X-User-Id", secondUserId))
