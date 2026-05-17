@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 
 // TO KOMPONENT STWORZONY PRZEZ CLAUDE CODE XD ALE DZIAŁA KOZACKO
 
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.subtle,
     justifyContent: "center",
     overflow: "hidden",
-    marginVertical: 8,
+    marginVertical: spacing.xs,
     ...Platform.select({
       ios: {
         shadowColor: colors.primary.base,

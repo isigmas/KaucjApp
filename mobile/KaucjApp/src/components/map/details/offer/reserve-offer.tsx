@@ -21,7 +21,9 @@ export default function ReserveOffer({
 
   return (
     <View>
-      <CardTitle>Rezerwacja oferty</CardTitle>
+      <View style={{ marginLeft: spacing.md }}>
+        <CardTitle>Rezerwacja oferty</CardTitle>
+      </View>
 
       <SwipeToReserve onComplete={mutateAsync} disabled={isPending} />
 
