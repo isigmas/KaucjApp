@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { Offer } from "@/src/types";
 import { formatDate } from "@/src/lib";
 import DetailHeader from "../details-header";
@@ -8,12 +8,30 @@ import OfferItemsCard from "./offer-items-card";
 import PickupCard from "./pickup-card";
 import { OfferSummaryCard } from "./offer-summary-card";
 import ReserveOffer from "./reserve-offer";
+import { useGetOffer } from "@/src/api/hooks/use-offer";
+import LoadingState from "@/src/components/states/loading-state";
+import EmptyState from "@/src/components/states/empty-state";
+import { useAuth } from "@/src/auth/use-auth";
+import SectionCard from "@/src/components/ui/section-card";
+import { colors, rounded, spacing } from "@/src/theme";
 
 interface OfferDetailsProps {
   offer: Offer;
+  offerId: number;
 }
 
-export default function OfferDetails({ offer }: OfferDetailsProps) {
+export default function OfferDetails({ offerId }: OfferDetailsProps) {
+  const { user } = useAuth();
+  const { data: offer, isLoading } = useGetOffer(offerId);
+  if (isLoading) {
+    return <LoadingState title="Ładowanie oferty" />;
+  }
+  if (!offer) {
+    return <EmptyState title="Ta oferta jest już niedostępna." />;
+  }
+
+  const isReserved = offer.status === "RESERVED";
+  const isTheUserOwner = offer.creatorId === user?.userId;
   return (
     <View style={styles.container}>
       <DetailHeader
@@ -21,7 +39,7 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
         subtitle={formatDate(offer.createdAt)}
         rightSlot={<StatusBadge status={offer.status} />}
       />
-
+      {isTheUserOwner && <OwnerCard />}
       <OfferItemsCard offer={offer} />
 
       <PickupCard
@@ -31,8 +49,18 @@ export default function OfferDetails({ offer }: OfferDetailsProps) {
 
       <OfferSummaryCard offer={offer} />
 
-      <ReserveOffer offerId={offer.offerId} totalIncome={offer.totalIncome} />
+      {!isTheUserOwner && !isReserved && (
+        <ReserveOffer offerId={offer.offerId} totalIncome={offer.totalIncome} />
+      )}
     </View>
+  );
+}
+
+function OwnerCard() {
+  return (
+    <SectionCard style={styles.ownerCard}>
+      <Text style={styles.ownerCardText}>Przeglądasz swoją ofertę</Text>
+    </SectionCard>
   );
 }
 
@@ -40,5 +68,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 100,
+    paddingTop: spacing.sm,
+  },
+  ownerCard: {
+    backgroundColor: colors.status.warning + "30",
+    borderColor: colors.status.warning,
+    borderRadius: rounded.pill,
+    borderWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ownerCardText: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    color: colors.text.secondary,
   },
 });

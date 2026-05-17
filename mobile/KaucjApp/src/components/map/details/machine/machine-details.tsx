@@ -15,6 +15,7 @@ import StatusDropdown from "./status-dropdown";
 import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
+import { spacing } from "@/src/theme";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -99,5 +100,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 100,
+    paddingTop: spacing.sm,
   },
 });

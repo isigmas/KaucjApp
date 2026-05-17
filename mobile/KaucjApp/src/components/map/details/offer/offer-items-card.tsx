@@ -7,10 +7,7 @@ import SectionCard from "../../../ui/section-card";
 
 interface OfferItemsCardProps {
   offer: Offer;
-  /**
-   * When true, renders only the inner rows without a SectionCard wrapper or
-   * title. Useful when embedding inside another card (e.g. an expandable one).
-   */
+
   bare?: boolean;
 }
 

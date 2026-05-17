@@ -7,7 +7,7 @@ import MapScreen from "./map-screen";
 import DetailsSheet from "./details-sheet";
 
 export type SelectedMapItem =
-  | { type: "offer"; data: Offer }
+  | { type: "offer"; data: Offer; id: number }
   | { type: "machine"; data: DepositMachine; id: number };
 
 export default function MapContainer() {
@@ -17,7 +17,7 @@ export default function MapContainer() {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const handleOfferPress = useCallback((offer: Offer) => {
-    setSelectedItem({ type: "offer", data: offer });
+    setSelectedItem({ type: "offer", data: offer, id: offer.offerId });
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 

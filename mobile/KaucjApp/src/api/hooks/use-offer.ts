@@ -28,14 +28,19 @@ export const offerKeys = {
     [...offerKeys.all(), "search", bbox] as const,
 };
 
-// GET /offer/szosti - get all offers (for map)
-export const useAllOffers = () => {
-  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
-    queryKey: offerKeys.lists(),
+//GET /offer/{id} - get an offer by id
+export const useGetOffer = (id: number) => {
+  return useQuery<Offer, AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.detail(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<Offer[]>("/offer/szosti");
+      const { data } = await apiClient.get<Offer>(`/offer/${id}`);
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
+    enabled: !!id,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
