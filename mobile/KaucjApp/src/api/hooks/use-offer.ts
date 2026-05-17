@@ -24,6 +24,8 @@ export const offerKeys = {
   detail: (id: number) => [...offerKeys.details(), id] as const,
   mine: () => [...offerKeys.all(), "my"] as const,
   reserved: () => [...offerKeys.all(), "my-reserved"] as const,
+  history: () => [...offerKeys.all(), "history"] as const,
+  reservedHistory: () => [...offerKeys.all(), "reserved-history"] as const,
   search: (bbox: OfferSearchBBox) =>
     [...offerKeys.all(), "search", bbox] as const,
 };
@@ -60,6 +62,17 @@ export const useMyOffers = () => {
   });
 };
 
+// GET /offer/my/history - get offers history for the current user
+export const useMyOffersHistory = () => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.history(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>("/offer/my/history");
+      return data;
+    },
+  });
+};
+
 // GET /offer/my/reserved - get offers reserved by the current user
 export const useMyReservedOffers = () => {
   return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
@@ -72,6 +85,19 @@ export const useMyReservedOffers = () => {
         );
       });
       return sortedData;
+    },
+  });
+};
+
+// GET /offer/my/reserved/history - get reserved offers history for the current user
+export const useMyReservedOffersHistory = () => {
+  return useQuery<Offer[], AxiosError<ApiErrorResponse>>({
+    queryKey: offerKeys.reservedHistory(),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Offer[]>(
+        "/offer/my/reserved/history",
+      );
+      return data;
     },
   });
 };
