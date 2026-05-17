@@ -476,4 +476,11 @@ public class OfferService {
                 .map(this::mapToComplaintResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public OfferResponseDTO getOffer(Long offerId, Long userId) {
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+        return mapToResponseDTO(offer);
+    }
 }
