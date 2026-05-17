@@ -7,8 +7,12 @@ import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.ws.{Message, TextMessage}
 import org.apache.pekko.kafka.{ConsumerSettings, Subscriptions}
 import org.apache.pekko.kafka.scaladsl.Consumer
-import org.apache.pekko.stream.scaladsl.{BroadcastHub, Flow, Source, Sink}
+import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.http.scaladsl.server.Directives.*
+import com.fasterxml.jackson.databind.ObjectMapper
+import pl.isigmas.kaucjapp.monitor.handler.processIncomingLog
+import pl.isigmas.kaucjapp.common.logger.SystemLog
+import java.util.UUID
 
 import scala.util.{Failure, Success}
 
@@ -23,24 +27,34 @@ object MonitoringServer {
 
     val kafkaServers = config.getString("app.kafka.bootstrap-servers")
     val kafkaTopic = config.getString("app.kafka.topic")
-    val kafkaGroupId = config.getString("app.kafka.group-id")
 
-    val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-      .withBootstrapServers(kafkaServers)
-      .withGroupId(kafkaGroupId)
-      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+    val mapper = new ObjectMapper().findAndRegisterModules()
 
-    val kafkaSource: Source[String, ?] = Consumer
-      .plainSource(consumerSettings, Subscriptions.topics(kafkaTopic))
-      .map(record => record.value())
+    def createWebsocketFlow(): Flow[Message, Message, Any] = {
+      val uniqueGroupId = s"ws-log-viewer-${UUID.randomUUID()}"
+      
+      val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
+        .withBootstrapServers(kafkaServers)
+        .withGroupId(uniqueGroupId)
+        .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
 
-    val sharedKafkaStream: Source[String, ?] = kafkaSource
-      .runWith(BroadcastHub.sink)
+      val kafkaSource: Source[String, ?] = Consumer
+        .plainSource(consumerSettings, Subscriptions.topics(kafkaTopic))
+        .map(record => record.value())
 
-    val websocketFlow: Flow[Message, Message, Any] = Flow.fromSinkAndSource(
-      Sink.ignore,
-      sharedKafkaStream.map(logText => TextMessage(logText))
-    )
+      Flow.fromSinkAndSource(
+        Sink.ignore,
+        kafkaSource.map(logText =>
+          try {
+            val systemLog = mapper.readValue(logText, classOf[SystemLog])
+            processIncomingLog(systemLog)
+            TextMessage(logText)
+          } catch {
+            case ex: Throwable =>
+              TextMessage(s"Failed to process log: $logText")
+          })
+      )
+    }
 
     val route = {
       pathPrefix("api" / "monitor") {
@@ -51,7 +65,7 @@ object MonitoringServer {
             }
           },
           path("admin" / "ws" / "logs") {
-            handleWebSocketMessages(websocketFlow)
+            handleWebSocketMessages(createWebsocketFlow())
           }
         )
       }
