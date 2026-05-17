@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gql-gateway
+  config:
+    import: optional:classpath:application-local.yml
+  threads:
+    virtual:
+      enabled: true
+  graphql:
+    websocket:
+      path: /graphql
+
+logging:
+  level:
+    pl.isigmas.kaucjapp.gqlgateway: INFO
+    org.springframework.security: INFO
+
+gateway:
+  routes:
+    - id: users-service
+      path: /api/user/**
+      uri: http://users-service:8080
+    - id: offers-service
+      path: /api/offer/**
+      uri: http://offers-service:8080
+    - id: auth-service
+      path: /api/auth/**
+      uri: http://auth-service:8080
+    - id: deposit-service
+      path: /api/deposit/**
+      uri: http://deposit-service:8080
+    - id: notification-service
+      path: /api/notification/**
+      uri: http://notification-service:8080
+    - id: monitor-service
+      path: /api/monitor/**
+      uri: http://monitor-service:8080
+
+jwt:
+  secret: ${JWT_SECRET}
