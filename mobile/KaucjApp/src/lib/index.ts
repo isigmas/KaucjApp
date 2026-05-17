@@ -8,6 +8,8 @@ import {
 import { colors } from "../theme";
 export * from "./map-box";
 export * from "./countdown";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { pl } from "date-fns/locale";
 
 export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   switch (status) {
@@ -76,6 +78,19 @@ export const formatDate = (
       hour: "2-digit",
       minute: "2-digit",
     });
+  }
+};
+
+export const timeAgoInPolish = (dateString: string): string => {
+  try {
+    const date = parseISO(dateString);
+    return formatDistanceToNow(date, {
+      addSuffix: true, //adds "temu" at the end
+      locale: pl,
+    });
+  } catch (error) {
+    console.error("Invalid date string:", dateString);
+    return "";
   }
 };
 

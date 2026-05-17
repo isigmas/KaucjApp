@@ -6,6 +6,7 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { useReviews } from "@/src/api/hooks/use-rating";
 import LoadingState from "../states/loading-state";
 import { Review } from "@/src/types";
+import { timeAgoInPolish } from "@/src/lib";
 
 interface ReviewsSectionProps {
   userId: number;
@@ -57,7 +58,7 @@ const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
         <Text style={styles.reviewerName} numberOfLines={1}>
           {review.reviewerUsername}
         </Text>
-        <Text style={styles.dateText}>{review.createdAt}</Text>
+        <Text style={styles.dateText}>{timeAgoInPolish(review.createdAt)}</Text>
       </View>
 
       <View style={styles.starsRow}>
