@@ -78,13 +78,12 @@ public class DepositMachineService {
             depositMachine.addOpeningHour(record);
         }
 
-        depositMachineRepository.save(depositMachine);
+        depositMachineRepository.saveAndFlush(depositMachine);
 
-        Rating rating = Rating.builder()
-                .depositMachine(depositMachine)
-                .avgScore(BigDecimal.ZERO)
-                .feedbackCount(0)
-                .build();
+        Rating rating = new Rating();
+        rating.setDepositMachine(depositMachine);
+        rating.setAvgScore(BigDecimal.ZERO);
+        rating.setFeedbackCount(0);
         ratingRepository.save(rating);
     }
 
@@ -145,6 +144,7 @@ public class DepositMachineService {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                 .orElseThrow(() -> new DepositMachineNotFoundException(id));
 
+        ratingRepository.findById(id).ifPresent(ratingRepository::delete);
         depositMachineRepository.delete(depositMachine);
     }
 
