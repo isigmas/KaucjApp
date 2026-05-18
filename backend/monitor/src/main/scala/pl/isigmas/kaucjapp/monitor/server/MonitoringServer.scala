@@ -10,8 +10,6 @@ import org.apache.pekko.kafka.scaladsl.Consumer
 import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import pl.isigmas.kaucjapp.monitor.handler.processIncomingLog
-import pl.isigmas.kaucjapp.common.logger.SystemLog
 import java.util.UUID
 
 import scala.util.{Failure, Success}
@@ -46,8 +44,6 @@ object MonitoringServer {
         Sink.ignore,
         kafkaSource.map(logText =>
           try {
-            val systemLog = mapper.readValue(logText, classOf[SystemLog])
-            processIncomingLog(systemLog)
             TextMessage(logText)
           } catch {
             case ex: Throwable =>
