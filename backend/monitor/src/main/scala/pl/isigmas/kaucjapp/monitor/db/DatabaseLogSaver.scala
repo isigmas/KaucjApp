@@ -13,7 +13,7 @@ import pl.isigmas.kaucjapp.monitor.db.LogRepository
 import scala.concurrent.duration.*
 
 object DatabaseLogSaver {
-  def start()(implicit system: ActorSystem[?]): Unit = {
+  def start(implicit system: ActorSystem[?]): Unit = {
     import system.executionContext
     val config = system.settings.config
     val mapper = new ObjectMapper().findAndRegisterModules()
