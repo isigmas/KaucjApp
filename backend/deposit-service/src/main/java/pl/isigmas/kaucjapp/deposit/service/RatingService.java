@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.deposit.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
+import pl.isigmas.kaucjapp.deposit.exception.RatingNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewForbiddenException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachineReview;
@@ -139,6 +141,13 @@ public class RatingService {
                 reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0));
     }
 
+    @Transactional(readOnly = true)
+    public RatingDTO getRatingDTO(Long depositMachineId) {
+        return ratingRepository.findById(depositMachineId)
+                .map(this::mapToDTO)
+                .orElseThrow(() -> new RatingNotFoundException(depositMachineId));
+    }
+
     private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review) {
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
@@ -148,5 +157,13 @@ public class RatingService {
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
                 .build();
+    }
+
+    private RatingDTO mapToDTO(Rating rating) {
+        RatingDTO dto = new RatingDTO();
+        dto.setDepositMachineId(rating.getDepositMachineId());
+        dto.setAvgScore(rating.getAvgScore());
+        dto.setFeedbackCount(rating.getFeedbackCount());
+        return dto;
     }
 }

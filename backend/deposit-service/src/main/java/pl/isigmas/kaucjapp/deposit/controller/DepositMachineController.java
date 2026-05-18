@@ -9,12 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.*;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
 import pl.isigmas.kaucjapp.deposit.service.RatingService;
 
@@ -122,6 +117,16 @@ public class DepositMachineController {
         log.info("User {} deleting review {}", userId, id);
         ratingService.deleteReview(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/machine/{id}/rating")
+    public ResponseEntity<RatingDTO> getRating(
+            @PathVariable Long id
+    )
+    {
+        log.info("Fetching rating for machine id {}",id);
+        RatingDTO ratingDTO = ratingService.getRatingDTO(id);
+        return ResponseEntity.ok(ratingDTO);
     }
 
 }
