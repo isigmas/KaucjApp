@@ -14,8 +14,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class RatingDTO {
 
-    @JsonProperty("user_id")
-    private Long userId;
+    @JsonProperty("deposit_machine_id")
+    private Long depositMachineId;
 
     @JsonProperty("avg_score")
     private BigDecimal avgScore;
