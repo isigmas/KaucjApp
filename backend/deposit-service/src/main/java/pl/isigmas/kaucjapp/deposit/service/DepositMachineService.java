@@ -10,6 +10,7 @@ import pl.isigmas.kaucjapp.deposit.exception.DepositValidationException;
 import pl.isigmas.kaucjapp.deposit.exception.RetailNetworkNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
 import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
+import pl.isigmas.kaucjapp.deposit.model.Rating;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
@@ -155,8 +156,5 @@ public class DepositMachineService {
         return mapToResponseDTO(depositMachine);
     }
 
-    public void createReview(@Valid ReviewRequestDTO dto) {
 
-
-    }
 }

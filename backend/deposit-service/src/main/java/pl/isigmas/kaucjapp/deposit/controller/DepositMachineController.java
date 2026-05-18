@@ -14,6 +14,7 @@ import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
+import pl.isigmas.kaucjapp.deposit.service.RatingService;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ import java.util.List;
 public class DepositMachineController {
 
     private final DepositMachineService depositMachineService;
+    private final RatingService ratingService;
 
     @GetMapping("/test")
     public ResponseEntity<String> get200() {
@@ -92,7 +94,7 @@ public class DepositMachineController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         log.info("Creating review for deposit machine with id {} by user {}",id, userId);
-        depositMachineService.createReview(reviewRequestDTO);
+        ratingService.createReview(id,userId,reviewRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
 
     }
