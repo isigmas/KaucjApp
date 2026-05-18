@@ -104,4 +104,13 @@ public class DepositMachineController {
         return ResponseEntity.ok(ratingService.getDepositMachineReviews(id));
     }
 
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("User {} deleting review {}", userId, id);
+        ratingService.deleteReview(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

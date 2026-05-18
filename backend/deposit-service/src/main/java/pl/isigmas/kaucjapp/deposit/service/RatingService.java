@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
+import pl.isigmas.kaucjapp.deposit.exception.ReviewForbiddenException;
+import pl.isigmas.kaucjapp.deposit.exception.ReviewNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachineReview;
 import pl.isigmas.kaucjapp.deposit.model.Rating;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineReviewRepository;
@@ -64,6 +66,41 @@ public class RatingService {
                 .stream()
                 .map(this::mapReviewToDTO)
                 .toList();
+    }
+
+    @Transactional
+    public void deleteReview(Long reviewId, Long reviewerId) {
+        DepositMachineReview review = depositMachineReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+
+        if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            throw new ReviewForbiddenException("Only the author of the review can delete it");
+        }
+
+        Rating rating = ratingRepository.findById(review.getDepositMachineId())
+                .orElseThrow(() -> new DepositMachineNotFoundException(review.getDepositMachineId()));
+
+        BigDecimal currentAvg = rating.getAvgScore();
+        int oldCount = rating.getFeedbackCount();
+        int newCount = oldCount - 1;
+
+        BigDecimal currentTotalSum = currentAvg.multiply(BigDecimal.valueOf(oldCount));
+        BigDecimal newTotalSum = currentTotalSum.subtract(review.getScore());
+
+        BigDecimal newAvg;
+        if (newCount <= 0) {
+            newAvg = BigDecimal.ZERO;
+        } else {
+            newAvg = newTotalSum.divide(BigDecimal.valueOf(newCount), 2, RoundingMode.HALF_UP);
+        }
+
+        rating.setAvgScore(newAvg);
+        rating.setFeedbackCount(Math.max(newCount, 0));
+
+        depositMachineReviewRepository.delete(review);
+
+        log.info("Deleted review {} for deposit machine {} (new avg: {}, count: {})",
+                reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0));
     }
 
     private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review) {
