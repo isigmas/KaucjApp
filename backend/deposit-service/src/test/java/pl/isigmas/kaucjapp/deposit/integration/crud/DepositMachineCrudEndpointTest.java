@@ -57,7 +57,7 @@ public class DepositMachineCrudEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())
@@ -71,7 +71,7 @@ public class DepositMachineCrudEndpointTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$[0].opening_hours.length()").value(7));
 
         mockMvc.perform(delete("/api/deposit/machine/" + id))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         assertThat(depositMachineRepository.findAll()).isEmpty();
     }

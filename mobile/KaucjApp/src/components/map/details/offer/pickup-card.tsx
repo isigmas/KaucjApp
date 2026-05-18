@@ -2,7 +2,7 @@ import { colors, rounded, spacing } from "@/src/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SectionTitle from "../card-title";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 import MiniMap from "@/src/components/profile/reserved-offers/mini-map";
 
 interface PickupCardProps {

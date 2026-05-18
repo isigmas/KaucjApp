@@ -8,6 +8,8 @@ import {
 import { colors } from "../theme";
 export * from "./map-box";
 export * from "./countdown";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { pl } from "date-fns/locale";
 
 export const getMachineStatusConfig = (status: DepositMachineStatus) => {
   switch (status) {
@@ -62,14 +64,34 @@ export const getDayName = (dayOfWeek: number) => {
   ][dayOfWeek - 1];
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (
+  dateString: string,
+  getOnlyYear: boolean = false,
+) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("pl-PL", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  if (getOnlyYear) {
+    return date.getFullYear().toString();
+  } else {
+    return date.toLocaleDateString("pl-PL", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+};
+
+export const timeAgoInPolish = (dateString: string): string => {
+  try {
+    const date = parseISO(dateString);
+    return formatDistanceToNow(date, {
+      addSuffix: true, //adds "temu" at the end
+      locale: pl,
+    });
+  } catch (error) {
+    console.error("Invalid date string:", dateString);
+    return "";
+  }
 };
 
 export const formatHour = (time: string) => {
@@ -92,6 +114,27 @@ export const getPolishPackageQuantity = (
     return showNumber ? n + " opakowania kaucyjne" : "opakowania kaucyjne";
   }
   return showNumber ? n + " opakowań kaucyjnych" : "opakowań kaucyjnych";
+};
+
+export const getPolishPickupsCount = (n: number) => {
+  if (n === 1) return "jeden odbiór";
+  const last = n % 10;
+  const lastTwo = n % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return n + " odbiory";
+  }
+  return n + " odbiorów";
+};
+
+export const getPolishRatingCount = (n: number) => {
+  if (n === 0) return "brak opinii";
+  if (n === 1) return "jedna opinia";
+  const last = n % 10;
+  const lastTwo = n % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return n + " opinie";
+  }
+  return n + " opinii";
 };
 
 export const getComplaintReasonLabel = (

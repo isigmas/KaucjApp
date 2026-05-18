@@ -2,7 +2,7 @@ import React from "react";
 import { Text, StyleSheet } from "react-native";
 import { OpeningHour } from "@/src/types";
 import { colors } from "@/src/theme";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 import CardTitle from "../card-title";
 import CurrentOpeningStatus from "./current-opening-status";
 

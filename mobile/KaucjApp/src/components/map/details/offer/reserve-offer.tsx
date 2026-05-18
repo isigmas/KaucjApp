@@ -20,8 +20,10 @@ export default function ReserveOffer({
   );
 
   return (
-    <View style={styles.container}>
-      <CardTitle>Rezerwacja oferty</CardTitle>
+    <View>
+      <View style={{ marginLeft: spacing.md }}>
+        <CardTitle>Rezerwacja oferty</CardTitle>
+      </View>
 
       <SwipeToReserve onComplete={mutateAsync} disabled={isPending} />
 
@@ -39,9 +41,6 @@ export default function ReserveOffer({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: spacing.lg,
-  },
   errorText: {
     fontSize: 13,
     fontWeight: "600",

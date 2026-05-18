@@ -9,10 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.*;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
+import pl.isigmas.kaucjapp.deposit.service.RatingService;
 
 import java.util.List;
 
@@ -24,6 +23,7 @@ import java.util.List;
 public class DepositMachineController {
 
     private final DepositMachineService depositMachineService;
+    private final RatingService ratingService;
 
     @GetMapping("/test")
     public ResponseEntity<String> get200() {
@@ -63,7 +63,7 @@ public class DepositMachineController {
     ) {
         log.info("Updating deposit machine with id {}",id);
         depositMachineService.updateMachine(id, updateMachineDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/machine/{id}")
@@ -72,7 +72,7 @@ public class DepositMachineController {
     ) {
         log.info("Deleting deposit machine with id {}",id);
         depositMachineService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/machine/{id}")
@@ -82,6 +82,51 @@ public class DepositMachineController {
         log.info("Getting deposit machine with id {}",id);
         DepositMachineResponseDTO depositMachineResponseDTO = depositMachineService.getDepositMachine(id);
         return ResponseEntity.ok(depositMachineResponseDTO);
+    }
+
+    @PostMapping("/machine/{id}/rating")
+    public ResponseEntity<Void> createReview(
+            @PathVariable Long id,
+            @Valid @RequestBody ReviewRequestDTO reviewRequestDTO,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("Creating review for deposit machine {} by user {}", id, userId);
+        ratingService.createReview(id, userId, reviewRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/machine/{id}/reviews")
+    public ResponseEntity<List<ReviewResponseDTO>> getDepositMachineReviews(@PathVariable Long id) {
+        log.info("Fetching reviews for deposit machine {}", id);
+        return ResponseEntity.ok(ratingService.getDepositMachineReviews(id));
+    }
+
+    @PatchMapping("/reviews/{id}")
+    public ResponseEntity<Void> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateReviewDTO request,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("User {} updating review {}", userId, id);
+        ratingService.updateReview(id, userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("User {} deleting review {}", userId, id);
+        ratingService.deleteReview(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/machine/{id}/rating")
+    public ResponseEntity<RatingDTO> getRating(
+            @PathVariable Long id
+    )
+    {
+        log.info("Fetching rating for machine id {}",id);
+        RatingDTO ratingDTO = ratingService.getRatingDTO(id);
+        return ResponseEntity.ok(ratingDTO);
     }
 
 }

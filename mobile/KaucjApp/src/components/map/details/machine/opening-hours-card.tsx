@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { OpeningHour } from "@/src/types";
 import { colors, spacing } from "@/src/theme";
 import { formatHour, getDayName } from "@/src/lib";
-import SectionCard from "../section-card";
+import SectionCard from "../../../ui/section-card";
 import SectionTitle from "../card-title";
 
 interface OpeningHoursCardProps {

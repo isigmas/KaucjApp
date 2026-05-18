@@ -1,12 +1,10 @@
-import SectionCard from "@/src/components/map/details/section-card";
+import SectionCard from "@/src/components/ui/section-card";
 import Countdown from "@/src/components/profile/reserved-offers/countdown";
 import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   AlertCircle,
-  AlertTriangle,
-  Calendar,
   CheckCircle,
   CheckCircle2,
   Clock3,
@@ -63,7 +61,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/offers/confirmation",
-                  params: { type: "success" },
+                  params: { type: "success", userId: offer.collectorId },
                 });
               }
             },
@@ -77,6 +75,12 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
     router.push({
       pathname: "/profile/offers/complaint",
       params: { id: offer.offerId },
+    });
+  };
+  const handleOnUserProfileInfoPress = () => {
+    router.push({
+      pathname: "/profile/offers/profile-details-sheet",
+      params: { userId: offer.collectorId },
     });
   };
 
@@ -94,6 +98,8 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             asCard={false}
             userId={offer.collectorId}
             header={courierHeaderText}
+            isTheUserCourier={true}
+            onUserProfileInfoPress={handleOnUserProfileInfoPress}
           />
           <View style={styles.hairline} />
 
@@ -237,10 +243,6 @@ interface DateRowProps {
 }
 
 function DateRow({ offer }: DateRowProps) {
-  const showReservedAt = !!offer.reservedAt && offer.status !== "OPEN";
-  const reservedAccent =
-    offer.status === "RESERVED" ? colors.status.warning : colors.text.muted;
-
   return (
     <View style={styles.datesRow}>
       <DateChip
@@ -248,13 +250,6 @@ function DateRow({ offer }: DateRowProps) {
         label="Utworzono"
         value={formatDate(offer.createdAt)}
       />
-      {showReservedAt ? (
-        <DateChip
-          icon={<Calendar size={12} color={reservedAccent} />}
-          label="Zarezerwowano"
-          value={formatDate(offer.reservedAt!)}
-        />
-      ) : null}
     </View>
   );
 }
