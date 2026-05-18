@@ -16,10 +16,6 @@ import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,7 +24,6 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
     private final DepositMachineReviewRepository depositMachineReviewRepository;
-    private final ReviewerUsernameResolver reviewerUsernameResolver;
 
     @Transactional
     public void createReview(Long depositMachineId, Long reviewerId, @Valid ReviewRequestDTO dto) {
@@ -64,30 +59,17 @@ public class RatingService {
             throw new DepositMachineNotFoundException(depositMachineId);
         }
 
-        List<DepositMachineReview> reviews =
-                depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(depositMachineId);
-
-        Set<Long> reviewerIds = reviews.stream()
-                .map(DepositMachineReview::getReviewerId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        Map<Long, String> usernamesById = reviewerUsernameResolver.resolveUsernames(reviewerIds);
-
-        return reviews.stream()
-                .map(review -> mapReviewToDTO(review, usernamesById))
+        return depositMachineReviewRepository
+                .findByDepositMachineIdOrderByCreatedAtDesc(depositMachineId)
+                .stream()
+                .map(this::mapReviewToDTO)
                 .toList();
     }
 
-    private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review, Map<Long, String> usernamesById) {
-        String reviewerUsername = review.getReviewerId() == null
-                ? null
-                : usernamesById.get(review.getReviewerId());
-
+    private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review) {
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .reviewerId(review.getReviewerId())
-                .reviewerUsername(reviewerUsername)
                 .score(review.getScore())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
