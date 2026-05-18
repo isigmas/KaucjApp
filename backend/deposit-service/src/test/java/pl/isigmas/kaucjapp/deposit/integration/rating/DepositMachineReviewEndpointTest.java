@@ -271,6 +271,39 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.error_code").value("DEP_006"));
     }
 
+    // ---------- GET /api/deposit/machine/{id}/rating ----------
+
+    @Test
+    void getRating_newMachine_returnsZeroAggregate() throws Exception {
+        Long machineId = createMachine();
+
+        mockMvc.perform(get("/api/deposit/machine/{id}/rating", machineId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deposit_machine_id").value(machineId))
+                .andExpect(jsonPath("$.feedback_count").value(0))
+                .andExpect(jsonPath("$.avg_score").value(0));
+    }
+
+    @Test
+    void getRating_afterReview_returnsUpdatedAggregate() throws Exception {
+        Long machineId = createMachine();
+        postReview(machineId, 2001L, 5, "Great");
+        postReview(machineId, 2002L, 3, "OK");
+
+        mockMvc.perform(get("/api/deposit/machine/{id}/rating", machineId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deposit_machine_id").value(machineId))
+                .andExpect(jsonPath("$.feedback_count").value(2))
+                .andExpect(jsonPath("$.avg_score").value(4.00));
+    }
+
+    @Test
+    void getRating_unknownMachine_returns404() throws Exception {
+        mockMvc.perform(get("/api/deposit/machine/999999/rating"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error_code").value("DEP_008"));
+    }
+
     // ---------- helpers ----------
 
     private Long createMachine() throws Exception {
