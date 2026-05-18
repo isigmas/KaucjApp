@@ -12,8 +12,10 @@ import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
 import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
 import pl.isigmas.kaucjapp.deposit.model.Rating;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
+import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +27,7 @@ public class DepositMachineService {
 
     private final DepositMachineRepository depositMachineRepository;
     private final RetailNetworkRepository retailNetworkRepository;
+    private final RatingRepository ratingRepository;
 
     @Transactional(readOnly = true)
     public List<DepositMachineResponseDTO> getAll() {
@@ -76,6 +79,13 @@ public class DepositMachineService {
         }
 
         depositMachineRepository.save(depositMachine);
+
+        Rating rating = Rating.builder()
+                .depositMachine(depositMachine)
+                .avgScore(BigDecimal.ZERO)
+                .feedbackCount(0)
+                .build();
+        ratingRepository.save(rating);
     }
 
     @Transactional

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
 import pl.isigmas.kaucjapp.deposit.service.RatingService;
@@ -87,16 +88,20 @@ public class DepositMachineController {
         return ResponseEntity.ok(depositMachineResponseDTO);
     }
 
-    @PostMapping("machine/{id}/rating")
-    public ResponseEntity<ReviewRequestDTO> getDepositMachine(
-            @Valid @RequestBody ReviewRequestDTO reviewRequestDTO,
+    @PostMapping("/machine/{id}/rating")
+    public ResponseEntity<Void> createReview(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId
-    ) {
-        log.info("Creating review for deposit machine with id {} by user {}",id, userId);
-        ratingService.createReview(id,userId,reviewRequestDTO);
+            @Valid @RequestBody ReviewRequestDTO reviewRequestDTO,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("Creating review for deposit machine {} by user {}", id, userId);
+        ratingService.createReview(id, userId, reviewRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 
+    @GetMapping("/machine/{id}/reviews")
+    public ResponseEntity<List<ReviewResponseDTO>> getDepositMachineReviews(@PathVariable Long id) {
+        log.info("Fetching reviews for deposit machine {}", id);
+        return ResponseEntity.ok(ratingService.getDepositMachineReviews(id));
     }
 
 }
