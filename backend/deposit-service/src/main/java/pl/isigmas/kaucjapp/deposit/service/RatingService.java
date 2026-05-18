@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewForbiddenException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewNotFoundException;
@@ -66,6 +67,41 @@ public class RatingService {
                 .stream()
                 .map(this::mapReviewToDTO)
                 .toList();
+    }
+
+    @Transactional
+    public void updateReview(Long reviewId, Long reviewerId, UpdateReviewDTO request) {
+        DepositMachineReview review = depositMachineReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+
+        if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            throw new ReviewForbiddenException("Only the author of the review can edit it");
+        }
+
+        if (request.getScore() != null) {
+            Rating rating = ratingRepository.findById(review.getDepositMachineId())
+                    .orElseThrow(() -> new DepositMachineNotFoundException(review.getDepositMachineId()));
+
+            BigDecimal currentAvg = rating.getAvgScore();
+            int count = rating.getFeedbackCount();
+
+            if (count > 0) {
+                BigDecimal currentTotalSum = currentAvg.multiply(BigDecimal.valueOf(count));
+                BigDecimal newTotalSum = currentTotalSum.subtract(review.getScore()).add(request.getScore());
+                BigDecimal newAvg = newTotalSum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
+                rating.setAvgScore(newAvg);
+            }
+
+            review.setScore(request.getScore());
+        }
+
+        if (request.getComment() != null) {
+            review.setComment(request.getComment());
+        }
+
+        depositMachineReviewRepository.save(review);
+
+        log.info("Updated review {} for deposit machine {}", reviewId, review.getDepositMachineId());
     }
 
     @Transactional

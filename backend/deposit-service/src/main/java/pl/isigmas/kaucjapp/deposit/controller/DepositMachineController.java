@@ -14,6 +14,7 @@ import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
 import pl.isigmas.kaucjapp.deposit.service.RatingService;
 
@@ -102,6 +103,16 @@ public class DepositMachineController {
     public ResponseEntity<List<ReviewResponseDTO>> getDepositMachineReviews(@PathVariable Long id) {
         log.info("Fetching reviews for deposit machine {}", id);
         return ResponseEntity.ok(ratingService.getDepositMachineReviews(id));
+    }
+
+    @PatchMapping("/reviews/{id}")
+    public ResponseEntity<Void> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateReviewDTO request,
+            @RequestHeader("X-User-Id") Long userId) {
+        log.info("User {} updating review {}", userId, id);
+        ratingService.updateReview(id, userId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/reviews/{id}")
