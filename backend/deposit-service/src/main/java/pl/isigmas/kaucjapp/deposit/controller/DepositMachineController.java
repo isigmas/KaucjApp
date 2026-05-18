@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
 import pl.isigmas.kaucjapp.deposit.service.DepositMachineService;
 
@@ -63,7 +64,7 @@ public class DepositMachineController {
     ) {
         log.info("Updating deposit machine with id {}",id);
         depositMachineService.updateMachine(id, updateMachineDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/machine/{id}")
@@ -72,7 +73,7 @@ public class DepositMachineController {
     ) {
         log.info("Deleting deposit machine with id {}",id);
         depositMachineService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/machine/{id}")
@@ -84,6 +85,16 @@ public class DepositMachineController {
         return ResponseEntity.ok(depositMachineResponseDTO);
     }
 
+    @PostMapping("machine/{id}/rating")
+    public ResponseEntity<ReviewRequestDTO> getDepositMachine(
+            @Valid @RequestBody ReviewRequestDTO reviewRequestDTO,
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId
+    ) {
+        log.info("Creating review for deposit machine with id {} by user {}",id, userId);
+        depositMachineService.createReview(reviewRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
 
+    }
 
 }

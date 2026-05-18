@@ -1,12 +1,10 @@
 package pl.isigmas.kaucjapp.deposit.service;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.OpeningHourDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.*;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.DepositValidationException;
 import pl.isigmas.kaucjapp.deposit.exception.RetailNetworkNotFoundException;
@@ -155,5 +153,10 @@ public class DepositMachineService {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                                         .orElseThrow(() -> new DepositMachineNotFoundException(id));
         return mapToResponseDTO(depositMachine);
+    }
+
+    public void createReview(@Valid ReviewRequestDTO dto) {
+
+
     }
 }
