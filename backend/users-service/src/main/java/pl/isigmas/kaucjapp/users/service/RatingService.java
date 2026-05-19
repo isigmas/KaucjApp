@@ -42,12 +42,17 @@ public class RatingService {
             throw new SelfRatingForbiddenException();
         }
 
+        if(userReviewRepository.existsByReviewerIdAndOfferId(reviewerId,request.getOfferId())){
+            throw new ReviewForbiddenException("You've already rated this user for this offer");
+        }
+
         Rating rating = ratingRepository.findById(revieweeId)
                 .orElseThrow(() -> new UserNotFoundException(revieweeId));
 
         UserReview review = UserReview.builder()
                 .revieweeId(revieweeId)
                 .reviewerId(reviewerId)
+                .offerId(request.getOfferId())
                 .score(request.getScore())
                 .comment(request.getComment())
                 .build();
@@ -166,6 +171,12 @@ public class RatingService {
         return ratingRepository.findById(userId)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> new RatingNotFoundException(userId));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasUserReviewedOffer(Long reviewerId, Long offerId) {
+        log.info("Checking if reviewer {} already rated offer {}", reviewerId, offerId);
+        return userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, offerId);
     }
 
     private ReviewResponseDTO mapReviewToDTO(UserReview review, Map<Long, String> usernamesById) {

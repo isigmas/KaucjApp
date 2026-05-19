@@ -40,7 +40,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4, "comment": "Solid kaucjapper"}
+                                {"score": 4, "comment": "Solid kaucjapper", "offer_id": 101}
                                 """))
                 .andExpect(status().isCreated());
 
@@ -58,6 +58,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
             assertThat(r.getReviewerId()).isEqualTo(reviewerId);
             assertThat(r.getScore()).isEqualByComparingTo("4");
             assertThat(r.getComment()).isEqualTo("Solid kaucjapper");
+            assertThat(r.getOfferId()).isEqualTo(101L);
         });
     }
 
@@ -88,12 +89,67 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 7}
+                                {"score": 7, "offer_id": 1}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"));
 
         assertThat(userReviewRepository.count()).isZero();
+    }
+
+    @Test
+    void postRating_missingOfferId_returns400_validationError() throws Exception {
+        Long reviewerId = createUser(2001L, "alice", "alice@example.com");
+        Long revieweeId = createUser(2002L, "bob", "bob@example.com");
+
+        mockMvc.perform(post("/api/user/{id}/rating", revieweeId)
+                        .header("X-User-Id", reviewerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"score": 4, "comment": "no offer"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"))
+                .andExpect(jsonPath("$.validation_errors.offerId").exists());
+
+        assertThat(userReviewRepository.count()).isZero();
+    }
+
+    @Test
+    void postRating_duplicateOfferForSameReviewer_returns403_andDoesNotPersist() throws Exception {
+        Long reviewerId = createUser(2001L, "alice", "alice@example.com");
+        Long revieweeId = createUser(2002L, "bob", "bob@example.com");
+
+        rateUser(revieweeId, reviewerId, 5, "first", 777L);
+
+        mockMvc.perform(post("/api/user/{id}/rating", revieweeId)
+                        .header("X-User-Id", reviewerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"score": 1, "comment": "retry", "offer_id": 777}
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error_code").value("USER_007"));
+
+        assertThat(userReviewRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void postRating_sameReviewerDifferentOffer_returns201() throws Exception {
+        Long reviewerId = createUser(2001L, "alice", "alice@example.com");
+        Long revieweeId = createUser(2002L, "bob", "bob@example.com");
+
+        rateUser(revieweeId, reviewerId, 5, "offer one", 801L);
+
+        mockMvc.perform(post("/api/user/{id}/rating", revieweeId)
+                        .header("X-User-Id", reviewerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"score": 3, "comment": "offer two", "offer_id": 802}
+                                """))
+                .andExpect(status().isCreated());
+
+        assertThat(userReviewRepository.count()).isEqualTo(2);
     }
 
     @Test
@@ -104,7 +160,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", me)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 5}
+                                {"score": 5, "offer_id": 1}
                                 """))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error_code").value("USER_004"));
@@ -120,7 +176,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4}
+                                {"score": 4, "offer_id": 1}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_code").value("USER_001"));
@@ -133,7 +189,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/{id}/rating", revieweeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4}
+                                {"score": 4, "offer_id": 1}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"));
@@ -147,8 +203,8 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
         Long bob = createUser(2002L, "bob", "bob@example.com");
         Long carol = createUser(2003L, "carol", "carol@example.com");
 
-        rateUser(bob, alice, 5, "great");
-        rateUser(bob, carol, 3, "ok");
+        rateUser(bob, alice, 5, "great", 201L);
+        rateUser(bob, carol, 3, "ok", 202L);
 
         mockMvc.perform(get("/api/user/{id}/reviews", bob))
                 .andExpect(status().isOk())
@@ -183,7 +239,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     void getReview_existing_returns200_withDto() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
-        rateUser(bob, alice, 4, "ok");
+        rateUser(bob, alice, 4, "ok", 301L);
         Long reviewId = latestReviewId();
 
         mockMvc.perform(get("/api/user/reviews/{id}", reviewId)
@@ -212,7 +268,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     void patchReview_authorChangesScore_returns200_recomputesAggregate() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
-        rateUser(bob, alice, 4, "old");
+        rateUser(bob, alice, 4, "old", 401L);
         Long reviewId = latestReviewId();
 
         mockMvc.perform(patch("/api/user/reviews/{id}", reviewId)
@@ -241,7 +297,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
         Long bob = createUser(2002L, "bob", "bob@example.com");
         Long carol = createUser(2003L, "carol", "carol@example.com");
 
-        rateUser(bob, alice, 4, "by alice");
+        rateUser(bob, alice, 4, "by alice", 501L);
         Long reviewId = latestReviewId();
 
         mockMvc.perform(patch("/api/user/reviews/{id}", reviewId)
@@ -265,7 +321,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", alice)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 5}
+                                {"score": 5, "offer_id": 1}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_code").value("USER_006"));
@@ -275,7 +331,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     void patchReview_scoreOutOfRange_returns400() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
-        rateUser(bob, alice, 4, "x");
+        rateUser(bob, alice, 4, "x", 601L);
         Long reviewId = latestReviewId();
 
         mockMvc.perform(patch("/api/user/reviews/{id}", reviewId)
@@ -296,9 +352,9 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
         Long bob = createUser(2002L, "bob", "bob@example.com");
         Long carol = createUser(2003L, "carol", "carol@example.com");
 
-        rateUser(bob, alice, 5, "alice-review");
+        rateUser(bob, alice, 5, "alice-review", 701L);
         Long aliceReviewId = latestReviewId();
-        rateUser(bob, carol, 3, "carol-review");
+        rateUser(bob, carol, 3, "carol-review", 702L);
 
         // Aggregate before: avg=(5+3)/2=4.00
         mockMvc.perform(get("/api/user/{id}/rating", bob))
@@ -324,7 +380,7 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
         Long bob = createUser(2002L, "bob", "bob@example.com");
         Long carol = createUser(2003L, "carol", "carol@example.com");
 
-        rateUser(bob, alice, 5, "by alice");
+        rateUser(bob, alice, 5, "by alice", 703L);
         Long reviewId = latestReviewId();
 
         mockMvc.perform(delete("/api/user/reviews/{id}", reviewId)
@@ -343,6 +399,47 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", alice))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_code").value("USER_006"));
+    }
+
+    // ---------- GET /api/user/reviews/check ----------
+
+    @Test
+    void checkReviewStatus_beforeReview_returnsFalse() throws Exception {
+        Long alice = createUser(2001L, "alice", "alice@example.com");
+
+        mockMvc.perform(get("/api/user/reviews/check")
+                        .param("offerId", "900")
+                        .header("X-User-Id", alice))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.already_reviewed").value(false));
+    }
+
+    @Test
+    void checkReviewStatus_afterReview_returnsTrue() throws Exception {
+        Long alice = createUser(2001L, "alice", "alice@example.com");
+        Long bob = createUser(2002L, "bob", "bob@example.com");
+
+        rateUser(bob, alice, 4, "done", 901L);
+
+        mockMvc.perform(get("/api/user/reviews/check")
+                        .param("offerId", "901")
+                        .header("X-User-Id", alice))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.already_reviewed").value(true));
+    }
+
+    @Test
+    void checkReviewStatus_differentOffer_returnsFalse() throws Exception {
+        Long alice = createUser(2001L, "alice", "alice@example.com");
+        Long bob = createUser(2002L, "bob", "bob@example.com");
+
+        rateUser(bob, alice, 4, "done", 902L);
+
+        mockMvc.perform(get("/api/user/reviews/check")
+                        .param("offerId", "903")
+                        .header("X-User-Id", alice))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.already_reviewed").value(false));
     }
 
     // ---------- helpers ----------
@@ -371,13 +468,13 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                 .getId();
     }
 
-    private void rateUser(Long revieweeId, Long reviewerId, int score, String comment) throws Exception {
+    private void rateUser(Long revieweeId, Long reviewerId, int score, String comment, long offerId) throws Exception {
         mockMvc.perform(post("/api/user/{id}/rating", revieweeId)
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": %d, "comment": "%s"}
-                                """.formatted(score, comment)))
+                                {"score": %d, "comment": "%s", "offer_id": %d}
+                                """.formatted(score, comment, offerId)))
                 .andExpect(status().isCreated());
     }
 

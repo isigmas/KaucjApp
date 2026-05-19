@@ -18,5 +18,8 @@ public class ReviewRequestDTO {
     @DecimalMax(value = "5", message = "Score must be at most 5")
     private BigDecimal score;
 
+    @NotNull
+    private Long offerId;
+
     private String comment;
 }
