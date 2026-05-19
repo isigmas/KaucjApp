@@ -1,27 +1,30 @@
 package pl.isigmas.kaucjapp.auth.validation;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+@Component
 public class ProfanityValidator implements ConstraintValidator<CleanUsername, String> {
 
-    // Wulgaryzmy — substring match po normalizacji
-    private static final List<String> PROFANITY = List.of(
-            "kutas", "chuj", "huj", "kurw", "jeb", "cip", "cwel", "debil",
-            "pierdol", "pizd", "dziwk", "szmat", "suka", "pedal", "zjeb",
-            "rucha", "srac", "zajeb"
-    );
+    @Value("${validation.profanity.words}")
+    private String profanityRaw;
 
-    // Nazwy zastrzeżone — exact match
-    private static final Set<String> RESERVED = Set.of(
-            "admin", "administrator", "support", "moderator", "mod",
-            "system", "root", "pomoc", "kaucjapp", "test", "bot",
-            "guest", "superuser"
-    );
+    @Value("${validation.profanity.reserved}")
+    private String reservedRaw;
+
+    private List<String> profanity;
+    private Set<String> reserved;
+
+    @PostConstruct
+    public void init() {
+        profanity = Arrays.asList(profanityRaw.split(","));
+        reserved = new HashSet<>(Arrays.asList(reservedRaw.split(",")));
+    }
 
     private static final Map<Character, Character> LEET = Map.of(
             '0', 'o',
@@ -39,9 +42,9 @@ public class ProfanityValidator implements ConstraintValidator<CleanUsername, St
         String lower = value.toLowerCase();
         String normalized = normalizeLeet(lower);
 
-        if (RESERVED.contains(normalized)) return false;
+        if (reserved.contains(normalized)) return false;
 
-        if (PROFANITY.stream().anyMatch(normalized::contains)) return false;
+        if (profanity.stream().anyMatch(normalized::contains)) return false;
 
         return true;
     }
