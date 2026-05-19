@@ -51,7 +51,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + secondUserId + "/rating")
                         .header("X-User-Id", firstUserId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5}"))
+                        .content("{\"score\":5,\"offer_id\":1001}"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/user/{id}/rating", secondUserId)
@@ -93,7 +93,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + userId + "/rating")
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5}"))
+                        .content("{\"score\":5,\"offer_id\":1001}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -139,13 +139,13 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + ratedId + "/rating")
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":0}"))
+                        .content("{\"score\":0,\"offer_id\":1002}"))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/user/" + ratedId + "/rating")
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":6}"))
+                        .content("{\"score\":6,\"offer_id\":1002}"))
                 .andExpect(status().isBadRequest());
     }
 

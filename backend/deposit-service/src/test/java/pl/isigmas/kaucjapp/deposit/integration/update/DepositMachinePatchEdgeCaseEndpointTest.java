@@ -77,7 +77,7 @@ public class DepositMachinePatchEdgeCaseEndpointTest extends BaseIntegrationTest
         mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(statusOnly)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())

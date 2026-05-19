@@ -1,20 +1,21 @@
 package pl.isigmas.kaucjapp.deposit.service;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineRequestDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.DepositMachineResponseDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.OpeningHourDTO;
-import pl.isigmas.kaucjapp.deposit.DTO.UpdateMachineDTO;
+import pl.isigmas.kaucjapp.deposit.DTO.*;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.DepositValidationException;
 import pl.isigmas.kaucjapp.deposit.exception.RetailNetworkNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
 import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
+import pl.isigmas.kaucjapp.deposit.model.Rating;
 import pl.isigmas.kaucjapp.deposit.repository.DepositMachineRepository;
+import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class DepositMachineService {
 
     private final DepositMachineRepository depositMachineRepository;
     private final RetailNetworkRepository retailNetworkRepository;
+    private final RatingRepository ratingRepository;
 
     @Transactional(readOnly = true)
     public List<DepositMachineResponseDTO> getAll() {
@@ -76,7 +78,13 @@ public class DepositMachineService {
             depositMachine.addOpeningHour(record);
         }
 
-        depositMachineRepository.save(depositMachine);
+        depositMachineRepository.saveAndFlush(depositMachine);
+
+        Rating rating = new Rating();
+        rating.setDepositMachine(depositMachine);
+        rating.setAvgScore(BigDecimal.ZERO);
+        rating.setFeedbackCount(0);
+        ratingRepository.save(rating);
     }
 
     @Transactional
@@ -136,6 +144,7 @@ public class DepositMachineService {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                 .orElseThrow(() -> new DepositMachineNotFoundException(id));
 
+        ratingRepository.findById(id).ifPresent(ratingRepository::delete);
         depositMachineRepository.delete(depositMachine);
     }
 
@@ -156,4 +165,6 @@ public class DepositMachineService {
                                         .orElseThrow(() -> new DepositMachineNotFoundException(id));
         return mapToResponseDTO(depositMachine);
     }
+
+
 }

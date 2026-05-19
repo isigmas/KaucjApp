@@ -1,4 +1,4 @@
-package pl.isigmas.kaucjapp.users.model;
+package pl.isigmas.kaucjapp.deposit.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,14 +8,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "user_reviews")
+@Table(name = "deposit_machines_reviews")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class UserReview {
+public class DepositMachineReview {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,14 +23,11 @@ public class UserReview {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "reviewee_id", nullable = false)
-    private Long revieweeId;
+    @Column(name = "deposit_machine_id", nullable = false)
+    private Long depositMachineId;
 
     @Column(name = "reviewer_id")
     private Long reviewerId;
-
-    @Column(name = "offer_id")
-    private Long offerId;
 
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal score;
