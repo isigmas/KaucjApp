@@ -15,6 +15,7 @@ import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -241,6 +242,18 @@ public class UserController {
     public ResponseEntity<List<ReviewResponseDTO>> getUserReviews(@PathVariable Long id) {
         log.info("Fetching reviews for user ID: {}", id);
         return ResponseEntity.ok(ratingService.getUserReviews(id));
+    }
+
+    @GetMapping("/reviews/check")
+    @Operation(
+            summary = "Check if offer is already reviewed",
+            description = "Returns true if the logged-in user (from X-User-Id) has already submitted a review for this specific offer.")
+    public ResponseEntity<Map<String, Boolean>> checkReviewStatus(
+            @RequestParam Long offerId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        boolean alreadyReviewed = ratingService.hasUserReviewedOffer(currentUserId, offerId);
+        return ResponseEntity.ok(Map.of("already_reviewed", alreadyReviewed));
     }
 
 

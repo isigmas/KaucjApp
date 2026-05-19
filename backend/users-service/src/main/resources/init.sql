@@ -19,6 +19,7 @@ CREATE TABLE user_reviews (
                               review_id    BIGSERIAL PRIMARY KEY,
                               reviewee_id  BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
                               reviewer_id  BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
+                              offer_id     BIGINT NOT NULL,
                               score        NUMERIC(3,2) NOT NULL CHECK (score BETWEEN 0 AND 5),
                               comment      TEXT,
                               created_at   TIMESTAMPTZ DEFAULT NOW(),
