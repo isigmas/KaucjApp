@@ -17,9 +17,8 @@ export default function OfferActions({ offer }: OfferActionsProps) {
   const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
 
   const isOpen = offer.status === "OPEN";
-  const isReserved = offer.status === "RESERVED";
 
-  if (!isOpen && !isReserved) return null;
+  if (!isOpen) return null;
 
   const handleCancel = () => {
     Alert.alert(
