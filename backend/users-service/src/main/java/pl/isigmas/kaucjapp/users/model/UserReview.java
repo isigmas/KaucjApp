@@ -29,6 +29,9 @@ public class UserReview {
     @Column(name = "reviewer_id")
     private Long reviewerId;
 
+    @Column(name = "offer_id")
+    private Long offerId;
+
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal score;
 

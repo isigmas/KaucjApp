@@ -2,6 +2,7 @@ package pl.isigmas.kaucjapp.auth.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import pl.isigmas.kaucjapp.auth.validation.CleanUsername;
 
 @Data
 public class User {
@@ -9,6 +10,7 @@ public class User {
     @NotBlank(message = "Username is needed")
     @Size(min=6, max = 100)
     @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "Username can only contain letters and numbers")
+    @CleanUsername
     private String username;
 
     @NotBlank(message = "Email is needed")

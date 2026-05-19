@@ -19,6 +19,7 @@ CREATE TABLE user_reviews (
                               review_id    BIGSERIAL PRIMARY KEY,
                               reviewee_id  BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
                               reviewer_id  BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
+                              offer_id     BIGINT NOT NULL,
                               score        NUMERIC(3,2) NOT NULL CHECK (score BETWEEN 0 AND 5),
                               comment      TEXT,
                               created_at   TIMESTAMPTZ DEFAULT NOW(),
@@ -49,6 +50,9 @@ CREATE TABLE user_stats (
 );
 
 CREATE INDEX idx_user_reviews_reviewee ON user_reviews(reviewee_id);
+CREATE UNIQUE INDEX idx_user_reviews_reviewer_offer
+    ON user_reviews(reviewer_id, offer_id)
+    WHERE reviewer_id IS NOT NULL;
 CREATE INDEX idx_user_stats_returned ON user_stats(returned_plastic_count DESC);
 CREATE INDEX idx_user_addresses_user_id ON user_addresses(user_id);
 CREATE UNIQUE INDEX idx_only_one_default_address
