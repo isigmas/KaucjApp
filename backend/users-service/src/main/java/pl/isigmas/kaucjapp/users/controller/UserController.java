@@ -230,6 +230,18 @@ public class UserController {
         return ResponseEntity.ok(review);
     }
 
+    @GetMapping("/reviews/check")
+    @Operation(
+            summary = "Check if offer is already reviewed",
+            description = "Returns true if the logged-in user (from X-User-Id) has already submitted a review for this specific offer.")
+    public ResponseEntity<Map<String, Boolean>> checkReviewStatus(
+            @RequestParam Long offerId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        boolean alreadyReviewed = ratingService.hasUserReviewedOffer(currentUserId, offerId);
+        return ResponseEntity.ok(Map.of("already_reviewed", alreadyReviewed));
+    }
+
 
     @GetMapping("/{id}/reviews")
     @Operation(
@@ -243,18 +255,5 @@ public class UserController {
         log.info("Fetching reviews for user ID: {}", id);
         return ResponseEntity.ok(ratingService.getUserReviews(id));
     }
-
-    @GetMapping("/reviews/check")
-    @Operation(
-            summary = "Check if offer is already reviewed",
-            description = "Returns true if the logged-in user (from X-User-Id) has already submitted a review for this specific offer.")
-    public ResponseEntity<Map<String, Boolean>> checkReviewStatus(
-            @RequestParam Long offerId,
-            @RequestHeader("X-User-Id") Long currentUserId) {
-
-        boolean alreadyReviewed = ratingService.hasUserReviewedOffer(currentUserId, offerId);
-        return ResponseEntity.ok(Map.of("already_reviewed", alreadyReviewed));
-    }
-
 
 }

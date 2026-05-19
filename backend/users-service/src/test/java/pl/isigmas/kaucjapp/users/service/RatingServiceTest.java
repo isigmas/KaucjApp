@@ -61,6 +61,7 @@ class RatingServiceTest {
         Rating rating = ratingOf(revieweeId, BigDecimal.ZERO, 0);
         ReviewRequestDTO req = reviewReq(new BigDecimal("4"), "ok");
 
+        when(userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, req.getOfferId())).thenReturn(false);
         when(ratingRepository.findById(revieweeId)).thenReturn(Optional.of(rating));
 
         // When
@@ -74,6 +75,7 @@ class RatingServiceTest {
         assertThat(review.getReviewerId()).isEqualTo(reviewerId);
         assertThat(review.getScore()).isEqualByComparingTo("4");
         assertThat(review.getComment()).isEqualTo("ok");
+        assertThat(review.getOfferId()).isEqualTo(100L);
 
         assertThat(rating.getFeedbackCount()).isEqualTo(1);
         assertThat(rating.getAvgScore()).isEqualByComparingTo("4.00");
@@ -85,10 +87,12 @@ class RatingServiceTest {
         Long revieweeId = 1L;
         Long reviewerId = 2L;
         Rating rating = ratingOf(revieweeId, new BigDecimal("4.00"), 2);
+        ReviewRequestDTO req = reviewReq(new BigDecimal("5"), null);
+        when(userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, req.getOfferId())).thenReturn(false);
         when(ratingRepository.findById(revieweeId)).thenReturn(Optional.of(rating));
 
         // When
-        ratingService.addReview(revieweeId, reviewerId, reviewReq(new BigDecimal("5"), null));
+        ratingService.addReview(revieweeId, reviewerId, req);
 
         // Then
         assertThat(rating.getFeedbackCount()).isEqualTo(3);
@@ -114,13 +118,31 @@ class RatingServiceTest {
     void addReview_revieweeMissing_throwsUserNotFound_andDoesNotPersistReview() {
         // Given
         Long revieweeId = 999L;
+        Long reviewerId = 1L;
+        ReviewRequestDTO req = reviewReq(new BigDecimal("3"), null);
+        when(userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, req.getOfferId())).thenReturn(false);
         when(ratingRepository.findById(revieweeId)).thenReturn(Optional.empty());
 
         // When / Then
-        assertThatThrownBy(() ->
-                ratingService.addReview(revieweeId, 1L, reviewReq(new BigDecimal("3"), null)))
+        assertThatThrownBy(() -> ratingService.addReview(revieweeId, reviewerId, req))
                 .isInstanceOf(UserNotFoundException.class);
 
+        verify(userReviewRepository, never()).save(any());
+    }
+
+    @Test
+    void addReview_alreadyReviewedOffer_throwsReviewForbidden_andDoesNotPersist() {
+        Long revieweeId = 10L;
+        Long reviewerId = 20L;
+        ReviewRequestDTO req = reviewReq(new BigDecimal("4"), "dup", 55L);
+
+        when(userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, 55L)).thenReturn(true);
+
+        assertThatThrownBy(() -> ratingService.addReview(revieweeId, reviewerId, req))
+                .isInstanceOf(ReviewForbiddenException.class)
+                .hasMessageContaining("already rated");
+
+        verify(ratingRepository, never()).findById(any());
         verify(userReviewRepository, never()).save(any());
     }
 
@@ -405,12 +427,33 @@ class RatingServiceTest {
                 .isInstanceOf(RatingNotFoundException.class);
     }
 
+    // ---------- hasUserReviewedOffer ----------
+
+    @Test
+    void hasUserReviewedOffer_whenReviewExists_returnsTrue() {
+        when(userReviewRepository.existsByReviewerIdAndOfferId(20L, 55L)).thenReturn(true);
+
+        assertThat(ratingService.hasUserReviewedOffer(20L, 55L)).isTrue();
+    }
+
+    @Test
+    void hasUserReviewedOffer_whenNoReview_returnsFalse() {
+        when(userReviewRepository.existsByReviewerIdAndOfferId(20L, 55L)).thenReturn(false);
+
+        assertThat(ratingService.hasUserReviewedOffer(20L, 55L)).isFalse();
+    }
+
     // ---------- helpers ----------
 
     private static ReviewRequestDTO reviewReq(BigDecimal score, String comment) {
+        return reviewReq(score, comment, 100L);
+    }
+
+    private static ReviewRequestDTO reviewReq(BigDecimal score, String comment, Long offerId) {
         ReviewRequestDTO dto = new ReviewRequestDTO();
         dto.setScore(score);
         dto.setComment(comment);
+        dto.setOfferId(offerId);
         return dto;
     }
 
