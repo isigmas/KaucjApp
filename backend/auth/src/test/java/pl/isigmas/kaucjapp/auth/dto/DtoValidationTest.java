@@ -1,13 +1,15 @@
 package pl.isigmas.kaucjapp.auth.dto;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import pl.isigmas.kaucjapp.auth.TestcontainersConfiguration;
 import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
 import pl.isigmas.kaucjapp.auth.dto.request.UsersServiceUser;
@@ -18,15 +20,12 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("DTO Validation Tests")
+@SpringBootTest
+@Import(TestcontainersConfiguration.class)
 class DtoValidationTest {
 
-    private static Validator validator;
-
-    @BeforeAll
-    static void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
-    }
+    @Autowired
+    private Validator validator;
 
     @Nested
     @DisplayName("User DTO Validation Tests")

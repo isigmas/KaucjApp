@@ -7,20 +7,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import pl.isigmas.kaucjapp.auth.TestcontainersConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 @DisplayName("ProfanityValidator")
+@SpringBootTest
+@Import(TestcontainersConfiguration.class)
 class ProfanityValidatorTest {
 
+    @Autowired
     private ProfanityValidator validator;
+
     private ConstraintValidatorContext context;
 
     @BeforeEach
     void setUp() {
-        validator = new ProfanityValidator();
+        // initialize() woła Hibernate przy walidacji przez API — tu wołamy ręcznie
+        validator.initialize(mock(CleanUsername.class));
         context = mock(ConstraintValidatorContext.class);
     }
 
