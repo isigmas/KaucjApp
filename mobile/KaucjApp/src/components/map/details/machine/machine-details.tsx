@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DepositMachineStatus } from "@/src/types";
+import { DepositMachineStatus, Rating } from "@/src/types";
 import { getMachineStatusConfig } from "@/src/lib";
 import {
   useMachineDetails,
@@ -16,6 +16,12 @@ import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
 import { spacing } from "@/src/theme";
+
+const RATING: Rating = {
+  userId: 1,
+  avgScore: 1.5,
+  feedbackCount: 10,
+};
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -68,7 +74,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
     <View style={styles.container}>
       <DetailHeader
         title="Kaucjomat"
-        subtitle={`Sieć handlowa: ${machine.networkName}`}
+        rating={RATING}
         rightSlot={
           <StatusDropdown
             statusLabel={statusLabel}
@@ -85,6 +91,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
       )}
 
       <LocationCard
+        networkName={machine.networkName}
         address={machine.address}
         openingHours={machine.openingHours}
       />

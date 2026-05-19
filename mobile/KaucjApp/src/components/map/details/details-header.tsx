@@ -1,12 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "@/src/theme";
+import StarRating from "../../ui/star-rating";
+import { Rating } from "@/src/types";
 
 interface DetailHeaderProps {
   title: string;
   titleSize?: number;
   subtitle?: string;
   rightSlot?: React.ReactNode;
+  rating?: Rating;
 }
 
 export default function DetailHeader({
@@ -14,12 +17,16 @@ export default function DetailHeader({
   titleSize = 24,
   subtitle,
   rightSlot,
+  rating,
 }: DetailHeaderProps) {
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleContainer}>
         <Text style={[styles.title, { fontSize: titleSize }]}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        {rating ? (
+          <StarRating rating={rating} size={16} style={{ marginBottom: 0 }} />
+        ) : null}
       </View>
 
       {rightSlot ? <View style={styles.rightSlot}>{rightSlot}</View> : null}
@@ -40,11 +47,11 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "700",
     color: colors.text.primary,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 14,
     color: colors.text.secondary,
-    marginTop: spacing.xs,
   },
   rightSlot: {
     position: "relative",
