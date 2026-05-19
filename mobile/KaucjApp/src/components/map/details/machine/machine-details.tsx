@@ -15,7 +15,8 @@ import StatusDropdown from "./status-dropdown";
 import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
-import { spacing } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
+import ReviewsSection from "@/src/components/ui/user-reviews-section";
 
 const RATING: Rating = {
   userId: 1,
@@ -99,6 +100,8 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
       <OpeningHoursCard openingHours={machine.openingHours} />
 
       <MachineImage />
+
+      <ReviewsSection userId={2} />
     </View>
   );
 }

@@ -5,6 +5,8 @@ import { colors, spacing } from "@/src/theme";
 import { formatHour, getDayName } from "@/src/lib";
 import SectionCard from "../../../ui/section-card";
 import SectionTitle from "../card-title";
+import ExpandableCard from "@/src/components/ui/expandable-card";
+import { Ionicons } from "@expo/vector-icons";
 
 interface OpeningHoursCardProps {
   openingHours: OpeningHour[];
@@ -16,8 +18,14 @@ export default function OpeningHoursCard({
   const sorted = [...openingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
 
   return (
-    <SectionCard>
-      <SectionTitle>Godziny otwarcia</SectionTitle>
+    <ExpandableCard
+      title="Godziny otwarcia"
+      subtitle="Pokaż więcej"
+      icon={
+        <Ionicons name="time-outline" size={24} color={colors.text.primary} />
+      }
+      titleStyle={styles.openingHoursTitle}
+    >
       {sorted.map((day) => (
         <View style={styles.row} key={day.dayOfWeek}>
           <Text style={styles.dayText}>{getDayName(day.dayOfWeek)}</Text>
@@ -30,7 +38,7 @@ export default function OpeningHoursCard({
           )}
         </View>
       ))}
-    </SectionCard>
+    </ExpandableCard>
   );
 }
 
@@ -55,5 +63,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.secondary,
     fontWeight: "500",
+  },
+  openingHoursTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text.primary,
+    textTransform: "uppercase",
   },
 });

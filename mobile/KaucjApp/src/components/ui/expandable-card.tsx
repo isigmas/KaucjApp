@@ -2,7 +2,14 @@ import { colors, rounded, spacing } from "@/src/theme";
 import * as Haptics from "expo-haptics";
 import { ChevronDown } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  View,
+} from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -18,6 +25,7 @@ interface ExpandableCardProps {
   icon?: React.ReactNode;
   defaultExpanded?: boolean;
   children: React.ReactNode;
+  titleStyle?: StyleProp<TextStyle>;
 }
 
 export const LAYOUT_SPRING = LinearTransition.springify()
@@ -31,6 +39,7 @@ export default function ExpandableCard({
   icon,
   defaultExpanded = false,
   children,
+  titleStyle,
 }: ExpandableCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const progress = useSharedValue(defaultExpanded ? 1 : 0);
@@ -66,7 +75,7 @@ export default function ExpandableCard({
         {icon && <View style={styles.iconChip}>{icon}</View>}
 
         <View style={styles.titleColumn}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, titleStyle]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
