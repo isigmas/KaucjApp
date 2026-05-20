@@ -186,4 +186,7 @@ public class UserService {
                 .build();
     }
 
+    public List<UserDTO> getStatsRanking() {
+
+    }
 }

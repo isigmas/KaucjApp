@@ -256,4 +256,14 @@ public class UserController {
         return ResponseEntity.ok(ratingService.getUserReviews(id));
     }
 
+    @GetMapping("/ranking")
+    @Operation(
+            summary = "Get all time ranking"
+    )
+    public ResponseEntity<List<UserDTO>> getStatsRanking(){
+        log.info("Getting stats ranking");
+        return ResponseEntity.ok(userService.getStatsRanking());
+
+    }
+
 }
