@@ -10,38 +10,48 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AzureStorageProperties {
 
     /**
-     * Blob service endpoint, e.g. http://azurite:10000/devstoreaccount1 (Docker) or http://127.0.0.1:10000/devstoreaccount1 (local).
+     * When true, connects via {@code UseDevelopmentStorage=true} (Azurite emulator).
+     * Avoids embedding the well-known account key in env vars where '+' may be corrupted.
+     */
+    private boolean useDevelopmentStorage = false;
+
+    /**
+     * Azurite proxy host reachable from users-service.
+     * Docker: {@code http://azurite:10000} — local JVM: {@code http://127.0.0.1:10000}.
+     */
+    private String developmentStorageProxyUri = "http://127.0.0.1:10000";
+
+    /**
+     * Azure Storage connection string (production). Ignored when {@link #useDevelopmentStorage} is true.
+     */
+    private String connectionString;
+
+    /**
+     * Alternative to connection string: blob endpoint + account credentials.
      */
     private String blobEndpoint;
 
     private String accountName = "devstoreaccount1";
 
-    /**
-     * Storage account key. Use a separate property (not a connection string) so '+' in the Azurite key is not corrupted.
-     */
     private String accountKey;
 
     public void setAccountKey(String accountKey) {
         this.accountKey = accountKey == null ? null : accountKey.trim();
     }
 
-    /**
-     * Optional full connection string (Azure production). Prefer blob-endpoint + account-key for Azurite.
-     */
-    private String connectionString;
-
     private String containerName = "profile-pictures";
 
     /**
-     * Optional public base URL for clients outside Docker (e.g. http://192.168.x.x:10000/devstoreaccount1).
+     * Base URL returned to clients (mobile/simulator), e.g. {@code http://127.0.0.1:10000/devstoreaccount1}.
+     * Must be reachable from the device — not the internal Docker hostname {@code azurite}.
      */
     private String publicBlobEndpoint;
 
     private long maxFileSizeBytes = 5 * 1024 * 1024;
 
     /**
-     * When true, blobs are readable via anonymous GET (required for mobile Image URLs with Azurite).
-     * Disable in production and serve images via SAS or a proxy instead.
+     * Anonymous read on container (required for {@code <Image uri>} without SAS).
+     * Keep {@code true} for local Azurite; set {@code false} on production Azure and use SAS/CDN.
      */
-    private boolean publicReadAccess = true;
+    private boolean publicReadAccess = false;
 }

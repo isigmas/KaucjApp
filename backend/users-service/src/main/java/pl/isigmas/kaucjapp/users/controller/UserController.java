@@ -289,7 +289,9 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId,
             @RequestPart("file") MultipartFile file) {
         try {
+            UserDTO current = userService.getUserById(currentUserId);
             String imageUrl = azureBlobService.uploadProfilePicture(currentUserId, file);
+            azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
             UserDTO updatedUser = userService.updateProfilePictureUrl(currentUserId, imageUrl);
             log.info("User {} updated profile picture", currentUserId);
             return ResponseEntity.ok(updatedUser);

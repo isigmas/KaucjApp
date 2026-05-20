@@ -3,20 +3,20 @@ package pl.isigmas.kaucjapp.users.service;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.options.BlobContainerCreateOptions;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.PublicAccessType;
-import com.azure.storage.common.StorageSharedKeyCredential;
+import com.azure.storage.blob.options.BlobContainerCreateOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import pl.isigmas.kaucjapp.users.config.AzureBlobClientFactory;
 import pl.isigmas.kaucjapp.users.config.AzureStorageProperties;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -37,93 +37,76 @@ public class AzureBlobService {
 
     public AzureBlobService(AzureStorageProperties properties) {
         this.properties = properties;
-        this.blobServiceClient = buildBlobServiceClient(properties);
+        this.blobServiceClient = AzureBlobClientFactory.create(properties);
         log.info(
-                "Azure Blob configured: endpoint={}, account={}, keyLength={}",
-                properties.getBlobEndpoint(),
-                properties.getAccountName(),
-                properties.getAccountKey() != null ? properties.getAccountKey().length() : 0
+                "Azure Blob ready: mode={}, container={}, publicRead={}, publicBase={}",
+                properties.isUseDevelopmentStorage() ? "azurite" : "azure",
+                properties.getContainerName(),
+                properties.isPublicReadAccess(),
+                properties.getPublicBlobEndpoint()
         );
-    }
-
-    private static BlobServiceClient buildBlobServiceClient(AzureStorageProperties properties) {
-        // 1. ZMIEŃ KOLEJNOŚĆ: Najpierw sprawdzamy Connection String (idealne dla Azurite lokalnie)
-        if (StringUtils.hasText(properties.getConnectionString())) {
-            return new BlobServiceClientBuilder()
-                    .connectionString(properties.getConnectionString())
-                    .buildClient();
-        }
-
-        // 2. Fallback na ręczne budowanie (dla prawdziwej chmury na produkcji)
-        if (StringUtils.hasText(properties.getBlobEndpoint())
-                && StringUtils.hasText(properties.getAccountName())
-                && StringUtils.hasText(properties.getAccountKey())) {
-            String accountKey = normalizeStorageAccountKey(properties.getAccountKey());
-            StorageSharedKeyCredential credential = new StorageSharedKeyCredential(
-                    properties.getAccountName(),
-                    accountKey
-            );
-            return new BlobServiceClientBuilder()
-                    .endpoint(properties.getBlobEndpoint())
-                    .credential(credential)
-                    .buildClient();
-        }
-
-        throw new IllegalStateException(
-                "Configure azure.storage.blob-endpoint + account-name + account-key, or azure.storage.connection-string");
-    }
-
-    /**
-     * Connection strings and some env loaders turn '+' in the Azurite account key into spaces.
-     */
-    private static String normalizeStorageAccountKey(String accountKey) {
-        String trimmed = accountKey.trim();
-        if (trimmed.indexOf(' ') >= 0 && trimmed.indexOf('+') < 0) {
-            return trimmed.replace(' ', '+');
-        }
-        return trimmed;
     }
 
     public String uploadProfilePicture(Long userId, MultipartFile file) throws IOException {
         validateFile(file);
 
-        BlobContainerClient containerClient = blobServiceClient
-                .getBlobContainerClient(properties.getContainerName());
-
-        try {
-            ensureContainerExists(containerClient);
-        } catch (RuntimeException e) {
-            log.error("Failed to access blob container {}", properties.getContainerName(), e);
-            throw ProfilePictureUploadException.storageFailed();
-        }
+        BlobContainerClient container = blobServiceClient.getBlobContainerClient(properties.getContainerName());
+        ensureContainerReady(container);
 
         String extension = resolveExtension(file);
         String blobName = "user-" + userId + "-" + UUID.randomUUID() + extension;
-        BlobClient blobClient = containerClient.getBlobClient(blobName);
-
+        BlobClient blobClient = container.getBlobClient(blobName);
         String contentType = resolveContentType(file);
-        BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
 
-        log.info("Uploading profile picture to blob storage: {}", blobName);
+        log.info("Uploading profile picture: {}", blobName);
         try {
+            BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
             blobClient.upload(file.getInputStream(), file.getSize(), true);
             blobClient.setHttpHeaders(headers);
         } catch (BlobStorageException e) {
-            log.error("Azure blob upload failed for {}", blobName, e);
+            log.error("Blob upload failed for {}: {} {}", blobName, e.getErrorCode(), e.getMessage());
             throw ProfilePictureUploadException.storageFailed();
         }
 
-        return buildPublicUrl(blobName, blobClient);
+        return buildPublicUrl(blobName);
     }
 
-    private void ensureContainerExists(BlobContainerClient containerClient) {
-        BlobContainerCreateOptions createOptions = new BlobContainerCreateOptions();
-        if (properties.isPublicReadAccess()) {
-            createOptions.setPublicAccessType(PublicAccessType.BLOB);
+    /**
+     * Best-effort removal of a previously stored profile picture URL.
+     */
+    public void deleteByStoredUrl(String profilePictureUrl) {
+        if (!StringUtils.hasText(profilePictureUrl)) {
+            return;
         }
-        containerClient.createIfNotExistsWithResponse(createOptions, null, null);
-        if (properties.isPublicReadAccess() && containerClient.exists()) {
-            containerClient.setAccessPolicy(PublicAccessType.BLOB, null);
+        String blobName = extractBlobName(profilePictureUrl);
+        if (blobName == null) {
+            log.debug("Skipping blob delete, URL does not match container {}: {}", properties.getContainerName(), profilePictureUrl);
+            return;
+        }
+        try {
+            BlobContainerClient container = blobServiceClient.getBlobContainerClient(properties.getContainerName());
+            boolean deleted = container.getBlobClient(blobName).deleteIfExists();
+            if (deleted) {
+                log.info("Deleted old profile picture blob: {}", blobName);
+            }
+        } catch (BlobStorageException e) {
+            log.warn("Could not delete old profile picture {}: {}", blobName, e.getMessage());
+        }
+    }
+
+    private void ensureContainerReady(BlobContainerClient container) {
+        try {
+            BlobContainerCreateOptions options = new BlobContainerCreateOptions();
+            if (properties.isPublicReadAccess()) {
+                options.setPublicAccessType(PublicAccessType.BLOB);
+            }
+            container.createIfNotExistsWithResponse(options, null, null);
+            if (properties.isPublicReadAccess()) {
+                container.setAccessPolicy(PublicAccessType.BLOB, null);
+            }
+        } catch (BlobStorageException e) {
+            log.error("Failed to prepare container {}: {} {}", properties.getContainerName(), e.getErrorCode(), e.getMessage());
+            throw ProfilePictureUploadException.storageFailed();
         }
     }
 
@@ -134,8 +117,7 @@ public class AzureBlobService {
         if (file.getSize() > properties.getMaxFileSizeBytes()) {
             throw new ProfilePictureUploadException("Profile picture exceeds maximum allowed size");
         }
-        String contentType = resolveContentType(file);
-        if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
+        if (!ALLOWED_CONTENT_TYPES.contains(resolveContentType(file))) {
             throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
         }
     }
@@ -173,12 +155,32 @@ public class AzureBlobService {
         };
     }
 
-    private String buildPublicUrl(String blobName, BlobClient blobClient) {
+    private String buildPublicUrl(String blobName) {
         String publicBase = properties.getPublicBlobEndpoint();
         if (StringUtils.hasText(publicBase)) {
             String base = publicBase.endsWith("/") ? publicBase.substring(0, publicBase.length() - 1) : publicBase;
             return base + "/" + properties.getContainerName() + "/" + blobName;
         }
-        return blobClient.getBlobUrl();
+        return blobServiceClient
+                .getBlobContainerClient(properties.getContainerName())
+                .getBlobClient(blobName)
+                .getBlobUrl();
+    }
+
+    private String extractBlobName(String profilePictureUrl) {
+        try {
+            String path = URI.create(profilePictureUrl).getPath();
+            if (!StringUtils.hasText(path)) {
+                return null;
+            }
+            String marker = "/" + properties.getContainerName() + "/";
+            int index = path.indexOf(marker);
+            if (index < 0) {
+                return null;
+            }
+            return path.substring(index + marker.length());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

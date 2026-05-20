@@ -76,7 +76,7 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
-    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
     volumes:
       - azurite_data:/data
 
@@ -93,13 +93,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      AZURE_STORAGE_BLOB_ENDPOINT: http://azurite:10000/devstoreaccount1
-      AZURE_STORAGE_ACCOUNT_NAME: devstoreaccount1
-      AZURE_STORAGE_ACCOUNT_KEY: "Eby8vdM02NoBQy7Pg8a209Q5SOqt0hX4da6e6e40BE3HIKYe+v805Nd92wN3PRJ7Iv58LsNRYd7d7x6ee8dMnwPQcq33bo2s0dCDSuUi0lHBfDJCHno3ABdAXaio96Utw=="
+      AZURE_STORAGE_USE_DEVELOPMENT_STORAGE: "true"
+      AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI: http://azurite:10000
       AZURE_STORAGE_CONTAINER_NAME: profile-pictures
       AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT: http://127.0.0.1:10000/devstoreaccount1
       AZURE_STORAGE_PUBLIC_READ_ACCESS: "true"
-      AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://azurite:10000;"
     depends_on:
       users-db:
         condition: service_healthy
