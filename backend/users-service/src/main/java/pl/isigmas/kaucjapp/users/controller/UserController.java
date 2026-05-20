@@ -294,7 +294,7 @@ public class UserController {
             log.info("User {} updated profile picture", currentUserId);
             return ResponseEntity.ok(updatedUser);
         } catch (IOException e) {
-            log.error("Failed to upload profile picture for user {}", currentUserId, e);
+            log.error("Failed to read profile picture for user {}", currentUserId, e);
             throw ProfilePictureUploadException.storageFailed();
         }
     }

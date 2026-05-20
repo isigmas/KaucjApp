@@ -9,6 +9,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      # Keep the raw multipart body so the proxy can forward it to downstream services.
+      enabled: false
 
 gateway:
   routes:

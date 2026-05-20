@@ -10,17 +10,38 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AzureStorageProperties {
 
     /**
-     * Azurite / Azure Blob connection string.
+     * Blob service endpoint, e.g. http://azurite:10000/devstoreaccount1 (Docker) or http://127.0.0.1:10000/devstoreaccount1 (local).
+     */
+    private String blobEndpoint;
+
+    private String accountName = "devstoreaccount1";
+
+    /**
+     * Storage account key. Use a separate property (not a connection string) so '+' in the Azurite key is not corrupted.
+     */
+    private String accountKey;
+
+    public void setAccountKey(String accountKey) {
+        this.accountKey = accountKey == null ? null : accountKey.trim();
+    }
+
+    /**
+     * Optional full connection string (Azure production). Prefer blob-endpoint + account-key for Azurite.
      */
     private String connectionString;
 
     private String containerName = "profile-pictures";
 
     /**
-     * Optional public base URL for clients outside Docker (e.g. http://localhost:10000/devstoreaccount1).
-     * When set, returned profile_picture_url uses this host instead of the internal blob endpoint.
+     * Optional public base URL for clients outside Docker (e.g. http://192.168.x.x:10000/devstoreaccount1).
      */
     private String publicBlobEndpoint;
 
     private long maxFileSizeBytes = 5 * 1024 * 1024;
+
+    /**
+     * When true, blobs are readable via anonymous GET (required for mobile Image URLs with Azurite).
+     * Disable in production and serve images via SAS or a proxy instead.
+     */
+    private boolean publicReadAccess = true;
 }

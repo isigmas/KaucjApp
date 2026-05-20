@@ -4,7 +4,11 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.options.BlobContainerCreateOptions;
 import com.azure.storage.blob.models.BlobHttpHeaders;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.blob.models.PublicAccessType;
+import com.azure.storage.common.StorageSharedKeyCredential;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,6 +27,7 @@ public class AzureBlobService {
 
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/jpeg",
+            "image/jpg",
             "image/png",
             "image/webp"
     );
@@ -31,13 +36,52 @@ public class AzureBlobService {
     private final AzureStorageProperties properties;
 
     public AzureBlobService(AzureStorageProperties properties) {
-        if (!StringUtils.hasText(properties.getConnectionString())) {
-            throw new IllegalStateException("azure.storage.connection-string must be configured");
-        }
         this.properties = properties;
-        this.blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(properties.getConnectionString())
-                .buildClient();
+        this.blobServiceClient = buildBlobServiceClient(properties);
+        log.info(
+                "Azure Blob configured: endpoint={}, account={}, keyLength={}",
+                properties.getBlobEndpoint(),
+                properties.getAccountName(),
+                properties.getAccountKey() != null ? properties.getAccountKey().length() : 0
+        );
+    }
+
+    private static BlobServiceClient buildBlobServiceClient(AzureStorageProperties properties) {
+        // 1. ZMIEŃ KOLEJNOŚĆ: Najpierw sprawdzamy Connection String (idealne dla Azurite lokalnie)
+        if (StringUtils.hasText(properties.getConnectionString())) {
+            return new BlobServiceClientBuilder()
+                    .connectionString(properties.getConnectionString())
+                    .buildClient();
+        }
+
+        // 2. Fallback na ręczne budowanie (dla prawdziwej chmury na produkcji)
+        if (StringUtils.hasText(properties.getBlobEndpoint())
+                && StringUtils.hasText(properties.getAccountName())
+                && StringUtils.hasText(properties.getAccountKey())) {
+            String accountKey = normalizeStorageAccountKey(properties.getAccountKey());
+            StorageSharedKeyCredential credential = new StorageSharedKeyCredential(
+                    properties.getAccountName(),
+                    accountKey
+            );
+            return new BlobServiceClientBuilder()
+                    .endpoint(properties.getBlobEndpoint())
+                    .credential(credential)
+                    .buildClient();
+        }
+
+        throw new IllegalStateException(
+                "Configure azure.storage.blob-endpoint + account-name + account-key, or azure.storage.connection-string");
+    }
+
+    /**
+     * Connection strings and some env loaders turn '+' in the Azurite account key into spaces.
+     */
+    private static String normalizeStorageAccountKey(String accountKey) {
+        String trimmed = accountKey.trim();
+        if (trimmed.indexOf(' ') >= 0 && trimmed.indexOf('+') < 0) {
+            return trimmed.replace(' ', '+');
+        }
+        return trimmed;
     }
 
     public String uploadProfilePicture(Long userId, MultipartFile file) throws IOException {
@@ -46,22 +90,41 @@ public class AzureBlobService {
         BlobContainerClient containerClient = blobServiceClient
                 .getBlobContainerClient(properties.getContainerName());
 
-        if (!containerClient.exists()) {
-            containerClient.create();
+        try {
+            ensureContainerExists(containerClient);
+        } catch (RuntimeException e) {
+            log.error("Failed to access blob container {}", properties.getContainerName(), e);
+            throw ProfilePictureUploadException.storageFailed();
         }
 
         String extension = resolveExtension(file);
         String blobName = "user-" + userId + "-" + UUID.randomUUID() + extension;
         BlobClient blobClient = containerClient.getBlobClient(blobName);
 
-        String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        String contentType = resolveContentType(file);
         BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
 
         log.info("Uploading profile picture to blob storage: {}", blobName);
-        blobClient.upload(file.getInputStream(), file.getSize(), true);
-        blobClient.setHttpHeaders(headers);
+        try {
+            blobClient.upload(file.getInputStream(), file.getSize(), true);
+            blobClient.setHttpHeaders(headers);
+        } catch (BlobStorageException e) {
+            log.error("Azure blob upload failed for {}", blobName, e);
+            throw ProfilePictureUploadException.storageFailed();
+        }
 
         return buildPublicUrl(blobName, blobClient);
+    }
+
+    private void ensureContainerExists(BlobContainerClient containerClient) {
+        BlobContainerCreateOptions createOptions = new BlobContainerCreateOptions();
+        if (properties.isPublicReadAccess()) {
+            createOptions.setPublicAccessType(PublicAccessType.BLOB);
+        }
+        containerClient.createIfNotExistsWithResponse(createOptions, null, null);
+        if (properties.isPublicReadAccess() && containerClient.exists()) {
+            containerClient.setAccessPolicy(PublicAccessType.BLOB, null);
+        }
     }
 
     private void validateFile(MultipartFile file) {
@@ -71,10 +134,28 @@ public class AzureBlobService {
         if (file.getSize() > properties.getMaxFileSizeBytes()) {
             throw new ProfilePictureUploadException("Profile picture exceeds maximum allowed size");
         }
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+        String contentType = resolveContentType(file);
+        if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
         }
+    }
+
+    private String resolveContentType(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null) {
+            String normalized = contentType.toLowerCase(Locale.ROOT);
+            if ("image/jpg".equals(normalized)) {
+                return "image/jpeg";
+            }
+            if (ALLOWED_CONTENT_TYPES.contains(normalized)) {
+                return normalized;
+            }
+        }
+        return switch (resolveExtension(file)) {
+            case ".png" -> "image/png";
+            case ".webp" -> "image/webp";
+            default -> "image/jpeg";
+        };
     }
 
     private String resolveExtension(MultipartFile file) {
@@ -85,7 +166,7 @@ public class AzureBlobService {
                 return originalFilename.substring(dotIndex).toLowerCase(Locale.ROOT);
             }
         }
-        return switch (file.getContentType()) {
+        return switch (resolveContentType(file)) {
             case "image/png" -> ".png";
             case "image/webp" -> ".webp";
             default -> ".jpg";
