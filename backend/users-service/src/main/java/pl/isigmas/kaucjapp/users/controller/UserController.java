@@ -10,10 +10,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.*;
+import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
+import pl.isigmas.kaucjapp.users.service.AzureBlobService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +35,7 @@ public class UserController {
 
     private final UserService userService;
     private final RatingService ratingService;
-
+    private final AzureBlobService azureBlobService;
 
 
     @GetMapping("/me/addresses")
@@ -269,6 +273,32 @@ public class UserController {
         log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
         List<UserDTO> ranking = userService.getStatsRanking(type, page, size);
         return ResponseEntity.ok(ranking);
+    }
+
+    @PostMapping(value = "/me/profile-picture", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Upload my profile picture",
+            description = "Multipart form field `file` (JPEG/PNG/WebP, max 5MB). Stores image in Azure Blob / Azurite and saves URL on user profile.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile updated with new profile_picture_url."),
+            @ApiResponse(responseCode = "400", description = "Invalid file (USER_008) or missing X-User-Id."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001)."),
+            @ApiResponse(responseCode = "500", description = "Blob storage upload failed (USER_009).")
+    })
+    public ResponseEntity<UserDTO> uploadProfilePicture(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestPart("file") MultipartFile file) {
+        try {
+            UserDTO current = userService.getUserById(currentUserId);
+            String imageUrl = azureBlobService.uploadProfilePicture(currentUserId, file);
+            azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+            UserDTO updatedUser = userService.updateProfilePictureUrl(currentUserId, imageUrl);
+            log.info("User {} updated profile picture", currentUserId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IOException e) {
+            log.error("Failed to read profile picture for user {}", currentUserId, e);
+            throw ProfilePictureUploadException.storageFailed();
+        }
     }
 
 }

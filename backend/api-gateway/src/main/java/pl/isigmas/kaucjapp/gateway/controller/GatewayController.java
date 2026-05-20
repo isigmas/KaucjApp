@@ -22,6 +22,8 @@ import pl.isigmas.kaucjapp.gateway.exception.HeaderInjectionException;
 import pl.isigmas.kaucjapp.gateway.exception.InvalidRouteConfigurationException;
 import pl.isigmas.kaucjapp.gateway.exception.RouteNotFoundException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.Enumeration;
 import java.util.List;
@@ -82,7 +84,8 @@ public class GatewayController {
      * @return a {@link ResponseEntity} containing the response from the downstream service
      */
     @RequestMapping("/**")
-    public ResponseEntity<byte[]> proxy(HttpServletRequest request, @RequestBody(required = false) byte[] body) {
+    public ResponseEntity<byte[]> proxy(HttpServletRequest request, @RequestBody(required = false) byte[] body)
+            throws IOException {
         String requestPath = request.getRequestURI();
         String queryString = request.getQueryString();
         
@@ -108,9 +111,9 @@ public class GatewayController {
         // Add X-User-Id from JWT
         addUserIdHeader(requestSpec);
 
-        // Add body if it exists
-        if (body != null && body.length > 0) {
-            requestSpec.body(body);
+        byte[] requestBody = readRequestBody(request, body);
+        if (requestBody.length > 0) {
+            requestSpec.body(requestBody);
         }
 
         // Perform the request and return the response
@@ -245,6 +248,22 @@ public class GatewayController {
             return trimmed;
         }
         throw new HeaderInjectionException("/", "user_id claim has unsupported type: " + userIdObj.getClass().getSimpleName());
+    }
+
+    /**
+     * Reads the raw request body. Multipart uploads must be forwarded unchanged to downstream services.
+     */
+    private byte[] readRequestBody(HttpServletRequest request, byte[] annotatedBody) throws IOException {
+        if (annotatedBody != null && annotatedBody.length > 0) {
+            return annotatedBody;
+        }
+        long contentLength = request.getContentLengthLong();
+        if (contentLength == 0) {
+            return new byte[0];
+        }
+        try (InputStream inputStream = request.getInputStream()) {
+            return inputStream.readAllBytes();
+        }
     }
 
     private static boolean isTimeout(ResourceAccessException ex) {
