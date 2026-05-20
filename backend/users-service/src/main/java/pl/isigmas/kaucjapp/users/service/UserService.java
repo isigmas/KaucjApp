@@ -173,4 +173,17 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public AdminStatsDTO getAllStats() {
+        var Can = userStatsRepository.getTotalReturnedCanCount();
+        var Plastic = userStatsRepository.getTotalReturnedPlasticCount();
+        var total = userStatsRepository.getTotalReturnedItemsCount();
+
+        return AdminStatsDTO.builder()
+                .returnedCanCount(Can)
+                .returnedPlasticCount(Plastic)
+                .returnedTotalCount(total)
+                .build();
+    }
+
 }
