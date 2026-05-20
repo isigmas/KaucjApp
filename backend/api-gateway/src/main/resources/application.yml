@@ -9,11 +9,15 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      # Keep the raw multipart body so the proxy can forward it to downstream services.
+      enabled: false
 
 gateway:
   routes:
     - id: users-services
-      path: /api/users/**
+      path: /api/user/**
       uri: http://localhost:8081
     - id: offers-service
       path: /api/offers/**
