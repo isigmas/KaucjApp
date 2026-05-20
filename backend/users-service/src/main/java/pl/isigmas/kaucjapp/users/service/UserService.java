@@ -203,7 +203,7 @@ public class UserService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
 
-        List<Long> sortedUserIds = userStatsRepository.findTopUserIdsByOrderBy(pageable);
+        List<Long> sortedUserIds = userStatsRepository.findUserIds(pageable);
 
         if (sortedUserIds.isEmpty()) {
             return List.of();

@@ -32,5 +32,5 @@ public interface UserStatsRepository extends JpaRepository<UserStats, Long> {
     long getTotalReturnedItemsCount();
 
     @Query("SELECT u.userId FROM UserStats u")
-    List<Long> findTopUserIdsByOrderBy(Pageable pageable);
+    List<Long> findUserIds(Pageable pageable);
 }
