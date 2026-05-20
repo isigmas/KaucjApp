@@ -17,9 +17,12 @@ import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import pl.isigmas.kaucjapp.deposit.repository.RetailNetworkRepository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,12 +35,15 @@ public class DepositMachineService {
 
     @Transactional(readOnly = true)
     public List<DepositMachineResponseDTO> getAll() {
-        return depositMachineRepository.findAll().stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        List<DepositMachine> machines = depositMachineRepository.findAll();
+        Map<Long, Rating> ratingByMachineId = ratingsByMachineId(machines.stream().map(DepositMachine::getId).toList());
+
+        return machines.stream()
+                .map(m -> mapToResponseDTO(m, ratingByMachineId.get(m.getId())))
+                .toList();
     }
 
-    private DepositMachineResponseDTO mapToResponseDTO(DepositMachine depositMachine) {
+    private DepositMachineResponseDTO mapToResponseDTO(DepositMachine depositMachine, Rating rating) {
         List<OpeningHourDTO> openingHourDTOs = depositMachine.getItems().stream()
                 .map(hourRecord -> OpeningHourDTO.builder()
                         .isClosed(hourRecord.getIsClosed())
@@ -47,9 +53,9 @@ public class DepositMachineService {
                         .build())
                 .collect(Collectors.toList());
 
-        Rating rating = ratingRepository.findById(depositMachine.getId())
-                .orElseThrow(() -> new RatingNotFoundException(depositMachine.getId()));
-
+        if (rating == null) {
+            throw new RatingNotFoundException(depositMachine.getId());
+        }
 
         return DepositMachineResponseDTO.builder()
                 .id(depositMachine.getId())
@@ -161,17 +167,26 @@ public class DepositMachineService {
         if (ids.isEmpty()) {
             return Collections.emptyList();
         }
-        return depositMachineRepository.findAllByIdInWithAssociations(ids).stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        List<DepositMachine> machines = depositMachineRepository.findAllByIdInWithAssociations(ids);
+        Map<Long, Rating> ratingByMachineId = ratingsByMachineId(ids);
+
+        return machines.stream()
+                .map(m -> mapToResponseDTO(m, ratingByMachineId.get(m.getId())))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public DepositMachineResponseDTO getDepositMachine(Long id) {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                                         .orElseThrow(() -> new DepositMachineNotFoundException(id));
-        return mapToResponseDTO(depositMachine);
+        Rating rating = ratingRepository.findById(id)
+                .orElseThrow(() -> new RatingNotFoundException(id));
+        return mapToResponseDTO(depositMachine, rating);
     }
 
+    private Map<Long, Rating> ratingsByMachineId(Collection<Long> machineIds) {
+        return ratingRepository.findByDepositMachineIdIn(machineIds).stream()
+                .collect(Collectors.toMap(Rating::getDepositMachineId, Function.identity()));
+    }
 
 }
