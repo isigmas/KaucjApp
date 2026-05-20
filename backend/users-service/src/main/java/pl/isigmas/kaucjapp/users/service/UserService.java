@@ -95,8 +95,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setUsername("deleted-user-"+id);
-        user.setEmail(user.getUsername()+"@deleted.com");
+        user.setUsername("deleted-user-" + id);
+        user.setEmail(user.getUsername() + "@deleted.com");
         user.setFirstName("Deleted");
         user.setLastName("User");
         user.setPhone(null);
@@ -121,8 +121,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
-                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
-                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -146,8 +146,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
-                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
-                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -190,7 +190,7 @@ public class UserService {
                 .build();
     }
 
-    public List<UserDTO> getStatsRanking(String type, int limit) {
+    public List<UserDTO> getStatsRanking(String type, int page, int size) {
         String sortByField = switch (type.toLowerCase()) {
             case "returned_plastic" -> "returnedPlasticCount";
             case "returned_can" -> "returnedCanCount";
@@ -201,9 +201,9 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid ranking type: " + type);
         };
 
-        Pageable topPageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, sortByField));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
 
-        List<Long> sortedUserIds = userStatsRepository.findTopUserIdsByOrderBy(topPageable);
+        List<Long> sortedUserIds = userStatsRepository.findTopUserIdsByOrderBy(pageable);
 
         if (sortedUserIds.isEmpty()) {
             return List.of();

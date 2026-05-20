@@ -258,15 +258,16 @@ public class UserController {
 
     @GetMapping("/ranking")
     @Operation(
-            summary = "Get top users ranking by activity type",
+            summary = "Get top users ranking by activity type with pagination",
             description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total"
     )
     public ResponseEntity<List<UserDTO>> getStatsRanking(
             @RequestParam(defaultValue = "returned_total") String type,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        log.info("Getting stats ranking for type: {}, limit: {}", type, limit);
-        List<UserDTO> ranking = userService.getStatsRanking(type, limit);
+        log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
+        List<UserDTO> ranking = userService.getStatsRanking(type, page, size);
         return ResponseEntity.ok(ranking);
     }
 
