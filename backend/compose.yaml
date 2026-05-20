@@ -74,6 +74,12 @@ services:
       timeout: 5s
       retries: 5
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+    volumes:
+      - azurite_data:/data
+
   users-service:
     build:
       context: .
@@ -87,11 +93,16 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02NoBQy7Pg8a209Q5SOqt0hX4da6e6e40BE3HIKYe+v805Nd92wN3PRJ7Iv58LsNRYd7d7x6ee8dMnwPQcq33bo2s0dCDSuUi0lHBfDJCHno3ABdAXaio96Utw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      - AZURE_STORAGE_CONTAINER_NAME=profile-pictures
+      - AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT=http://localhost:10000/devstoreaccount1
     depends_on:
       users-db:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      azurite:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
       interval: 5s
@@ -247,3 +258,6 @@ services:
         condition: service_healthy
       notification-service:
         condition: service_healthy
+
+volumes:
+  azurite_data:

@@ -96,21 +96,21 @@ class GatewayHeadersTest {
         Long expectedUserId = 999L;
         String validToken = createValidToken(expectedUserId);
 
-        stubFor(get(urlEqualTo("/api/users/profile"))
+        stubFor(get(urlEqualTo("/api/user/profile"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{\"id\": 999}")));
 
         // When
         HttpStatusCode status = restClient.get()
-                .uri("/api/users/profile")
+                .uri("/api/user/profile")
                 .header("Authorization", "Bearer " + validToken)
                 .exchange((request, response) -> response.getStatusCode());
 
         // Then
         assertThat(status).isEqualTo(HttpStatus.OK);
 
-        verify(getRequestedFor(urlEqualTo("/api/users/profile"))
+        verify(getRequestedFor(urlEqualTo("/api/user/profile"))
                 .withHeader("X-User-Id", equalTo("999")));
     }
 

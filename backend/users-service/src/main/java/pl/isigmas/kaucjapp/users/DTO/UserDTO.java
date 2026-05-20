@@ -37,6 +37,9 @@ public class UserDTO {
     @JsonProperty("phone")
     private String phone;
 
+    @JsonProperty("profile_picture_url")
+    private String profilePictureUrl;
+
     @JsonProperty("created_at")
     private Instant createdAt;
 

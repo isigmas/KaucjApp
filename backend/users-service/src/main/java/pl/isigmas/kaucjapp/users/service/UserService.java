@@ -91,6 +91,14 @@ public class UserService {
     }
 
     @Transactional
+    public UserDTO updateProfilePictureUrl(Long userId, String imageUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        user.setProfilePictureUrl(imageUrl);
+        return mapToDTO(user);
+    }
+
+    @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -115,6 +123,7 @@ public class UserService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .phone(user.getPhone())
+                .profilePictureUrl(user.getProfilePictureUrl())
                 .addresses(addressDTOs)
                 .createdAt(user.getTimeCreated())
                 .collectedCanCount(userStats.getCollectedCanCount())
@@ -218,4 +227,6 @@ public class UserService {
                 .filter(java.util.Objects::nonNull)
                 .toList();
     }
+
+
 }

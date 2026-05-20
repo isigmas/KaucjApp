@@ -13,7 +13,7 @@ spring:
 gateway:
   routes:
     - id: users-services
-      path: /api/users/**
+      path: /api/user/**
       uri: http://localhost:8081
     - id: offers-service
       path: /api/offers/**
