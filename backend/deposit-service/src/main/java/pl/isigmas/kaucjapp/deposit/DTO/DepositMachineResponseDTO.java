@@ -23,7 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DepositMachineResponseDTO {
 
-    @NotBlank
+    @NotNull
     private Long id;
 
     @NotBlank
