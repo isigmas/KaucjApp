@@ -119,14 +119,4 @@ public class DepositMachineController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/machine/{id}/rating")
-    public ResponseEntity<RatingDTO> getRating(
-            @PathVariable Long id
-    )
-    {
-        log.info("Fetching rating for machine id {}",id);
-        RatingDTO ratingDTO = ratingService.getRatingDTO(id);
-        return ResponseEntity.ok(ratingDTO);
-    }
-
 }

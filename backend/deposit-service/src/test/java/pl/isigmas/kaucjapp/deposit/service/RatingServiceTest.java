@@ -6,12 +6,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.isigmas.kaucjapp.deposit.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
-import pl.isigmas.kaucjapp.deposit.exception.RatingNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewForbiddenException;
 import pl.isigmas.kaucjapp.deposit.exception.ReviewNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachineReview;
@@ -279,28 +277,6 @@ class RatingServiceTest {
 
         assertThatThrownBy(() -> ratingService.deleteReview(42L, 1L))
                 .isInstanceOf(ReviewNotFoundException.class);
-    }
-
-    // ---------- getRatingDTO ----------
-
-    @Test
-    void getRatingDTO_existing_returnsMappedDto() {
-        Rating rating = ratingOf(10L, new BigDecimal("3.50"), 4);
-        when(ratingRepository.findById(10L)).thenReturn(Optional.of(rating));
-
-        RatingDTO dto = ratingService.getRatingDTO(10L);
-
-        assertThat(dto.getDepositMachineId()).isEqualTo(10L);
-        assertThat(dto.getAvgScore()).isEqualByComparingTo("3.50");
-        assertThat(dto.getFeedbackCount()).isEqualTo(4);
-    }
-
-    @Test
-    void getRatingDTO_missing_throwsRatingNotFound() {
-        when(ratingRepository.findById(10L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> ratingService.getRatingDTO(10L))
-                .isInstanceOf(RatingNotFoundException.class);
     }
 
     // ---------- helpers ----------

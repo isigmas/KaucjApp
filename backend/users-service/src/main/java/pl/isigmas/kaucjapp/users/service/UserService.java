@@ -1,6 +1,9 @@
 package pl.isigmas.kaucjapp.users.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,7 @@ import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,8 +95,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setUsername("deleted-user-"+id);
-        user.setEmail(user.getUsername()+"@deleted.com");
+        user.setUsername("deleted-user-" + id);
+        user.setEmail(user.getUsername() + "@deleted.com");
         user.setFirstName("Deleted");
         user.setLastName("User");
         user.setPhone(null);
@@ -117,8 +121,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
-                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
-                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -142,8 +146,8 @@ public class UserService {
                 .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
                 .returnedPlasticCount(userStats.getReturnedPlasticCount())
-                .returnedTotalCount(userStats.getReturnedCanCount()+userStats.getReturnedPlasticCount())
-                .collectedTotalCount(userStats.getCollectedCanCount()+userStats.getCollectedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -173,4 +177,45 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public AdminStatsDTO getAllStats() {
+        var Can = userStatsRepository.getTotalReturnedCanCount();
+        var Plastic = userStatsRepository.getTotalReturnedPlasticCount();
+        var total = userStatsRepository.getTotalReturnedItemsCount();
+
+        return AdminStatsDTO.builder()
+                .returnedCanCount(Can)
+                .returnedPlasticCount(Plastic)
+                .returnedTotalCount(total)
+                .build();
+    }
+
+    public List<UserDTO> getStatsRanking(String type, int page, int size) {
+        String sortByField = switch (type.toLowerCase()) {
+            case "returned_plastic" -> "returnedPlasticCount";
+            case "returned_can" -> "returnedCanCount";
+            case "collected_plastic" -> "collectedPlasticCount";
+            case "collected_can" -> "collectedCanCount";
+            case "returned_total" -> "returnedTotalCount";
+            case "collected_total" -> "collectedTotalCount";
+            default -> throw new IllegalArgumentException("Invalid ranking type: " + type);
+        };
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
+
+        List<Long> sortedUserIds = userStatsRepository.findUserIds(pageable);
+
+        if (sortedUserIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, UserDTO> usersMap = userRepository.findAllById(sortedUserIds).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toMap(UserDTO::getId, user -> user));
+
+        return sortedUserIds.stream()
+                .map(usersMap::get)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
 }

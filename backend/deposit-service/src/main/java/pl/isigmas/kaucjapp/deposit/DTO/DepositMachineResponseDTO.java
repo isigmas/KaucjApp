@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.deposit.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -22,7 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DepositMachineResponseDTO {
 
-    @NotBlank
+    @NotNull
     private Long id;
 
     @NotBlank
@@ -48,4 +49,10 @@ public class DepositMachineResponseDTO {
     @Valid
     @UniqueDaysOfWeek
     private List<OpeningHourDTO> openingHours;
+
+    @JsonProperty("avg_score")
+    private BigDecimal avgScore;
+
+    @JsonProperty("feedback_count")
+    private Integer feedbackCount;
 }

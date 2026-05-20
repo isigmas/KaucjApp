@@ -271,37 +271,37 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.error_code").value("DEP_006"));
     }
 
-    // ---------- GET /api/deposit/machine/{id}/rating ----------
+    // ---------- rating is embedded in DepositMachineResponseDTO ----------
 
     @Test
-    void getRating_newMachine_returnsZeroAggregate() throws Exception {
+    void getMachine_newMachine_containsZeroRatingAggregate() throws Exception {
         Long machineId = createMachine();
 
-        mockMvc.perform(get("/api/deposit/machine/{id}/rating", machineId))
+        mockMvc.perform(get("/api/deposit/machine/{id}", machineId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deposit_machine_id").value(machineId))
+                .andExpect(jsonPath("$.id").value(machineId))
                 .andExpect(jsonPath("$.feedback_count").value(0))
                 .andExpect(jsonPath("$.avg_score").value(0));
     }
 
     @Test
-    void getRating_afterReview_returnsUpdatedAggregate() throws Exception {
+    void getMachine_afterReviews_containsUpdatedRatingAggregate() throws Exception {
         Long machineId = createMachine();
         postReview(machineId, 2001L, 5, "Great");
         postReview(machineId, 2002L, 3, "OK");
 
-        mockMvc.perform(get("/api/deposit/machine/{id}/rating", machineId))
+        mockMvc.perform(get("/api/deposit/machine/{id}", machineId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deposit_machine_id").value(machineId))
+                .andExpect(jsonPath("$.id").value(machineId))
                 .andExpect(jsonPath("$.feedback_count").value(2))
                 .andExpect(jsonPath("$.avg_score").value(4.00));
     }
 
     @Test
-    void getRating_unknownMachine_returns404() throws Exception {
-        mockMvc.perform(get("/api/deposit/machine/999999/rating"))
+    void getMachine_unknownMachine_returns404() throws Exception {
+        mockMvc.perform(get("/api/deposit/machine/999999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error_code").value("DEP_008"));
+                .andExpect(jsonPath("$.error_code").value("DEP_001"));
     }
 
     // ---------- helpers ----------
