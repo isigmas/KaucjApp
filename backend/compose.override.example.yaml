@@ -1,0 +1,61 @@
+services:
+  offers-db:
+    ports:
+      - "5433:5432"
+
+  users-db:
+    ports:
+      - "5434:5432"
+
+  auth-db:
+    ports:
+      - "5435:5432"
+
+  deposit-db:
+    ports:
+      - "5436:5432"
+
+  notification-db:
+    ports:
+      - "5437:5432"
+
+  offers-service:
+    ports:
+      - "8082:8080"
+
+  users-service:
+    ports:
+      - "8081:8080"
+    environment:
+      AZURE_STORAGE_USE_DEVELOPMENT_STORAGE: "true"
+      AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI: "http://azurite:10000"
+      AZURE_STORAGE_CONTAINER_NAME: profile-pictures
+      AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT: "http://127.0.0.1:10000/devstoreaccount1"
+      AZURE_STORAGE_PUBLIC_READ_ACCESS: "true"
+    depends_on:
+      azurite:
+        condition: service_started
+
+  auth-service:
+    ports:
+      - "8083:8080"
+
+  deposit-service:
+    ports:
+      - "8084:8080"
+
+  notification-service:
+    ports:
+      - "8085:8080"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: kaucjapp-azurite
+    ports:
+      - "10000:10000"
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    volumes:
+      - azurite_data:/data
+
+volumes:
+  azurite_data:
