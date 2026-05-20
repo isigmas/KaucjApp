@@ -18,6 +18,7 @@ import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -110,7 +111,7 @@ public class AzureBlobService {
         }
     }
 
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file)  throws IOException {
         if (file == null || file.isEmpty()) {
             throw new ProfilePictureUploadException("Profile picture file is required");
         }
@@ -120,6 +121,7 @@ public class AzureBlobService {
         if (!ALLOWED_CONTENT_TYPES.contains(resolveContentType(file))) {
             throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
         }
+        validateMagicBytes(file);
     }
 
     private String resolveContentType(MultipartFile file) {
@@ -181,6 +183,32 @@ public class AzureBlobService {
             return path.substring(index + marker.length());
         } catch (IllegalArgumentException e) {
             return null;
+        }
+    }
+
+    private static final Map<String, byte[]> MAGIC_BYTES = Map.of(
+            "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "image/png",  new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47},
+            "image/webp", new byte[]{0x52, 0x49, 0x46, 0x46}
+    );
+
+    private void validateMagicBytes(MultipartFile file) throws IOException {
+        byte[] header = new byte[4];
+        try (var is = file.getInputStream()) {
+            int read = is.read(header);
+            if (read < 3) {
+                throw new ProfilePictureUploadException("File is too small to be a valid image");
+            }
+        }
+        String declaredType = resolveContentType(file);
+        byte[] expected = MAGIC_BYTES.get(declaredType);
+        if (expected == null) {
+            throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
+        }
+        for (int i = 0; i < expected.length; i++) {
+            if (header[i] != expected[i]) {
+                throw new ProfilePictureUploadException("File content does not match declared image type");
+            }
         }
     }
 }
