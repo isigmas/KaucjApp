@@ -36,9 +36,9 @@ public class AzureBlobService {
     private final BlobServiceClient blobServiceClient;
     private final AzureStorageProperties properties;
 
-    public AzureBlobService(AzureStorageProperties properties) {
+    public AzureBlobService(AzureStorageProperties properties,  BlobServiceClient blobServiceClient) {
         this.properties = properties;
-        this.blobServiceClient = AzureBlobClientFactory.create(properties);
+        this.blobServiceClient = blobServiceClient;
         log.info(
                 "Azure Blob ready: mode={}, container={}, publicRead={}, publicBase={}",
                 properties.isUseDevelopmentStorage() ? "azurite" : "azure",
