@@ -42,7 +42,7 @@ public class AzureStorageProperties {
     private String containerName = "profile-pictures";
 
     /**
-     * Base URL returned to clients (mobile/simulator), e.g. {@code http://127.0.0.1:10000/devstoreaccount1}.
+     * Base URL returned to clients, e.g. {@code http://127.0.0.1:10000/devstoreaccount1}.
      * Must be reachable from the device — not the internal Docker hostname {@code azurite}.
      */
     private String publicBlobEndpoint;

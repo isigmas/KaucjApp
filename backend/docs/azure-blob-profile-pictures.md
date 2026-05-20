@@ -10,13 +10,20 @@
 
 ```bash
 cd backend
-cp .example.env .env   # optional, for DB/JWT
+cp .example.env .env   # sets COMPOSE_FILE=compose.yaml:compose.dev.yaml
 docker compose up -d azurite users-service api-gateway
 ```
 
+| File | Role |
+|------|------|
+| `compose.yaml` | Core stack (no Azurite — CI/prod-like default) |
+| `compose.dev.yaml` | **Local only**: Azurite + ports + Azure env for `users-service` |
+| `compose.cicd.yaml` | CI healthcheck tuning |
+| `compose.override.yaml` | Optional, gitignored personal tweaks |
+
 | Service | Role |
 |---------|------|
-| `azurite` | Blob emulator, port **10000** (see `compose.override.yaml`) |
+| `azurite` | Blob emulator, port **10000** (`compose.dev.yaml`) |
 | `users-service` | `AZURE_STORAGE_USE_DEVELOPMENT_STORAGE=true`, proxy `http://azurite:10000` |
 
 Mobile / simulator must load images from **`http://127.0.0.1:10000/devstoreaccount1/profile-pictures/...`**  
