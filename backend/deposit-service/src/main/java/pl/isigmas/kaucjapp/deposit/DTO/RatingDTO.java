@@ -17,9 +17,5 @@ public class RatingDTO {
     @JsonProperty("deposit_machine_id")
     private Long depositMachineId;
 
-    @JsonProperty("avg_score")
-    private BigDecimal avgScore;
 
-    @JsonProperty("feedback_count")
-    private Integer feedbackCount;
 }

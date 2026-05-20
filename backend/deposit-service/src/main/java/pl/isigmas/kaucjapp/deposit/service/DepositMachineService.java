@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.*;
 import pl.isigmas.kaucjapp.deposit.exception.DepositMachineNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.DepositValidationException;
+import pl.isigmas.kaucjapp.deposit.exception.RatingNotFoundException;
 import pl.isigmas.kaucjapp.deposit.exception.RetailNetworkNotFoundException;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachine;
 import pl.isigmas.kaucjapp.deposit.model.OpeningHourRecord;
@@ -46,6 +47,10 @@ public class DepositMachineService {
                         .build())
                 .collect(Collectors.toList());
 
+        Rating rating = ratingRepository.findById(depositMachine.getId())
+                .orElseThrow(() -> new RatingNotFoundException(depositMachine.getId()));
+
+
         return DepositMachineResponseDTO.builder()
                 .id(depositMachine.getId())
                 .networkName(depositMachine.getRetailNetwork() != null ? depositMachine.getRetailNetwork().getName() : null)
@@ -54,6 +59,8 @@ public class DepositMachineService {
                 .latitude(depositMachine.getLatitude())
                 .longitude(depositMachine.getLongitude())
                 .openingHours(openingHourDTOs)
+                .avgScore(rating.getAvgScore())
+                .feedbackCount(rating.getFeedbackCount())
                 .build();
     }
 

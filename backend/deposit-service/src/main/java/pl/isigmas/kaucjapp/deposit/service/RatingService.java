@@ -141,12 +141,6 @@ public class RatingService {
                 reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0));
     }
 
-    @Transactional(readOnly = true)
-    public RatingDTO getRatingDTO(Long depositMachineId) {
-        return ratingRepository.findById(depositMachineId)
-                .map(this::mapToDTO)
-                .orElseThrow(() -> new RatingNotFoundException(depositMachineId));
-    }
 
     private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review) {
         return ReviewResponseDTO.builder()
@@ -159,11 +153,4 @@ public class RatingService {
                 .build();
     }
 
-    private RatingDTO mapToDTO(Rating rating) {
-        RatingDTO dto = new RatingDTO();
-        dto.setDepositMachineId(rating.getDepositMachineId());
-        dto.setAvgScore(rating.getAvgScore());
-        dto.setFeedbackCount(rating.getFeedbackCount());
-        return dto;
-    }
 }
