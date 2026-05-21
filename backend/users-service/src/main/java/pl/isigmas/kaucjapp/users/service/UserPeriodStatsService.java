@@ -7,6 +7,7 @@ import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
+import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 
@@ -43,9 +44,8 @@ public class UserPeriodStatsService {
     }
 
     private UserPeriodStatsDTO getStatsForPeriod(Long userId, LocalDate startDate, LocalDate endDate, int periodDays) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(userId);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         DailyStatsCounts aggregation = userDailyStatsRepository.getStatsForPeriod(userId, startDate, endDate);
 
@@ -56,6 +56,8 @@ public class UserPeriodStatsService {
 
         return UserPeriodStatsDTO.builder()
                 .userId(userId)
+                .username(user.getUsername())
+                .profilePictureUrl(user.getProfilePictureUrl())
                 .periodDays(periodDays)
                 .fromDate(startDate)
                 .toDate(endDate)
