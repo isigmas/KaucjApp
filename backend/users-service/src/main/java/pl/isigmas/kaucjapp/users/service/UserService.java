@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.InvalidRankingType;
+import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserAlreadyExistsException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
@@ -25,11 +26,21 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private static final Set<String> VALID_RANKING_TYPES = Set.of(
+            "returned_plastic",
+            "returned_can",
+            "collected_plastic",
+            "collected_can",
+            "returned_total",
+            "collected_total"
+    );
 
     private final UserRepository userRepository;
     private final UserStatsRepository userStatsRepository;
@@ -205,20 +216,21 @@ public class UserService {
     }
 
     public List<UserPeriodStatsDTO> getStatsRanking(String type, int days, int page, int size) {
+        String sortType = normalizeRankingType(type);
         if (days > 0) {
-            return getPeriodRanking(type, days, page, size);
-        } else {
-            return getAllTimeRanking(type, page, size);
+            validateRankingPeriodDays(days);
+            return getPeriodRanking(sortType, days, page, size);
         }
+        return getAllTimeRanking(sortType, page, size);
     }
 
-    private List<UserPeriodStatsDTO> getPeriodRanking(String type, int days, int page, int size) {
-        LocalDate endDate = LocalDate.now(java.time.ZoneOffset.UTC);
+    private List<UserPeriodStatsDTO> getPeriodRanking(String sortType, int days, int page, int size) {
+        LocalDate endDate = LocalDate.now(ZoneOffset.UTC);
         LocalDate startDate = endDate.minusDays(days - 1L);
         Pageable pageable = PageRequest.of(page, size, Sort.unsorted());
 
         List<PeriodRankingAggregation> stats = userDailyStatsRepository.findTopUsersStatsForPeriod(
-                startDate, endDate, type.toLowerCase(), pageable
+                startDate, endDate, sortType, pageable
         );
 
         if (stats.isEmpty()) return List.of();
@@ -231,7 +243,7 @@ public class UserService {
             User user = usersMap.get(agg.getUserId());
             return UserPeriodStatsDTO.builder()
                     .userId(agg.getUserId())
-                    .username(user.getUsername())
+                    .username(user != null ? user.getUsername(): null)
                     .profilePictureUrl(user != null ? user.getProfilePictureUrl() : null)
                     .periodDays(days)
                     .fromDate(startDate)
@@ -246,15 +258,15 @@ public class UserService {
         }).toList();
     }
 
-    private List<UserPeriodStatsDTO> getAllTimeRanking(String type, int page, int size) {
-        String sortByField = switch (type.toLowerCase()) {
+    private List<UserPeriodStatsDTO> getAllTimeRanking(String sortType, int page, int size) {
+        String sortByField = switch (sortType) {
             case "returned_plastic" -> "returnedPlasticCount";
             case "returned_can" -> "returnedCanCount";
             case "collected_plastic" -> "collectedPlasticCount";
             case "collected_can" -> "collectedCanCount";
             case "returned_total" -> "returnedTotalCount";
             case "collected_total" -> "collectedTotalCount";
-            default -> throw new InvalidRankingType("Invalid ranking type: " + type);
+            default -> throw new InvalidRankingType("Invalid ranking type: " + sortType);
         };
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
@@ -270,20 +282,34 @@ public class UserService {
             User user = usersMap.get(stat.getUserId());
             return UserPeriodStatsDTO.builder()
                     .userId(stat.getUserId())
-                    .username(user.getUsername())
+                    .username(user != null ? user.getUsername(): null)
                     .profilePictureUrl(user != null ? user.getProfilePictureUrl() : null)
                     .periodDays(0)
                     .fromDate(null)
                     .toDate(null)
                     .returnedPlasticCount(stat.getReturnedPlasticCount())
                     .returnedCanCount(stat.getReturnedCanCount())
-                    .returnedTotalCount(stat.getReturnedTotalCount())
+                    .returnedTotalCount(stat.getReturnedPlasticCount() + stat.getReturnedCanCount())
                     .collectedPlasticCount(stat.getCollectedPlasticCount())
                     .collectedCanCount(stat.getCollectedCanCount())
-                    .collectedTotalCount(stat.getCollectedTotalCount())
+                    .collectedTotalCount(stat.getCollectedPlasticCount() + stat.getCollectedCanCount())
                     .build();
         }).toList();
     }
 
+    private static String normalizeRankingType(String type) {
+        String normalized = type.toLowerCase();
+        if (!VALID_RANKING_TYPES.contains(normalized)) {
+            throw new InvalidRankingType("Invalid ranking type: " + type);
+        }
+        return normalized;
+    }
 
+    private static void validateRankingPeriodDays(int days) {
+        if (days < 1 || days > UserPeriodStatsService.MAX_PERIOD_DAYS) {
+            throw new InvalidStatsPeriodException(
+                    "days must be between 1 and " + UserPeriodStatsService.MAX_PERIOD_DAYS + ", got: " + days
+            );
+        }
+    }
 }
