@@ -18,6 +18,8 @@ import MachineImage from "./machine-image";
 import { spacing } from "@/src/theme";
 import ReviewsSection from "@/src/components/ui/review/reviews-list";
 import MachineReview from "@/src/components/ui/review/machine-review";
+import Animated from "react-native-reanimated";
+import { layoutSpring } from "@/src/constants";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -99,7 +101,9 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 
       <MachineReview machineId={machineId} />
 
-      <ReviewsSection machineId={machineId} />
+      <Animated.View layout={layoutSpring}>
+        <ReviewsSection machineId={machineId} />
+      </Animated.View>
     </View>
   );
 }

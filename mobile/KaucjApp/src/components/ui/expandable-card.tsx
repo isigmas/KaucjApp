@@ -1,3 +1,4 @@
+import { layoutSpring } from "@/src/constants";
 import { colors, rounded, spacing } from "@/src/theme";
 import * as Haptics from "expo-haptics";
 import { ChevronDown } from "lucide-react-native";
@@ -13,7 +14,6 @@ import {
 import Animated, {
   FadeIn,
   FadeOut,
-  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -27,11 +27,6 @@ interface ExpandableCardProps {
   children: React.ReactNode;
   titleStyle?: StyleProp<TextStyle>;
 }
-
-export const LAYOUT_SPRING = LinearTransition.springify()
-  .damping(50)
-  .stiffness(500)
-  .mass(2.5);
 
 export default function ExpandableCard({
   title,
@@ -60,7 +55,7 @@ export default function ExpandableCard({
   }, [expanded, progress]);
 
   return (
-    <Animated.View layout={LAYOUT_SPRING} style={styles.wrapper}>
+    <Animated.View layout={layoutSpring} style={styles.wrapper}>
       <Pressable
         onPress={toggle}
         accessibilityRole="button"
