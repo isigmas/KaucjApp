@@ -18,24 +18,27 @@ export default function ReviewForm({ mode }: { mode: "create" | "edit" }) {
         control={control}
         name="score"
         render={({ field }) => (
-          <StarSelector
-            rating={field.value}
-            onSelect={(val) => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              // Allow deselecting the star if it's already selected
-              if (val === field.value) {
-                field.onChange(0);
-                return;
-              }
-              field.onChange(val);
-            }}
-          />
+          <>
+            <StarSelector
+              rating={field.value}
+              onSelect={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                // Allow deselecting the star if it's already selected
+                if (val === field.value) {
+                  field.onChange(0);
+                  return;
+                }
+                field.onChange(val);
+              }}
+            />
+            {errors.score && (
+              <Text style={styles.errorText}>
+                Wybierz ocenę przed wysłaniem
+              </Text>
+            )}
+          </>
         )}
       />
-
-      {errors.score && (
-        <Text style={styles.errorText}>Wybierz ocenę przed wysłaniem</Text>
-      )}
 
       <Controller
         control={control}

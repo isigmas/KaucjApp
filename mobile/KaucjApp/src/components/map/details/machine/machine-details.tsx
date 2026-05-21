@@ -95,7 +95,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 
       <OpeningHoursCard openingHours={machine.openingHours} />
 
-      <MachineImage />
+      {/* <MachineImage /> */}
 
       <MachineReview machineId={machineId} />
 

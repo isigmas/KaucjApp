@@ -44,22 +44,21 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
     });
   };
   return (
-    <View style={styles.container}>
+    <SectionCard>
       <Text style={styles.sectionTitle}>Oceń kaucjomat</Text>
+      <FormProvider {...methods}>
+        <ReviewForm mode="create" />
 
-      <SectionCard style={styles.card}>
-        <View style={styles.divider} />
-        <FormProvider {...methods}>
-          <ReviewForm mode="create" />
-
-          <SubmitButton
-            onPress={methods.handleSubmit(onSubmit)}
-            disabled={isPending}
-            text={buttonText}
-          />
-        </FormProvider>
-      </SectionCard>
-    </View>
+        <SubmitButton
+          onPress={methods.handleSubmit(onSubmit)}
+          disabled={isPending}
+          text={buttonText}
+        />
+        <Text style={styles.secondaryText}>
+          Twoja opinia będzie widoczna publicznie
+        </Text>
+      </FormProvider>
+    </SectionCard>
   );
 }
 
@@ -99,11 +98,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginLeft: spacing.xs,
   },
-  card: {
-    borderRadius: rounded.apple,
-    gap: spacing.md,
-    borderColor: colors.status.border + "40",
-  },
+
   divider: {
     height: 1,
     backgroundColor: colors.status.border,
@@ -111,9 +106,10 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   submitButton: {
+    marginTop: spacing.sm,
     backgroundColor: colors.primary.base,
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: spacing.md,
+    borderRadius: rounded.lg,
     alignItems: "center",
   },
   submitButtonPressed: {
@@ -124,5 +120,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.3,
+  },
+  secondaryText: {
+    textAlign: "center",
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
 });
