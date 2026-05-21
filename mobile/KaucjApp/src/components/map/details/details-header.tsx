@@ -2,14 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, spacing } from "@/src/theme";
 import StarRating from "../../ui/star-rating";
-import { Rating } from "@/src/types";
 
 interface DetailHeaderProps {
   title: string;
   titleSize?: number;
   subtitle?: string;
   rightSlot?: React.ReactNode;
-  rating?: Rating;
+  ratingScore?: number;
+  feedbackCount?: number;
 }
 
 export default function DetailHeader({
@@ -17,16 +17,21 @@ export default function DetailHeader({
   titleSize = 24,
   subtitle,
   rightSlot,
-  rating,
+  ratingScore,
+  feedbackCount,
 }: DetailHeaderProps) {
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleContainer}>
         <Text style={[styles.title, { fontSize: titleSize }]}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-        {rating ? (
-          <StarRating rating={rating} size={16} style={{ marginBottom: 0 }} />
-        ) : null}
+
+        <StarRating
+          ratingScore={ratingScore || 0}
+          feedbackCount={feedbackCount || 0}
+          size={16}
+          style={{ marginBottom: 0 }}
+        />
       </View>
 
       {rightSlot ? <View style={styles.rightSlot}>{rightSlot}</View> : null}

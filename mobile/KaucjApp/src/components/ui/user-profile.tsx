@@ -23,7 +23,9 @@ export default function UserProfile({
   showStats = true,
   color = "primary",
 }: UserProfileProps) {
-  const { data: userRating } = useUserRating(user.userId);
+  const { data: userRating, isLoading: isLoadingRating } = useUserRating(
+    user.userId,
+  );
 
   return (
     <View style={styles.headerSection}>
@@ -36,7 +38,13 @@ export default function UserProfile({
         {user.firstName + " " + user.lastName}
       </Animated.Text>
 
-      {showRating && <StarRating rating={userRating} />}
+      {showRating && (
+        <StarRating
+          isLoading={isLoadingRating}
+          ratingScore={userRating?.avgScore || 0}
+          feedbackCount={userRating?.feedbackCount || 0}
+        />
+      )}
 
       {showStats && <StatsBadge user={user} role={role} color={color} />}
     </View>

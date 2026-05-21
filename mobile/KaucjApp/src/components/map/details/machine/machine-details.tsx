@@ -75,7 +75,8 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
     <View style={styles.container}>
       <DetailHeader
         title="Kaucjomat"
-        rating={RATING}
+        ratingScore={machine.avgScore}
+        feedbackCount={machine.feedbackCount}
         rightSlot={
           <StatusDropdown
             statusLabel={statusLabel}

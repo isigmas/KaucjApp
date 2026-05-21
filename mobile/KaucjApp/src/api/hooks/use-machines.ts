@@ -60,6 +60,7 @@ export const useMachineDetails = (id: number) => {
       const { data } = await apiClient.get<DepositMachine>(
         `/deposit/machine/${id}`,
       );
+      console.log(JSON.stringify(data, null, 2));
       return data;
     },
     enabled: !!id,
