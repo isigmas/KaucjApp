@@ -17,10 +17,20 @@ export default function OpeningHoursCard({
 }: OpeningHoursCardProps) {
   const sorted = [...openingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
 
+  const now = new Date();
+  const currentDayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+  const today = openingHours.find((h) => h.dayOfWeek === currentDayOfWeek);
+  const subtitle = today
+    ? "Dzisiaj: " +
+      formatHour(today.openTime) +
+      " - " +
+      formatHour(today.closeTime)
+    : "Pokaż więcej";
+
   return (
     <ExpandableCard
       title="Godziny otwarcia"
-      subtitle="Pokaż więcej"
+      subtitle={subtitle}
       icon={
         <Ionicons name="time-outline" size={24} color={colors.text.primary} />
       }

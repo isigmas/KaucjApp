@@ -15,7 +15,7 @@ import StatusDropdown from "./status-dropdown";
 import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
-import { colors, spacing } from "@/src/theme";
+import { spacing } from "@/src/theme";
 import ReviewsSection from "@/src/components/ui/reviews-section";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
@@ -96,7 +96,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 
       <MachineImage />
 
-      <ReviewsSection userId={2} />
+      <ReviewsSection machineId={machineId} />
     </View>
   );
 }
