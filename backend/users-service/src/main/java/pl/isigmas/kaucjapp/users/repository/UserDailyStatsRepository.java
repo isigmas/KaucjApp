@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.users.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +11,7 @@ import pl.isigmas.kaucjapp.users.DTO.DailyStatsSnapshot;
 import pl.isigmas.kaucjapp.users.model.UserStats;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -61,5 +63,26 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = """
+            SELECT user_id
+            FROM user_daily_stats
+            WHERE stat_date >= :startDate AND stat_date <= :endDate
+            GROUP BY user_id
+            ORDER BY
+                CASE WHEN :sortType = 'returned_plastic' THEN SUM(returned_plastic_count)
+                     WHEN :sortType = 'returned_can' THEN SUM(returned_can_count)
+                     WHEN :sortType = 'collected_plastic' THEN SUM(collected_plastic_count)
+                     WHEN :sortType = 'collected_can' THEN SUM(collected_can_count)
+                     WHEN :sortType = 'returned_total' THEN SUM(returned_plastic_count + returned_can_count)
+                     WHEN :sortType = 'collected_total' THEN SUM(collected_plastic_count + collected_can_count)
+                     ELSE 0 END DESC
+            """, nativeQuery = true)
+    List<Long> findTopUsersForPeriod(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("sortType") String sortType,
+            Pageable pageable
     );
 }

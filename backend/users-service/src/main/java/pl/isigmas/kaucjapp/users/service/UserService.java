@@ -8,16 +8,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import pl.isigmas.kaucjapp.users.DTO.*;
+import pl.isigmas.kaucjapp.users.exception.InvalidRankingType;
 import pl.isigmas.kaucjapp.users.exception.UserAlreadyExistsException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserAddress;
 import pl.isigmas.kaucjapp.users.model.UserStats;
+import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +33,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserStatsRepository userStatsRepository;
+    private final UserDailyStatsRepository userDailyStatsRepository;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -199,20 +204,30 @@ public class UserService {
                 .build();
     }
 
-    public List<UserDTO> getStatsRanking(String type, int page, int size) {
-        String sortByField = switch (type.toLowerCase()) {
-            case "returned_plastic" -> "returnedPlasticCount";
-            case "returned_can" -> "returnedCanCount";
-            case "collected_plastic" -> "collectedPlasticCount";
-            case "collected_can" -> "collectedCanCount";
-            case "returned_total" -> "returnedTotalCount";
-            case "collected_total" -> "collectedTotalCount";
-            default -> throw new IllegalArgumentException("Invalid ranking type: " + type);
-        };
+    public List<UserDTO> getStatsRanking(String type, int days, int page, int size) {
+        List<Long> sortedUserIds;
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
+        if (days <= 0) {
+            String sortByField = switch (type.toLowerCase()) {
+                case "returned_plastic" -> "returnedPlasticCount";
+                case "returned_can" -> "returnedCanCount";
+                case "collected_plastic" -> "collectedPlasticCount";
+                case "collected_can" -> "collectedCanCount";
+                case "returned_total" -> "returnedTotalCount";
+                case "collected_total" -> "collectedTotalCount";
+                default -> throw new InvalidRankingType("Invalid ranking type: " + type);
+            };
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
+            sortedUserIds = userStatsRepository.findUserIds(pageable);
+        } else {
+            LocalDate endDate = LocalDate.now(ZoneOffset.UTC);
+            LocalDate startDate = endDate.minusDays(days - 1L);
 
-        List<Long> sortedUserIds = userStatsRepository.findUserIds(pageable);
+            Pageable pageable = PageRequest.of(page, size, Sort.unsorted());
+            sortedUserIds = userDailyStatsRepository.findTopUsersForPeriod(
+                    startDate, endDate, type.toLowerCase(), pageable
+            );
+        }
 
         if (sortedUserIds.isEmpty()) {
             return List.of();

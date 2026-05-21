@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class UserController {
     private final RatingService ratingService;
     private final AzureBlobService azureBlobService;
     private final UserPeriodStatsService userPeriodStatsService;
+    private final DefaultErrorAttributes defaultErrorAttributes;
 
 
     @GetMapping("/me/addresses")
@@ -299,11 +301,12 @@ public class UserController {
     )
     public ResponseEntity<List<UserDTO>> getStatsRanking(
             @RequestParam(defaultValue = "returned_total") String type,
+            @RequestParam(defaultValue = "0") int days, //0- all-time
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
-        List<UserDTO> ranking = userService.getStatsRanking(type, page, size);
+        List<UserDTO> ranking = userService.getStatsRanking(type,days, page, size);
         return ResponseEntity.ok(ranking);
     }
 
