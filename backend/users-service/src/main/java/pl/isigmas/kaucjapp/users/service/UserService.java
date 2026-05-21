@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private static final Set<String> VALID_RANKING_TYPES = Set.of(
-            "returned_bottle",
+            "returned_plastic",
             "returned_can",
-            "collected_bottle",
+            "collected_plastic",
             "collected_can",
             "returned_total",
             "collected_total"
@@ -143,11 +143,11 @@ public class UserService {
                 .addresses(addressDTOs)
                 .createdAt(user.getTimeCreated())
                 .collectedCanCount(userStats.getCollectedCanCount())
-                .collectedBottleCount(userStats.getCollectedBottleCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
-                .returnedBottleCount(userStats.getReturnedBottleCount())
-                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedBottleCount())
-                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedBottleCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -168,11 +168,11 @@ public class UserService {
                 .addresses(addressDTOs)
                 .createdAt(user.getTimeCreated())
                 .collectedCanCount(userStats.getCollectedCanCount())
-                .collectedBottleCount(userStats.getCollectedBottleCount())
+                .collectedPlasticCount(userStats.getCollectedPlasticCount())
                 .returnedCanCount(userStats.getReturnedCanCount())
-                .returnedBottleCount(userStats.getReturnedBottleCount())
-                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedBottleCount())
-                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedBottleCount())
+                .returnedPlasticCount(userStats.getReturnedPlasticCount())
+                .returnedTotalCount(userStats.getReturnedCanCount() + userStats.getReturnedPlasticCount())
+                .collectedTotalCount(userStats.getCollectedCanCount() + userStats.getCollectedPlasticCount())
                 .build();
     }
 
@@ -205,12 +205,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public AdminStatsDTO getAllStats() {
         var cans = userStatsRepository.getTotalReturnedCanCount();
-        var bottles = userStatsRepository.getTotalReturnedBottleCount();
+        var plastic = userStatsRepository.getTotalReturnedPlasticCount();
         var total = userStatsRepository.getTotalReturnedItemsCount();
 
         return AdminStatsDTO.builder()
                 .returnedCanCount(cans)
-                .returnedBottleCount(bottles)
+                .returnedPlasticCount(plastic)
                 .returnedTotalCount(total)
                 .build();
     }
@@ -248,21 +248,21 @@ public class UserService {
                     .periodDays(days)
                     .fromDate(startDate)
                     .toDate(endDate)
-                    .returnedBottleCount(agg.getReturnedBottle())
+                    .returnedPlasticCount(agg.getReturnedPlastic())
                     .returnedCanCount(agg.getReturnedCan())
-                    .returnedTotalCount(agg.getReturnedBottle() + agg.getReturnedCan())
-                    .collectedBottleCount(agg.getCollectedBottle())
+                    .returnedTotalCount(agg.getReturnedPlastic() + agg.getReturnedCan())
+                    .collectedPlasticCount(agg.getCollectedPlastic())
                     .collectedCanCount(agg.getCollectedCan())
-                    .collectedTotalCount(agg.getCollectedBottle() + agg.getCollectedCan())
+                    .collectedTotalCount(agg.getCollectedPlastic() + agg.getCollectedCan())
                     .build();
         }).toList();
     }
 
     private List<UserPeriodStatsDTO> getAllTimeRanking(String sortType, int page, int size) {
         String sortByField = switch (sortType) {
-            case "returned_bottle" -> "returnedBottleCount";
+            case "returned_plastic" -> "returnedPlasticCount";
             case "returned_can" -> "returnedCanCount";
-            case "collected_bottle" -> "collectedBottleCount";
+            case "collected_plastic" -> "collectedPlasticCount";
             case "collected_can" -> "collectedCanCount";
             case "returned_total" -> "returnedTotalCount";
             case "collected_total" -> "collectedTotalCount";
@@ -287,12 +287,12 @@ public class UserService {
                     .periodDays(0)
                     .fromDate(null)
                     .toDate(null)
-                    .returnedBottleCount(stat.getReturnedBottleCount())
+                    .returnedPlasticCount(stat.getReturnedPlasticCount())
                     .returnedCanCount(stat.getReturnedCanCount())
-                    .returnedTotalCount(stat.getReturnedBottleCount() + stat.getReturnedCanCount())
-                    .collectedBottleCount(stat.getCollectedBottleCount())
+                    .returnedTotalCount(stat.getReturnedPlasticCount() + stat.getReturnedCanCount())
+                    .collectedPlasticCount(stat.getCollectedPlasticCount())
                     .collectedCanCount(stat.getCollectedCanCount())
-                    .collectedTotalCount(stat.getCollectedBottleCount() + stat.getCollectedCanCount())
+                    .collectedTotalCount(stat.getCollectedPlasticCount() + stat.getCollectedCanCount())
                     .build();
         }).toList();
     }

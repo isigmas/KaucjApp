@@ -32,10 +32,10 @@ class UserPeriodStatsServiceIntegrationTest extends BaseIntegrationTest {
 
         UserPeriodStatsDTO stats = userPeriodStatsService.getStatsForPeriod(userId, twoDaysAgo, today);
 
-        assertThat(stats.getReturnedBottleCount()).isEqualTo(3);
+        assertThat(stats.getReturnedPlasticCount()).isEqualTo(3);
         assertThat(stats.getReturnedCanCount()).isEqualTo(1);
         assertThat(stats.getReturnedTotalCount()).isEqualTo(4);
-        assertThat(stats.getCollectedBottleCount()).isEqualTo(3);
+        assertThat(stats.getCollectedPlasticCount()).isEqualTo(3);
         assertThat(stats.getCollectedCanCount()).isEqualTo(1);
         assertThat(stats.getCollectedTotalCount()).isEqualTo(4);
         assertThat(stats.getPeriodDays()).isEqualTo(3);
@@ -54,7 +54,7 @@ class UserPeriodStatsServiceIntegrationTest extends BaseIntegrationTest {
 
         UserPeriodStatsDTO stats = userPeriodStatsService.getStatsForLastDays(userId, 30);
 
-        assertThat(stats.getReturnedBottleCount()).isEqualTo(5);
+        assertThat(stats.getReturnedPlasticCount()).isEqualTo(5);
         assertThat(stats.getReturnedTotalCount()).isEqualTo(5);
         assertThat(stats.getPeriodDays()).isEqualTo(30);
     }

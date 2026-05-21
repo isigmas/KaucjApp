@@ -9,7 +9,7 @@ import lombok.Data;
 public class AdminStatsDTO {
 
     @JsonProperty("returned_bottle_count")
-    private Long returnedBottleCount;
+    private Long returnedPlasticCount;
 
     @JsonProperty("returned_can_count")
     private Long returnedCanCount;

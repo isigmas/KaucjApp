@@ -19,28 +19,28 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
 
     @Modifying(flushAutomatically = true)
     @Query(value = """
-            INSERT INTO user_daily_stats (user_id, stat_date, returned_bottle_count, returned_can_count, collected_bottle_count, collected_can_count)
-            VALUES (:userId, :statDate, :retBottles, :retCans, :colBottles, :colCans)
+            INSERT INTO user_daily_stats (user_id, stat_date, returned_plastic_count, returned_can_count, collected_plastic_count, collected_can_count)
+            VALUES (:userId, :statDate, :retPlastic, :retCan, :colPlastic, :colCan)
             ON CONFLICT (user_id, stat_date) DO UPDATE SET
-                returned_bottle_count = user_daily_stats.returned_bottle_count + :retBottles,
-                returned_can_count = user_daily_stats.returned_can_count + :retCans,
-                collected_bottle_count = user_daily_stats.collected_bottle_count + :colBottles,
-                collected_can_count = user_daily_stats.collected_can_count + :colCans
+                returned_plastic_count = user_daily_stats.returned_plastic_count + :retPlastic,
+                returned_can_count = user_daily_stats.returned_can_count + :retCan,
+                collected_plastic_count = user_daily_stats.collected_plastic_count + :colPlastic,
+                collected_can_count = user_daily_stats.collected_can_count + :colCan
             """, nativeQuery = true)
     void upsertDailyStats(
             @Param("userId") Long userId,
             @Param("statDate") LocalDate statDate,
-            @Param("retBottles") int retBottles,
-            @Param("retCans") int retCans,
-            @Param("colBottles") int colBottles,
-            @Param("colCans") int colCans
+            @Param("retPlastic") int retPlastic,
+            @Param("retCan") int retCan,
+            @Param("colPlastic") int colPlastic,
+            @Param("colCan") int colCan
     );
 
     @Query(value = """
             SELECT
-                returned_bottle_count::bigint AS returnedBottle,
+                returned_plastic_count::bigint AS returnedPlastic,
                 returned_can_count::bigint AS returnedCan,
-                collected_bottle_count::bigint AS collectedBottle,
+                collected_plastic_count::bigint AS collectedPlastic,
                 collected_can_count::bigint AS collectedCan
             FROM user_daily_stats
             WHERE user_id = :userId AND stat_date = :statDate
@@ -52,9 +52,9 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
 
     @Query(value = """
             SELECT
-                COALESCE(SUM(returned_bottle_count), 0) as returnedBottle,
+                COALESCE(SUM(returned_plastic_count), 0) as returnedPlastic,
                 COALESCE(SUM(returned_can_count), 0) as returnedCan,
-                COALESCE(SUM(collected_bottle_count), 0) as collectedBottle,
+                COALESCE(SUM(collected_plastic_count), 0) as collectedPlastic,
                 COALESCE(SUM(collected_can_count), 0) as collectedCan
             FROM user_daily_stats
             WHERE user_id = :userId AND stat_date >= :startDate AND stat_date <= :endDate
@@ -68,20 +68,20 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
     @Query(value = """
             SELECT
                 user_id AS userId,
-                COALESCE(SUM(returned_bottle_count), 0) AS returnedBottle,
+                COALESCE(SUM(returned_plastic_count), 0) AS returnedPlastic,
                 COALESCE(SUM(returned_can_count), 0) AS returnedCan,
-                COALESCE(SUM(collected_bottle_count), 0) AS collectedBottle,
+                COALESCE(SUM(collected_plastic_count), 0) AS collectedPlastic,
                 COALESCE(SUM(collected_can_count), 0) AS collectedCan
             FROM user_daily_stats
             WHERE stat_date >= :startDate AND stat_date <= :endDate
             GROUP BY user_id
             ORDER BY
-                CASE WHEN :sortType = 'returned_bottle' THEN SUM(returned_bottle_count)
+                CASE WHEN :sortType = 'returned_plastic' THEN SUM(returned_plastic_count)
                      WHEN :sortType = 'returned_can' THEN SUM(returned_can_count)
-                     WHEN :sortType = 'collected_bottle' THEN SUM(collected_bottle_count)
+                     WHEN :sortType = 'collected_plastic' THEN SUM(collected_plastic_count)
                      WHEN :sortType = 'collected_can' THEN SUM(collected_can_count)
-                     WHEN :sortType = 'returned_total' THEN SUM(returned_bottle_count + returned_can_count)
-                     WHEN :sortType = 'collected_total' THEN SUM(collected_bottle_count + collected_can_count)
+                     WHEN :sortType = 'returned_total' THEN SUM(returned_plastic_count + returned_can_count)
+                     WHEN :sortType = 'collected_total' THEN SUM(collected_plastic_count + collected_can_count)
                      ELSE 0 END DESC
             """, nativeQuery = true)
     List<UserDailyStatsCounts> findTopUsersStatsForPeriod(

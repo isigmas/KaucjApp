@@ -49,22 +49,22 @@ public class UserPeriodStatsService {
 
         DailyStatsCounts aggregation = userDailyStatsRepository.getStatsForPeriod(userId, startDate, endDate);
 
-        long returnedBottles = nullSafe(aggregation.getReturnedBottle());
-        long returnedCans = nullSafe(aggregation.getReturnedCan());
-        long collectedBottles = nullSafe(aggregation.getCollectedBottle());
-        long collectedCans = nullSafe(aggregation.getCollectedCan());
+        long returnedPlastic = nullSafe(aggregation.getReturnedPlastic());
+        long returnedCan = nullSafe(aggregation.getReturnedCan());
+        long collectedPlastic = nullSafe(aggregation.getCollectedPlastic());
+        long collectedCan = nullSafe(aggregation.getCollectedCan());
 
         return UserPeriodStatsDTO.builder()
                 .userId(userId)
                 .periodDays(periodDays)
                 .fromDate(startDate)
                 .toDate(endDate)
-                .returnedBottleCount(returnedBottles)
-                .returnedCanCount(returnedCans)
-                .returnedTotalCount(returnedBottles + returnedCans)
-                .collectedBottleCount(collectedBottles)
-                .collectedCanCount(collectedCans)
-                .collectedTotalCount(collectedBottles + collectedCans)
+                .returnedPlasticCount(returnedPlastic)
+                .returnedCanCount(returnedCan)
+                .returnedTotalCount(returnedPlastic + returnedCan)
+                .collectedPlasticCount(collectedPlastic)
+                .collectedCanCount(collectedCan)
+                .collectedTotalCount(collectedPlastic + collectedCan)
                 .build();
     }
 

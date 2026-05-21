@@ -4,11 +4,11 @@ package pl.isigmas.kaucjapp.users.DTO;
  * Projection for daily stat counters (single bucket or SUM over a period).
  */
 public interface DailyStatsCounts {
-    Long getReturnedBottle();
+    Long getReturnedPlastic();
 
     Long getReturnedCan();
 
-    Long getCollectedBottle();
+    Long getCollectedPlastic();
 
     Long getCollectedCan();
 }

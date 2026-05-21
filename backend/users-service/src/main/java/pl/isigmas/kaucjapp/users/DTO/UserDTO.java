@@ -44,13 +44,13 @@ public class UserDTO {
     private Instant createdAt;
 
     @JsonProperty("collected_bottle_count")
-    private Integer collectedBottleCount;
+    private Integer collectedPlasticCount;
 
     @JsonProperty("collected_can_count")
     private Integer collectedCanCount;
 
     @JsonProperty("returned_bottle_count")
-    private Integer returnedBottleCount;
+    private Integer returnedPlasticCount;
 
     @JsonProperty("returned_can_count")
     private Integer returnedCanCount;

@@ -39,16 +39,16 @@ public class UserStatsIngestService {
         }
 
         LocalDate statDate = LocalDate.now(ZoneOffset.UTC);
-        int bottles = event.getBottleQuantity();
+        int plastic = event.getPlasticQuantity();
         int cans = event.getCanQuantity();
 
-        userStatsRepository.incrementReturnedStats(event.getCreatorId(), bottles, cans);
-        userStatsRepository.incrementCollectedStats(event.getCollectorId(), bottles, cans);
+        userStatsRepository.incrementReturnedStats(event.getCreatorId(), plastic, cans);
+        userStatsRepository.incrementCollectedStats(event.getCollectorId(), plastic, cans);
 
         userDailyStatsRepository.upsertDailyStats(
                 event.getCreatorId(),
                 statDate,
-                bottles,
+                plastic,
                 cans,
                 0,
                 0
@@ -59,19 +59,19 @@ public class UserStatsIngestService {
                 statDate,
                 0,
                 0,
-                bottles,
+                plastic,
                 cans
         );
 
         log.info(
-                "Stats ingested for offerId={} statDate={}: creatorId={} returned +{} bottles, +{} cans; collectorId={} collected +{} bottles, +{} cans",
+                "Stats ingested for offerId={} statDate={}: creatorId={} returned +{} plastic, +{} cans; collectorId={} collected +{} plastic, +{} cans",
                 event.getOfferId(),
                 statDate,
                 event.getCreatorId(),
-                bottles,
+                plastic,
                 cans,
                 event.getCollectorId(),
-                bottles,
+                plastic,
                 cans
         );
     }

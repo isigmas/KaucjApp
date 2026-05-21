@@ -49,10 +49,10 @@ class UserPeriodStatsServiceTest {
         assertThat(result.getPeriodDays()).isEqualTo(30);
         assertThat(result.getFromDate()).isEqualTo(start);
         assertThat(result.getToDate()).isEqualTo(end);
-        assertThat(result.getReturnedBottleCount()).isEqualTo(10);
+        assertThat(result.getReturnedPlasticCount()).isEqualTo(10);
         assertThat(result.getReturnedCanCount()).isEqualTo(4);
         assertThat(result.getReturnedTotalCount()).isEqualTo(14);
-        assertThat(result.getCollectedBottleCount()).isEqualTo(6);
+        assertThat(result.getCollectedPlasticCount()).isEqualTo(6);
         assertThat(result.getCollectedCanCount()).isEqualTo(2);
         assertThat(result.getCollectedTotalCount()).isEqualTo(8);
     }
@@ -94,7 +94,7 @@ class UserPeriodStatsServiceTest {
     private static DailyStatsCounts aggregation(long rp, long rc, long cp, long cc) {
         return new DailyStatsCounts() {
             @Override
-            public Long getReturnedBottle() {
+            public Long getReturnedPlastic() {
                 return rp;
             }
 
@@ -104,7 +104,7 @@ class UserPeriodStatsServiceTest {
             }
 
             @Override
-            public Long getCollectedBottle() {
+            public Long getCollectedPlastic() {
                 return cp;
             }
 

@@ -38,7 +38,7 @@ class UserStatsIngestServiceTest {
                 .offerId(1L)
                 .creatorId(10L)
                 .collectorId(20L)
-                .bottleQuantity(3)
+                .plasticQuantity(3)
                 .canQuantity(2)
                 .build();
 
@@ -59,7 +59,7 @@ class UserStatsIngestServiceTest {
                 .offerId(99L)
                 .creatorId(10L)
                 .collectorId(20L)
-                .bottleQuantity(1)
+                .plasticQuantity(1)
                 .canQuantity(1)
                 .build();
 

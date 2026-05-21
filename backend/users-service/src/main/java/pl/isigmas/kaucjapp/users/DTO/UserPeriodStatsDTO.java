@@ -29,7 +29,7 @@ public class UserPeriodStatsDTO {
     private LocalDate toDate;
 
     @JsonProperty("returned_bottle_count")
-    private long returnedBottleCount;
+    private long returnedPlasticCount;
 
     @JsonProperty("returned_can_count")
     private long returnedCanCount;
@@ -38,7 +38,7 @@ public class UserPeriodStatsDTO {
     private long returnedTotalCount;
 
     @JsonProperty("collected_bottle_count")
-    private long collectedBottleCount;
+    private long collectedPlasticCount;
 
     @JsonProperty("collected_can_count")
     private long collectedCanCount;
