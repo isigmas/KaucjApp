@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, rounded, spacing } from "@/src/theme";
 import { useUserReviews, useMachineReviews } from "@/src/api/hooks/use-rating";
-import LoadingState from "../states/loading-state";
+import LoadingState from "../../states/loading-state";
 import { Review } from "@/src/types";
 import { timeAgoInPolish } from "@/src/lib";
 

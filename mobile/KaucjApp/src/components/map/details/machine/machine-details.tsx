@@ -16,7 +16,8 @@ import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
 import { spacing } from "@/src/theme";
-import ReviewsSection from "@/src/components/ui/reviews-section";
+import ReviewsSection from "@/src/components/ui/review/reviews-list";
+import MachineReview from "@/src/components/ui/review/machine-review";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -95,6 +96,8 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
       <OpeningHoursCard openingHours={machine.openingHours} />
 
       <MachineImage />
+
+      <MachineReview machineId={machineId} />
 
       <ReviewsSection machineId={machineId} />
     </View>

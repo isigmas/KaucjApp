@@ -5,7 +5,7 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { router } from "expo-router";
 import UserProfile from "@/src/components/ui/user-profile";
 import { useUserById } from "@/src/api/hooks/use-user";
-import ReviewsSection from "../ui/reviews-section";
+import ReviewsSection from "@/src/components/ui/review/reviews-list";
 import { UserRole } from "@/src/types/user";
 
 interface ProfileDetailsScreenProps {

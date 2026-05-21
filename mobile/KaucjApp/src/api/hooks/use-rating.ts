@@ -6,6 +6,7 @@ import {
   UserReviewPayload,
   MachineReviewPayload,
 } from "@/src/types";
+import { machineKeys } from "./use-machines";
 
 export const useUserRating = (userId: number) => {
   return useQuery({
@@ -45,7 +46,9 @@ export const useMachineReviews = (machineId: number) => {
   return useQuery({
     queryKey: ["machineReviews", machineId],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/machine/${machineId}/reviews`);
+      const { data } = await apiClient.get(
+        `/deposit/machine/${machineId}/reviews`,
+      );
       console.log(JSON.stringify(data, null, 2));
       return data as Review[];
     },
@@ -56,12 +59,17 @@ export const useAddMachineReview = (machineId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: MachineReviewPayload) => {
-      await apiClient.post(`/machine/${machineId}/rating`, payload);
+      await apiClient.post(`/deposit/machine/${machineId}/rating`, payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["machineReviews", machineId],
-      });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: machineKeys.detail(machineId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["machineReviews", machineId],
+        }),
+      ]);
     },
   });
 };
