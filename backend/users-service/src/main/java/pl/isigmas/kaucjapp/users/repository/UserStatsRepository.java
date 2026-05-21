@@ -14,11 +14,11 @@ import java.util.List;
 @Repository
 public interface UserStatsRepository extends JpaRepository<UserStats, Long> {
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE UserStats u SET u.returnedPlasticCount = u.returnedPlasticCount + :plastic, u.returnedCanCount = u.returnedCanCount + :can WHERE u.userId = :userId")
     void incrementReturnedStats(@Param("userId") Long userId, @Param("plastic") int plastic, @Param("can") int can);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE UserStats u SET u.collectedPlasticCount = u.collectedPlasticCount + :plastic, u.collectedCanCount = u.collectedCanCount + :can WHERE u.userId = :userId")
     void incrementCollectedStats(@Param("userId") Long userId, @Param("plastic") int plastic, @Param("can") int can);
 

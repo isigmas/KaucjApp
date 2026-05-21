@@ -6,14 +6,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
+import pl.isigmas.kaucjapp.users.DTO.DailyStatsSnapshot;
 import pl.isigmas.kaucjapp.users.model.UserStats;
 
-import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long> {
 
-    @Modifying
+    @Modifying(flushAutomatically = true)
     @Query(value = """
             INSERT INTO user_daily_stats (user_id, stat_date, returned_plastic_count, returned_can_count, collected_plastic_count, collected_can_count)
             VALUES (:userId, :statDate, :retPlastic, :retCan, :colPlastic, :colCan)
@@ -25,7 +27,7 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
             """, nativeQuery = true)
     void upsertDailyStats(
             @Param("userId") Long userId,
-            @Param("statDate") Instant statDate,
+            @Param("statDate") LocalDate statDate,
             @Param("retPlastic") int retPlastic,
             @Param("retCan") int retCan,
             @Param("colPlastic") int colPlastic,
@@ -33,7 +35,21 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
     );
 
     @Query(value = """
-            SELECT 
+            SELECT
+                returned_plastic_count AS returnedPlastic,
+                returned_can_count AS returnedCan,
+                collected_plastic_count AS collectedPlastic,
+                collected_can_count AS collectedCan
+            FROM user_daily_stats
+            WHERE user_id = :userId AND stat_date = :statDate
+            """, nativeQuery = true)
+    Optional<DailyStatsSnapshot> findDailyBucket(
+            @Param("userId") Long userId,
+            @Param("statDate") LocalDate statDate
+    );
+
+    @Query(value = """
+            SELECT
                 COALESCE(SUM(returned_plastic_count), 0) as returnedPlastic,
                 COALESCE(SUM(returned_can_count), 0) as returnedCan,
                 COALESCE(SUM(collected_plastic_count), 0) as collectedPlastic,
@@ -43,7 +59,7 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
             """, nativeQuery = true)
     DailyStatsAggregation getStatsForPeriod(
             @Param("userId") Long userId,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }

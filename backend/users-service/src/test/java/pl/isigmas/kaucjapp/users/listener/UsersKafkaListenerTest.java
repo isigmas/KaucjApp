@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
+import pl.isigmas.kaucjapp.users.DTO.OfferCompletedEventDTO;
 import pl.isigmas.kaucjapp.users.service.UserService;
+import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -19,37 +21,36 @@ class UsersKafkaListenerTest {
     private UserService userService;
 
     @Mock
-    private UserStatsRepository userStatsRepository;
+    private UserStatsIngestService userStatsIngestService;
 
     private UsersKafkaListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new UsersKafkaListener(userService, userStatsRepository);
+        listener = new UsersKafkaListener(userService, userStatsIngestService);
     }
 
     @Test
-    void handleOfferCompleted_validJson_parsesAndIncrementsStatsWithExpectedArguments() {
-        // Given
+    void handleOfferCompleted_validJson_delegatesToIngestService() {
         String eventJson = """
                 {"offer_id":1,"creator_id":10,"collector_id":20,"plastic_quantity":3,"can_quantity":2}
                 """;
 
-        // When
         listener.handleOfferCompleted(eventJson);
 
-        // Then
-        verify(userStatsRepository).incrementReturnedStats(10L, 3, 2);
-        verify(userStatsRepository).incrementCollectedStats(20L, 3, 2);
+        verify(userStatsIngestService).ingestOfferCompleted(argThat(event ->
+                event.getOfferId().equals(1L)
+                        && event.getCreatorId().equals(10L)
+                        && event.getCollectorId().equals(20L)
+                        && event.getPlasticQuantity() == 3
+                        && event.getCanQuantity() == 2
+        ));
     }
 
     @Test
-    void handleOfferCompleted_invalidJson_doesNotPropagateException_andDoesNotTouchRepository() {
-        // Given
-        String corrupted = "{ not valid json";
-
-        // When / Then — listener swallows parse errors so the consumer thread does not fail the poll loop
-        assertThatCode(() -> listener.handleOfferCompleted(corrupted)).doesNotThrowAnyException();
-        verifyNoInteractions(userStatsRepository);
+    void handleOfferCompleted_invalidJson_doesNotPropagateException() {
+        assertThatCode(() -> listener.handleOfferCompleted("{ not valid json"))
+                .doesNotThrowAnyException();
+        verifyNoInteractions(userStatsIngestService);
     }
 }
