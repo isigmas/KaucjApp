@@ -1,14 +1,11 @@
 import SectionCard from "@/src/components/ui/section-card";
-import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
+import { formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   AlertCircle,
-  AlertTriangle,
-  Calendar,
   CheckCircle,
   CheckCircle2,
-  Clock3,
   Hourglass,
   Truck,
   XCircle,
@@ -53,7 +50,11 @@ export default function BookingStatusSummaryCard({
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/bookings/confirmation",
-                  params: { type: "success", userId: offer.creatorId },
+                  params: {
+                    type: "success",
+                    userId: offer.creatorId,
+                    offerId: offer.offerId,
+                  },
                 });
               }
             },

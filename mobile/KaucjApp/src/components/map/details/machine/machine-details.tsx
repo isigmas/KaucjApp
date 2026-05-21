@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DepositMachineStatus, Rating } from "@/src/types";
+import { DepositMachineStatus } from "@/src/types";
 import { getMachineStatusConfig } from "@/src/lib";
 import {
   useMachineDetails,
@@ -17,12 +17,6 @@ import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
 import { colors, spacing } from "@/src/theme";
 import ReviewsSection from "@/src/components/ui/user-reviews-section";
-
-const RATING: Rating = {
-  userId: 1,
-  avgScore: 1.5,
-  feedbackCount: 10,
-};
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {

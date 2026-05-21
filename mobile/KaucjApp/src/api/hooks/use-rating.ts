@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api-client";
-import { Rating, RatingPayload, Review } from "@/src/types";
+import {
+  UserRating,
+  Review,
+  UserReviewPayload,
+  MachineReviewPayload,
+} from "@/src/types";
 
 export const useUserRating = (userId: number) => {
   return useQuery({
@@ -8,15 +13,15 @@ export const useUserRating = (userId: number) => {
     queryFn: async () => {
       const { data } = await apiClient.get(`/user/${userId}/rating`);
       console.log(JSON.stringify(data, null, 2));
-      return data as Rating;
+      return data as UserRating;
     },
   });
 };
 
-export const useAddRating = (userId: number) => {
+export const useAddUserReview = (userId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: RatingPayload) => {
+    mutationFn: async (payload: UserReviewPayload) => {
       await apiClient.post(`/user/${userId}/rating`, payload);
     },
     onSuccess: () => {
@@ -25,13 +30,38 @@ export const useAddRating = (userId: number) => {
   });
 };
 
-export const useReviews = (userId: number) => {
+export const useUserReviews = (userId: number) => {
   return useQuery({
-    queryKey: ["reviews", userId],
+    queryKey: ["userReviews", userId],
     queryFn: async () => {
       const { data } = await apiClient.get(`/user/${userId}/reviews`);
       console.log(JSON.stringify(data, null, 2));
       return data as Review[];
+    },
+  });
+};
+
+export const useMachineReviews = (machineId: number) => {
+  return useQuery({
+    queryKey: ["machineReviews", machineId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/machine/${machineId}/reviews`);
+      console.log(JSON.stringify(data, null, 2));
+      return data as Review[];
+    },
+  });
+};
+
+export const useAddMachineReview = (machineId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: MachineReviewPayload) => {
+      await apiClient.post(`/machine/${machineId}/rating`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["machineReviews", machineId],
+      });
     },
   });
 };

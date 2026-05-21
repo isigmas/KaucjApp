@@ -61,7 +61,11 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/offers/confirmation",
-                  params: { type: "success", userId: offer.collectorId },
+                  params: {
+                    type: "success",
+                    userId: offer.collectorId,
+                    offerId: offer.offerId,
+                  },
                 });
               }
             },

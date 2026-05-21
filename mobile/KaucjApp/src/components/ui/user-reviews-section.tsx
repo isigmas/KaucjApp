@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, rounded, spacing } from "@/src/theme";
-import { useReviews } from "@/src/api/hooks/use-rating";
+import { useUserReviews } from "@/src/api/hooks/use-rating";
 import LoadingState from "../states/loading-state";
 import { Review } from "@/src/types";
 import { timeAgoInPolish } from "@/src/lib";
@@ -13,7 +13,7 @@ interface ReviewsSectionProps {
 }
 
 export default function ReviewsSection({ userId }: ReviewsSectionProps) {
-  const { data: reviews, isLoading } = useReviews(userId);
+  const { data: reviews, isLoading } = useUserReviews(userId);
 
   if (isLoading) {
     return <LoadingState title="Ładowanie opinii" />;

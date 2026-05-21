@@ -4,23 +4,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert } from "react-native";
 import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-layout";
 import ReviewSection from "@/src/components/ui/review-section";
-import { useAddRating } from "@/src/api/hooks/use-rating";
-import { RatingPayload } from "@/src/types";
+import { useAddUserReview } from "@/src/api/hooks/use-rating";
+import { UserReviewPayload } from "@/src/types";
 import { ratingSchema, RatingFormValues } from "@/src/validation/rating";
 import * as Haptics from "expo-haptics";
 
 interface ConfirmationWithReviewProps {
   userId: number;
+  offerId: number;
   onSuccess: () => void;
   isTheUserToReviewCourier?: boolean;
 }
 
 export default function ConfirmationWithReview({
   userId,
+  offerId,
   onSuccess,
   isTheUserToReviewCourier = false,
 }: ConfirmationWithReviewProps) {
-  const { mutate: addRating, isPending } = useAddRating(userId);
+  const { mutate: addUserReview, isPending } = useAddUserReview(userId);
 
   const methods = useForm<RatingFormValues>({
     resolver: zodResolver(ratingSchema),
@@ -36,12 +38,13 @@ export default function ConfirmationWithReview({
       : "Zakończ";
 
   const onSubmit = (data: RatingFormValues) => {
-    const payload: RatingPayload = {
+    const payload: UserReviewPayload = {
+      offerId: offerId,
       score: data.score,
       ...(data.comment &&
         data.comment.trim() !== "" && { comment: data.comment }),
     };
-    addRating(payload, {
+    addUserReview(payload, {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onSuccess();
