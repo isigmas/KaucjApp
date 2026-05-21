@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
+import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
@@ -91,8 +91,8 @@ class UserPeriodStatsServiceTest {
         assertThat(result.getReturnedTotalCount()).isEqualTo(2);
     }
 
-    private static DailyStatsAggregation aggregation(long rp, long rc, long cp, long cc) {
-        return new DailyStatsAggregation() {
+    private static DailyStatsCounts aggregation(long rp, long rc, long cp, long cc) {
+        return new DailyStatsCounts() {
             @Override
             public Long getReturnedPlastic() {
                 return rp;

@@ -229,13 +229,13 @@ public class UserService {
         LocalDate startDate = endDate.minusDays(days - 1L);
         Pageable pageable = PageRequest.of(page, size, Sort.unsorted());
 
-        List<PeriodRankingAggregation> stats = userDailyStatsRepository.findTopUsersStatsForPeriod(
+        List<UserDailyStatsCounts> stats = userDailyStatsRepository.findTopUsersStatsForPeriod(
                 startDate, endDate, sortType, pageable
         );
 
         if (stats.isEmpty()) return List.of();
 
-        List<Long> userIds = stats.stream().map(PeriodRankingAggregation::getUserId).toList();
+        List<Long> userIds = stats.stream().map(UserDailyStatsCounts::getUserId).toList();
         Map<Long, User> usersMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
 

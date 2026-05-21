@@ -3,7 +3,7 @@ package pl.isigmas.kaucjapp.users.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
+import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
@@ -47,7 +47,7 @@ public class UserPeriodStatsService {
             throw new UserNotFoundException(userId);
         }
 
-        DailyStatsAggregation aggregation = userDailyStatsRepository.getStatsForPeriod(userId, startDate, endDate);
+        DailyStatsCounts aggregation = userDailyStatsRepository.getStatsForPeriod(userId, startDate, endDate);
 
         long returnedPlastic = nullSafe(aggregation.getReturnedPlastic());
         long returnedCan = nullSafe(aggregation.getReturnedCan());

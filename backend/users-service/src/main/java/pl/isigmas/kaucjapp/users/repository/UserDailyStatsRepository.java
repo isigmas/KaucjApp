@@ -6,9 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
-import pl.isigmas.kaucjapp.users.DTO.DailyStatsSnapshot;
-import pl.isigmas.kaucjapp.users.DTO.PeriodRankingAggregation;
+import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
+import pl.isigmas.kaucjapp.users.DTO.UserDailyStatsCounts;
 import pl.isigmas.kaucjapp.users.model.UserStats;
 
 import java.time.LocalDate;
@@ -39,14 +38,14 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
 
     @Query(value = """
             SELECT
-                returned_plastic_count AS returnedPlastic,
-                returned_can_count AS returnedCan,
-                collected_plastic_count AS collectedPlastic,
-                collected_can_count AS collectedCan
+                returned_plastic_count::bigint AS returnedPlastic,
+                returned_can_count::bigint AS returnedCan,
+                collected_plastic_count::bigint AS collectedPlastic,
+                collected_can_count::bigint AS collectedCan
             FROM user_daily_stats
             WHERE user_id = :userId AND stat_date = :statDate
             """, nativeQuery = true)
-    Optional<DailyStatsSnapshot> findDailyBucket(
+    Optional<DailyStatsCounts> findDailyBucket(
             @Param("userId") Long userId,
             @Param("statDate") LocalDate statDate
     );
@@ -60,7 +59,7 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
             FROM user_daily_stats
             WHERE user_id = :userId AND stat_date >= :startDate AND stat_date <= :endDate
             """, nativeQuery = true)
-    DailyStatsAggregation getStatsForPeriod(
+    DailyStatsCounts getStatsForPeriod(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
@@ -85,7 +84,7 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
                      WHEN :sortType = 'collected_total' THEN SUM(collected_plastic_count + collected_can_count)
                      ELSE 0 END DESC
             """, nativeQuery = true)
-    List<PeriodRankingAggregation> findTopUsersStatsForPeriod(
+    List<UserDailyStatsCounts> findTopUsersStatsForPeriod(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("sortType") String sortType,

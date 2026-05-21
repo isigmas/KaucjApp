@@ -2,7 +2,7 @@ package pl.isigmas.kaucjapp.users.integration.stats;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import pl.isigmas.kaucjapp.users.DTO.DailyStatsSnapshot;
+import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.listener.UsersKafkaListener;
 import pl.isigmas.kaucjapp.users.model.UserStats;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
@@ -41,16 +41,16 @@ class OfferCompletedStatsIngestIntegrationTest extends BaseIntegrationTest {
         assertThat(collectorStats.getCollectedPlasticCount()).isEqualTo(3);
         assertThat(collectorStats.getCollectedCanCount()).isEqualTo(2);
 
-        DailyStatsSnapshot creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
-        DailyStatsSnapshot collectorBucket = userDailyStatsRepository.findDailyBucket(collectorId, today).orElseThrow();
+        DailyStatsCounts creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
+        DailyStatsCounts collectorBucket = userDailyStatsRepository.findDailyBucket(collectorId, today).orElseThrow();
 
-        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3);
-        assertThat(creatorBucket.getReturnedCan()).isEqualTo(2);
+        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3L);
+        assertThat(creatorBucket.getReturnedCan()).isEqualTo(2L);
         assertThat(creatorBucket.getCollectedPlastic()).isZero();
         assertThat(creatorBucket.getCollectedCan()).isZero();
 
-        assertThat(collectorBucket.getCollectedPlastic()).isEqualTo(3);
-        assertThat(collectorBucket.getCollectedCan()).isEqualTo(2);
+        assertThat(collectorBucket.getCollectedPlastic()).isEqualTo(3L);
+        assertThat(collectorBucket.getCollectedCan()).isEqualTo(2L);
         assertThat(collectorBucket.getReturnedPlastic()).isZero();
         assertThat(collectorBucket.getReturnedCan()).isZero();
     }
@@ -78,9 +78,9 @@ class OfferCompletedStatsIngestIntegrationTest extends BaseIntegrationTest {
         publishOfferCompleted(301L, creatorId, collectorId, 1, 0);
         publishOfferCompleted(302L, creatorId, collectorId, 2, 3);
 
-        DailyStatsSnapshot creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
-        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3);
-        assertThat(creatorBucket.getReturnedCan()).isEqualTo(3);
+        DailyStatsCounts creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
+        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3L);
+        assertThat(creatorBucket.getReturnedCan()).isEqualTo(3L);
 
         UserStats creatorStats = userStatsRepository.findById(creatorId).orElseThrow();
         assertThat(creatorStats.getReturnedPlasticCount()).isEqualTo(3);
