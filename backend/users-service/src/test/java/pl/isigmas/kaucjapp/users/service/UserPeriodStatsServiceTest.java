@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
+import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
@@ -67,9 +68,9 @@ class UserPeriodStatsServiceTest {
     @Test
     void getStatsForLastDays_invalidDays_throws() {
         assertThatThrownBy(() -> userPeriodStatsService.getStatsForLastDays(1L, 0))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidStatsPeriodException.class);
         assertThatThrownBy(() -> userPeriodStatsService.getStatsForLastDays(1L, 400))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidStatsPeriodException.class);
     }
 
     @Test
