@@ -100,7 +100,7 @@ export const formatHour = (time: string) => {
 };
 
 export const formatPrice = (value: number) => {
-  return `${value.toFixed(2).replace(".", ",")} zł`;
+  return `${value.toFixed(2).replace(".", ",")}zł`;
 };
 
 export const getPolishPackageQuantity = (
