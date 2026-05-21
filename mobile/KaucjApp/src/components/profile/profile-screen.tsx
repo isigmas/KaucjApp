@@ -1,16 +1,7 @@
-import React, { use } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Image,
-} from "react-native";
+import Reactś from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
-  FadeInDown,
   FadeInLeft,
-  Layout,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -122,10 +113,15 @@ export default function ProfileScreen() {
           onPress={() => router.push("/profile/bookings")}
         />
         <ProfileMenuItem
-          icon="wallet"
-          title="Historia transakcji"
+          icon="telescope"
+          title="Test opini userid 3; offerid 1 jak chcesz zmienic to w pliku src/components/profile/profile-screen.tsx linijka 122 XD"
           delay={600}
-          onPress={() => console.log("Portfel")}
+          onPress={() =>
+            router.push({
+              pathname: "/profile/test-review",
+              params: { userId: 2, offerId: 1 },
+            })
+          }
         />
       </View>
 

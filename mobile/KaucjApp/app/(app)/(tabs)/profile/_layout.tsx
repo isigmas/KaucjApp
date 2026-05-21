@@ -32,6 +32,14 @@ export default function HomeLayout() {
           headerTitle: "Moje rezerwacje",
         }}
       />
+
+      <Stack.Screen
+        name="test-review"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+        }}
+      />
     </Stack>
   );
 }
