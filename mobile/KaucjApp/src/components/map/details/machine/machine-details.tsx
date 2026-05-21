@@ -16,7 +16,7 @@ import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
 import { colors, spacing } from "@/src/theme";
-import ReviewsSection from "@/src/components/ui/user-reviews-section";
+import ReviewsSection from "@/src/components/ui/reviews-section";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {

@@ -3,20 +3,50 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, rounded, spacing } from "@/src/theme";
-import { useUserReviews } from "@/src/api/hooks/use-rating";
+import { useUserReviews, useMachineReviews } from "@/src/api/hooks/use-rating";
 import LoadingState from "../states/loading-state";
 import { Review } from "@/src/types";
 import { timeAgoInPolish } from "@/src/lib";
 
-interface ReviewsSectionProps {
-  userId: number;
+export interface ReviewsSectionProps {
+  userId?: number;
+  machineId?: number;
 }
 
-export default function ReviewsSection({ userId }: ReviewsSectionProps) {
-  const { data: reviews, isLoading } = useUserReviews(userId);
+export default function ReviewsSection({
+  userId,
+  machineId,
+}: ReviewsSectionProps) {
+  if (userId !== undefined) {
+    return <UserReviews userId={userId} />;
+  }
 
+  if (machineId !== undefined) {
+    return <MachineReviews machineId={machineId} />;
+  }
+
+  console.warn("ReviewsSection requires either a userId or a machineId.");
+  return null;
+}
+
+function UserReviews({ userId }: { userId: number }) {
+  const { data: reviews, isLoading } = useUserReviews(userId);
+  return <ReviewsList reviews={reviews} isLoading={isLoading} />;
+}
+
+function MachineReviews({ machineId }: { machineId: number }) {
+  const { data: reviews, isLoading } = useMachineReviews(machineId);
+  return <ReviewsList reviews={reviews} isLoading={isLoading} />;
+}
+
+interface ReviewsListProps {
+  reviews?: Review[];
+  isLoading: boolean;
+}
+
+function ReviewsList({ reviews, isLoading }: ReviewsListProps) {
   if (isLoading) {
-    return <LoadingState title="Ładowanie opinii" />;
+    return <LoadingState title="Ładowanie opinii..." />;
   }
 
   if (!reviews || reviews.length === 0) {
@@ -25,7 +55,7 @@ export default function ReviewsSection({ userId }: ReviewsSectionProps) {
         entering={FadeInDown.delay(400).springify()}
         style={styles.emptyContainer}
       >
-        <Text style={styles.emptyText}>Brak opinii dla tego użytkownika.</Text>
+        <Text style={styles.emptyText}>Brak opinii.</Text>
       </Animated.View>
     );
   }
