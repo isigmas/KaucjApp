@@ -204,43 +204,85 @@ public class UserService {
                 .build();
     }
 
-    public List<UserDTO> getStatsRanking(String type, int days, int page, int size) {
-        List<Long> sortedUserIds;
-
-        if (days <= 0) {
-            String sortByField = switch (type.toLowerCase()) {
-                case "returned_plastic" -> "returnedPlasticCount";
-                case "returned_can" -> "returnedCanCount";
-                case "collected_plastic" -> "collectedPlasticCount";
-                case "collected_can" -> "collectedCanCount";
-                case "returned_total" -> "returnedTotalCount";
-                case "collected_total" -> "collectedTotalCount";
-                default -> throw new InvalidRankingType("Invalid ranking type: " + type);
-            };
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
-            sortedUserIds = userStatsRepository.findUserIds(pageable);
+    public List<UserPeriodStatsDTO> getStatsRanking(String type, int days, int page, int size) {
+        if (days > 0) {
+            return getPeriodRanking(type, days, page, size);
         } else {
-            LocalDate endDate = LocalDate.now(ZoneOffset.UTC);
-            LocalDate startDate = endDate.minusDays(days - 1L);
-
-            Pageable pageable = PageRequest.of(page, size, Sort.unsorted());
-            sortedUserIds = userDailyStatsRepository.findTopUsersForPeriod(
-                    startDate, endDate, type.toLowerCase(), pageable
-            );
+            return getAllTimeRanking(type, page, size);
         }
+    }
 
-        if (sortedUserIds.isEmpty()) {
-            return List.of();
-        }
+    private List<UserPeriodStatsDTO> getPeriodRanking(String type, int days, int page, int size) {
+        LocalDate endDate = LocalDate.now(java.time.ZoneOffset.UTC);
+        LocalDate startDate = endDate.minusDays(days - 1L);
+        Pageable pageable = PageRequest.of(page, size, Sort.unsorted());
 
-        Map<Long, UserDTO> usersMap = userRepository.findAllById(sortedUserIds).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toMap(UserDTO::getId, user -> user));
+        List<PeriodRankingAggregation> stats = userDailyStatsRepository.findTopUsersStatsForPeriod(
+                startDate, endDate, type.toLowerCase(), pageable
+        );
 
-        return sortedUserIds.stream()
-                .map(usersMap::get)
-                .filter(java.util.Objects::nonNull)
-                .toList();
+        if (stats.isEmpty()) return List.of();
+
+        List<Long> userIds = stats.stream().map(PeriodRankingAggregation::getUserId).toList();
+        Map<Long, User> usersMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        return stats.stream().map(agg -> {
+            User user = usersMap.get(agg.getUserId());
+            return UserPeriodStatsDTO.builder()
+                    .userId(agg.getUserId())
+                    .username(user.getUsername())
+                    .profilePictureUrl(user != null ? user.getProfilePictureUrl() : null)
+                    .periodDays(days)
+                    .fromDate(startDate)
+                    .toDate(endDate)
+                    .returnedPlasticCount(agg.getReturnedPlastic())
+                    .returnedCanCount(agg.getReturnedCan())
+                    .returnedTotalCount(agg.getReturnedPlastic() + agg.getReturnedCan())
+                    .collectedPlasticCount(agg.getCollectedPlastic())
+                    .collectedCanCount(agg.getCollectedCan())
+                    .collectedTotalCount(agg.getCollectedPlastic() + agg.getCollectedCan())
+                    .build();
+        }).toList();
+    }
+
+    private List<UserPeriodStatsDTO> getAllTimeRanking(String type, int page, int size) {
+        String sortByField = switch (type.toLowerCase()) {
+            case "returned_plastic" -> "returnedPlasticCount";
+            case "returned_can" -> "returnedCanCount";
+            case "collected_plastic" -> "collectedPlasticCount";
+            case "collected_can" -> "collectedCanCount";
+            case "returned_total" -> "returnedTotalCount";
+            case "collected_total" -> "collectedTotalCount";
+            default -> throw new InvalidRankingType("Invalid ranking type: " + type);
+        };
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
+        List<UserStats> allTimeStats = userStatsRepository.findAll(pageable).getContent();
+
+        if (allTimeStats.isEmpty()) return List.of();
+
+        List<Long> userIds = allTimeStats.stream().map(UserStats::getUserId).toList();
+        Map<Long, User> usersMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        return allTimeStats.stream().map(stat -> {
+            User user = usersMap.get(stat.getUserId());
+            return UserPeriodStatsDTO.builder()
+                    .userId(stat.getUserId())
+                    .username(user.getUsername())
+                    .profilePictureUrl(user != null ? user.getProfilePictureUrl() : null)
+                    .periodDays(0)
+                    .fromDate(null)
+                    .toDate(null)
+                    .returnedPlasticCount(stat.getReturnedPlasticCount())
+                    .returnedCanCount(stat.getReturnedCanCount())
+                    .returnedTotalCount(stat.getReturnedTotalCount())
+                    .collectedPlasticCount(stat.getCollectedPlasticCount())
+                    .collectedCanCount(stat.getCollectedCanCount())
+                    .collectedTotalCount(stat.getCollectedTotalCount())
+                    .build();
+        }).toList();
     }
 
 

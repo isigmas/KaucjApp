@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsAggregation;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsSnapshot;
+import pl.isigmas.kaucjapp.users.DTO.PeriodRankingAggregation;
 import pl.isigmas.kaucjapp.users.model.UserStats;
 
 import java.time.LocalDate;
@@ -80,6 +81,32 @@ public interface UserDailyStatsRepository extends JpaRepository<UserStats, Long>
                      ELSE 0 END DESC
             """, nativeQuery = true)
     List<Long> findTopUsersForPeriod(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("sortType") String sortType,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT 
+                user_id AS userId,
+                COALESCE(SUM(returned_plastic_count), 0) AS returnedPlastic,
+                COALESCE(SUM(returned_can_count), 0) AS returnedCan,
+                COALESCE(SUM(collected_plastic_count), 0) AS collectedPlastic,
+                COALESCE(SUM(collected_can_count), 0) AS collectedCan
+            FROM user_daily_stats
+            WHERE stat_date >= :startDate AND stat_date <= :endDate
+            GROUP BY user_id
+            ORDER BY
+                CASE WHEN :sortType = 'returned_plastic' THEN SUM(returned_plastic_count)
+                     WHEN :sortType = 'returned_can' THEN SUM(returned_can_count)
+                     WHEN :sortType = 'collected_plastic' THEN SUM(collected_plastic_count)
+                     WHEN :sortType = 'collected_can' THEN SUM(collected_can_count)
+                     WHEN :sortType = 'returned_total' THEN SUM(returned_plastic_count + returned_can_count)
+                     WHEN :sortType = 'collected_total' THEN SUM(collected_plastic_count + collected_can_count)
+                     ELSE 0 END DESC
+            """, nativeQuery = true)
+    List<PeriodRankingAggregation> findTopUsersStatsForPeriod(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("sortType") String sortType,

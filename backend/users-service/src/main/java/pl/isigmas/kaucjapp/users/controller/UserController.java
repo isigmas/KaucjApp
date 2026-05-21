@@ -299,14 +299,14 @@ public class UserController {
             summary = "Get top users ranking by activity type with pagination",
             description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total"
     )
-    public ResponseEntity<List<UserDTO>> getStatsRanking(
+    public ResponseEntity<List<UserPeriodStatsDTO>> getStatsRanking(
             @RequestParam(defaultValue = "returned_total") String type,
-            @RequestParam(defaultValue = "0") int days, //0- all-time
+            @RequestParam(defaultValue = "0") int days,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
-        List<UserDTO> ranking = userService.getStatsRanking(type,days, page, size);
+        List<UserPeriodStatsDTO> ranking = userService.getStatsRanking(type, days, page, size);
         return ResponseEntity.ok(ranking);
     }
 

@@ -13,6 +13,12 @@ public class UserPeriodStatsDTO {
     @JsonProperty("user_id")
     private Long userId;
 
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("profile_picture_url")
+    private String profilePictureUrl;
+
     @JsonProperty("period_days")
     private int periodDays;
 
