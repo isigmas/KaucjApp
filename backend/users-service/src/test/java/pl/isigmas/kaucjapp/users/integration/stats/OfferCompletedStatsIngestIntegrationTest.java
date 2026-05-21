@@ -36,22 +36,22 @@ class OfferCompletedStatsIngestIntegrationTest extends BaseIntegrationTest {
         UserStats creatorStats = userStatsRepository.findById(creatorId).orElseThrow();
         UserStats collectorStats = userStatsRepository.findById(collectorId).orElseThrow();
 
-        assertThat(creatorStats.getReturnedPlasticCount()).isEqualTo(3);
+        assertThat(creatorStats.getReturnedBottleCount()).isEqualTo(3);
         assertThat(creatorStats.getReturnedCanCount()).isEqualTo(2);
-        assertThat(collectorStats.getCollectedPlasticCount()).isEqualTo(3);
+        assertThat(collectorStats.getCollectedBottleCount()).isEqualTo(3);
         assertThat(collectorStats.getCollectedCanCount()).isEqualTo(2);
 
         DailyStatsCounts creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
         DailyStatsCounts collectorBucket = userDailyStatsRepository.findDailyBucket(collectorId, today).orElseThrow();
 
-        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3L);
+        assertThat(creatorBucket.getReturnedBottle()).isEqualTo(3L);
         assertThat(creatorBucket.getReturnedCan()).isEqualTo(2L);
-        assertThat(creatorBucket.getCollectedPlastic()).isZero();
+        assertThat(creatorBucket.getCollectedBottle()).isZero();
         assertThat(creatorBucket.getCollectedCan()).isZero();
 
-        assertThat(collectorBucket.getCollectedPlastic()).isEqualTo(3L);
+        assertThat(collectorBucket.getCollectedBottle()).isEqualTo(3L);
         assertThat(collectorBucket.getCollectedCan()).isEqualTo(2L);
-        assertThat(collectorBucket.getReturnedPlastic()).isZero();
+        assertThat(collectorBucket.getReturnedBottle()).isZero();
         assertThat(collectorBucket.getReturnedCan()).isZero();
     }
 
@@ -65,7 +65,7 @@ class OfferCompletedStatsIngestIntegrationTest extends BaseIntegrationTest {
         usersKafkaListener.handleOfferCompleted(eventJson);
 
         UserStats creatorStats = userStatsRepository.findById(creatorId).orElseThrow();
-        assertThat(creatorStats.getReturnedPlasticCount()).isEqualTo(5);
+        assertThat(creatorStats.getReturnedBottleCount()).isEqualTo(5);
         assertThat(creatorStats.getReturnedCanCount()).isEqualTo(1);
     }
 
@@ -79,22 +79,22 @@ class OfferCompletedStatsIngestIntegrationTest extends BaseIntegrationTest {
         publishOfferCompleted(302L, creatorId, collectorId, 2, 3);
 
         DailyStatsCounts creatorBucket = userDailyStatsRepository.findDailyBucket(creatorId, today).orElseThrow();
-        assertThat(creatorBucket.getReturnedPlastic()).isEqualTo(3L);
+        assertThat(creatorBucket.getReturnedBottle()).isEqualTo(3L);
         assertThat(creatorBucket.getReturnedCan()).isEqualTo(3L);
 
         UserStats creatorStats = userStatsRepository.findById(creatorId).orElseThrow();
-        assertThat(creatorStats.getReturnedPlasticCount()).isEqualTo(3);
+        assertThat(creatorStats.getReturnedBottleCount()).isEqualTo(3);
         assertThat(creatorStats.getReturnedCanCount()).isEqualTo(3);
     }
 
-    private void publishOfferCompleted(Long offerId, Long creatorId, Long collectorId, int plastic, int cans) {
-        usersKafkaListener.handleOfferCompleted(offerCompletedJson(offerId, creatorId, collectorId, plastic, cans));
+    private void publishOfferCompleted(Long offerId, Long creatorId, Long collectorId, int bottles, int cans) {
+        usersKafkaListener.handleOfferCompleted(offerCompletedJson(offerId, creatorId, collectorId, bottles, cans));
     }
 
-    private static String offerCompletedJson(Long offerId, Long creatorId, Long collectorId, int plastic, int cans) {
+    private static String offerCompletedJson(Long offerId, Long creatorId, Long collectorId, int bottles, int cans) {
         return """
                 {"offer_id":%d,"creator_id":%d,"collector_id":%d,"plastic_quantity":%d,"can_quantity":%d}
-                """.formatted(offerId, creatorId, collectorId, plastic, cans);
+                """.formatted(offerId, creatorId, collectorId, bottles, cans);
     }
 
     private Long createUser(long requestedId, String username, String email) throws Exception {

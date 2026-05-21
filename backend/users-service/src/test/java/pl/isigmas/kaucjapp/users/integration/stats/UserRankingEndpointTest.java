@@ -16,7 +16,7 @@ class UserRankingEndpointTest extends BaseIntegrationTest {
     private UserStatsRepository userStatsRepository;
 
     @Test
-    void ranking_returnedPlastic_sortsDesc() throws Exception {
+    void ranking_returnedBottle_sortsDesc() throws Exception {
         Long u1 = createUser(3001L, "u1", "u1@example.com");
         Long u2 = createUser(3002L, "u2", "u2@example.com");
         Long u3 = createUser(3003L, "u3", "u3@example.com");
@@ -26,7 +26,7 @@ class UserRankingEndpointTest extends BaseIntegrationTest {
         setStats(u3, 20, 0, 0, 0);
 
         mockMvc.perform(get("/api/user/ranking")
-                        .param("type", "returned_plastic")
+                        .param("type", "returned_bottle")
                         .param("page", "0")
                         .param("size", "3"))
                 .andExpect(status().isOk())
@@ -125,7 +125,7 @@ class UserRankingEndpointTest extends BaseIntegrationTest {
 
         // page 1 size 1 -> second user in sorted order: u2
         mockMvc.perform(get("/api/user/ranking")
-                        .param("type", "returned_plastic")
+                        .param("type", "returned_bottle")
                         .param("page", "1")
                         .param("size", "1"))
                 .andExpect(status().isOk())
@@ -152,11 +152,11 @@ class UserRankingEndpointTest extends BaseIntegrationTest {
                 .getId();
     }
 
-    private void setStats(Long userId, int returnedPlastic, int returnedCan, int collectedPlastic, int collectedCan) {
+    private void setStats(Long userId, int returnedBottles, int returnedCan, int collectedBottles, int collectedCan) {
         UserStats stats = userStatsRepository.findById(userId).orElseThrow();
-        stats.setReturnedPlasticCount(returnedPlastic);
+        stats.setReturnedBottleCount(returnedBottles);
         stats.setReturnedCanCount(returnedCan);
-        stats.setCollectedPlasticCount(collectedPlastic);
+        stats.setCollectedBottleCount(collectedBottles);
         stats.setCollectedCanCount(collectedCan);
         userStatsRepository.saveAndFlush(stats);
     }

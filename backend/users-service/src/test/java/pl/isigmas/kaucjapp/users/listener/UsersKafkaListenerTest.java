@@ -42,7 +42,7 @@ class UsersKafkaListenerTest {
                 event.getOfferId().equals(1L)
                         && event.getCreatorId().equals(10L)
                         && event.getCollectorId().equals(20L)
-                        && event.getPlasticQuantity() == 3
+                        && event.getBottleQuantity() == 3
                         && event.getCanQuantity() == 2
         ));
     }

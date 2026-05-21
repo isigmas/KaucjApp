@@ -297,7 +297,7 @@ public class UserController {
     @GetMapping("/ranking")
     @Operation(
             summary = "Get top users ranking by activity type with pagination",
-            description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total"
+            description = "Available types: returned_bottle, returned_can, collected_bottle, collected_can, returned_total, collected_total. Use days=0 for all-time, days>0 for period ranking."
     )
     public ResponseEntity<List<UserPeriodStatsDTO>> getStatsRanking(
             @RequestParam(defaultValue = "returned_total") String type,

@@ -45,13 +45,13 @@ public class UserAdminDTO {
     private Instant createdAt;
 
     @JsonProperty("collected_bottle_count")
-    private Integer collectedPlasticCount;
+    private Integer collectedBottleCount;
 
     @JsonProperty("collected_can_count")
     private Integer collectedCanCount;
 
     @JsonProperty("returned_bottle_count")
-    private Integer returnedPlasticCount;
+    private Integer returnedBottleCount;
 
     @JsonProperty("returned_can_count")
     private Integer returnedCanCount;
