@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { View, StyleSheet } from "react-native";
+
 import { Store, MapPin, Power } from "lucide-react-native";
-import { colors, shadows, spacing } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import { getMachineStatusConfig } from "@/src/lib";
 import { DepositMachineStatus } from "@/src/types";
+import StatItem from "@/src/components/ui/stat-item";
 
 export interface MachineQuickStatsProps {
   networkName: string;
@@ -63,55 +64,6 @@ export default function MachineQuickStats({
   );
 }
 
-// --- Internal Subcomponent ---
-
-interface StatItemProps {
-  icon: React.ReactNode;
-  iconBg: string;
-  value: string;
-  label: string;
-  valueColor?: string;
-  index: number;
-  shadowColor?: string;
-}
-
-function StatItem({
-  icon,
-  iconBg,
-  value,
-  label,
-  valueColor,
-  index,
-  shadowColor,
-}: StatItemProps) {
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100 + 50).springify()}
-      style={styles.statWrapper}
-    >
-      <View
-        style={[
-          styles.iconCircle,
-          { backgroundColor: iconBg, shadowColor: shadowColor },
-        ]}
-      >
-        {icon}
-      </View>
-      <Text
-        style={[styles.valueText, valueColor && { color: valueColor }]}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
-      >
-        {value}
-      </Text>
-      <Text style={styles.labelText} numberOfLines={1}>
-        {label}
-      </Text>
-    </Animated.View>
-  );
-}
-
 // --- Styles ---
 
 const styles = StyleSheet.create({
@@ -121,33 +73,5 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingBottom: spacing.lg,
     width: "100%",
-  },
-  statWrapper: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xs,
-  },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.sm,
-    ...shadows.light,
-  },
-  valueText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text?.primary || "#1C1C1E",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  labelText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: colors.text?.muted || "#8E8E93",
-    textAlign: "center",
   },
 });
