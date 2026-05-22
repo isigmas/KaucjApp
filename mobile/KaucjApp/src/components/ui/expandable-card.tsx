@@ -10,8 +10,10 @@ import {
   Text,
   TextStyle,
   View,
+  ViewStyle,
 } from "react-native";
 import Animated, {
+  EntryOrExitLayoutType,
   FadeIn,
   FadeOut,
   useAnimatedStyle,
@@ -26,6 +28,8 @@ interface ExpandableCardProps {
   defaultExpanded?: boolean;
   children: React.ReactNode;
   titleStyle?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
+  entering?: EntryOrExitLayoutType;
 }
 
 export default function ExpandableCard({
@@ -35,6 +39,8 @@ export default function ExpandableCard({
   defaultExpanded = false,
   children,
   titleStyle,
+  style,
+  entering,
 }: ExpandableCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const progress = useSharedValue(defaultExpanded ? 1 : 0);
@@ -55,7 +61,11 @@ export default function ExpandableCard({
   }, [expanded, progress]);
 
   return (
-    <Animated.View layout={layoutSpring} style={styles.wrapper}>
+    <Animated.View
+      layout={layoutSpring}
+      style={[styles.wrapper, style]}
+      entering={entering}
+    >
       <Pressable
         onPress={toggle}
         accessibilityRole="button"
@@ -121,8 +131,9 @@ const styles = StyleSheet.create({
   iconChip: {
     width: 36,
     height: 36,
-    borderRadius: rounded.md,
-    backgroundColor: colors.primary.light,
+
+    borderRadius: rounded.xl,
+
     alignItems: "center",
     justifyContent: "center",
   },

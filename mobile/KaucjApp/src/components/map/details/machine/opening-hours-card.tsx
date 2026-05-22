@@ -1,12 +1,14 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { OpeningHour } from "@/src/types";
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { formatHour, getDayName } from "@/src/lib";
 import SectionCard from "../../../ui/section-card";
 import SectionTitle from "../card-title";
 import ExpandableCard from "@/src/components/ui/expandable-card";
 import { Ionicons } from "@expo/vector-icons";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { Clock } from "lucide-react-native";
 
 interface OpeningHoursCardProps {
   openingHours: OpeningHour[];
@@ -28,31 +30,40 @@ export default function OpeningHoursCard({
     : "Pokaż więcej";
 
   return (
-    <ExpandableCard
-      title="Godziny otwarcia"
-      subtitle={subtitle}
-      icon={
-        <Ionicons name="time-outline" size={24} color={colors.text.primary} />
-      }
-      titleStyle={styles.openingHoursTitle}
-    >
-      {sorted.map((day) => (
-        <View style={styles.row} key={day.dayOfWeek}>
-          <Text style={styles.dayText}>{getDayName(day.dayOfWeek)}</Text>
-          {day.isClosed ? (
-            <Text style={styles.closedText}>zamknięte</Text>
-          ) : (
-            <Text style={styles.hoursText}>
-              {formatHour(day.openTime)} - {formatHour(day.closeTime)}
-            </Text>
-          )}
-        </View>
-      ))}
-    </ExpandableCard>
+    <Animated.View style={styles.shadow}>
+      <ExpandableCard
+        title="Godziny otwarcia"
+        subtitle={subtitle}
+        icon={<Clock size={28} strokeWidth={2} color={colors.accent.base} />}
+        titleStyle={styles.openingHoursTitle}
+        style={styles.card}
+        entering={FadeInDown.delay(300).springify()}
+      >
+        {sorted.map((day) => (
+          <View style={styles.row} key={day.dayOfWeek}>
+            <Text style={styles.dayText}>{getDayName(day.dayOfWeek)}</Text>
+            {day.isClosed ? (
+              <Text style={styles.closedText}>zamknięte</Text>
+            ) : (
+              <Text style={styles.hoursText}>
+                {formatHour(day.openTime)} - {formatHour(day.closeTime)}
+              </Text>
+            )}
+          </View>
+        ))}
+      </ExpandableCard>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  shadow: {
+    ...shadows.light,
+  },
+  card: {
+    borderRadius: rounded.apple,
+    borderWidth: 0,
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useUserReviews, useMachineReviews } from "@/src/api/hooks/use-rating";
 import LoadingState from "../../states/loading-state";
 import { Review } from "@/src/types";
@@ -125,13 +125,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card || "#FFFFFF",
     borderRadius: rounded.apple || 16,
     padding: spacing.md,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.03)",
+    ...shadows.light,
   },
   cardHeader: {
     flexDirection: "row",

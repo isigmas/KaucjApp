@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { FormProvider, useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
 
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { StarSelector, ReviewTextInput } from "./review-form";
 import { RatingFormValues, ratingSchema } from "@/src/validation";
 import { useAddMachineReview } from "@/src/api/hooks/use-rating";
@@ -55,7 +55,11 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
   };
 
   return (
-    <Animated.View layout={layoutSpring} style={styles.card}>
+    <Animated.View
+      layout={layoutSpring}
+      style={styles.card}
+      entering={FadeInDown.delay(400).springify()}
+    >
       <CardTitle>Oceń kaucjomat</CardTitle>
       <FormProvider {...methods}>
         <View style={styles.starsContainer}>
@@ -140,11 +144,10 @@ function SubmitButton({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.card,
-    borderRadius: rounded.xl,
+    borderRadius: rounded.apple,
     padding: spacing.md,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.status.border,
+    ...shadows.light,
   },
   sectionTitle: {
     fontSize: 14,

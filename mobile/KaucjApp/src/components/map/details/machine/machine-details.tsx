@@ -20,6 +20,7 @@ import ReviewsSection from "@/src/components/ui/review/reviews-list";
 import MachineReview from "@/src/components/ui/review/machine-review";
 import Animated from "react-native-reanimated";
 import { layoutSpring } from "@/src/constants";
+import MachineQuickStats from "./quick-stats";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -88,12 +89,17 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
       {isUnavailable && (
         <WarningBanner accentColor={statusColor} message={warningMessage} />
       )}
+      <MachineQuickStats
+        networkName={machine.networkName}
+        status={machine.status}
+        address={machine.address}
+      />
 
-      <LocationCard
+      {/* <LocationCard
         networkName={machine.networkName}
         address={machine.address}
         openingHours={machine.openingHours}
-      />
+      /> */}
 
       <OpeningHoursCard openingHours={machine.openingHours} />
 
