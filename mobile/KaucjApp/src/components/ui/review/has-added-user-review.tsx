@@ -21,8 +21,11 @@ export default function UserReviewCheck({
     return null;
   }
 
-  const { data } = useUserReviewCheck(offerId, userId);
+  const { data, isLoading } = useUserReviewCheck(offerId, userId);
   const isReviewPosted = data?.alreadyReviewed;
+  if (isLoading) {
+    return null;
+  }
   if (isReviewPosted) {
     return <Text>Ocena dodana, docelowo wyswietlic tutaj ocene</Text>;
   }
