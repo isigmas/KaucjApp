@@ -84,6 +84,36 @@ class UserRankingEndpointTest extends BaseIntegrationTest {
     }
 
     @Test
+    void ranking_period_invalidType_returnsBadRequest() throws Exception {
+        createUser(3401L, "bad1", "bad1@example.com");
+
+        mockMvc.perform(get("/api/user/ranking")
+                        .param("type", "invalid_type")
+                        .param("days", "30"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ranking_period_invalidDays_returnsBadRequest() throws Exception {
+        createUser(3411L, "bad2", "bad2@example.com");
+
+        mockMvc.perform(get("/api/user/ranking")
+                        .param("type", "returned_total")
+                        .param("days", "400"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ranking_allTime_invalidType_returnsBadRequest() throws Exception {
+        createUser(3421L, "bad3", "bad3@example.com");
+
+        mockMvc.perform(get("/api/user/ranking")
+                        .param("type", "not_a_metric")
+                        .param("days", "0"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void ranking_pagination_works() throws Exception {
         Long u1 = createUser(3301L, "p1", "p1@example.com");
         Long u2 = createUser(3302L, "p2", "p2@example.com");

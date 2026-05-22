@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 import pl.isigmas.kaucjapp.users.service.AzureBlobService;
+import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
@@ -36,6 +38,8 @@ public class UserController {
     private final UserService userService;
     private final RatingService ratingService;
     private final AzureBlobService azureBlobService;
+    private final UserPeriodStatsService userPeriodStatsService;
+    private final DefaultErrorAttributes defaultErrorAttributes;
 
 
     @GetMapping("/me/addresses")
@@ -91,8 +95,38 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(myUserId));
     }
 
+    @GetMapping("/me/stats/period")
+    @Operation(
+            summary = "Get my activity stats for a recent period",
+            description = "Sums daily stat buckets over the last `days` calendar days (UTC, inclusive). "
+                    + "Profile all-time stats (GET /me) are unchanged; this endpoint is for period views such as last 30 days.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "UserPeriodStatsDTO with summed counts and period metadata."),
+            @ApiResponse(responseCode = "400", description = "Invalid days (1–365) or missing X-User-Id."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<UserPeriodStatsDTO> getMyPeriodStats(
+            @RequestHeader("X-User-Id") Long myUserId,
+            @RequestParam(defaultValue = "30") int days) {
+        log.info("Fetching period stats for user {} (last {} days)", myUserId, days);
+        return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(myUserId, days));
+    }
 
-
+    @GetMapping("/{id}/stats/period")
+    @Operation(
+            summary = "Get user activity stats for a recent period",
+            description = "Same aggregation as GET /me/stats/period but for any user id (public period stats).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "UserPeriodStatsDTO."),
+            @ApiResponse(responseCode = "400", description = "Invalid days (1–365)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<UserPeriodStatsDTO> getUserPeriodStats(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "30") int days) {
+        log.info("Fetching period stats for user {} (last {} days)", id, days);
+        return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(id, days));
+    }
 
     @GetMapping("/test")
     @Operation(
@@ -263,15 +297,16 @@ public class UserController {
     @GetMapping("/ranking")
     @Operation(
             summary = "Get top users ranking by activity type with pagination",
-            description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total"
+            description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total. Use days=0 for all-time, days>0 for period ranking."
     )
-    public ResponseEntity<List<UserDTO>> getStatsRanking(
+    public ResponseEntity<List<UserPeriodStatsDTO>> getStatsRanking(
             @RequestParam(defaultValue = "returned_total") String type,
+            @RequestParam(defaultValue = "0") int days,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
-        List<UserDTO> ranking = userService.getStatsRanking(type, page, size);
+        List<UserPeriodStatsDTO> ranking = userService.getStatsRanking(type, days, page, size);
         return ResponseEntity.ok(ranking);
     }
 
