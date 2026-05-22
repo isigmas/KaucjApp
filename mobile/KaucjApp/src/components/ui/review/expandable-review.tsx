@@ -36,6 +36,7 @@ type ReviewType = "machine" | "user";
 
 interface BaseExpandableReviewProps {
   type: ReviewType;
+  isDefaultExpanded?: boolean;
 }
 
 interface MachineReviewProps extends BaseExpandableReviewProps {
@@ -58,7 +59,10 @@ export default function ExpandableReview(props: ExpandableReviewProps) {
   return <UserReview {...props} />;
 }
 
-function MachineReview({ machineId }: Omit<MachineReviewProps, "type">) {
+function MachineReview({
+  machineId,
+  isDefaultExpanded,
+}: Omit<MachineReviewProps, "type">) {
   const { mutate: addMachineReview, isPending } =
     useAddMachineReview(machineId);
 
@@ -81,11 +85,16 @@ function MachineReview({ machineId }: Omit<MachineReviewProps, "type">) {
       isPending={isPending}
       onSubmit={handleSubmit}
       entering={FadeInDown.delay(400).springify()}
+      isDefaultExpanded={isDefaultExpanded}
     />
   );
 }
 
-function UserReview({ userId, offerId }: Omit<UserReviewProps, "type">) {
+function UserReview({
+  userId,
+  offerId,
+  isDefaultExpanded,
+}: Omit<UserReviewProps, "type">) {
   const { mutate: addUserReview, isPending } = useAddUserReview(userId);
 
   const handleSubmit = (
@@ -106,6 +115,7 @@ function UserReview({ userId, offerId }: Omit<UserReviewProps, "type">) {
     <ExpandableReviewForm
       isPending={isPending}
       onSubmit={handleSubmit}
+      isDefaultExpanded={isDefaultExpanded}
       style={{
         shadowOpacity: 0,
         shadowRadius: 0,
@@ -145,6 +155,7 @@ function ExpandableReviewForm({
   const methods = useForm<RatingFormValues>({
     resolver: zodResolver(ratingSchema),
     defaultValues: { score: 0, comment: "" },
+    mode: "onSubmit",
   });
 
   const currentScore = useWatch({
@@ -185,19 +196,26 @@ function ExpandableReviewForm({
             <Controller
               control={methods.control}
               name="score"
-              render={({ field }) => (
-                <StarSelector
-                  rating={field.value}
-                  onSelect={(val) => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    // Allows deselecting to collapse the card gracefully
-                    if (val === field.value) {
-                      field.onChange(0);
-                      return;
-                    }
-                    field.onChange(val);
-                  }}
-                />
+              render={({ field, fieldState: { error } }) => (
+                <>
+                  <StarSelector
+                    rating={field.value}
+                    onSelect={(val) => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      // Allows deselecting to collapse the card gracefully
+                      if (val === field.value) {
+                        field.onChange(0);
+                        return;
+                      }
+                      field.onChange(val);
+                    }}
+                  />
+                  {error && (
+                    <Text style={styles.errorText}>
+                      Wybierz ocenę przed wysłaniem
+                    </Text>
+                  )}
+                </>
               )}
             />
           </View>
@@ -360,5 +378,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.text.white,
     fontWeight: "900",
+  },
+  errorText: {
+    fontSize: 12,
+    color: colors.status.error,
+    marginTop: spacing.xs,
+    textAlign: "center",
   },
 });

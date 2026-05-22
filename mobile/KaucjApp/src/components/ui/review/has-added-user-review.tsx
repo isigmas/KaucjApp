@@ -9,11 +9,13 @@ interface UserReviewCheckProps {
   role: UserRole;
   userId: number | null;
   offerId: number | null;
+  isDefaultExpanded?: boolean;
 }
 export default function UserReviewCheck({
   userId,
   offerId,
   role,
+  isDefaultExpanded = false,
 }: UserReviewCheckProps) {
   if (!userId || !offerId) {
     return null;
@@ -28,9 +30,14 @@ export default function UserReviewCheck({
   return (
     <View>
       <Text style={styles.title}>
-        Oceń {role === "creator" ? "użytkownika" : "kuriera"}
+        Oceń {role === "creator" ? "wystawiającego" : "kuriera"}
       </Text>
-      <ExpandableReview type="user" userId={userId} offerId={offerId} />
+      <ExpandableReview
+        type="user"
+        userId={userId}
+        offerId={offerId}
+        isDefaultExpanded={isDefaultExpanded}
+      />
     </View>
   );
 }

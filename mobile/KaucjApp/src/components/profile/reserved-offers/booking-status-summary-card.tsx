@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import { ReservedState } from "../my-offers/offer-status-summary-card";
 import { ActionButton } from "../my-offers/offer-actions";
 import ComplaintCard from "../my-offers/complaint-card";
+import UserReviewCheck from "../../ui/review/has-added-user-review";
 
 interface BookingStatusSummaryCardProps {
   offer: Offer;
@@ -92,6 +93,14 @@ export default function BookingStatusSummaryCard({
             icon={<CheckCircle size={18} color={colors.text.white} />}
           />
         </>
+      )}
+      {isCompleted && (
+        <UserReviewCheck
+          role="creator"
+          userId={offer.creatorId}
+          offerId={offer.offerId}
+          isDefaultExpanded={true}
+        />
       )}
       {isComplaint && <ComplaintCard offerId={offer.offerId} />}
       {!isConfirmedByCollector && !isCompleted && (

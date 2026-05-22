@@ -5,14 +5,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import * as Haptics from "expo-haptics";
 import { colors, rounded, spacing } from "@/src/theme";
 import { RatingFormValues } from "@/src/validation/rating";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInLeft,
-  FadeInRight,
-  FadeInUp,
-  FadeOut,
-} from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 export default function ReviewForm({ mode }: { mode: "create" | "edit" }) {
   const {
@@ -90,7 +83,7 @@ export const StarSelector = ({ rating, onSelect }: StarSelectorProps) => {
             hitSlop={12}
           >
             <Animated.View
-              entering={FadeInLeft.delay(starPosition * 100 - 100)
+              entering={FadeInDown.delay(starPosition * 100 - 100)
                 .springify()
                 .damping(50)
                 .stiffness(500)
