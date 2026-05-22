@@ -26,12 +26,14 @@ export default function DetailHeader({
         <Text style={[styles.title, { fontSize: titleSize }]}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
 
-        <StarRating
-          ratingScore={ratingScore || 0}
-          feedbackCount={feedbackCount || 0}
-          size={16}
-          style={{ marginBottom: 0 }}
-        />
+        {ratingScore && feedbackCount ? (
+          <StarRating
+            ratingScore={ratingScore}
+            feedbackCount={feedbackCount}
+            size={16}
+            style={{ marginBottom: 0 }}
+          />
+        ) : null}
       </View>
 
       {rightSlot ? <View style={styles.rightSlot}>{rightSlot}</View> : null}
