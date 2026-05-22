@@ -40,6 +40,20 @@ export default function HomeLayout() {
           presentation: "transparentModal",
         }}
       />
+
+      <Stack.Screen
+        name="stats"
+        options={{
+          headerShown: true,
+          headerTitle: "Moje statystyki",
+          headerLargeTitleEnabled: false,
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
+          presentation: "formSheet",
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [0.9, 1],
+        }}
+      />
     </Stack>
   );
 }

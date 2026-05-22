@@ -94,7 +94,11 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {user && <UserProfile user={user} role="creator" />}
+      {user && (
+        <Pressable onPress={() => router.push("/profile/stats")}>
+          <UserProfile user={user} role="creator" />
+        </Pressable>
+      )}
 
       <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Twoja aktywność</Text>

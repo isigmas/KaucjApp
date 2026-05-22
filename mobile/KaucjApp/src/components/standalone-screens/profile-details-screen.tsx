@@ -11,10 +11,12 @@ import { UserRole } from "@/src/types/user";
 interface ProfileDetailsScreenProps {
   userId: string;
   role: UserRole;
+  color?: "primary" | "accent";
 }
 export default function ProfileDetailsScreen({
   userId,
   role,
+  color = "accent",
 }: ProfileDetailsScreenProps) {
   const userIdNumber = Number(userId);
   if (!Number.isFinite(userIdNumber)) {
@@ -39,7 +41,7 @@ export default function ProfileDetailsScreen({
         role={role}
         showRating={true}
         showStats={true}
-        color="accent"
+        color={color}
       />
 
       <ReviewsSection userId={userIdNumber} />
