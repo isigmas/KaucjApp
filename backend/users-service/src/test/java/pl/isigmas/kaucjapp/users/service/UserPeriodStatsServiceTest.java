@@ -9,11 +9,13 @@ import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
 import pl.isigmas.kaucjapp.users.exception.UserNotFoundException;
+import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,13 +41,14 @@ class UserPeriodStatsServiceTest {
         LocalDate end = LocalDate.now(ZoneOffset.UTC);
         LocalDate start = end.minusDays(days - 1L);
 
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user(userId, "alice")));
         when(userDailyStatsRepository.getStatsForPeriod(eq(userId), eq(start), eq(end)))
                 .thenReturn(aggregation(10L, 4L, 6L, 2L));
 
         UserPeriodStatsDTO result = userPeriodStatsService.getStatsForLastDays(userId, days);
 
         assertThat(result.getUserId()).isEqualTo(userId);
+        assertThat(result.getUsername()).isEqualTo("alice");
         assertThat(result.getPeriodDays()).isEqualTo(30);
         assertThat(result.getFromDate()).isEqualTo(start);
         assertThat(result.getToDate()).isEqualTo(end);
@@ -59,7 +62,7 @@ class UserPeriodStatsServiceTest {
 
     @Test
     void getStatsForLastDays_unknownUser_throwsNotFound() {
-        when(userRepository.existsById(99L)).thenReturn(false);
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userPeriodStatsService.getStatsForLastDays(99L, 30))
                 .isInstanceOf(UserNotFoundException.class);
@@ -79,7 +82,7 @@ class UserPeriodStatsServiceTest {
         LocalDate start = LocalDate.of(2026, 5, 1);
         LocalDate end = LocalDate.of(2026, 5, 7);
 
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user(userId, "bob")));
         when(userDailyStatsRepository.getStatsForPeriod(userId, start, end))
                 .thenReturn(aggregation(1L, 1L, 1L, 1L));
 
@@ -89,6 +92,16 @@ class UserPeriodStatsServiceTest {
         assertThat(result.getFromDate()).isEqualTo(start);
         assertThat(result.getToDate()).isEqualTo(end);
         assertThat(result.getReturnedTotalCount()).isEqualTo(2);
+    }
+
+    private static User user(Long id, String username) {
+        User user = new User();
+        user.setId(id);
+        user.setUsername(username);
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user.setEmail(username + "@example.com");
+        return user;
     }
 
     private static DailyStatsCounts aggregation(long rp, long rc, long cp, long cc) {
