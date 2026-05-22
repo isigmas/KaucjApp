@@ -126,10 +126,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
             />
           )}
           {isCompleted && (
-            <UserReviewCheck
-              userId={offer.collectorId}
-              offerId={offer.offerId}
-            />
+            <UserReviewCheck userId={offer.creatorId} offerId={offer.offerId} />
           )}
 
           {!isCompleted && !isConfirmedByCreator && (

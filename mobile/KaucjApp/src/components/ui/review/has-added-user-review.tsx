@@ -14,10 +14,7 @@ export default function UserReviewCheck({
     return null;
   }
 
-  const { data, isLoading: isLoadingUserReviewCheck } = useUserReviewCheck(
-    offerId,
-    userId,
-  );
+  const { data } = useUserReviewCheck(offerId, userId);
   const isReviewPosted = data?.alreadyReviewed;
 
   return (
