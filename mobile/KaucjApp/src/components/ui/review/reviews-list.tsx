@@ -45,19 +45,9 @@ interface ReviewsListProps {
 }
 
 function ReviewsList({ reviews, isLoading }: ReviewsListProps) {
+  const hasReviews = reviews && reviews.length > 0;
   if (isLoading) {
     return <LoadingState title="Ładowanie opinii..." />;
-  }
-
-  if (!reviews || reviews.length === 0) {
-    return (
-      <Animated.View
-        entering={FadeInDown.delay(400).springify()}
-        style={styles.emptyContainer}
-      >
-        <Text style={styles.emptyText}>Brak opinii.</Text>
-      </Animated.View>
-    );
   }
 
   return (
@@ -69,11 +59,20 @@ function ReviewsList({ reviews, isLoading }: ReviewsListProps) {
         Opinie
       </Animated.Text>
 
-      <View style={styles.listContainer}>
-        {reviews.map((review, index) => (
-          <ReviewCard key={review.reviewId} review={review} index={index} />
-        ))}
-      </View>
+      {hasReviews ? (
+        <View style={styles.listContainer}>
+          {reviews.map((review, index) => (
+            <ReviewCard key={review.reviewId} review={review} index={index} />
+          ))}
+        </View>
+      ) : (
+        <Animated.View
+          entering={FadeInDown.delay(400).springify()}
+          style={styles.emptyContainer}
+        >
+          <Text style={styles.emptyText}>Brak opinii.</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -159,7 +158,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   emptyContainer: {
-    marginTop: spacing.xl,
     padding: spacing.xl,
     alignItems: "center",
     justifyContent: "center",
