@@ -125,7 +125,12 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               icon={<CheckCircle size={18} color={colors.text.white} />}
             />
           )}
-          {isCompleted && <UserReviewCheck userId={offer.collectorId} />}
+          {isCompleted && (
+            <UserReviewCheck
+              userId={offer.collectorId}
+              offerId={offer.offerId}
+            />
+          )}
 
           {!isCompleted && !isConfirmedByCreator && (
             <Pressable onPress={handleComplaint}>

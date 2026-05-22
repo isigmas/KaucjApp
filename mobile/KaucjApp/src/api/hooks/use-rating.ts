@@ -19,6 +19,18 @@ export const useUserRating = (userId: number) => {
   });
 };
 
+export const useUserReviewCheck = (offerId: number, userId: number) => {
+  return useQuery({
+    queryKey: ["userReviewCheck", offerId, userId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(
+        `/user/reviews/check?offerId=${offerId}`,
+      );
+      return data as { alreadyReviewed: boolean };
+    },
+  });
+};
+
 export const useAddUserReview = (userId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
