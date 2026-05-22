@@ -1,14 +1,19 @@
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import { useUserReviewCheck } from "@/src/api/hooks/use-rating";
+import ExpandableReview from "./expandable-review";
+import { colors, spacing } from "@/src/theme";
+import { UserRole } from "@/src/types/user";
 
 interface UserReviewCheckProps {
+  role: UserRole;
   userId: number | null;
   offerId: number | null;
 }
 export default function UserReviewCheck({
   userId,
   offerId,
+  role,
 }: UserReviewCheckProps) {
   if (!userId || !offerId) {
     return null;
@@ -22,8 +27,25 @@ export default function UserReviewCheck({
       {isReviewPosted ? (
         <Text>Review posted</Text>
       ) : (
-        <Text>Review not posted</Text>
+        <View>
+          <Text style={styles.title}>
+            Oceń {role === "creator" ? "użytkownika" : "kuriera"}
+          </Text>
+          <ExpandableReview type="user" userId={userId} offerId={offerId} />
+        </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {},
+  title: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+});

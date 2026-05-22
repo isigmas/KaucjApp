@@ -149,7 +149,6 @@ const starStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
   },
   starButton: {
     padding: spacing.xs,

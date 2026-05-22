@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Alert,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
 import { FormProvider, useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as Haptics from "expo-haptics";
@@ -14,19 +22,119 @@ import Animated, {
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { StarSelector, ReviewTextInput } from "./review-form";
 import { RatingFormValues, ratingSchema } from "@/src/validation";
-import { useAddMachineReview } from "@/src/api/hooks/use-rating";
-import { MachineReviewPayload } from "@/src/types";
+import {
+  useAddMachineReview,
+  useAddUserReview,
+} from "@/src/api/hooks/use-rating";
+import { MachineReviewPayload, UserReviewPayload } from "@/src/types";
 import CardTitle from "../../map/details/card-title";
 import { layoutSpring } from "@/src/constants";
+import { UserRole } from "@/src/types/user";
 
-interface MachineReviewProps {
+type ReviewType = "machine" | "user";
+
+interface BaseExpandableReviewProps {
+  type: ReviewType;
+}
+
+interface MachineReviewProps extends BaseExpandableReviewProps {
+  type: "machine";
   machineId: number;
 }
 
-export default function MachineReview({ machineId }: MachineReviewProps) {
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+interface UserReviewProps extends BaseExpandableReviewProps {
+  type: "user";
+  role: UserRole;
+  userId: number;
+  offerId: number;
+}
+
+export type ExpandableReviewProps = MachineReviewProps | UserReviewProps;
+
+export default function ExpandableReview(props: ExpandableReviewProps) {
+  if (props.type === "machine") {
+    return <MachineReview {...props} />;
+  }
+  return <UserReview {...props} />;
+}
+
+function MachineReview({ machineId }: Omit<MachineReviewProps, "type">) {
   const { mutate: addMachineReview, isPending } =
     useAddMachineReview(machineId);
+
+  const handleSubmit = (
+    data: RatingFormValues,
+    onSuccess: () => void,
+    onError: (error: any) => void,
+  ) => {
+    const payload: MachineReviewPayload = {
+      score: data.score,
+      ...(data.comment?.trim() ? { comment: data.comment.trim() } : {}),
+    };
+
+    addMachineReview(payload, { onSuccess, onError });
+  };
+
+  return (
+    <ExpandableReviewForm
+      title="Oceń kaucjomat"
+      isPending={isPending}
+      onSubmit={handleSubmit}
+    />
+  );
+}
+
+function UserReview({ userId, offerId }: Omit<UserReviewProps, "type">) {
+  const { mutate: addUserReview, isPending } = useAddUserReview(userId);
+
+  const handleSubmit = (
+    data: RatingFormValues,
+    onSuccess: () => void,
+    onError: (error: any) => void,
+  ) => {
+    const payload: UserReviewPayload = {
+      offerId,
+      score: data.score,
+      ...(data.comment?.trim() ? { comment: data.comment.trim() } : {}),
+    };
+
+    addUserReview(payload, { onSuccess, onError });
+  };
+
+  return (
+    <ExpandableReviewForm
+      isPending={isPending}
+      onSubmit={handleSubmit}
+      style={{
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        shadowOffset: { width: 0, height: 0 },
+        marginBottom: 0,
+        paddingBottom: spacing.sm,
+        paddingHorizontal: 0,
+      }}
+    />
+  );
+}
+
+interface ExpandableReviewFormProps {
+  title?: string;
+  isPending: boolean;
+  onSubmit: (
+    data: RatingFormValues,
+    onSuccess: () => void,
+    onError: (error: any) => void,
+  ) => void;
+  style?: StyleProp<ViewStyle>;
+}
+
+function ExpandableReviewForm({
+  title,
+  isPending,
+  onSubmit,
+  style,
+}: ExpandableReviewFormProps) {
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const buttonText = isPending ? "Wysyłanie..." : "Dodaj opinię";
 
   const methods = useForm<RatingFormValues>({
@@ -41,38 +149,33 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
 
   const isExpanded = currentScore > 0;
 
-  const onSubmit = (data: RatingFormValues) => {
-    const payload: MachineReviewPayload = {
-      score: data.score,
-      ...(data.comment &&
-        data.comment.trim() !== "" && { comment: data.comment }),
-    };
-
-    addMachineReview(payload, {
-      onSuccess: () => {
+  const handleFormSubmit = (data: RatingFormValues) => {
+    onSubmit(
+      data,
+      () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setIsSuccess(true);
         methods.reset();
       },
-      onError: (error) => {
+      (error) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        console.error("Error submitting review:", error);
-        Alert.alert("Błąd", "Nie udało się dodać oceny.");
+        console.error(`Error submitting: `, error);
+        Alert.alert("Błąd", "Nie udało się dodać oceny. Spróbuj ponownie.");
       },
-    });
+    );
   };
 
   return (
     <Animated.View
       layout={layoutSpring}
-      style={styles.card}
+      style={[styles.card, style]}
       entering={FadeInDown.delay(400).springify()}
     >
       {isSuccess ? (
         <SuccessState />
       ) : (
         <FormProvider {...methods}>
-          <CardTitle>Oceń kaucjomat</CardTitle>
+          {title && <CardTitle>{title}</CardTitle>}
           <View style={styles.starsContainer}>
             <Controller
               control={methods.control}
@@ -113,7 +216,7 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
               />
 
               <SubmitButton
-                onPress={methods.handleSubmit(onSubmit)}
+                onPress={methods.handleSubmit(handleFormSubmit)}
                 disabled={isPending}
                 text={buttonText}
               />
@@ -175,6 +278,7 @@ function SuccessState() {
     </Animated.View>
   );
 }
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.card,
@@ -183,18 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     ...shadows.light,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.text.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginLeft: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  starsContainer: {
-    marginTop: spacing.xs,
-  },
+  starsContainer: {},
   expandedContent: {
     marginTop: spacing.md,
     gap: spacing.sm,
@@ -240,7 +333,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: "center",
   },
-
   iconContainer: {
     shadowColor: colors.primary.base,
     shadowOffset: { width: 0, height: 12 },
