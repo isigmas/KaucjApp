@@ -50,6 +50,26 @@ CREATE TABLE user_stats (
                                 REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+CREATE TABLE user_daily_stats (
+                                  id                      BIGSERIAL PRIMARY KEY,
+                                  user_id                 BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                                  stat_date               DATE NOT NULL,
+                                  returned_plastic_count  INTEGER NOT NULL DEFAULT 0,
+                                  returned_can_count      INTEGER NOT NULL DEFAULT 0,
+                                  collected_plastic_count INTEGER NOT NULL DEFAULT 0,
+                                  collected_can_count     INTEGER NOT NULL DEFAULT 0,
+
+                                  UNIQUE(user_id, stat_date)
+);
+
+CREATE INDEX idx_user_daily_stats_user_date ON user_daily_stats(user_id, stat_date);
+CREATE INDEX idx_user_daily_stats_date_ranking ON user_daily_stats(stat_date DESC, user_id);
+
+CREATE TABLE processed_offer_events (
+                                        offer_id      BIGINT PRIMARY KEY,
+                                        processed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX idx_user_reviews_reviewee ON user_reviews(reviewee_id);
 CREATE UNIQUE INDEX idx_user_reviews_reviewer_offer
     ON user_reviews(reviewer_id, offer_id)
