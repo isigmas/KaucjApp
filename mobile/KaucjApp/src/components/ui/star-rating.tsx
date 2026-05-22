@@ -19,7 +19,7 @@ export default function StarRating({
   isLoading = false,
   style,
 }: StarRatingProps) {
-  const hasRating = feedbackCount && feedbackCount > 0;
+  const hasRating = feedbackCount > 0;
 
   const renderStar = (index: number) => {
     const fillValue = Math.max(0, Math.min(1, ratingScore - index));

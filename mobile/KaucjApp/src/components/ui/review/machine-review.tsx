@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { FormProvider, useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
+import Animated, {
+  BounceIn,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOut,
+} from "react-native-reanimated";
 
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { StarSelector, ReviewTextInput } from "./review-form";
@@ -18,6 +24,7 @@ interface MachineReviewProps {
 }
 
 export default function MachineReview({ machineId }: MachineReviewProps) {
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const { mutate: addMachineReview, isPending } =
     useAddMachineReview(machineId);
   const buttonText = isPending ? "Wysyłanie..." : "Dodaj opinię";
@@ -44,6 +51,7 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
     addMachineReview(payload, {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setIsSuccess(true);
         methods.reset();
       },
       onError: (error) => {
@@ -60,59 +68,63 @@ export default function MachineReview({ machineId }: MachineReviewProps) {
       style={styles.card}
       entering={FadeInDown.delay(400).springify()}
     >
-      <CardTitle>Oceń kaucjomat</CardTitle>
-      <FormProvider {...methods}>
-        <View style={styles.starsContainer}>
-          <Controller
-            control={methods.control}
-            name="score"
-            render={({ field }) => (
-              <StarSelector
-                rating={field.value}
-                onSelect={(val) => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  // Allows deselecting to collapse the card gracefully
-                  if (val === field.value) {
-                    field.onChange(0);
-                    return;
-                  }
-                  field.onChange(val);
-                }}
-              />
-            )}
-          />
-        </View>
-
-        {isExpanded && (
-          <Animated.View
-            entering={FadeIn.duration(420)}
-            exiting={FadeOut.duration(140)}
-            style={styles.expandedContent}
-          >
+      {isSuccess ? (
+        <SuccessState />
+      ) : (
+        <FormProvider {...methods}>
+          <CardTitle>Oceń kaucjomat</CardTitle>
+          <View style={styles.starsContainer}>
             <Controller
               control={methods.control}
-              name="comment"
+              name="score"
               render={({ field }) => (
-                <ReviewTextInput
-                  value={field.value ?? ""}
-                  onChangeText={field.onChange}
-                  placeholder="Napisz kilka słów... (opcjonalnie)"
+                <StarSelector
+                  rating={field.value}
+                  onSelect={(val) => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    // Allows deselecting to collapse the card gracefully
+                    if (val === field.value) {
+                      field.onChange(0);
+                      return;
+                    }
+                    field.onChange(val);
+                  }}
                 />
               )}
             />
+          </View>
 
-            <SubmitButton
-              onPress={methods.handleSubmit(onSubmit)}
-              disabled={isPending}
-              text={buttonText}
-            />
+          {isExpanded && (
+            <Animated.View
+              entering={FadeIn.duration(420)}
+              exiting={FadeOut.duration(140)}
+              style={styles.expandedContent}
+            >
+              <Controller
+                control={methods.control}
+                name="comment"
+                render={({ field }) => (
+                  <ReviewTextInput
+                    value={field.value ?? ""}
+                    onChangeText={field.onChange}
+                    placeholder="Napisz kilka słów... (opcjonalnie)"
+                  />
+                )}
+              />
 
-            <Text style={styles.secondaryText}>
-              Twoja opinia będzie widoczna publicznie
-            </Text>
-          </Animated.View>
-        )}
-      </FormProvider>
+              <SubmitButton
+                onPress={methods.handleSubmit(onSubmit)}
+                disabled={isPending}
+                text={buttonText}
+              />
+
+              <Text style={styles.secondaryText}>
+                Twoja opinia będzie widoczna publicznie
+              </Text>
+            </Animated.View>
+          )}
+        </FormProvider>
+      )}
     </Animated.View>
   );
 }
@@ -141,6 +153,28 @@ function SubmitButton({
   );
 }
 
+function SuccessState() {
+  return (
+    <Animated.View
+      layout={layoutSpring}
+      entering={FadeInUp.delay(200).duration(200).springify()}
+      style={styles.successState}
+    >
+      <Animated.View
+        entering={BounceIn.duration(800).delay(100)}
+        style={styles.iconContainer}
+      >
+        <View style={styles.iconBackground}>
+          <Text style={styles.iconText}>✓</Text>
+        </View>
+      </Animated.View>
+      <Text style={styles.successStateTitle}>Ocena dodana</Text>
+      <Text style={styles.successStateMessage}>
+        Dziękujemy, że jesteś częścią społeczności!
+      </Text>
+    </Animated.View>
+  );
+}
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.card,
@@ -188,5 +222,45 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     color: colors.text.secondary,
+  },
+  successState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    padding: spacing.sm,
+  },
+  successStateTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.text.primary,
+  },
+  successStateMessage: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: "center",
+  },
+
+  iconContainer: {
+    shadowColor: colors.primary.base,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  iconBackground: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary.base,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 6,
+    borderColor: colors.primary.light,
+  },
+  iconText: {
+    fontSize: 24,
+    color: colors.text.white,
+    fontWeight: "900",
   },
 });

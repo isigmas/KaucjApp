@@ -20,20 +20,22 @@ export default function DetailHeader({
   ratingScore,
   feedbackCount,
 }: DetailHeaderProps) {
+  const showRating = ratingScore != undefined && feedbackCount != undefined;
+
   return (
     <View style={styles.headerRow}>
       <View style={styles.titleContainer}>
         <Text style={[styles.title, { fontSize: titleSize }]}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
 
-        {ratingScore && feedbackCount ? (
+        {showRating && (
           <StarRating
             ratingScore={ratingScore}
             feedbackCount={feedbackCount}
             size={16}
             style={{ marginBottom: 0 }}
           />
-        ) : null}
+        )}
       </View>
 
       {rightSlot ? <View style={styles.rightSlot}>{rightSlot}</View> : null}
