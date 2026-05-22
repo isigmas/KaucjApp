@@ -21,7 +21,7 @@ export const useUserRating = (userId: number) => {
 
 export const useUserReviewCheck = (offerId: number, userId: number) => {
   return useQuery({
-    queryKey: ["userReviewCheck", offerId, userId],
+    queryKey: ["userReviewCheck", userId, offerId],
     queryFn: async () => {
       const { data } = await apiClient.get(
         `/user/reviews/check?offerId=${offerId}`,
