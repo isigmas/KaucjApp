@@ -1,12 +1,18 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeInLeft,
+  FadeInUp,
+  LinearTransition,
+} from "react-native-reanimated";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useUserReviews, useMachineReviews } from "@/src/api/hooks/use-rating";
 import LoadingState from "../../states/loading-state";
 import { Review } from "@/src/types";
 import { timeAgoInPolish } from "@/src/lib";
+import { layoutSpring } from "@/src/constants";
 
 export interface ReviewsSectionProps {
   userId?: number;
@@ -80,7 +86,8 @@ function ReviewsList({ reviews, isLoading }: ReviewsListProps) {
 const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
   return (
     <Animated.View
-      entering={FadeInDown.delay(400 + index * 100).springify()}
+      layout={layoutSpring}
+      entering={FadeInDown.delay(Math.min((index + 2) * 80, 400)).springify()}
       style={styles.card}
     >
       <View style={styles.cardHeader}>

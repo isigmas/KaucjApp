@@ -13,10 +13,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as Haptics from "expo-haptics";
 import Animated, {
   BounceIn,
+  EntryOrExitLayoutType,
   FadeIn,
   FadeInDown,
   FadeInUp,
   FadeOut,
+  SharedValue,
 } from "react-native-reanimated";
 
 import { colors, rounded, shadows, spacing } from "@/src/theme";
@@ -29,7 +31,6 @@ import {
 import { MachineReviewPayload, UserReviewPayload } from "@/src/types";
 import CardTitle from "../../map/details/card-title";
 import { layoutSpring } from "@/src/constants";
-import { UserRole } from "@/src/types/user";
 
 type ReviewType = "machine" | "user";
 
@@ -44,7 +45,6 @@ interface MachineReviewProps extends BaseExpandableReviewProps {
 
 interface UserReviewProps extends BaseExpandableReviewProps {
   type: "user";
-  role: UserRole;
   userId: number;
   offerId: number;
 }
@@ -80,6 +80,7 @@ function MachineReview({ machineId }: Omit<MachineReviewProps, "type">) {
       title="Oceń kaucjomat"
       isPending={isPending}
       onSubmit={handleSubmit}
+      entering={FadeInDown.delay(400).springify()}
     />
   );
 }
@@ -120,19 +121,23 @@ function UserReview({ userId, offerId }: Omit<UserReviewProps, "type">) {
 interface ExpandableReviewFormProps {
   title?: string;
   isPending: boolean;
+  isDefaultExpanded?: boolean;
   onSubmit: (
     data: RatingFormValues,
     onSuccess: () => void,
     onError: (error: any) => void,
   ) => void;
   style?: StyleProp<ViewStyle>;
+  entering?: EntryOrExitLayoutType;
 }
 
 function ExpandableReviewForm({
   title,
   isPending,
+  isDefaultExpanded = false,
   onSubmit,
   style,
+  entering,
 }: ExpandableReviewFormProps) {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const buttonText = isPending ? "Wysyłanie..." : "Dodaj opinię";
@@ -147,7 +152,7 @@ function ExpandableReviewForm({
     name: "score",
   });
 
-  const isExpanded = currentScore > 0;
+  const isExpanded = isDefaultExpanded || currentScore > 0;
 
   const handleFormSubmit = (data: RatingFormValues) => {
     onSubmit(
@@ -168,8 +173,8 @@ function ExpandableReviewForm({
   return (
     <Animated.View
       layout={layoutSpring}
+      entering={entering}
       style={[styles.card, style]}
-      entering={FadeInDown.delay(400).springify()}
     >
       {isSuccess ? (
         <SuccessState />
@@ -321,7 +326,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    padding: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.lg,
   },
   successStateTitle: {
     fontSize: 20,

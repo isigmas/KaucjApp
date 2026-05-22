@@ -37,8 +37,19 @@ export const useAddUserReview = (userId: number) => {
     mutationFn: async (payload: UserReviewPayload) => {
       await apiClient.post(`/user/${userId}/rating`, payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userRating", userId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["userRating", userId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["userReviews", userId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["userReviewCheck", userId],
+        }),
+        ,
+      ]);
     },
   });
 };

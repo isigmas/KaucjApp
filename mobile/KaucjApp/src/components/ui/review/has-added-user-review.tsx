@@ -21,19 +21,16 @@ export default function UserReviewCheck({
 
   const { data } = useUserReviewCheck(offerId, userId);
   const isReviewPosted = data?.alreadyReviewed;
+  if (isReviewPosted) {
+    return <Text>Ocena dodana, docelowo wyswietlic tutaj ocene</Text>;
+  }
 
   return (
     <View>
-      {isReviewPosted ? (
-        <Text>Review posted</Text>
-      ) : (
-        <View>
-          <Text style={styles.title}>
-            Oceń {role === "creator" ? "użytkownika" : "kuriera"}
-          </Text>
-          <ExpandableReview type="user" userId={userId} offerId={offerId} />
-        </View>
-      )}
+      <Text style={styles.title}>
+        Oceń {role === "creator" ? "użytkownika" : "kuriera"}
+      </Text>
+      <ExpandableReview type="user" userId={userId} offerId={offerId} />
     </View>
   );
 }
