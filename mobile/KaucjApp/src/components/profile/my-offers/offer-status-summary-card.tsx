@@ -20,6 +20,7 @@ import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
 import ComplaintCard from "./complaint-card";
+import UserReviewCheck from "../../ui/review/has-added-user-review";
 
 interface OfferHeadlineProps {
   offer: Offer;
@@ -124,6 +125,7 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               icon={<CheckCircle size={18} color={colors.text.white} />}
             />
           )}
+          {isCompleted && <UserReviewCheck userId={offer.collectorId} />}
 
           {!isCompleted && !isConfirmedByCreator && (
             <Pressable onPress={handleComplaint}>
