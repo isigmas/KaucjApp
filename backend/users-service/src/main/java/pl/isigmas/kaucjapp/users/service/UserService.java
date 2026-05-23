@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import pl.isigmas.kaucjapp.users.event.UserDeletedEvent;
 
 import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.InvalidRankingType;
@@ -46,7 +48,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -131,7 +133,7 @@ public class UserService {
         user.setLastName("User");
         user.setPhone(null);
 
-        kafkaTemplate.send("users.deleted.event", String.valueOf(id));
+        applicationEventPublisher.publishEvent(new UserDeletedEvent(id));
     }
 
     private UserDTO mapToDTO(User user) {
