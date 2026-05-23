@@ -3,7 +3,6 @@ package pl.isigmas.kaucjapp.deposit.service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.misc.MultiMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
@@ -39,6 +38,7 @@ public class RatingService {
         DepositMachineReview review = DepositMachineReview.builder()
                 .depositMachineId(depositMachineId)
                 .reviewerId(reviewerId)
+                .reviewerUsername(dto.getReviewerUsername())
                 .score(dto.getScore())
                 .comment(dto.getComment())
                 .build();
@@ -147,6 +147,7 @@ public class RatingService {
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .reviewerId(review.getReviewerId())
+                .reviewerUsername(review.getReviewerUsername())
                 .score(review.getScore())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())

@@ -19,6 +19,7 @@ public class ReviewResponseDTO {
 
     private Long reviewId;
     private Long reviewerId;
+    private String reviewerUsername;
     private BigDecimal score;
     private String comment;
     private Instant createdAt;

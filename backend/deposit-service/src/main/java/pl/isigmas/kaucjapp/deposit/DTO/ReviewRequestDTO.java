@@ -19,7 +19,7 @@ public class ReviewRequestDTO {
     private BigDecimal score;
 
     @NotNull(message = "Reviewer username is required")
-    private String reviewer_username;
+    private String reviewerUsername;
 
     private String comment;
 }

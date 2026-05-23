@@ -30,7 +30,7 @@ public class DepositMachineReview {
     private Long reviewerId;
 
     @Column(name = "reviewer_username")
-    private Long reviewerUsername;
+    private String reviewerUsername;
 
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal score;
