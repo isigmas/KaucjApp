@@ -10,6 +10,7 @@ import StarRating from "./star-rating";
 import StatItem from "./stat-item";
 import { DEPOSIT_VALUE_PER_UNIT } from "@/src/validation";
 import { formatPrice } from "@/src/lib";
+import UserStats from "./user-stats";
 
 interface UserProfileProps {
   user: User;
@@ -84,85 +85,6 @@ function StatsBadge({ user, role, color }: StatsBadgeProps) {
   );
 }
 
-interface UserStatsProps {
-  user: User;
-}
-
-function UserStats({ user }: UserStatsProps) {
-  const totalDepositValue =
-    (user.collectedTotalCount + user.returnedTotalCount) *
-    DEPOSIT_VALUE_PER_UNIT;
-
-  return (
-    <View style={styles.userStatsContainer}>
-      <View style={styles.userStatsWrapper}>
-        <StatItem
-          index={1}
-          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.collectedBottleCount.toString()}
-          label="Odebranych butelek"
-          shadowColor={colors.text.primary}
-        />
-        <StatItem
-          index={2}
-          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.collectedCanCount.toString()}
-          label="Odebranych puszek"
-          shadowColor={colors.accent.base}
-        />
-        <StatItem
-          index={3}
-          icon={<Ionicons name="leaf" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.collectedTotalCount.toString()}
-          label="Odebranych opakowań"
-          shadowColor={colors.text.primary}
-        />
-      </View>
-      <View style={styles.userStatsWrapper}>
-        <StatItem
-          index={4}
-          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.returnedBottleCount.toString()}
-          label="Zwróconych butelek"
-          shadowColor={colors.text.primary}
-        />
-        <StatItem
-          index={5}
-          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.returnedCanCount.toString()}
-          label="Zwróconych puszek"
-          shadowColor={colors.accent.base}
-        />
-        <StatItem
-          index={6}
-          icon={<Ionicons name="leaf" size={16} color={colors.text.primary} />}
-          iconBg={colors.background.card}
-          value={user.returnedTotalCount.toString()}
-          label="Zwróconych opakowań"
-          shadowColor={colors.text.primary}
-        />
-      </View>
-      <View style={styles.userStatsWrapper}>
-        <StatItem
-          index={7}
-          icon={
-            <Ionicons name="wallet" size={16} color={colors.text.primary} />
-          }
-          iconBg={colors.background.card}
-          value={formatPrice(totalDepositValue)}
-          label="Wartość zwróconych opakowań"
-          shadowColor={colors.accent.base}
-        />
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   headerSection: {
     alignItems: "center",
@@ -231,11 +153,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingVertical: spacing.md,
-  },
-
-  userStatsWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
 });
