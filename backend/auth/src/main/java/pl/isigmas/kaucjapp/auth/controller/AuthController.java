@@ -51,6 +51,8 @@ public class AuthController {
             ) {
         String token = service.login(credentials);
 
+        logger.important("Login successful " + credentials.getIdentifier());
+
         return ResponseEntity.ok(token);
     }
 
