@@ -10,6 +10,7 @@ object LogRepository {
   import ctx.*
 
   given MappedEncoding[LogLevel, String] = MappedEncoding[LogLevel, String](_.toString)
+  given MappedEncoding[String, LogLevel] = MappedEncoding[String, LogLevel](LogLevel.valueOf)
 
   private case class SystemLogEntity(
                                       serviceName: String,
@@ -31,5 +32,18 @@ object LogRepository {
     )
 
     ()
+  }
+
+  def findLast(amount: Int)(implicit ec: ExecutionContext): Future[List[SystemLog]] = Future {
+    val entities: List[SystemLogEntity] = ctx.run(query[SystemLogEntity].sortBy(_.timestamp)(using Ord.desc).take(lift(amount)))
+
+    entities.map(entity =>
+      SystemLog(
+        serviceName = entity.serviceName,
+        level = entity.level,
+        message = entity.message,
+        timestamp = entity.timestamp
+      )
+    )
   }
 }
