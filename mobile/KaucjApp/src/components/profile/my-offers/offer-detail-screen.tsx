@@ -1,0 +1,125 @@
+import { useGetOffer } from "@/src/api/hooks/use-offer";
+import OfferItemsCard from "@/src/components/map/details/offer/offer-items-card";
+import { OfferSummaryCard } from "@/src/components/map/details/offer/offer-summary-card";
+import PickupCard from "@/src/components/map/details/offer/pickup-card";
+import MiniMap from "@/src/components/profile/reserved-offers/mini-map";
+import EmptyState from "@/src/components/states/empty-state";
+import ErrorState from "@/src/components/states/error-state";
+import LoadingState from "@/src/components/states/loading-state";
+import { colors, spacing } from "@/src/theme";
+
+import { MapPin, Package, Receipt } from "lucide-react-native";
+import React from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import ExpandableCard from "../../ui/expandable-card";
+import OfferStatusSummaryCard from "./offer-status-summary-card";
+import OfferActions from "./offer-actions";
+
+interface OfferDetailScreenProps {
+  offerId: number;
+}
+
+export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
+  const {
+    data: offer,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useGetOffer(offerId);
+
+  if (isLoading) {
+    return <LoadingState title="Ładowanie oferty" />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Nie udało się załadować oferty"
+        message={error?.response?.data?.message || "Spróbuj ponownie."}
+        onRetry={refetch}
+      />
+    );
+  }
+
+  if (!offer) {
+    return (
+      <EmptyState title="Ta oferta jest już niedostępna." onRefresh={refetch} />
+    );
+  }
+
+  return (
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.primary.base}
+          colors={[colors.primary.base]}
+          progressBackgroundColor={colors.background.main}
+          progressViewOffset={10}
+        />
+      }
+    >
+      <OfferStatusSummaryCard offer={offer} />
+
+      <ExpandableCard
+        title="Zawartość"
+        subtitle={`${offer.totalQuantity} szt. · butelki i puszki`}
+        icon={<Package size={18} color={colors.primary.dark} />}
+      >
+        <OfferItemsCard offer={offer} bare />
+      </ExpandableCard>
+
+      <ExpandableCard
+        title="Finanse"
+        subtitle={`Należność ${offer.totalPrize.toFixed(2).replace(".", ",")} zł`}
+        icon={<Receipt size={18} color={colors.primary.dark} />}
+      >
+        <OfferSummaryCard offer={offer} bare />
+      </ExpandableCard>
+
+      <ExpandableCard
+        title="Lokalizacja"
+        subtitle={offer.pickupAddress}
+        icon={<MapPin size={18} color={colors.accent.dark} />}
+      >
+        <View style={styles.pickupBody}>
+          <PickupCard
+            address={offer.pickupAddress}
+            instructions={offer.pickupInstructions}
+            bare
+          />
+          <MiniMap
+            interactive
+            latitude={offer.latitude}
+            longitude={offer.longitude}
+            height={180}
+          />
+        </View>
+      </ExpandableCard>
+
+      <OfferActions offer={offer} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: colors.background.main,
+  },
+  content: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+  pickupBody: {
+    gap: spacing.md,
+  },
+});

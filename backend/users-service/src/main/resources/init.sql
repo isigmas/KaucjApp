@@ -5,6 +5,7 @@ CREATE TABLE users (
                        last_name   VARCHAR(50) NOT NULL,
                        email       VARCHAR(255) NOT NULL UNIQUE,
                        phone       VARCHAR(20),
+                       profile_picture_url VARCHAR(500),
                        created_at  TIMESTAMPTZ DEFAULT NOW(),
                        updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
@@ -13,6 +14,17 @@ CREATE TABLE ratings (
                          user_id        BIGINT PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
                          avg_score      NUMERIC(3,2) DEFAULT 0.00 CHECK (avg_score BETWEEN 0 AND 5),
                          feedback_count INT DEFAULT 0
+);
+
+CREATE TABLE user_reviews (
+                              review_id    BIGSERIAL PRIMARY KEY,
+                              reviewee_id  BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                              reviewer_id  BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
+                              offer_id     BIGINT NOT NULL,
+                              score        NUMERIC(3,2) NOT NULL CHECK (score BETWEEN 0 AND 5),
+                              comment      TEXT,
+                              created_at   TIMESTAMPTZ DEFAULT NOW(),
+                              updated_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE user_addresses (
@@ -27,6 +39,42 @@ CREATE TABLE user_addresses (
                                 updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE user_stats (
+                            user_id                 BIGINT PRIMARY KEY,
+                            returned_plastic_count  INTEGER NOT NULL DEFAULT 0,
+                            returned_can_count      INTEGER NOT NULL DEFAULT 0,
+                            collected_plastic_count INTEGER NOT NULL DEFAULT 0,
+                            collected_can_count     INTEGER NOT NULL DEFAULT 0,
+
+                            CONSTRAINT fk_user_stats_account FOREIGN KEY (user_id)
+                                REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE user_daily_stats (
+                                  id                      BIGSERIAL PRIMARY KEY,
+                                  user_id                 BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                                  stat_date               DATE NOT NULL,
+                                  returned_plastic_count  INTEGER NOT NULL DEFAULT 0,
+                                  returned_can_count      INTEGER NOT NULL DEFAULT 0,
+                                  collected_plastic_count INTEGER NOT NULL DEFAULT 0,
+                                  collected_can_count     INTEGER NOT NULL DEFAULT 0,
+
+                                  UNIQUE(user_id, stat_date)
+);
+
+CREATE INDEX idx_user_daily_stats_user_date ON user_daily_stats(user_id, stat_date);
+CREATE INDEX idx_user_daily_stats_date_ranking ON user_daily_stats(stat_date DESC, user_id);
+
+CREATE TABLE processed_offer_events (
+                                        offer_id      BIGINT PRIMARY KEY,
+                                        processed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_reviews_reviewee ON user_reviews(reviewee_id);
+CREATE UNIQUE INDEX idx_user_reviews_reviewer_offer
+    ON user_reviews(reviewer_id, offer_id)
+    WHERE reviewer_id IS NOT NULL;
+CREATE INDEX idx_user_stats_returned ON user_stats(returned_plastic_count DESC);
 CREATE INDEX idx_user_addresses_user_id ON user_addresses(user_id);
 CREATE UNIQUE INDEX idx_only_one_default_address
     ON user_addresses(user_id)

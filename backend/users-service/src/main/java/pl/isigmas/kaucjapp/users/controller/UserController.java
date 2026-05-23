@@ -7,13 +7,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.*;
+import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
+import pl.isigmas.kaucjapp.users.service.AzureBlobService;
+import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -29,18 +37,9 @@ public class UserController {
 
     private final UserService userService;
     private final RatingService ratingService;
-
-
-    @GetMapping("/admin/users")
-    @Operation(
-            summary = "List all users",
-            description = "Returns all users located in db"
-    )
-    public ResponseEntity<List<UserDTO>> getAllUsers(){
-        log.info("Getting all users");
-        return ResponseEntity.ok(userService.getAll());
-    }
-
+    private final AzureBlobService azureBlobService;
+    private final UserPeriodStatsService userPeriodStatsService;
+    private final DefaultErrorAttributes defaultErrorAttributes;
 
 
     @GetMapping("/me/addresses")
@@ -66,7 +65,8 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(
             summary = "Get user by id",
-            description = "Returns UserDTO: user_id, username, names, phone, email, and nested addresses.")
+            description = "Returns UserDTO: user_id, username, names, phone, bottle/can stats, and nested addresses. "
+                    + "Email is not included; use admin user listing for email.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
@@ -95,8 +95,38 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(myUserId));
     }
 
+    @GetMapping("/me/stats/period")
+    @Operation(
+            summary = "Get my activity stats for a recent period",
+            description = "Sums daily stat buckets over the last `days` calendar days (UTC, inclusive). "
+                    + "Profile all-time stats (GET /me) are unchanged; this endpoint is for period views such as last 30 days.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "UserPeriodStatsDTO with summed counts and period metadata."),
+            @ApiResponse(responseCode = "400", description = "Invalid days (1–365) or missing X-User-Id."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<UserPeriodStatsDTO> getMyPeriodStats(
+            @RequestHeader("X-User-Id") Long myUserId,
+            @RequestParam(defaultValue = "30") int days) {
+        log.info("Fetching period stats for user {} (last {} days)", myUserId, days);
+        return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(myUserId, days));
+    }
 
-
+    @GetMapping("/{id}/stats/period")
+    @Operation(
+            summary = "Get user activity stats for a recent period",
+            description = "Same aggregation as GET /me/stats/period but for any user id (public period stats).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "UserPeriodStatsDTO."),
+            @ApiResponse(responseCode = "400", description = "Invalid days (1–365)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<UserPeriodStatsDTO> getUserPeriodStats(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "30") int days) {
+        log.info("Fetching period stats for user {} (last {} days)", id, days);
+        return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(id, days));
+    }
 
     @GetMapping("/test")
     @Operation(
@@ -122,7 +152,7 @@ public class UserController {
                     + "Username, email, and phone cannot be updated via this API (not present on UpdateUserDTO). "
                     + "Each address: latitude ∈ [-90, 90], longitude ∈ [-180, 180], address length limits per UserAddressDTO.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Profile updated."),
+            @ApiResponse(responseCode = "204", description = "Profile updated."),
             @ApiResponse(responseCode = "400", description = "Validation (VALIDATION_ERR, field details in validationErrors), "
                     + "malformed JSON (MALFORMED_JSON), or DB range/length mapped to client error."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
@@ -133,7 +163,7 @@ public class UserController {
 
         userService.updateUser(loggedInUserId, updateUserDTO);
         log.info("User updated, ID: {}", loggedInUserId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -143,7 +173,7 @@ public class UserController {
             summary = "Delete my account",
             description = "Deletes the user (and dependent data per JPA cascade) for id from `X-User-Id`.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User deleted."),
+            @ApiResponse(responseCode = "204", description = "User deleted."),
             @ApiResponse(responseCode = "400", description = "Missing or invalid X-User-Id (BAD_REQUEST)."),
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
@@ -152,7 +182,7 @@ public class UserController {
 
         userService.deleteUser(loggedInUserId);
         log.info("User deleted, ID: {}", loggedInUserId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -172,28 +202,149 @@ public class UserController {
     }
 
 
-    
-
     @PostMapping("/{id}/rating")
     @Operation(
-            summary = "Submit rating for user",
-            description = "Body: integer score between 1 and 5 (RatingRequestDTO). "
-                    + "Path `id` is the rated user; header `X-User-Id` is the rater. Self-rating is rejected.")
+            summary = "Submit review for user",
+            description = "Body: ReviewRequestDTO with score (1–5) and optional comment. "
+                    + "Path `id` is the reviewed user; header `X-User-Id` is the reviewer. "
+                    + "Creates an individual review and updates the denormalized rating aggregate. Self-review is rejected.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Rating recorded; running average updated."),
+            @ApiResponse(responseCode = "200", description = "Review recorded; running average updated."),
             @ApiResponse(responseCode = "400", description = "Invalid score or body (VALIDATION_ERR)."),
-            @ApiResponse(responseCode = "403", description = "Cannot rate yourself (USER_004)."),
-            @ApiResponse(responseCode = "404", description = "Rated user / rating row not found (USER_001).")
+            @ApiResponse(responseCode = "403", description = "Cannot review yourself (USER_004)."),
+            @ApiResponse(responseCode = "404", description = "Reviewed user not found (USER_001).")
     })
-    public ResponseEntity<Void> addRating(
+    public ResponseEntity<Void> rateUser(
             @PathVariable Long id,
-            @Valid @RequestBody RatingRequestDTO ratingRequest,
-            @RequestHeader("X-User-Id") Long raterId) {
+            @Valid @RequestBody ReviewRequestDTO request,
+            @RequestHeader("X-User-Id") Long currentUserId) {
 
-        ratingService.addRating(id, ratingRequest.getScore(), raterId);
-        log.info("User {} added rating {} for user ID: {}", raterId, ratingRequest.getScore(), id);
+        ratingService.addReview(id, currentUserId, request);
+        log.info("User {} added review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PatchMapping("/reviews/{id}")
+    @Operation(summary = "Update own review", description = "Partial update of score and/or comment. Only the original reviewer may edit.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Review updated; aggregate recalculated when score changes."),
+            @ApiResponse(responseCode = "400", description = "Invalid score (VALIDATION_ERR)."),
+            @ApiResponse(responseCode = "403", description = "Not the review author (USER_007)."),
+            @ApiResponse(responseCode = "404", description = "Review not found (USER_006).")
+    })
+    public ResponseEntity<Void> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateReviewDTO request,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        ratingService.updateReview(id, currentUserId, request);
+        log.info("User {} updated review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/reviews/{id}")
+    @Operation(summary = "Delete own review", description = "Removes the review and updates the denormalized rating aggregate. Only the original reviewer may delete.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Review deleted; aggregate recalculated."),
+            @ApiResponse(responseCode = "403", description = "Not the review author (USER_007)."),
+            @ApiResponse(responseCode = "404", description = "Review not found (USER_006).")
+    })
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        ratingService.deleteReview(id, currentUserId);
+        log.info("User {} deleted review for user ID: {}", currentUserId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponseDTO> getReview(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        var review = ratingService.getReview(id);
+        log.info("Getting review {} for user ID: {}", id, currentUserId);
+        return ResponseEntity.ok(review);
+    }
+
+    @GetMapping("/reviews/check")
+    @Operation(
+            summary = "Check if offer is already reviewed",
+            description = "Returns true and the review details if the logged-in user has already submitted a review for this offer.")
+    public ResponseEntity<ReviewCheckResponseDTO> checkReviewStatus(
+            @RequestParam Long offerId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        return ratingService.getReviewForOffer(currentUserId, offerId)
+                .map(review -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(true)
+                                .review(review)
+                                .build()
+                ))
+                .orElseGet(() -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(false)
+                                .review(null)
+                                .build()
+                ));
+    }
+
+
+    @GetMapping("/{id}/reviews")
+    @Operation(
+            summary = "List reviews for user",
+            description = "Returns all individual reviews for the given user id, newest first.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "JSON array of ReviewResponseDTO."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<List<ReviewResponseDTO>> getUserReviews(@PathVariable Long id) {
+        log.info("Fetching reviews for user ID: {}", id);
+        return ResponseEntity.ok(ratingService.getUserReviews(id));
+    }
+
+    @GetMapping("/ranking")
+    @Operation(
+            summary = "Get top users ranking by activity type with pagination",
+            description = "Available types: returned_plastic, returned_can, collected_plastic, collected_can, returned_total, collected_total. Use days=0 for all-time, days>0 for period ranking."
+    )
+    public ResponseEntity<List<UserPeriodStatsDTO>> getStatsRanking(
+            @RequestParam(defaultValue = "returned_total") String type,
+            @RequestParam(defaultValue = "0") int days,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
+        List<UserPeriodStatsDTO> ranking = userService.getStatsRanking(type, days, page, size);
+        return ResponseEntity.ok(ranking);
+    }
+
+    @PostMapping(value = "/me/profile-picture", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Upload my profile picture",
+            description = "Multipart form field `file` (JPEG/PNG/WebP, max 5MB). Stores image in Azure Blob / Azurite and saves URL on user profile.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile updated with new profile_picture_url."),
+            @ApiResponse(responseCode = "400", description = "Invalid file (USER_008) or missing X-User-Id."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001)."),
+            @ApiResponse(responseCode = "500", description = "Blob storage upload failed (USER_009).")
+    })
+    public ResponseEntity<UserDTO> uploadProfilePicture(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestPart("file") MultipartFile file) {
+        try {
+            UserDTO current = userService.getUserById(currentUserId);
+            String imageUrl = azureBlobService.uploadProfilePicture(currentUserId, file);
+            azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+            UserDTO updatedUser = userService.updateProfilePictureUrl(currentUserId, imageUrl);
+            log.info("User {} updated profile picture", currentUserId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IOException e) {
+            log.error("Failed to read profile picture for user {}", currentUserId, e);
+            throw ProfilePictureUploadException.storageFailed();
+        }
+    }
 
 }

@@ -16,8 +16,8 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "anowak",
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
+                    "first_name": "Anna",
+                    "last_name": "Nowak",
                     "phone": "123456789",
                     "email": "anna@example.com"
                 }
@@ -29,14 +29,14 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "addresses": [
                         {
-                            "addressLabel": "home",
+                            "address_label": "home",
                             "address": "ul. Testowa 2",
                             "latitude": 52.23,
                             "longitude": 21.01,
                             "default": true
                         },
                         {
-                            "addressLabel": "work",
+                            "address_label": "work",
                             "address": "ul. Testowa 3",
                             "latitude": 52.24,
                             "longitude": 21.03,
@@ -50,20 +50,20 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 1005L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateUserJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses")
                         .header("X-User-Id", 1005L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].addressLabel").value("home"))
-                .andExpect(jsonPath("$[1].addressLabel").value("work"));
+                .andExpect(jsonPath("$[0].address_label").value("home"))
+                .andExpect(jsonPath("$[1].address_label").value("work"));
     }
 
     @Test
     void gettingMyAddressesWithoutUserIdHeaderReturns400() throws Exception {
         mockMvc.perform(get("/api/user/me/addresses"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.path").value("/api/user/me/addresses"));
     }
 
@@ -73,8 +73,8 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 2001,
                     "username": "u2001",
-                    "firstName": "Old",
-                    "lastName": "Name",
+                    "first_name": "Old",
+                    "last_name": "Name",
                     "phone": "123456789",
                     "email": "u2001@example.com"
                 }
@@ -85,7 +85,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "addresses": [
                         {
-                            "addressLabel": "home",
+                            "address_label": "home",
                             "address": "ul. A 1",
                             "latitude": 52.23,
                             "longitude": 21.01,
@@ -98,31 +98,31 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(setAddressesJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2001L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].addressLabel").value("home"));
+                .andExpect(jsonPath("$[0].address_label").value("home"));
 
         String patchFirstNameOnly = """
                 {
-                    "firstName": "New"
+                    "first_name": "New"
                 }
                 """;
         mockMvc.perform(patch("/api/user/me")
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchFirstNameOnly))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/2001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("New"))
-                .andExpect(jsonPath("$.lastName").value("Name"));
+                .andExpect(jsonPath("$.first_name").value("New"))
+                .andExpect(jsonPath("$.last_name").value("Name"));
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2001L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].addressLabel").value("home"));
+                .andExpect(jsonPath("$[0].address_label").value("home"));
     }
 
     @Test
@@ -131,8 +131,8 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 2003,
                     "username": "u2003",
-                    "firstName": "A",
-                    "lastName": "B",
+                    "first_name": "A",
+                    "last_name": "B",
                     "phone": "123456789",
                     "email": "u2003@example.com"
                 }
@@ -143,7 +143,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "addresses": [
                         {
-                            "addressLabel": "home",
+                            "address_label": "home",
                             "address": "Somewhere",
                             "latitude": 999,
                             "longitude": 21.01,
@@ -158,8 +158,8 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(badLatJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERR"))
-                .andExpect(jsonPath("$.validationErrors['addresses[0].latitude']").exists());
+                .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"))
+                .andExpect(jsonPath("$.validation_errors['addresses[0].latitude']").exists());
     }
 
     @Test
@@ -168,8 +168,8 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 2002,
                     "username": "u2002",
-                    "firstName": "A",
-                    "lastName": "B",
+                    "first_name": "A",
+                    "last_name": "B",
                     "phone": "123456789",
                     "email": "u2002@example.com"
                 }
@@ -180,7 +180,7 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                 {
                     "addresses": [
                         {
-                            "addressLabel": "home",
+                            "address_label": "home",
                             "address": "ul. A 1",
                             "latitude": 52.23,
                             "longitude": 21.01,
@@ -193,17 +193,17 @@ public class UserAddressEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2002L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(setAddressesJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2002L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].addressLabel").value("home"));
+                .andExpect(jsonPath("$[0].address_label").value("home"));
 
         mockMvc.perform(patch("/api/user/me")
                         .header("X-User-Id", 2002L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"addresses\": []}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/user/me/addresses").header("X-User-Id", 2002L))
                 .andExpect(status().isOk())

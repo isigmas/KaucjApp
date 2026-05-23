@@ -16,9 +16,9 @@ import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
 import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { AuthHeader } from "./auth-header";
-import { forgotPasswordSchema, ForgotPasswordValues } from "@/src/types";
 import { useAuth } from "@/src/auth/use-auth";
 import { ErrorBanner } from "./error-banner";
+import { forgotPasswordSchema, ForgotPasswordValues } from "@/src/validation";
 
 export default function ForgotPasswordScreen() {
   const { resetPassword, isPasswordResetting, resetPasswordError } = useAuth();

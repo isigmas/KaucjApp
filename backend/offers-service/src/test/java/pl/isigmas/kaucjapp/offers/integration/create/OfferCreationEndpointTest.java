@@ -18,10 +18,10 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 0, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 0, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -41,10 +41,10 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": -1.00 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": -1.00 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -64,10 +64,10 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.51 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.51 }
                     ]
                 }
                 """.formatted(plasticBottleId);
@@ -77,7 +77,7 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERR"));
+                .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"));
     }
 
     @Test
@@ -103,9 +103,9 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                     {
                         "latitude": 52.2297,
                         "longitude": 21.0122,
-                        "pickupAddress": "",
+                        "pickup_address": "",
                         "items": [
-                            { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                            { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                             ]
                     }
                     """;
@@ -124,10 +124,10 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": 999999999, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": 999999999, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """;
@@ -137,6 +137,6 @@ public class OfferCreationEndpointTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createOfferJson))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("BOTTLE_001"));
+                .andExpect(jsonPath("$.error_code").value("BOTTLE_001"));
     }
 }

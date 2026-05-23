@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useAuthStore, User } from "./auth-store";
+import { useAuthStore } from "./auth-store";
 import { apiClient } from "@/src/api/api-client";
-import { SignInValues, SignUpValues } from "@/src/types";
+
 import { tokenStorage } from "./secure-storage";
 import { AuthError, parseAuthError } from "@/src/api/api-error";
+import { SignInValues, SignUpValues } from "../validation";
+import { User } from "@/src/types/user";
 
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
@@ -32,8 +34,24 @@ export const useAuth = () => {
         });
         const newAccessToken: string = refreshRes.data;
 
-        // TODO: replace with a real /auth/me call once the endpoint exists
-        const user: User = { id: "1", email: credentials.email, name: "Aska" };
+        const { data: userData } = await apiClient.get("/user/me", {
+          headers: { Authorization: `Bearer ${newAccessToken}` },
+        });
+        const user: User = {
+          userId: userData.userId,
+          username: userData.username,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone,
+          addresses: userData.addresses,
+          createdAt: userData.createdAt,
+          collectedBottleCount: userData.collectedBottleCount,
+          collectedCanCount: userData.collectedCanCount,
+          returnedBottleCount: userData.returnedBottleCount,
+          returnedCanCount: userData.returnedCanCount,
+          returnedTotalCount: userData.returnedTotalCount,
+          collectedTotalCount: userData.collectedTotalCount,
+        };
 
         return { accessToken: newAccessToken, refreshToken, user };
       } catch (error) {
@@ -93,9 +111,8 @@ export const useAuth = () => {
   const resetPassword = useMutation<void, AuthError, string>({
     mutationFn: async (email) => {
       try {
-        await apiClient.post("/auth/resetpassword", email, {
-          headers: { "Content-Type": "text/plain" },
-        });
+        const payload = { emailTo: email };
+        await apiClient.post("/auth/resetpassword", payload);
       } catch (error) {
         throw parseAuthError(error);
       }

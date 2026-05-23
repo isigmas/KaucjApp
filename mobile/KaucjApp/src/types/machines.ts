@@ -16,6 +16,9 @@ export interface DepositMachine {
   latitude: number;
   longitude: number;
   openingHours: OpeningHour[];
+
+  avgScore: number;
+  feedbackCount: number;
 }
 
 // GET /api/deposit/search

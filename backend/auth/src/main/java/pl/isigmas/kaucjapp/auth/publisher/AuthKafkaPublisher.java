@@ -33,7 +33,7 @@ public class AuthKafkaPublisher {
     }
 
     public void sendDeleteUser(Long id, String email) {
-        idTemplate.send("users.delete", email, id);
+        idTemplate.send("users.delete.command", email, id);
     }
 
     public void sendWarning(WarningDTO warning) {

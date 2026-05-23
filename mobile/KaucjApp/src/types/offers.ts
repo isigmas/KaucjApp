@@ -1,26 +1,38 @@
-export type OfferStatus = "OPEN" | "RESERVED" | "COMPLETED" | "CANCELED";
+export type OfferStatus =
+  | "OPEN"
+  | "RESERVED"
+  | "COMPLETED"
+  | "CANCELED"
+  | "PENDING_CONFIRMATION"
+  | "COMPLAINT";
 
 export interface Offer {
-  offer_id: number;
-  creator_id: number;
-  collector_id: number | null;
+  offerId: number;
+  creatorId: number;
+  collectorId: number | null;
   status: OfferStatus;
+  collectorConfirmed: boolean;
+  creatorConfirmed: boolean;
+  confirmationDeadline: string | null;
   latitude: number;
   longitude: number;
-  pickup_address: string;
-  pickup_instructions: string | null;
-  created_at: string;
-  plastic_quantity: number;
-  can_quantity: number;
-  total_quantity: number;
-  total_prize: number; //co kurier zapłaci za całość oferty
-  total_income: number; //co kurier zarobi na ofercie
-  plastic_price: number | null;
-  can_price: number | null;
+  pickupAddress: string;
+  pickupInstructions: string | null;
+  createdAt: string;
+  reservedAt: string | null;
+  reservedTo: string | null;
+  plasticQuantity: number;
+  canQuantity: number;
+  totalQuantity: number;
+  totalPrize: number; //co kurier zapłaci za całość oferty
+  totalIncome: number; //co kurier zarobi na ofercie
+  plasticPrice: number | null;
+  canPrice: number | null;
+  updatedAt: string;
 }
 
 export interface OfferItemPayload {
-  bottleId: number; //notnull
+  bottleId: 1 | 2; //notnull plastic - 1, can - 2
   quantity: number; //notnull, min 1
   unitPrice: number; //notnull, min 0.0, max 0.5
 }
@@ -31,7 +43,7 @@ export interface OfferPayload {
   longitude: number; //notnull
   pickupAddress: string; //notnull
   pickupInstructions?: string; //nullable
-  items: OfferItemPayload[]; //notnull, min 1
+  items: OfferItemPayload[]; //notnull, min 1, max 2
 }
 
 // box parameters for the /api/offer/search endpoint.

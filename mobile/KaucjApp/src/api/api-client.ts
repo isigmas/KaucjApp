@@ -1,27 +1,40 @@
 import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
+import { camelizeKeys, decamelizeKeys } from "humps";
 
-const API_URL = "http://192.168.100.7:8080/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 5000,
+  timeout: 15000,
 });
 
 // Injecting the Access Token
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
-
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.debug(`[Auth] Injected Access Token into request header.`);
-    console.debug(`[Auth] Current Access Token: ${token}`);
+    // console.debug(`[Auth] Current Access Token: ${token}`);
   } else {
     console.debug(`[Auth] No Access Token found in memory for this request.`);
   }
+
+  if (config.data && typeof config.data === "object") {
+    config.data = decamelizeKeys(config.data);
+  }
+
+  //logging
+  console.log(
+    `[API Request]  ►  ${config.method?.toUpperCase()} ${config.url}`,
+  );
+  if (config.data) {
+    console.log(
+      `[API Request] Payload: ${JSON.stringify(config.data, null, 2)}`,
+    );
+  }
+
   return config;
 });
 
@@ -41,7 +54,15 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response Interceptor
 apiClient.interceptors.response.use(
-  (response) => response, // 200 OK
+  (response) => {
+    console.log(
+      `[API] ◄ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
+    );
+    if (response.data && typeof response.data === "object") {
+      response.data = camelizeKeys(response.data);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
@@ -52,7 +73,7 @@ apiClient.interceptors.response.use(
 
     if (error.response) {
       console.warn(
-        `[API Error] ${error.response.status} - ${originalRequest?.url} - ${JSON.stringify(error.response.data, null, 2)}`,
+        `[API Error]${error.response.status} - ${error.response.config.method?.toUpperCase()} ${originalRequest?.url} - ${JSON.stringify(error.response.data, null, 2)}`,
       );
     } else {
       console.error(`[API Error] Client Setup Error - ${error.message}`);

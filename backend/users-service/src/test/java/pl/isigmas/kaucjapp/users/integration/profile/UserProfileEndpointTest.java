@@ -15,7 +15,7 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
     private static final String VALID_ADDRESS_BLOCK = """
             "addresses": [
                 {
-                    "addressLabel": "home",
+                    "address_label": "home",
                     "address": "ul. Testowa 2",
                     "latitude": 52.23,
                     "longitude": 21.01,
@@ -30,8 +30,8 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "anowak",
-                    "firstName": "Anna",
-                    "lastName": "Nowak",
+                    "first_name": "Anna",
+                    "last_name": "Nowak",
                     "phone": "111222333",
                     "email": "anna@example.com"
                 }
@@ -53,8 +53,8 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
 
         String updateUserJson = """
                 {
-                    "firstName": "Anna",
-                    "lastName": "Kowalska",
+                    "first_name": "Anna",
+                    "last_name": "Kowalska",
                     %s
                 }
                 """.formatted(VALID_ADDRESS_BLOCK);
@@ -63,11 +63,11 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateUserJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(delete("/api/user/me")
                 .header("X-User-Id", userId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         var deletedUser = userRepository.findById(userId).orElseThrow();
 
@@ -94,8 +94,8 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 92001,
                     "username": "dupe",
-                    "firstName": "A",
-                    "lastName": "A",
+                    "first_name": "A",
+                    "last_name": "A",
                     "phone": "111222335",
                     "email": "duplicate@example.com"
                 }
@@ -104,8 +104,8 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 92002,
                     "username": "dupb",
-                    "firstName": "B",
-                    "lastName": "B",
+                    "first_name": "B",
+                    "last_name": "B",
                     "phone": "111222336",
                     "email": "duplicate@example.com"
                 }
@@ -128,15 +128,15 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
     void getMeWithoutUserIdHeaderReturns400() throws Exception {
         mockMvc.perform(get("/api/user/me"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
+                .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"));
     }
 
     @Test
     void patchMeWithoutUserIdHeaderReturns400() throws Exception {
         mockMvc.perform(patch("/api/user/me")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"X\"}"))
+                        .content("{\"first_name\": \"X\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
+                .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"));
     }
 }

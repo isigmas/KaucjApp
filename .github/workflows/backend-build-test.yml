@@ -41,8 +41,8 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           IT_SECRET: ${{ secrets.IT_SECRET }}
-        run: docker compose up --build -d --wait
+        run: docker compose -f compose.yaml -f compose.cicd.yaml up --build -d --wait
 
       - name: Print logs on failure
         if: failure()
-        run: docker compose logs
+        run: docker compose -f compose.yaml -f compose.cicd.yaml logs

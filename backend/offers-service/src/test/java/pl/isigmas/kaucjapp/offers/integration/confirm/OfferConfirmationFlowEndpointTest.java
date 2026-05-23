@@ -117,7 +117,7 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
 
         String complaintPayload = """
                 {
-                  "complaintReason": "OTHER",
+                  "complaint_reason": "OTHER",
                   "message": "Issue during handover"
                 }
                 """;
@@ -156,6 +156,7 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
 
         completingPendingOffersService.completePendingOffers();
 
+        entityManager.flush();
         entityManager.clear();
         Offer completed = offerRepository.findById(offerId).orElseThrow();
         assertThat(completed.getStatus()).isEqualTo(OfferStatus.COMPLETED);
@@ -196,10 +197,10 @@ public class OfferConfirmationFlowEndpointTest extends BaseIntegrationTest {
                 {
                     "latitude": 52.2297,
                     "longitude": 21.0122,
-                    "pickupAddress": "ul. Odbiorcza 1",
-                    "pickupInstructions": "Test",
+                    "pickup_address": "ul. Odbiorcza 1",
+                    "pickup_instructions": "Test",
                     "items": [
-                      { "bottleId": %d, "quantity": 1, "unitPrice": 0.10 }
+                      { "bottle_id": %d, "quantity": 1, "unit_price": 0.10 }
                     ]
                 }
                 """.formatted(plasticBottleId);

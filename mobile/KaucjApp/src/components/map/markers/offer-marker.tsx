@@ -3,6 +3,7 @@ import React, { useState, useCallback } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Marker } from "react-native-maps";
 import { colors } from "@/src/theme";
+import { formatPrice } from "@/src/lib";
 
 interface OfferMarkerProps {
   offer: Offer;
@@ -21,7 +22,7 @@ export const OfferMarker = React.memo(
 
     return (
       <Marker
-        identifier={`offer-${offer.offer_id}`}
+        identifier={`offer-${offer.offerId}`}
         coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}
         onPress={() => onPress(offer)}
         tracksViewChanges={isTracking}
@@ -30,8 +31,7 @@ export const OfferMarker = React.memo(
         <View style={styles.markerContainer} onLayout={handleLayout}>
           <View style={styles.bubble}>
             <Text style={styles.bubbleText} numberOfLines={1}>
-              {offer.total_quantity} sztuk •{" "}
-              {offer.total_prize.toLocaleString("pl-PL")}zł
+              {offer.totalQuantity} sztuk +{formatPrice(offer.totalIncome)}
             </Text>
           </View>
           <View style={styles.triangle} />
@@ -41,10 +41,11 @@ export const OfferMarker = React.memo(
     );
   },
   (prevProps, nextProps) =>
-    prevProps.offer.offer_id === nextProps.offer.offer_id &&
+    prevProps.offer.updatedAt === nextProps.offer.updatedAt &&
+    prevProps.offer.offerId === nextProps.offer.offerId &&
     prevProps.offer.status === nextProps.offer.status &&
-    prevProps.offer.total_quantity === nextProps.offer.total_quantity &&
-    prevProps.offer.total_prize === nextProps.offer.total_prize,
+    prevProps.offer.totalQuantity === nextProps.offer.totalQuantity &&
+    prevProps.offer.totalPrize === nextProps.offer.totalPrize,
 );
 
 const styles = StyleSheet.create({

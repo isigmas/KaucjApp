@@ -39,13 +39,13 @@ public class DepositMachineCrudEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].networkName").value("Zabka"))
+                .andExpect(jsonPath("$[0].network_name").value("Zabka"))
                 .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
-                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
-                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
+                .andExpect(jsonPath("$[0].opening_hours[0].is_closed").value(false))
+                .andExpect(jsonPath("$[0].opening_hours.length()").value(7));
 
         UpdateMachineDTO update = UpdateMachineDTO.builder()
                 .status(DepositMachineStatus.OUT_OF_ORDER)
@@ -57,21 +57,21 @@ public class DepositMachineCrudEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(patch("/api/deposit/machine/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/deposit/machines"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].networkName").value("Biedronka"))
+                .andExpect(jsonPath("$[0].network_name").value("Biedronka"))
                 .andExpect(jsonPath("$[0].status").value("OUT_OF_ORDER"))
                 .andExpect(jsonPath("$[0].address").value("ul. Wawelska 15, 31-000 Kraków"))
                 .andExpect(jsonPath("$[0].latitude").value(50.052000))
                 .andExpect(jsonPath("$[0].longitude").value(19.936000))
-                .andExpect(jsonPath("$[0].openingHours[0].isClosed").value(false))
-                .andExpect(jsonPath("$[0].openingHours.length()").value(7));
+                .andExpect(jsonPath("$[0].opening_hours[0].is_closed").value(false))
+                .andExpect(jsonPath("$[0].opening_hours.length()").value(7));
 
         mockMvc.perform(delete("/api/deposit/machine/" + id))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         assertThat(depositMachineRepository.findAll()).isEmpty();
     }

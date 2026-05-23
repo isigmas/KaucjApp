@@ -191,6 +191,7 @@ public class AuthService {
 
         String backupUsername = account.getUsername();
         account.setUsername("deleted#" + seed);
+        account.setPasswordHash(encoder.hashPassword(UUID.randomUUID().toString()));
 
         kafkaPublisher.sendDeleteUser(id, backupEmail);
 
@@ -204,6 +205,50 @@ public class AuthService {
         deletionScheduleRepository.save(deletionSchedule);
 
         account.setStatus(AccountStatus.PENDING_DELETION);
+    }
+
+    /**
+     * Called when users-service finishes soft-deleting a user (self-service DELETE /me
+     * or after processing users.delete.command from admin). Idempotent for admin-initiated flow.
+     */
+    @Transactional
+    public void handleUserDeleted(Long id) {
+        Account account = accountRepository.findById(id).orElse(null);
+        if (account == null) {
+            log.warn("users.deleted.event for unknown account ID: {}", id);
+            return;
+        }
+
+        if (account.getStatus() == AccountStatus.DELETED) {
+            return;
+        }
+
+        refreshTokenRepository.findAllByAccount(account)
+                .forEach(token -> token.setRevoked(true));
+
+        if (account.getStatus() == AccountStatus.PENDING_DELETION) {
+            account.setPasswordHash(encoder.hashPassword(UUID.randomUUID().toString()));
+            return;
+        }
+
+        String backupEmail = account.getEmail();
+        String backupUsername = account.getUsername();
+        String seed = UUID.randomUUID().toString();
+
+        account.setEmail(seed + "@deleted.user");
+        account.setUsername("deleted#" + seed);
+        account.setPasswordHash(encoder.hashPassword(UUID.randomUUID().toString()));
+        account.setStatus(AccountStatus.PENDING_DELETION);
+
+        DeletionSchedule deletionSchedule = DeletionSchedule.builder()
+                .account(account)
+                .scheduledDeletionDate(Instant.now().plus(Duration.ofDays(30)))
+                .backupUsername(backupUsername)
+                .backupEmail(backupEmail)
+                .build();
+        deletionScheduleRepository.save(deletionSchedule);
+
+        log.info("Anonymized auth account for deleted user ID: {}", id);
     }
 
     @Transactional

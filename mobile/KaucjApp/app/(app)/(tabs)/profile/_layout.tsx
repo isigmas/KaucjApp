@@ -15,17 +15,43 @@ export default function HomeLayout() {
       <Stack.Screen
         name="offers"
         options={{
-          headerTitle: "Moje oferty",
+          headerShown: false,
           headerLargeTitleEnabled: true,
+          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
+          headerTitle: "Moje rezerwacje",
         }}
       />
       <Stack.Screen
         name="bookings"
         options={{
-          headerTitle: "Moje rezerwacje",
+          headerShown: false,
           headerLargeTitleEnabled: true,
+          headerTransparent: true,
           headerBackButtonDisplayMode: "minimal",
+          headerTitle: "Moje rezerwacje",
+        }}
+      />
+
+      <Stack.Screen
+        name="test-review"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+        }}
+      />
+
+      <Stack.Screen
+        name="stats"
+        options={{
+          headerShown: false,
+          headerTitle: "Mój profil",
+          headerLargeTitleEnabled: false,
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
+          presentation: "formSheet",
+          sheetGrabberVisible: true,
+          sheetAllowedDetents: [0.9, 1],
         }}
       />
     </Stack>

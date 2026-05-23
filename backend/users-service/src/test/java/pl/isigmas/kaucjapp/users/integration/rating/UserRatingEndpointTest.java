@@ -17,8 +17,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "first",
-                    "firstName": "First",
-                    "lastName": "User",
+                    "first_name": "First",
+                    "last_name": "User",
                     "phone": "333444555",
                     "email": "first@example.com"
                 }
@@ -27,8 +27,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1006,
                     "username": "second",
-                    "firstName": "Second",
-                    "lastName": "User",
+                    "first_name": "Second",
+                    "last_name": "User",
                     "phone": "333444556",
                     "email": "second@example.com"
                 }
@@ -51,8 +51,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + secondUserId + "/rating")
                         .header("X-User-Id", firstUserId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5}"))
-                .andExpect(status().isNoContent());
+                        .content("{\"score\":5,\"offer_id\":1001}"))
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/user/{id}/rating", secondUserId)
                         .header("X-User-Id", secondUserId))
@@ -66,7 +66,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
     void getRatingForNonExistentUserReturns404() throws Exception {
         mockMvc.perform(get("/api/user/999999/rating"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("USER_002"));
+                .andExpect(jsonPath("$.error_code").value("USER_002"));
     }
 
     @Test
@@ -75,8 +75,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "solo",
-                    "firstName": "Solo",
-                    "lastName": "User",
+                    "first_name": "Solo",
+                    "last_name": "User",
                     "phone": "333444555",
                     "email": "solo@example.com"
                 }
@@ -93,7 +93,7 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + userId + "/rating")
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5}"))
+                        .content("{\"score\":5,\"offer_id\":1001}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -103,8 +103,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1005,
                     "username": "rated",
-                    "firstName": "R",
-                    "lastName": "ated",
+                    "first_name": "R",
+                    "last_name": "ated",
                     "phone": "444555666",
                     "email": "rated@example.com"
                 }
@@ -116,8 +116,8 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
                 {
                     "user_id": 1006,
                     "username": "rater",
-                    "firstName": "Ra",
-                    "lastName": "ter",
+                    "first_name": "Ra",
+                    "last_name": "ter",
                     "phone": "555666777",
                     "email": "rater@example.com"
                 }
@@ -139,13 +139,13 @@ public class UserRatingEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/user/" + ratedId + "/rating")
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":0}"))
+                        .content("{\"score\":0,\"offer_id\":1002}"))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/user/" + ratedId + "/rating")
                         .header("X-User-Id", raterId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":6}"))
+                        .content("{\"score\":6,\"offer_id\":1002}"))
                 .andExpect(status().isBadRequest());
     }
 

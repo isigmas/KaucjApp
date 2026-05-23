@@ -1,95 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
   Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
-import Animated, { Layout, FadeIn, FadeOut } from "react-native-reanimated";
-import * as Location from "expo-location";
+import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { colors } from "@/src/theme";
-import { OfferData } from "./create-offer";
-import { Link } from "expo-router";
-import { useLocationStore } from "@/src/state/location";
+import type { PickedLocation } from "./location-bottom-sheet";
+import { OfferFormValues } from "@/src/validation";
 
 interface Step2LocationProps {
-  data: OfferData;
-  updateData: (newData: Partial<OfferData>) => void;
+  selectedLocation: PickedLocation | null;
+  defaultLocation: PickedLocation | null;
+  onOpenLocationPicker: () => void;
 }
 
 export default function Step2Location({
-  data,
-  updateData,
+  selectedLocation,
+  defaultLocation,
+  onOpenLocationPicker,
 }: Step2LocationProps) {
-  const [isNotesExpanded, setIsNotesExpanded] = useState(!!data.notes);
-  const pickedLocation = useLocationStore((state) => state.pickedLocation);
+  const { control } = useFormContext<OfferFormValues>();
+  const initialNotes = useWatch({ control, name: "pickupInstructions" });
 
-  const [previewRegion, setPreviewRegion] = useState({
-    latitude: data.latitude || 50.0647,
-    longitude: data.longitude || 19.945,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  });
-
-  useEffect(() => {
-    if (pickedLocation) {
-      updateData({
-        latitude: pickedLocation.latitude,
-        longitude: pickedLocation.longitude,
-      });
-
-      setPreviewRegion({
-        latitude: pickedLocation.latitude,
-        longitude: pickedLocation.longitude,
-        latitudeDelta: 0.003,
-        longitudeDelta: 0.003,
-      });
-      return;
-    }
-
-    if (data.latitude && data.longitude) {
-      setPreviewRegion({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-      return;
-    }
-
-    (async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-
-        if (status === "granted") {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-
-          setPreviewRegion({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          });
-        }
-      } catch (error) {
-        console.warn("Could not fetch location for thumbnail preview", error);
-      }
-    })();
-  }, [data.latitude, data.longitude, pickedLocation]);
-
-  const hasSelectedLocation = !!data.latitude;
+  const [isNotesExpanded, setIsNotesExpanded] = useState(() => !!initialNotes);
 
   return (
     <ScrollView
       style={styles.stepContainer}
       showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets={true}
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Gdzie odbiór?</Text>
@@ -98,82 +44,47 @@ export default function Step2Location({
         </Text>
       </View>
 
-      {/* BLURRED MAP THUMBNAIL  */}
-      <Link href="/(tabs)/create/map-sheet" asChild>
-        <Pressable style={styles.mapThumbnailContainer}>
-          <View pointerEvents="none" style={styles.mapThumbnailWrapper}>
-            <MapView
-              provider={PROVIDER_DEFAULT}
-              style={styles.mapThumbnail}
-              region={previewRegion}
-              pitchEnabled={false}
-              rotateEnabled={false}
-              scrollEnabled={false}
-              zoomEnabled={false}
-            >
-              {hasSelectedLocation && (
-                <Marker
-                  coordinate={{
-                    latitude: data.latitude!,
-                    longitude: data.longitude!,
-                  }}
-                  pinColor={colors.primary.base}
-                />
-              )}
-            </MapView>
+      <MapThumbnail
+        selectedLocation={selectedLocation}
+        defaultLocation={defaultLocation}
+        onPress={onOpenLocationPicker}
+      />
 
-            {!hasSelectedLocation && (
-              <BlurView
-                intensity={5}
-                tint="dark"
-                style={StyleSheet.absoluteFill}
-              />
-            )}
-          </View>
-
-          {/* floating button */}
-          <View
-            style={
-              hasSelectedLocation
-                ? styles.thumbnailOverlaySelected
-                : styles.thumbnailOverlay
-            }
-          >
-            <View
+      <Controller
+        control={control}
+        name="pickupAddress"
+        render={({
+          field: { value, onChange, onBlur },
+          fieldState: { error },
+        }) => (
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Adres odbioru (ulica i numer)</Text>
+            <TextInput
               style={[
-                styles.thumbnailPill,
-                hasSelectedLocation && { opacity: 0.75 },
+                styles.textInput,
+                {
+                  borderColor: error
+                    ? colors.status.error
+                    : colors.status.border,
+                },
               ]}
-            >
-              <Text style={styles.thumbnailPillIcon}>📍</Text>
-              <Text style={styles.thumbnailPillText}>
-                {hasSelectedLocation ? "Zmień lokalizację" : "Wybierz na mapie"}
-              </Text>
-            </View>
+              placeholder="ul. Studencka 4"
+              placeholderTextColor={colors.text.muted}
+              value={value ?? ""}
+              onChangeText={onChange}
+              onBlur={onBlur}
+            />
           </View>
-        </Pressable>
-      </Link>
+        )}
+      />
 
-      {/* Address Input  */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Adres odbioru (ulica i numer)</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="ul. Studencka 4"
-          placeholderTextColor={colors.text.muted}
-          value={data.address || ""}
-          onChangeText={(text) => updateData({ address: text })}
-        />
-      </View>
-
-      {/*  Notes Section */}
       <Animated.View
         layout={Layout.springify().damping(50).stiffness(500).mass(2.5)}
         style={styles.notesContainer}
       >
         <Pressable
           style={styles.notesHeader}
-          onPress={() => setIsNotesExpanded(!isNotesExpanded)}
+          onPress={() => setIsNotesExpanded((prev) => !prev)}
         >
           <View style={styles.notesHeaderLeft}>
             <Text style={styles.notesTitle}>
@@ -189,20 +100,110 @@ export default function Step2Location({
             exiting={FadeOut}
             style={styles.notesContent}
           >
-            <TextInput
-              style={[styles.textInput, styles.textArea]}
-              placeholder="Jestem w domu od 18:00, ale mogę się dostosować..."
-              placeholderTextColor={colors.text.muted}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              value={data.notes || ""}
-              onChangeText={(text) => updateData({ notes: text })}
+            <Controller
+              control={control}
+              name="pickupInstructions"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  placeholder="Jestem w domu od 18:00, ale mogę się dostosować..."
+                  placeholderTextColor={colors.text.muted}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
+              )}
             />
           </Animated.View>
         )}
       </Animated.View>
     </ScrollView>
+  );
+}
+
+interface MapThumbnailProps {
+  selectedLocation: PickedLocation | null;
+  defaultLocation: PickedLocation | null;
+  onPress: () => void;
+}
+
+/**
+ * Read-only mini-map that previews the pickup pin. Uses
+ * `selectedLocation ?? defaultLocation` so the preview is always meaningful,
+ * and reflects the same single source of truth as the picker.
+ *
+ * While `defaultLocation` is still resolving and there is no selection yet,
+ * we render the thumbnail without an inner map — the blurred placeholder
+ * matches the "no selection" UX without showing a misleading region.
+ */
+function MapThumbnail({
+  selectedLocation,
+  defaultLocation,
+  onPress,
+}: MapThumbnailProps) {
+  const hasSelected = selectedLocation !== null;
+  const pin = selectedLocation ?? defaultLocation;
+
+  const region = useMemo(
+    () =>
+      pin
+        ? {
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+            latitudeDelta: hasSelected ? 0.003 : 0.01,
+            longitudeDelta: hasSelected ? 0.003 : 0.01,
+          }
+        : null,
+    [pin, hasSelected],
+  );
+
+  return (
+    <Pressable style={styles.mapThumbnailContainer} onPress={onPress}>
+      <View pointerEvents="none" style={styles.mapThumbnailWrapper}>
+        {region && (
+          <MapView
+            provider={PROVIDER_DEFAULT}
+            style={styles.mapThumbnail}
+            region={region}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={false}
+            zoomEnabled={false}
+          >
+            {hasSelected && pin && (
+              <Marker coordinate={pin} pinColor={colors.primary.base} />
+            )}
+          </MapView>
+        )}
+
+        {!hasSelected && (
+          <BlurView intensity={5} tint="dark" style={StyleSheet.absoluteFill} />
+        )}
+      </View>
+
+      <View
+        style={
+          hasSelected
+            ? styles.thumbnailOverlaySelected
+            : styles.thumbnailOverlay
+        }
+      >
+        <View
+          style={[
+            styles.thumbnailPill,
+            hasSelected && styles.thumbnailPillFaded,
+          ]}
+        >
+          <Text style={styles.thumbnailPillIcon}>📍</Text>
+          <Text style={styles.thumbnailPillText}>
+            {hasSelected ? "Zmień lokalizację" : "Wybierz na mapie"}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -264,6 +265,9 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 12,
   },
+  thumbnailPillFaded: {
+    opacity: 0.75,
+  },
   thumbnailPillIcon: {
     fontSize: 16,
   },
@@ -310,9 +314,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  notesIcon: {
-    fontSize: 18,
-  },
   notesTitle: {
     fontSize: 15,
     fontWeight: "600",
@@ -326,12 +327,6 @@ const styles = StyleSheet.create({
   notesContent: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-  },
-  notesHint: {
-    fontSize: 13,
-    color: colors.text.secondary,
-    marginBottom: 12,
-    lineHeight: 18,
   },
   textArea: {
     minHeight: 100,

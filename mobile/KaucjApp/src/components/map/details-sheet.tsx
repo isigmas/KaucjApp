@@ -1,10 +1,10 @@
 import React, { forwardRef, useMemo } from "react";
 import { Text, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { rounded } from "@/src/theme";
+import { rounded, spacing } from "@/src/theme";
 import { SelectedMapItem } from "./map-container";
-import OfferDetails from "./details/offer-details";
-import MachineDetails from "./details/machine-details";
+import OfferDetails from "./details/offer/offer-details";
+import MachineDetails from "./details/machine/machine-details";
 
 interface DetailsSheetProps {
   selectedItem: SelectedMapItem | null;
@@ -23,7 +23,9 @@ const DetailsSheet = forwardRef<BottomSheet, DetailsSheetProps>(
       }
 
       if (selectedItem.type === "offer") {
-        return <OfferDetails offer={selectedItem.data} />;
+        return (
+          <OfferDetails offer={selectedItem.data} offerId={selectedItem.id} />
+        );
       }
 
       if (selectedItem.type === "machine") {
@@ -61,8 +63,8 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   contentContainer: {
-    padding: 24,
     paddingBottom: 40,
+    paddingHorizontal: spacing.md,
   },
   errorText: {
     textAlign: "center",

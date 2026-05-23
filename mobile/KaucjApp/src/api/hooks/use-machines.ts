@@ -54,24 +54,18 @@ export const useSearchMachines = (
 };
 
 export const useMachineDetails = (id: number) => {
-  const queryClient = useQueryClient();
   return useQuery<DepositMachine, Error>({
     queryKey: machineKeys.detail(id),
     queryFn: async () => {
-      const cachedQueries = queryClient.getQueriesData<DepositMachine[]>({
-        queryKey: machineKeys.all(),
-      });
-
-      for (const [_, machines] of cachedQueries) {
-        if (Array.isArray(machines)) {
-          const found = machines.find((m) => m.id === id);
-          if (found) return found;
-        }
-      }
-
-      throw new Error("Machine not found in local cache");
+      const { data } = await apiClient.get<DepositMachine>(
+        `/deposit/machine/${id}`,
+      );
+      console.log(JSON.stringify(data, null, 2));
+      return data;
     },
-    staleTime: Infinity,
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 

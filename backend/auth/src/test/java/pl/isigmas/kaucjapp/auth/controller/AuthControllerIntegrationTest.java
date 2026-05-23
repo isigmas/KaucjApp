@@ -157,6 +157,36 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
+        @DisplayName("Should reject registration with profane username")
+        void shouldRejectProfaneUsername() throws Exception {
+            User user = createValidUser();
+            user.setUsername("chuj123");
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(user)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.validationErrors.username")
+                            .value("Username contains inappropriate words"));
+
+            assertTrue(accountRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase("chuj123", user.getEmail()).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should reject registration with reserved username")
+        void shouldRejectReservedUsername() throws Exception {
+            User user = createValidUser();
+            user.setUsername("moderator");
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(user)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.validationErrors.username")
+                            .value("Username contains inappropriate words"));
+        }
+
+        @Test
         @DisplayName("Should reject registration with blank username")
         void shouldRejectBlankUsername() throws Exception {
             // given
