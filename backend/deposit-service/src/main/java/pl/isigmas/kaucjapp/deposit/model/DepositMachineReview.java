@@ -29,6 +29,9 @@ public class DepositMachineReview {
     @Column(name = "reviewer_id")
     private Long reviewerId;
 
+    @Column(name = "reviewer_username")
+    private Long reviewerUsername;
+
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal score;
 

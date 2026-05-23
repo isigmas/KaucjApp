@@ -35,6 +35,7 @@ CREATE TABLE deposit_machines_reviews (
                               review_id    BIGSERIAL PRIMARY KEY,
                               deposit_machine_id BIGINT NOT NULL REFERENCES deposit_machines(deposit_machine_id) ON DELETE CASCADE ,
                               reviewer_id  BIGINT,
+                              reviewer_username VARCHAR(100),
                               score        NUMERIC(3,2) NOT NULL CHECK (score BETWEEN 0 AND 5),
                               comment      TEXT,
                               created_at   TIMESTAMPTZ DEFAULT NOW(),
