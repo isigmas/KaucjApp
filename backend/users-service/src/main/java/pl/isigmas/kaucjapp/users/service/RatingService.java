@@ -18,10 +18,7 @@ import pl.isigmas.kaucjapp.users.repository.UserReviewRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -174,9 +171,11 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public boolean hasUserReviewedOffer(Long reviewerId, Long offerId) {
-        log.info("Checking if reviewer {} already rated offer {}", reviewerId, offerId);
-        return userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, offerId);
+    public Optional<ReviewResponseDTO> getReviewForOffer(Long reviewerId, Long offerId) {
+        log.info("Fetching review for reviewer {} and offer {}", reviewerId, offerId);
+
+        return userReviewRepository.findByReviewerIdAndOfferId(reviewerId, offerId)
+                .map(this::mapReviewToDTO);
     }
 
     private ReviewResponseDTO mapReviewToDTO(UserReview review, Map<Long, String> usernamesById) {

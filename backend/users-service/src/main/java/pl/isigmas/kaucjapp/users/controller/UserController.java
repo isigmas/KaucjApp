@@ -271,13 +271,24 @@ public class UserController {
     @GetMapping("/reviews/check")
     @Operation(
             summary = "Check if offer is already reviewed",
-            description = "Returns true if the logged-in user (from X-User-Id) has already submitted a review for this specific offer.")
-    public ResponseEntity<Map<String, Boolean>> checkReviewStatus(
+            description = "Returns true and the review details if the logged-in user has already submitted a review for this offer.")
+    public ResponseEntity<ReviewCheckResponseDTO> checkReviewStatus(
             @RequestParam Long offerId,
             @RequestHeader("X-User-Id") Long currentUserId) {
 
-        boolean alreadyReviewed = ratingService.hasUserReviewedOffer(currentUserId, offerId);
-        return ResponseEntity.ok(Map.of("already_reviewed", alreadyReviewed));
+        return ratingService.getReviewForOffer(currentUserId, offerId)
+                .map(review -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(true)
+                                .review(review)
+                                .build()
+                ))
+                .orElseGet(() -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(false)
+                                .review(null)
+                                .build()
+                ));
     }
 
 
