@@ -40,7 +40,7 @@ export default function ProfileDetailsScreen({
         user={user}
         role={role}
         showRating={true}
-        showStats={true}
+        showDetailedStats={true}
         color={color}
       />
 

@@ -42,7 +42,7 @@ export default function StatItem({
       >
         {value}
       </Text>
-      <Text style={styles.labelText} numberOfLines={1}>
+      <Text style={styles.labelText} numberOfLines={2}>
         {label}
       </Text>
     </Animated.View>

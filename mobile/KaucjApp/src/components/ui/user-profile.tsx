@@ -2,17 +2,20 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import BottleCapAvatar from "./user-avatar";
 import { User, UserRole } from "@/src/types/user";
 import { useUserRating } from "@/src/api/hooks/use-rating";
 import StarRating from "./star-rating";
+import StatItem from "./stat-item";
+import { DEPOSIT_VALUE_PER_UNIT } from "@/src/validation";
+import { formatPrice } from "@/src/lib";
 
 interface UserProfileProps {
   user: User;
   role: UserRole;
   showRating?: boolean;
-  showStats?: boolean;
+  showDetailedStats?: boolean;
   color?: "primary" | "accent";
 }
 
@@ -20,7 +23,7 @@ export default function UserProfile({
   user,
   role,
   showRating = true,
-  showStats = true,
+  showDetailedStats = false,
   color = "primary",
 }: UserProfileProps) {
   const { data: userRating, isLoading: isLoadingRating } = useUserRating(
@@ -46,7 +49,11 @@ export default function UserProfile({
         />
       )}
 
-      {showStats && <StatsBadge user={user} role={role} color={color} />}
+      {showDetailedStats ? (
+        <UserStats user={user} />
+      ) : (
+        <StatsBadge user={user} role={role} color={color} />
+      )}
     </View>
   );
 }
@@ -74,6 +81,85 @@ function StatsBadge({ user, role, color }: StatsBadgeProps) {
         {text} {count} opakowań PET
       </Text>
     </Animated.View>
+  );
+}
+
+interface UserStatsProps {
+  user: User;
+}
+
+function UserStats({ user }: UserStatsProps) {
+  const totalDepositValue =
+    (user.collectedTotalCount + user.returnedTotalCount) *
+    DEPOSIT_VALUE_PER_UNIT;
+
+  return (
+    <View style={styles.userStatsContainer}>
+      <View style={styles.userStatsWrapper}>
+        <StatItem
+          index={1}
+          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.collectedBottleCount.toString()}
+          label="Odebranych butelek"
+          shadowColor={colors.text.primary}
+        />
+        <StatItem
+          index={2}
+          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.collectedCanCount.toString()}
+          label="Odebranych puszek"
+          shadowColor={colors.accent.base}
+        />
+        <StatItem
+          index={3}
+          icon={<Ionicons name="leaf" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.collectedTotalCount.toString()}
+          label="Odebranych opakowań"
+          shadowColor={colors.text.primary}
+        />
+      </View>
+      <View style={styles.userStatsWrapper}>
+        <StatItem
+          index={4}
+          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.returnedBottleCount.toString()}
+          label="Zwróconych butelek"
+          shadowColor={colors.text.primary}
+        />
+        <StatItem
+          index={5}
+          icon={<Ionicons name="water" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.returnedCanCount.toString()}
+          label="Zwróconych puszek"
+          shadowColor={colors.accent.base}
+        />
+        <StatItem
+          index={6}
+          icon={<Ionicons name="leaf" size={16} color={colors.text.primary} />}
+          iconBg={colors.background.card}
+          value={user.returnedTotalCount.toString()}
+          label="Zwróconych opakowań"
+          shadowColor={colors.text.primary}
+        />
+      </View>
+      <View style={styles.userStatsWrapper}>
+        <StatItem
+          index={7}
+          icon={
+            <Ionicons name="wallet" size={16} color={colors.text.primary} />
+          }
+          iconBg={colors.background.card}
+          value={formatPrice(totalDepositValue)}
+          label="Wartość zwróconych opakowań"
+          shadowColor={colors.accent.base}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -139,5 +225,17 @@ const styles = StyleSheet.create({
   statsText: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  userStatsContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: spacing.md,
+  },
+
+  userStatsWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
 });
