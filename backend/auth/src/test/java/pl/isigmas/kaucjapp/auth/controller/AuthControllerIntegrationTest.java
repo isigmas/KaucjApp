@@ -41,6 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@org.springframework.kafka.test.context.EmbeddedKafka(partitions = 1)
 @Import({TestcontainersConfiguration.class})
 @DisplayName("AuthController Integration Tests")
 class AuthControllerIntegrationTest {
@@ -115,6 +116,7 @@ class AuthControllerIntegrationTest {
             mockMvc.perform(post("/api/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(user)))
+                    .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                     .andExpect(status().isCreated());
 
             // Verify account was created in database

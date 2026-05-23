@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@org.springframework.kafka.test.context.EmbeddedKafka(partitions = 1)
 @Import(TestcontainersConfiguration.class)
 @Transactional
 @DisplayName("AccountRepository Integration Tests with Testcontainers")
