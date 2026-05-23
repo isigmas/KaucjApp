@@ -5,10 +5,14 @@ import org.springframework.stereotype.Repository;
 import pl.isigmas.kaucjapp.deposit.model.DepositMachineReview;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DepositMachineReviewRepository  extends JpaRepository<DepositMachineReview, Long> {
 
     List<DepositMachineReview> findByDepositMachineIdOrderByCreatedAtDesc(Long depositMachineId);
+
+    Optional<DepositMachineReview> findByReviewerIdAndDepositMachineId(Long reviewerId, Long depositMachineId);
+
 
 }
