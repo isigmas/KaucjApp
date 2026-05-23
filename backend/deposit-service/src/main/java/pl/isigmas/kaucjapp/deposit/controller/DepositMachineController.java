@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.deposit.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -117,6 +118,29 @@ public class DepositMachineController {
         log.info("User {} deleting review {}", userId, id);
         ratingService.deleteReview(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reviews/check")
+    @Operation(
+            summary = "Check if deposit machineś is already reviewed",
+            description = "Returns true and the review details if the logged-in user has already submitted a review for this deposit machine.")
+    public ResponseEntity<ReviewCheckResponseDTO> checkReviewStatus(
+            @RequestParam Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        return ratingService.getReviewForDepositMachine(currentUserId, id)
+                .map(review -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(true)
+                                .review(review)
+                                .build()
+                ))
+                .orElseGet(() -> ResponseEntity.ok(
+                        ReviewCheckResponseDTO.builder()
+                                .alreadyReviewed(false)
+                                .review(null)
+                                .build()
+                ));
     }
 
 }

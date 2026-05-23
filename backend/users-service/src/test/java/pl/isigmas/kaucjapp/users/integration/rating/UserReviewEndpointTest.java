@@ -404,18 +404,19 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
     // ---------- GET /api/user/reviews/check ----------
 
     @Test
-    void checkReviewStatus_beforeReview_returnsFalse() throws Exception {
+    void checkReviewStatus_beforeReview_returnsFalseWithoutReview() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
 
         mockMvc.perform(get("/api/user/reviews/check")
                         .param("offerId", "900")
                         .header("X-User-Id", alice))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.already_reviewed").value(false));
+                .andExpect(jsonPath("$.already_reviewed").value(false))
+                .andExpect(jsonPath("$.review").isEmpty());
     }
 
     @Test
-    void checkReviewStatus_afterReview_returnsTrue() throws Exception {
+    void checkReviewStatus_afterReview_returnsTrueWithReviewDetails() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
 
@@ -425,11 +426,16 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .param("offerId", "901")
                         .header("X-User-Id", alice))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.already_reviewed").value(true));
+                .andExpect(jsonPath("$.already_reviewed").value(true))
+                .andExpect(jsonPath("$.review.review_id").isNumber())
+                .andExpect(jsonPath("$.review.reviewer_id").value(alice))
+                .andExpect(jsonPath("$.review.reviewer_username").value("alice"))
+                .andExpect(jsonPath("$.review.score").value(4))
+                .andExpect(jsonPath("$.review.comment").value("done"));
     }
 
     @Test
-    void checkReviewStatus_differentOffer_returnsFalse() throws Exception {
+    void checkReviewStatus_differentOffer_returnsFalseWithoutReview() throws Exception {
         Long alice = createUser(2001L, "alice", "alice@example.com");
         Long bob = createUser(2002L, "bob", "bob@example.com");
 
@@ -439,7 +445,8 @@ public class UserReviewEndpointTest extends BaseIntegrationTest {
                         .param("offerId", "903")
                         .header("X-User-Id", alice))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.already_reviewed").value(false));
+                .andExpect(jsonPath("$.already_reviewed").value(false))
+                .andExpect(jsonPath("$.review").isEmpty());
     }
 
     // ---------- helpers ----------

@@ -279,12 +279,22 @@ class RatingServiceTest {
                 .isInstanceOf(ReviewNotFoundException.class);
     }
 
+    // ---------- deleteUserInfo ----------
+
+    @Test
+    void deleteUserInfo_anonymizesReviewsForUser() {
+        ratingService.deleteUserInfo(20L);
+
+        verify(depositMachineReviewRepository).anonymizeUserReviews(20L);
+    }
+
     // ---------- helpers ----------
 
     private static ReviewRequestDTO reviewReq(BigDecimal score, String comment) {
         ReviewRequestDTO dto = new ReviewRequestDTO();
         dto.setScore(score);
         dto.setComment(comment);
+        dto.setReviewerUsername("alice");
         return dto;
     }
 

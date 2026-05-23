@@ -55,6 +55,6 @@ public abstract class BaseIntegrationTest {
     }
 
     public void deleteUser(Long userId) {
-        usersKafkaListener.handleUserDelete(String.valueOf(userId));
+        usersKafkaListener.handleUserDeleteCommand(String.valueOf(userId));
     }
 }
