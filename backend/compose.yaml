@@ -237,6 +237,8 @@ services:
       - DATASOURCE_PASSWORD=${DB_PASSWORD}
       - DATASOURCE_URL=jdbc:postgresql://monitor-db:5432/monitor_db
     depends_on:
+      monitor-db:
+        condition: service_healthy
       kafka:
         condition: service_healthy
     healthcheck:
