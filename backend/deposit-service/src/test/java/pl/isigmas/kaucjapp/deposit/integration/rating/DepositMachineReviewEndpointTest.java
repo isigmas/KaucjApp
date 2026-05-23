@@ -44,7 +44,7 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4, "comment": "Fast and clean"}
+                                {"score": 4, "comment": "Fast and clean", "reviewer_username": "alice"}
                                 """))
                 .andExpect(status().isCreated());
 
@@ -55,6 +55,7 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
         assertThat(depositMachineReviewRepository.findAll()).singleElement().satisfies(r -> {
             assertThat(r.getDepositMachineId()).isEqualTo(machineId);
             assertThat(r.getReviewerId()).isEqualTo(reviewerId);
+            assertThat(r.getReviewerUsername()).isEqualTo("alice");
             assertThat(r.getScore()).isEqualByComparingTo("4");
             assertThat(r.getComment()).isEqualTo("Fast and clean");
         });
@@ -85,10 +86,27 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 9}
+                                {"score": 9, "reviewer_username": "alice"}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"));
+
+        assertThat(depositMachineReviewRepository.count()).isZero();
+    }
+
+    @Test
+    void postReview_missingReviewerUsername_returns400() throws Exception {
+        Long machineId = createMachine();
+
+        mockMvc.perform(post("/api/deposit/machine/{id}/rating", machineId)
+                        .header("X-User-Id", 2001L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"score": 4, "comment": "no username"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error_code").value("VALIDATION_ERR"))
+                .andExpect(jsonPath("$.validation_errors.reviewerUsername").exists());
 
         assertThat(depositMachineReviewRepository.count()).isZero();
     }
@@ -99,7 +117,7 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", 2001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4}
+                                {"score": 4, "reviewer_username": "alice"}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_code").value("DEP_001"));
@@ -112,7 +130,7 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/deposit/machine/{id}/rating", machineId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": 4}
+                                {"score": 4, "reviewer_username": "alice"}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"));
@@ -329,8 +347,8 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
                         .header("X-User-Id", reviewerId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"score": %d, "comment": "%s"}
-                                """.formatted(score, comment)))
+                                {"score": %d, "comment": "%s", "reviewer_username": "user-%d"}
+                                """.formatted(score, comment, reviewerId)))
                 .andExpect(status().isCreated());
     }
 

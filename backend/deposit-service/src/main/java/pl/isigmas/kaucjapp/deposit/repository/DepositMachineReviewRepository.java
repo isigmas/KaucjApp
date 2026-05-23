@@ -18,7 +18,12 @@ public interface DepositMachineReviewRepository  extends JpaRepository<DepositMa
     Optional<DepositMachineReview> findByReviewerIdAndDepositMachineId(Long reviewerId, Long depositMachineId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE DepositMachineReview d SET d.reviewerUsername = CONCAT('deleted-user-', :userId) WHERE d.reviewerId = :userId")
+    @Query("""
+            UPDATE DepositMachineReview d
+            SET d.reviewerId = NULL,
+                d.reviewerUsername = CONCAT('deleted-user-', :userId)
+            WHERE d.reviewerId = :userId
+            """)
     void anonymizeUserReviews(@Param("userId") Long userId);
 
 

@@ -13,15 +13,15 @@ public class DepositKafkaListener {
 
     private final RatingService ratingService;
 
-    @KafkaListener(topics = "users.delete.event", groupId = "deposit-group")
-    public void handleUserDelete(String idStr) {
+    @KafkaListener(topics = "users.deleted.event", groupId = "deposit-group")
+    public void handleUserDeleted(String idStr) {
         try {
             Long id = Long.valueOf(idStr.replace("\"", ""));
-            log.info("Deposit service received delete event for user ID: {}", id);
+            log.info("Deposit service received user deleted event for user ID: {}", id);
             ratingService.deleteUserInfo(id);
         } catch (Exception e) {
-            log.error("Failed to parse user delete message: {}", idStr, e);
-            throw new RuntimeException("Error parsing users.delete message", e);
+            log.error("Failed to parse user deleted message: {}", idStr, e);
+            throw new RuntimeException("Error parsing users.deleted.event message", e);
         }
     }
 }
