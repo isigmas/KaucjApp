@@ -20,6 +20,7 @@ import { useConfirmOffer } from "@/src/api/hooks/use-offer";
 import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
 import ComplaintCard from "./complaint-card";
+import UserReviewCheck from "../../ui/review/has-added-user-review";
 
 interface OfferHeadlineProps {
   offer: Offer;
@@ -61,7 +62,11 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/offers/confirmation",
-                  params: { type: "success", userId: offer.collectorId },
+                  params: {
+                    type: "success",
+                    userId: offer.collectorId,
+                    offerId: offer.offerId,
+                  },
                 });
               }
             },
@@ -118,6 +123,13 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
               isPending={isPending}
               label="Potwierdź odbiór kuriera"
               icon={<CheckCircle size={18} color={colors.text.white} />}
+            />
+          )}
+          {isCompleted && (
+            <UserReviewCheck
+              userId={offer.collectorId}
+              offerId={offer.offerId}
+              role="collector"
             />
           )}
 

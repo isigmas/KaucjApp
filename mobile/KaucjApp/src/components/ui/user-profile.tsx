@@ -2,17 +2,21 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import BottleCapAvatar from "./user-avatar";
 import { User, UserRole } from "@/src/types/user";
 import { useUserRating } from "@/src/api/hooks/use-rating";
 import StarRating from "./star-rating";
+import StatItem from "./stat-item";
+import { DEPOSIT_VALUE_PER_UNIT } from "@/src/validation";
+import { formatPrice } from "@/src/lib";
+import UserStats from "./user-stats";
 
 interface UserProfileProps {
   user: User;
   role: UserRole;
   showRating?: boolean;
-  showStats?: boolean;
+  showDetailedStats?: boolean;
   color?: "primary" | "accent";
 }
 
@@ -20,10 +24,12 @@ export default function UserProfile({
   user,
   role,
   showRating = true,
-  showStats = true,
+  showDetailedStats = false,
   color = "primary",
 }: UserProfileProps) {
-  const { data: userRating } = useUserRating(user.userId);
+  const { data: userRating, isLoading: isLoadingRating } = useUserRating(
+    user.userId,
+  );
 
   return (
     <View style={styles.headerSection}>
@@ -36,9 +42,19 @@ export default function UserProfile({
         {user.firstName + " " + user.lastName}
       </Animated.Text>
 
-      {showRating && <StarRating rating={userRating} />}
+      {showRating && (
+        <StarRating
+          isLoading={isLoadingRating}
+          ratingScore={userRating?.avgScore || 0}
+          feedbackCount={userRating?.feedbackCount || 0}
+        />
+      )}
 
-      {showStats && <StatsBadge user={user} role={role} color={color} />}
+      {showDetailedStats ? (
+        <UserStats user={user} />
+      ) : (
+        <StatsBadge user={user} role={role} color={color} />
+      )}
     </View>
   );
 }
@@ -131,5 +147,11 @@ const styles = StyleSheet.create({
   statsText: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  userStatsContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: spacing.md,
   },
 });

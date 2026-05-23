@@ -8,7 +8,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 // Injecting the Access Token

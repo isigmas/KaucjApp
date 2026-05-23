@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { DepositMachineStatus } from "@/src/types";
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 
 interface StatusDropdownProps {
   statusLabel: string;
@@ -60,13 +60,13 @@ export default function StatusDropdown({
       <TouchableOpacity
         style={[
           styles.badge,
-          { backgroundColor: statusColor, opacity: isPending ? 0.7 : 1 },
+          { shadowColor: colors.accent.dark, opacity: isPending ? 0.7 : 1 },
         ]}
         onPress={() => setIsOpen(!isOpen)}
         disabled={isPending}
       >
         <Text style={styles.badgeText}>
-          {isPending ? "Zgłaszanie..." : `${statusLabel}  ▼`}
+          {isPending ? "Zgłaszanie..." : `Zgłoszenie  ▼`}
         </Text>
       </TouchableOpacity>
 
@@ -103,20 +103,23 @@ export default function StatusDropdown({
 
 const styles = StyleSheet.create({
   badge: {
+    backgroundColor: colors.background.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: rounded.pill,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   badgeText: {
     fontSize: 13,
     fontWeight: "700",
     textTransform: "uppercase",
-    color: "#fff",
+    color: colors.accent.dark,
   },
   dropdown: {
     position: "absolute",

@@ -1,11 +1,11 @@
 import { useChangeOfferStatus } from "@/src/api/hooks/use-offer";
+import { layoutSpring } from "@/src/constants";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import { useRouter } from "expo-router";
-import { CheckCircle, XCircle } from "lucide-react-native";
+import { XCircle } from "lucide-react-native";
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { LAYOUT_SPRING } from "../../ui/expandable-card";
+import { Alert, Pressable, StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
 
 interface OfferActionsProps {
@@ -17,9 +17,8 @@ export default function OfferActions({ offer }: OfferActionsProps) {
   const { mutate: changeOfferStatus, isPending } = useChangeOfferStatus();
 
   const isOpen = offer.status === "OPEN";
-  const isReserved = offer.status === "RESERVED";
 
-  if (!isOpen && !isReserved) return null;
+  if (!isOpen) return null;
 
   const handleCancel = () => {
     Alert.alert(
@@ -55,7 +54,7 @@ export default function OfferActions({ offer }: OfferActionsProps) {
   };
 
   return (
-    <Animated.View style={styles.container} layout={LAYOUT_SPRING}>
+    <Animated.View style={styles.container} layout={layoutSpring}>
       <Pressable
         onPress={handleCancel}
         disabled={isPending}

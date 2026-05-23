@@ -1,10 +1,16 @@
-export interface Rating {
+export interface UserRating {
   userId: number;
   avgScore: number;
   feedbackCount: number;
 }
 
-export interface RatingPayload {
+export interface UserReviewPayload {
+  offerId: number;
+  score: number;
+  comment?: string;
+}
+
+export interface MachineReviewPayload {
   score: number;
   comment?: string;
 }

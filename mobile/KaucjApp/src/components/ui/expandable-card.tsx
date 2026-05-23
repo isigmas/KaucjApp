@@ -1,12 +1,21 @@
+import { layoutSpring } from "@/src/constants";
 import { colors, rounded, spacing } from "@/src/theme";
 import * as Haptics from "expo-haptics";
 import { ChevronDown } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native";
 import Animated, {
+  EntryOrExitLayoutType,
   FadeIn,
   FadeOut,
-  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -18,12 +27,10 @@ interface ExpandableCardProps {
   icon?: React.ReactNode;
   defaultExpanded?: boolean;
   children: React.ReactNode;
+  titleStyle?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
+  entering?: EntryOrExitLayoutType;
 }
-
-export const LAYOUT_SPRING = LinearTransition.springify()
-  .damping(50)
-  .stiffness(500)
-  .mass(2.5);
 
 export default function ExpandableCard({
   title,
@@ -31,6 +38,9 @@ export default function ExpandableCard({
   icon,
   defaultExpanded = false,
   children,
+  titleStyle,
+  style,
+  entering,
 }: ExpandableCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const progress = useSharedValue(defaultExpanded ? 1 : 0);
@@ -51,7 +61,11 @@ export default function ExpandableCard({
   }, [expanded, progress]);
 
   return (
-    <Animated.View layout={LAYOUT_SPRING} style={styles.wrapper}>
+    <Animated.View
+      layout={layoutSpring}
+      style={[styles.wrapper, style]}
+      entering={entering}
+    >
       <Pressable
         onPress={toggle}
         accessibilityRole="button"
@@ -66,7 +80,7 @@ export default function ExpandableCard({
         {icon && <View style={styles.iconChip}>{icon}</View>}
 
         <View style={styles.titleColumn}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, titleStyle]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
@@ -117,8 +131,9 @@ const styles = StyleSheet.create({
   iconChip: {
     width: 36,
     height: 36,
-    borderRadius: rounded.md,
-    backgroundColor: colors.primary.light,
+
+    borderRadius: rounded.xl,
+
     alignItems: "center",
     justifyContent: "center",
   },

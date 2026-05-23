@@ -3,6 +3,7 @@ import React, { useState, useCallback } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Marker } from "react-native-maps";
 import { colors } from "@/src/theme";
+import { formatPrice } from "@/src/lib";
 
 interface OfferMarkerProps {
   offer: Offer;
@@ -30,8 +31,7 @@ export const OfferMarker = React.memo(
         <View style={styles.markerContainer} onLayout={handleLayout}>
           <View style={styles.bubble}>
             <Text style={styles.bubbleText} numberOfLines={1}>
-              {offer.totalQuantity} sztuk •{" "}
-              {offer.totalPrize.toLocaleString("pl-PL")}zł
+              {offer.totalQuantity} sztuk +{formatPrice(offer.totalIncome)}
             </Text>
           </View>
           <View style={styles.triangle} />
