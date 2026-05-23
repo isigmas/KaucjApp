@@ -10,8 +10,11 @@ import org.apache.pekko.kafka.scaladsl.Consumer
 import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.util.UUID
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import pl.isigmas.kaucjapp.monitor.db.LogRepository
 
+import java.util.UUID
 import scala.util.{Failure, Success}
 
 object MonitoringServer {
@@ -26,7 +29,11 @@ object MonitoringServer {
     val kafkaServers = config.getString("app.kafka.bootstrap-servers")
     val kafkaTopic = config.getString("app.kafka.topic")
 
-    val mapper = new ObjectMapper().findAndRegisterModules()
+    val mapper = new ObjectMapper()
+      .registerModule(DefaultScalaModule)
+      .findAndRegisterModules()
+
+    def toJson(obj: Any): String = mapper.writeValueAsString(obj)
 
     def createWebsocketFlow(): Flow[Message, Message, Any] = {
       val uniqueGroupId = s"ws-log-viewer-${UUID.randomUUID()}"
@@ -55,14 +62,36 @@ object MonitoringServer {
     val route = {
       pathPrefix("api" / "monitor") {
         concat(
+
           path("status") {
             get {
               complete("Ready")
             }
           },
+
+          path("admin" / "logs") {
+            get {
+              onComplete(LogRepository.findLast(100)) {
+                case Success(logs) =>
+                  try {
+                    val jsonResponse = toJson(logs)
+                    complete(HttpEntity(ContentTypes.`application/json`, jsonResponse))
+                  } catch {
+                    case ex: Throwable =>
+                      system.log.error("Failed to serialize logs to JSON", ex)
+                      complete(StatusCodes.InternalServerError, "Serialization error")
+                  }
+                case Failure(ex) =>
+                  system.log.error("Failed to fetch logs from database", ex)
+                  complete(StatusCodes.InternalServerError, "Database error")
+              }
+            }
+          },
+
           path("admin" / "ws" / "logs") {
             handleWebSocketMessages(createWebsocketFlow())
           }
+
         )
       }
     }
