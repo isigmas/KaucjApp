@@ -162,4 +162,10 @@ public class RatingService {
         return depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(reviewerId, depositMachineId)
                 .map(this::mapReviewToDTO);
     }
+
+    @Transactional
+    public void deleteUserInfo(Long userId) {
+        log.info("Anonymizing reviews in deposit-service for deleted user {}", userId);
+        depositMachineReviewRepository.anonymizeUserReviews(userId);
+    }
 }
