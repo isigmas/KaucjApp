@@ -30,15 +30,14 @@ public class UsersKafkaListener {
         }
     }
 
-    @KafkaListener(topics = "users.delete", groupId = "users-group")
-    public void handleUserDelete(String idStr) {
+    @KafkaListener(topics = "users.delete.command", groupId = "users-group")
+    public void handleUserDeleteCommand(String idStr) {
         try {
             Long id = Long.valueOf(idStr.replace("\"", ""));
-            log.info("Admin requested delete of user ID: {}", id);
+            log.info("Received command to delete user ID: {}", id);
             userService.deleteUser(id);
         } catch (Exception e) {
-            log.error("Failed to parse user delete message: {}", idStr, e);
-            throw new RuntimeException("Error parsing users.delete message", e);
+            log.error("Failed to parse user delete command: {}", idStr, e);
         }
     }
 

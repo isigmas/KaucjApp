@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -119,11 +121,17 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
+        if (user.getUsername().startsWith("deleted-user-")) {
+            return;
+        }
+
         user.setUsername("deleted-user-" + id);
         user.setEmail(user.getUsername() + "@deleted.com");
         user.setFirstName("Deleted");
         user.setLastName("User");
         user.setPhone(null);
+
+        kafkaTemplate.send("users.deleted.event", String.valueOf(id));
     }
 
     private UserDTO mapToDTO(User user) {
