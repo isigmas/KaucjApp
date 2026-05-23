@@ -427,20 +427,30 @@ class RatingServiceTest {
                 .isInstanceOf(RatingNotFoundException.class);
     }
 
-    // ---------- hasUserReviewedOffer ----------
+    // ---------- getReviewForOffer ----------
 
     @Test
-    void hasUserReviewedOffer_whenReviewExists_returnsTrue() {
-        when(userReviewRepository.existsByReviewerIdAndOfferId(20L, 55L)).thenReturn(true);
+    void getReviewForOffer_whenReviewExists_returnsMappedDto() {
+        UserReview review = buildReview(5L, 10L, 20L, new BigDecimal("4"), "nice");
 
-        assertThat(ratingService.hasUserReviewedOffer(20L, 55L)).isTrue();
+        when(userReviewRepository.findByReviewerIdAndOfferId(20L, 55L)).thenReturn(Optional.of(review));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(userOf(20L, "alice")));
+
+        Optional<ReviewResponseDTO> result = ratingService.getReviewForOffer(20L, 55L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getReviewId()).isEqualTo(5L);
+        assertThat(result.get().getReviewerId()).isEqualTo(20L);
+        assertThat(result.get().getReviewerUsername()).isEqualTo("alice");
+        assertThat(result.get().getScore()).isEqualByComparingTo("4");
+        assertThat(result.get().getComment()).isEqualTo("nice");
     }
 
     @Test
-    void hasUserReviewedOffer_whenNoReview_returnsFalse() {
-        when(userReviewRepository.existsByReviewerIdAndOfferId(20L, 55L)).thenReturn(false);
+    void getReviewForOffer_whenNoReview_returnsEmpty() {
+        when(userReviewRepository.findByReviewerIdAndOfferId(20L, 55L)).thenReturn(Optional.empty());
 
-        assertThat(ratingService.hasUserReviewedOffer(20L, 55L)).isFalse();
+        assertThat(ratingService.getReviewForOffer(20L, 55L)).isEmpty();
     }
 
     // ---------- helpers ----------
