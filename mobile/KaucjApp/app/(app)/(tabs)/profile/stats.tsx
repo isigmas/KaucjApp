@@ -22,6 +22,7 @@ export default function ProfileDetailsSheet() {
       userId={String(user.userId)}
       role="creator"
       color="primary"
+      showDetailedStats={true}
     />
   );
 }

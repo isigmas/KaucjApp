@@ -44,8 +44,8 @@ export default function HomeLayout() {
       <Stack.Screen
         name="stats"
         options={{
-          headerShown: true,
-          headerTitle: "Moje statystyki",
+          headerShown: false,
+          headerTitle: "Mój profil",
           headerLargeTitleEnabled: false,
           headerBackButtonDisplayMode: "minimal",
           headerTransparent: true,

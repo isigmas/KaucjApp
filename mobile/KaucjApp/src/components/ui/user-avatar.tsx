@@ -1,4 +1,4 @@
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
 
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: spacing.md,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
