@@ -1,5 +1,8 @@
-### Read logs
+### Read live logs
 WEBSOCKET ws://localhost:8080/api/monitor/admin/ws/logs
 Authorization: Bearer {{JWT_token_admin}}
 
-###
+### Read last logs
+
+GET http://localhost:8080/api/monitor/admin/logs
+Authorization: Bearer {{JWT_token_admin}}
