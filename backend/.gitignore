@@ -1,8 +1,13 @@
 HELP.md
+.bsp/
+.env
+
+### Maven ###
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+dependency-reduced-pom.xml
 
 ### STS ###
 .apt_generated
@@ -34,6 +39,9 @@ build/
 
 ### MacOS ###
 .DS_Store
+
+# --- Local configuration ---
+application-local.yml
 
 ### Docker ###
 compose.override.yaml

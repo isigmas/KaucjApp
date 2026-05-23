@@ -1,0 +1,14 @@
+type Query {
+    status: Status!
+    hello: String!
+}
+
+type Subscription {
+    logs: String!
+}
+
+type Status {
+    service: String!
+    version: String!
+    uptime: String!
+}

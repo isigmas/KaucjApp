@@ -23,6 +23,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@org.springframework.kafka.test.context.EmbeddedKafka(partitions = 1)
 @Import(TestcontainersConfiguration.class)
 @Transactional
 @DisplayName("RefreshTokenRepository Integration Tests with Testcontainers")
