@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import pl.isigmas.kaucjapp.users.event.UserDeletedEvent;
 
 import pl.isigmas.kaucjapp.users.DTO.*;
 import pl.isigmas.kaucjapp.users.exception.InvalidRankingType;
@@ -45,6 +48,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -119,11 +123,17 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
+        if (user.getUsername().startsWith("deleted-user-")) {
+            return;
+        }
+
         user.setUsername("deleted-user-" + id);
         user.setEmail(user.getUsername() + "@deleted.com");
         user.setFirstName("Deleted");
         user.setLastName("User");
         user.setPhone(null);
+
+        applicationEventPublisher.publishEvent(new UserDeletedEvent(id));
     }
 
     private UserDTO mapToDTO(User user) {

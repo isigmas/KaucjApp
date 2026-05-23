@@ -1,33 +1,59 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { colors, rounded, spacing } from "@/src/theme";
-import { useReviews } from "@/src/api/hooks/use-rating";
-import LoadingState from "../states/loading-state";
+import Animated, {
+  FadeInDown,
+  FadeInLeft,
+  FadeInUp,
+  LinearTransition,
+} from "react-native-reanimated";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
+import { useUserReviews, useMachineReviews } from "@/src/api/hooks/use-rating";
+import LoadingState from "../../states/loading-state";
 import { Review } from "@/src/types";
 import { timeAgoInPolish } from "@/src/lib";
+import { layoutSpring } from "@/src/constants";
 
-interface ReviewsSectionProps {
-  userId: number;
+export interface ReviewsSectionProps {
+  userId?: number;
+  machineId?: number;
 }
 
-export default function ReviewsSection({ userId }: ReviewsSectionProps) {
-  const { data: reviews, isLoading } = useReviews(userId);
-
-  if (isLoading) {
-    return <LoadingState title="Ładowanie opinii" />;
+export default function ReviewsSection({
+  userId,
+  machineId,
+}: ReviewsSectionProps) {
+  if (userId !== undefined) {
+    return <UserReviews userId={userId} />;
   }
 
-  if (!reviews || reviews.length === 0) {
-    return (
-      <Animated.View
-        entering={FadeInDown.delay(400).springify()}
-        style={styles.emptyContainer}
-      >
-        <Text style={styles.emptyText}>Brak opinii dla tego użytkownika.</Text>
-      </Animated.View>
-    );
+  if (machineId !== undefined) {
+    return <MachineReviews machineId={machineId} />;
+  }
+
+  console.warn("ReviewsSection requires either a userId or a machineId.");
+  return null;
+}
+
+function UserReviews({ userId }: { userId: number }) {
+  const { data: reviews, isLoading } = useUserReviews(userId);
+  return <ReviewsList reviews={reviews} isLoading={isLoading} />;
+}
+
+function MachineReviews({ machineId }: { machineId: number }) {
+  const { data: reviews, isLoading } = useMachineReviews(machineId);
+  return <ReviewsList reviews={reviews} isLoading={isLoading} />;
+}
+
+interface ReviewsListProps {
+  reviews?: Review[];
+  isLoading: boolean;
+}
+
+function ReviewsList({ reviews, isLoading }: ReviewsListProps) {
+  const hasReviews = reviews && reviews.length > 0;
+  if (isLoading) {
+    return <LoadingState title="Ładowanie opinii..." />;
   }
 
   return (
@@ -39,11 +65,20 @@ export default function ReviewsSection({ userId }: ReviewsSectionProps) {
         Opinie
       </Animated.Text>
 
-      <View style={styles.listContainer}>
-        {reviews.map((review, index) => (
-          <ReviewCard key={review.reviewId} review={review} index={index} />
-        ))}
-      </View>
+      {hasReviews ? (
+        <View style={styles.listContainer}>
+          {reviews.map((review, index) => (
+            <ReviewCard key={review.reviewId} review={review} index={index} />
+          ))}
+        </View>
+      ) : (
+        <Animated.View
+          entering={FadeInDown.delay(400).springify()}
+          style={styles.emptyContainer}
+        >
+          <Text style={styles.emptyText}>Brak opinii.</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -51,7 +86,8 @@ export default function ReviewsSection({ userId }: ReviewsSectionProps) {
 const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
   return (
     <Animated.View
-      entering={FadeInDown.delay(400 + index * 100).springify()}
+      layout={layoutSpring}
+      entering={FadeInDown.delay(Math.min((index + 2) * 80, 400)).springify()}
       style={styles.card}
     >
       <View style={styles.cardHeader}>
@@ -95,13 +131,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card || "#FFFFFF",
     borderRadius: rounded.apple || 16,
     padding: spacing.md,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.03)",
+    ...shadows.light,
   },
   cardHeader: {
     flexDirection: "row",
@@ -133,7 +165,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   emptyContainer: {
-    marginTop: spacing.xl,
     padding: spacing.xl,
     alignItems: "center",
     justifyContent: "center",

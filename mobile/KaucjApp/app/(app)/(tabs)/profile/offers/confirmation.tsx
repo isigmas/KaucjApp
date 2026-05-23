@@ -1,17 +1,23 @@
 import React from "react";
-import { router, useLocalSearchParams, useRouter } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import ActionConfirmationLayout from "@/src/components/standalone-screens/confirmation/confirmation-layout";
 import ConfirmationWithReview from "@/src/components/standalone-screens/confirmation/confirmation-with-review";
 import ErrorState from "@/src/components/states/error-state";
 
 export default function ConfirmationScreen() {
-  const { type, userId } = useLocalSearchParams<{
+  const { type, userId, offerId } = useLocalSearchParams<{
     type: "success" | "cancel";
     userId?: string;
+    offerId?: string;
   }>();
 
   if (type === "success") {
-    if (!userId || !Number.isFinite(Number(userId))) {
+    if (
+      !userId ||
+      !Number.isFinite(Number(userId)) ||
+      !offerId ||
+      !Number.isFinite(Number(offerId))
+    ) {
       return (
         <ErrorState
           title="Wystąpił błąd"
@@ -22,6 +28,7 @@ export default function ConfirmationScreen() {
     }
     return (
       <ConfirmationWithReview
+        offerId={Number(offerId)}
         userId={Number(userId)}
         onSuccess={() => router.dismissTo("/profile/offers")}
         isTheUserToReviewCourier={true}

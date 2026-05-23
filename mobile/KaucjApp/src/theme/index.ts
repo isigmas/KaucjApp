@@ -36,6 +36,23 @@ export const colors = {
   },
 } as const;
 
+export const shadows = {
+  light: {
+    shadowColor: colors.accent.base,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  medium: {
+    shadowColor: colors.accent.base,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+};
+
 //#606342 - ciekawy kolor gdzieś znalazłem
 
 export type AppColors = typeof colors;

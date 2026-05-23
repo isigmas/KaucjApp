@@ -5,23 +5,32 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { router } from "expo-router";
 import UserProfile from "@/src/components/ui/user-profile";
 import { useUserById } from "@/src/api/hooks/use-user";
-import ReviewsSection from "../ui/user-reviews-section";
+import ReviewsSection from "@/src/components/ui/review/reviews-list";
 import { UserRole } from "@/src/types/user";
+import LoadingState from "../states/loading-state";
 
 interface ProfileDetailsScreenProps {
   userId: string;
   role: UserRole;
+  color?: "primary" | "accent";
+  showDetailedStats?: boolean;
 }
 export default function ProfileDetailsScreen({
   userId,
   role,
+  color = "accent",
+  showDetailedStats = false,
 }: ProfileDetailsScreenProps) {
   const userIdNumber = Number(userId);
   if (!Number.isFinite(userIdNumber)) {
     router.back();
     return null;
   }
-  const { data: user } = useUserById(userIdNumber);
+  const { data: user, isLoading } = useUserById(userIdNumber);
+
+  if (isLoading) {
+    return <LoadingState title="Ładowanie profilu" />;
+  }
   if (!user) {
     router.back();
     return null;
@@ -38,8 +47,8 @@ export default function ProfileDetailsScreen({
         user={user}
         role={role}
         showRating={true}
-        showStats={true}
-        color="accent"
+        showDetailedStats={showDetailedStats}
+        color={color}
       />
 
       <ReviewsSection userId={userIdNumber} />

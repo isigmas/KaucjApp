@@ -1,14 +1,11 @@
 import SectionCard from "@/src/components/ui/section-card";
-import { formatDate, formatPrice, getPolishPackageQuantity } from "@/src/lib";
+import { formatPrice, getPolishPackageQuantity } from "@/src/lib";
 import { colors, spacing } from "@/src/theme";
 import { Offer } from "@/src/types";
 import {
   AlertCircle,
-  AlertTriangle,
-  Calendar,
   CheckCircle,
   CheckCircle2,
-  Clock3,
   Hourglass,
   Truck,
   XCircle,
@@ -20,6 +17,7 @@ import { useRouter } from "expo-router";
 import { ReservedState } from "../my-offers/offer-status-summary-card";
 import { ActionButton } from "../my-offers/offer-actions";
 import ComplaintCard from "../my-offers/complaint-card";
+import UserReviewCheck from "../../ui/review/has-added-user-review";
 
 interface BookingStatusSummaryCardProps {
   offer: Offer;
@@ -53,7 +51,11 @@ export default function BookingStatusSummaryCard({
               if (isPendingConfirmation) {
                 router.push({
                   pathname: "/profile/bookings/confirmation",
-                  params: { type: "success", userId: offer.creatorId },
+                  params: {
+                    type: "success",
+                    userId: offer.creatorId,
+                    offerId: offer.offerId,
+                  },
                 });
               }
             },
@@ -91,6 +93,14 @@ export default function BookingStatusSummaryCard({
             icon={<CheckCircle size={18} color={colors.text.white} />}
           />
         </>
+      )}
+      {isCompleted && (
+        <UserReviewCheck
+          role="creator"
+          userId={offer.creatorId}
+          offerId={offer.offerId}
+          isDefaultExpanded={true}
+        />
       )}
       {isComplaint && <ComplaintCard offerId={offer.offerId} />}
       {!isConfirmedByCollector && !isCompleted && (

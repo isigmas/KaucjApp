@@ -13,6 +13,7 @@ import React from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import ExpandableCard from "../../ui/expandable-card";
 import OfferStatusSummaryCard from "./offer-status-summary-card";
+import OfferActions from "./offer-actions";
 
 interface OfferDetailScreenProps {
   offerId: number;
@@ -102,6 +103,8 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
           />
         </View>
       </ExpandableCard>
+
+      <OfferActions offer={offer} />
     </ScrollView>
   );
 }

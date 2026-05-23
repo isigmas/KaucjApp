@@ -19,6 +19,8 @@ import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -36,6 +38,7 @@ public class RatingService {
         DepositMachineReview review = DepositMachineReview.builder()
                 .depositMachineId(depositMachineId)
                 .reviewerId(reviewerId)
+                .reviewerUsername(dto.getReviewerUsername())
                 .score(dto.getScore())
                 .comment(dto.getComment())
                 .build();
@@ -144,6 +147,7 @@ public class RatingService {
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .reviewerId(review.getReviewerId())
+                .reviewerUsername(review.getReviewerUsername())
                 .score(review.getScore())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
@@ -151,4 +155,17 @@ public class RatingService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public Optional<ReviewResponseDTO> getReviewForDepositMachine(Long reviewerId, Long depositMachineId) {
+        log.info("Fetching review for reviewer {} and deposit machine {}", reviewerId, depositMachineId);
+
+        return depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(reviewerId, depositMachineId)
+                .map(this::mapReviewToDTO);
+    }
+
+    @Transactional
+    public void deleteUserInfo(Long userId) {
+        log.info("Anonymizing reviews in deposit-service for deleted user {}", userId);
+        depositMachineReviewRepository.anonymizeUserReviews(userId);
+    }
 }

@@ -17,6 +17,7 @@ import pl.isigmas.kaucjapp.auth.publisher.AuthKafkaPublisher;
 import pl.isigmas.kaucjapp.auth.repository.AccountRepository;
 import pl.isigmas.kaucjapp.auth.repository.DeletionScheduleRepository;
 import pl.isigmas.kaucjapp.auth.repository.RefreshTokenRepository;
+import pl.isigmas.kaucjapp.auth.security.Encoder;
 import pl.isigmas.kaucjapp.common.dto.WarningDTO;
 
 import java.util.List;
@@ -39,6 +40,8 @@ class AuthServiceDeleteTest {
     private DeletionScheduleRepository deletionScheduleRepository;
     @Mock
     private AuthKafkaPublisher authKafkaPublisher;
+    @Mock
+    private Encoder encoder;
 
     @InjectMocks
     private AuthService authService;
@@ -62,6 +65,7 @@ class AuthServiceDeleteTest {
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(refreshTokenRepository.findAllByAccount(account)).thenReturn(List.of(token));
+        when(encoder.hashPassword(any())).thenReturn("new-hash");
 
         authService.delete(accountId);
 
@@ -69,6 +73,7 @@ class AuthServiceDeleteTest {
         assertThat(account.getEmail()).endsWith("@deleted.user");
         assertThat(account.getUsername()).startsWith("deleted#");
         assertThat(account.getStatus()).isEqualTo(AccountStatus.PENDING_DELETION);
+        assertThat(account.getPasswordHash()).isEqualTo("new-hash");
 
         verify(authKafkaPublisher).sendDeleteUser(eq(accountId), anyString());
 

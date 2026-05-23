@@ -14,6 +14,7 @@ import EmptyState from "@/src/components/states/empty-state";
 import { useAuth } from "@/src/auth/use-auth";
 import SectionCard from "@/src/components/ui/section-card";
 import { colors, rounded, spacing } from "@/src/theme";
+import WarningBanner from "../warning-banner";
 
 interface OfferDetailsProps {
   offer: Offer;
@@ -39,7 +40,12 @@ export default function OfferDetails({ offerId }: OfferDetailsProps) {
         subtitle={formatDate(offer.createdAt)}
         rightSlot={<StatusBadge status={offer.status} />}
       />
-      {isTheUserOwner && <OwnerCard />}
+      {isTheUserOwner && (
+        <WarningBanner
+          message="To jest twoja oferta"
+          accentColor={colors.status.warning}
+        />
+      )}
       <OfferItemsCard offer={offer} />
 
       <PickupCard
@@ -56,32 +62,10 @@ export default function OfferDetails({ offerId }: OfferDetailsProps) {
   );
 }
 
-function OwnerCard() {
-  return (
-    <SectionCard style={styles.ownerCard}>
-      <Text style={styles.ownerCardText}>Przeglądasz swoją ofertę</Text>
-    </SectionCard>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 100,
     paddingTop: spacing.sm,
-  },
-  ownerCard: {
-    backgroundColor: colors.status.warning + "30",
-    borderColor: colors.status.warning,
-    borderRadius: rounded.pill,
-    borderWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ownerCardText: {
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    color: colors.text.secondary,
   },
 });

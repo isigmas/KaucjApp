@@ -1,49 +1,69 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing } from "@/src/theme";
 import { getPolishRatingCount } from "@/src/lib";
-import { Rating } from "@/src/types";
 
 interface StarRatingProps {
-  rating: Rating | undefined;
+  ratingScore: number;
+  feedbackCount: number;
+  isLoading?: boolean;
+  size?: number;
+  style?: StyleProp<ViewStyle>;
 }
 
-export default function StarRating({ rating }: StarRatingProps) {
-  if (!rating) return null;
-  const hasRating = rating.feedbackCount > 0;
+export default function StarRating({
+  ratingScore,
+  feedbackCount,
+  size = 16,
+  isLoading = false,
+  style,
+}: StarRatingProps) {
+  const hasRating = feedbackCount > 0;
 
   const renderStar = (index: number) => {
-    const fillValue = Math.max(0, Math.min(1, rating.avgScore - index));
+    const fillValue = Math.max(0, Math.min(1, ratingScore - index));
     return (
       <View key={index} style={styles.starWrapper}>
-        <Ionicons name="star-outline" size={16} color={colors.status.warning} />
+        <Ionicons
+          name="star-outline"
+          size={size}
+          color={colors.status.warning}
+        />
 
         {fillValue > 0 && (
           <View
             style={[styles.filledStarOverlay, { width: `${fillValue * 100}%` }]}
           >
-            <Ionicons name="star" size={16} color={colors.status.warning} />
+            <Ionicons name="star" size={size} color={colors.status.warning} />
           </View>
         )}
       </View>
     );
   };
+  if (isLoading)
+    return (
+      <Text style={[styles.ratingCount, { fontSize: size - 1 }]}>
+        Ładowanie opinii...
+      </Text>
+    );
 
   return (
-    <View style={styles.ratingContainer}>
+    <View style={[styles.ratingContainer, style]}>
       {hasRating ? (
         <>
           <View style={styles.starsRow}>{[0, 1, 2, 3, 4].map(renderStar)}</View>
-          <Text style={styles.ratingText}>
-            {rating.avgScore.toFixed(1)}{" "}
+          <Text style={[styles.ratingText, { fontSize: size - 1 }]}>
+            {ratingScore.toFixed(1)}{" "}
             <Text style={styles.ratingCount}>
-              ({getPolishRatingCount(rating.feedbackCount)})
+              ({getPolishRatingCount(feedbackCount)})
             </Text>
           </Text>
         </>
       ) : (
-        <Text style={styles.ratingCount}>Brak opinii</Text>
+        <Text style={[styles.ratingCount, { fontSize: size - 1 }]}>
+          Brak opinii
+        </Text>
       )}
     </View>
   );

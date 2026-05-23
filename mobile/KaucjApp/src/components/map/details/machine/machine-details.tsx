@@ -16,6 +16,11 @@ import LocationCard from "./location-card";
 import OpeningHoursCard from "./opening-hours-card";
 import MachineImage from "./machine-image";
 import { spacing } from "@/src/theme";
+import ReviewsSection from "@/src/components/ui/review/reviews-list";
+import Animated from "react-native-reanimated";
+import { layoutSpring } from "@/src/constants";
+import MachineQuickStats from "./quick-stats";
+import ExpandableReview from "@/src/components/ui/review/expandable-review";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -68,7 +73,8 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
     <View style={styles.container}>
       <DetailHeader
         title="Kaucjomat"
-        subtitle={`Sieć handlowa: ${machine.networkName}`}
+        ratingScore={machine.avgScore}
+        feedbackCount={machine.feedbackCount}
         rightSlot={
           <StatusDropdown
             statusLabel={statusLabel}
@@ -83,15 +89,27 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
       {isUnavailable && (
         <WarningBanner accentColor={statusColor} message={warningMessage} />
       )}
+      <MachineQuickStats
+        networkName={machine.networkName}
+        status={machine.status}
+        address={machine.address}
+      />
 
-      <LocationCard
+      {/* <LocationCard
+        networkName={machine.networkName}
         address={machine.address}
         openingHours={machine.openingHours}
-      />
+      /> */}
 
       <OpeningHoursCard openingHours={machine.openingHours} />
 
-      <MachineImage />
+      {/* <MachineImage /> */}
+
+      <ExpandableReview type="machine" machineId={machineId} />
+
+      <Animated.View layout={layoutSpring}>
+        <ReviewsSection machineId={machineId} />
+      </Animated.View>
     </View>
   );
 }
