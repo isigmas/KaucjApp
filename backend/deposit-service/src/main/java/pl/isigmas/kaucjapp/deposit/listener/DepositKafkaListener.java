@@ -13,7 +13,7 @@ public class DepositKafkaListener {
 
     private final RatingService ratingService;
 
-    @KafkaListener(topics = "users.delete", groupId = "deposit-group")
+    @KafkaListener(topics = "users.delete.event", groupId = "deposit-group")
     public void handleUserDelete(String idStr) {
         try {
             Long id = Long.valueOf(idStr.replace("\"", ""));
