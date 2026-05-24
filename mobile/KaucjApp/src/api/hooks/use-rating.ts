@@ -54,6 +54,20 @@ export const useAddUserReview = (userId: number) => {
   });
 };
 
+export const useUpdateUserReview = (reviewId: number, userId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: UserReviewPayload) => {
+      await apiClient.patch(`/user/reviews/${reviewId}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userRating", userId],
+      });
+    },
+  });
+};
+
 export const useUserReviews = (userId: number) => {
   return useQuery({
     queryKey: ["userReviews", userId],
@@ -97,6 +111,25 @@ export const useAddMachineReview = (machineId: number) => {
   return useMutation({
     mutationFn: async (payload: MachineReviewPayload) => {
       await apiClient.post(`/deposit/machine/${machineId}/rating`, payload);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: machineKeys.detail(machineId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["machineReviews", machineId],
+        }),
+      ]);
+    },
+  });
+};
+
+export const useUpdateMachineReview = (reviewId: number, machineId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: MachineReviewPayload) => {
+      await apiClient.patch(`/deposit/reviews/${reviewId}`, payload);
     },
     onSuccess: async () => {
       await Promise.all([
