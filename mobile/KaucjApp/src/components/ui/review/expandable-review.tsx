@@ -46,6 +46,7 @@ interface BaseExpandableReviewProps {
 interface MachineReviewProps extends BaseExpandableReviewProps {
   type: "machine";
   machineId: number;
+  onEditCancel?: () => void;
 }
 
 interface UserReviewProps extends BaseExpandableReviewProps {
@@ -68,6 +69,7 @@ function MachineReview({
   isDefaultExpanded,
   existingReview,
   style,
+  onEditCancel,
 }: Omit<MachineReviewProps, "type">) {
   const { user } = useAuth();
   const username = user?.username;
@@ -118,6 +120,7 @@ function MachineReview({
       entering={FadeInDown.delay(isEditMode ? 100 : 400).springify()}
       isDefaultExpanded={isDefaultExpanded || isEditMode}
       style={style}
+      onEditCancel={onEditCancel}
     />
   );
 }
@@ -193,6 +196,7 @@ interface ExpandableReviewFormProps {
   ) => void;
   style?: StyleProp<ViewStyle>;
   entering?: EntryOrExitLayoutType;
+  onEditCancel?: () => void;
 }
 
 function ExpandableReviewForm({
@@ -204,6 +208,7 @@ function ExpandableReviewForm({
   onSubmit,
   style,
   entering,
+  onEditCancel,
 }: ExpandableReviewFormProps) {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
@@ -255,7 +260,7 @@ function ExpandableReviewForm({
       style={[styles.card, style]}
     >
       {isSuccess ? (
-        <SuccessState isEditMode={isEditMode} />
+        <SuccessState isEditMode={isEditMode} onComplete={onEditCancel} />
       ) : (
         <FormProvider {...methods}>
           {title && <CardTitle>{title}</CardTitle>}
@@ -310,9 +315,19 @@ function ExpandableReviewForm({
                 text={buttonText}
               />
 
-              <Text style={styles.secondaryText}>
-                Twoja opinia będzie widoczna publicznie
-              </Text>
+              {isEditMode ? (
+                <Pressable
+                  onPress={onEditCancel}
+                  disabled={isPending}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelButtonText}>Anuluj edycję</Text>
+                </Pressable>
+              ) : (
+                <Text style={styles.secondaryText}>
+                  Twoja opinia będzie widoczna publicznie
+                </Text>
+              )}
             </Animated.View>
           )}
         </FormProvider>
@@ -345,7 +360,14 @@ function SubmitButton({
   );
 }
 
-function SuccessState({ isEditMode }: { isEditMode: boolean }) {
+//TODO: przemyśleć jak najlepiej drillować propsy do tego komponentu zeby np przełączyć widok na istniejącą opinię
+function SuccessState({
+  isEditMode,
+  onComplete,
+}: {
+  isEditMode: boolean;
+  onComplete?: () => void;
+}) {
   return (
     <Animated.View
       layout={layoutSpring}
@@ -368,6 +390,11 @@ function SuccessState({ isEditMode }: { isEditMode: boolean }) {
           ? "Twoja opinia została zaktualizowana."
           : "Dziękujemy, że jesteś częścią społeczności!"}
       </Text>
+      {onComplete && (
+        <Pressable onPress={onComplete} style={styles.cancelButton}>
+          <Text style={styles.cancelButtonText}>Zobacz opinię</Text>
+        </Pressable>
+      )}
     </Animated.View>
   );
 }
@@ -403,6 +430,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.3,
+  },
+  cancelButton: {
+    marginTop: spacing.xs,
+  },
+  cancelButtonText: {
+    color: colors.text.secondary,
+    fontSize: 14,
+    fontWeight: "500",
+    letterSpacing: 0.3,
+    textDecorationLine: "underline",
+    alignSelf: "center",
   },
   secondaryText: {
     textAlign: "center",

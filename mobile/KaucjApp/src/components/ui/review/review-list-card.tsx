@@ -4,13 +4,7 @@ import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { Review } from "@/src/types";
 import { Ionicons } from "@expo/vector-icons";
 import { PencilIcon } from "lucide-react-native";
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  ViewStyle,
-} from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
@@ -37,9 +31,9 @@ export default function ReviewCard({
         <Text style={styles.reviewerName} numberOfLines={1}>
           {review.reviewerUsername}
         </Text>
-        <Text style={styles.dateText}>{timeAgoInPolish(review.createdAt)}</Text>
+        <Text style={styles.dateText}>{timeAgoInPolish(review.updatedAt)}</Text>
         {onEdit ? (
-          <Pressable onPress={onEdit}>
+          <Pressable onPress={onEdit} hitSlop={44}>
             <PencilIcon
               size={20}
               color={colors.text.primary}
