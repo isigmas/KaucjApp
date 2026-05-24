@@ -118,7 +118,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 100,
+    paddingBottom: 300,
     paddingTop: spacing.sm,
   },
 });
