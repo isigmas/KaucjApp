@@ -120,10 +120,13 @@ export const useAddMachineReview = (machineId: number) => {
         queryClient.invalidateQueries({
           queryKey: ["machineReviews", machineId],
         }),
+      ]);
+      // The timeout here is to show the SuccessState for 3 seconds, consider changing it to a more elegant solution in the future.
+      setTimeout(() => {
         queryClient.invalidateQueries({
           queryKey: ["machineReviewCheck", machineId],
-        }),
-      ]);
+        });
+      }, 3000);
     },
   });
 };

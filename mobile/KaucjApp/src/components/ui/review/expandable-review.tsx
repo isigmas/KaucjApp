@@ -257,6 +257,7 @@ function ExpandableReviewForm({
     <Animated.View
       layout={layoutSpring}
       entering={entering}
+      exiting={FadeOut.duration(140)}
       style={[styles.card, style]}
     >
       {isSuccess ? (
