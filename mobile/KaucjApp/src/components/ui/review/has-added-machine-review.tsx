@@ -16,12 +16,9 @@ export default function HasAddedMachineReview({
   isDefaultExpanded = false,
 }: UserReviewCheckProps) {
   const { data, isLoading } = useMachineReviewCheck(machineId);
-  const isReviewPosted = data?.alreadyReviewed;
+
   if (isLoading) {
     return null;
-  }
-  if (isReviewPosted) {
-    return <Text>Ocena dodana, docelowo wyswietlic tutaj ocene</Text>;
   }
 
   return (
@@ -29,6 +26,7 @@ export default function HasAddedMachineReview({
       type="machine"
       machineId={machineId}
       isDefaultExpanded={isDefaultExpanded}
+      existingReview={data?.review ?? null}
     />
   );
 }

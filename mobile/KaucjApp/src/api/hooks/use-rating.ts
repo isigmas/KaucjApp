@@ -139,6 +139,9 @@ export const useUpdateMachineReview = (reviewId: number, machineId: number) => {
         queryClient.invalidateQueries({
           queryKey: ["machineReviews", machineId],
         }),
+        queryClient.invalidateQueries({
+          queryKey: ["machineReviewCheck", machineId],
+        }),
       ]);
     },
   });

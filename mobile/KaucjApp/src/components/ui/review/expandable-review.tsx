@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import Animated, {
   FadeInDown,
   FadeInUp,
   FadeOut,
-  SharedValue,
 } from "react-native-reanimated";
 
 import { colors, rounded, shadows, spacing } from "@/src/theme";
@@ -26,9 +25,11 @@ import { StarSelector, ReviewTextInput } from "./review-form";
 import { RatingFormValues, ratingSchema } from "@/src/validation";
 import {
   useAddMachineReview,
+  useUpdateMachineReview,
   useAddUserReview,
+  useUpdateUserReview,
 } from "@/src/api/hooks/use-rating";
-import { MachineReviewPayload, UserReviewPayload } from "@/src/types";
+import { MachineReviewPayload, UserReviewPayload, Review } from "@/src/types";
 import CardTitle from "../../map/details/card-title";
 import { layoutSpring } from "@/src/constants";
 import { useAuth } from "@/src/auth/use-auth";
@@ -38,6 +39,7 @@ type ReviewType = "machine" | "user";
 interface BaseExpandableReviewProps {
   type: ReviewType;
   isDefaultExpanded?: boolean;
+  existingReview: Review | null;
 }
 
 interface MachineReviewProps extends BaseExpandableReviewProps {
@@ -63,14 +65,23 @@ export default function ExpandableReview(props: ExpandableReviewProps) {
 function MachineReview({
   machineId,
   isDefaultExpanded,
+  existingReview,
 }: Omit<MachineReviewProps, "type">) {
   const { user } = useAuth();
   const username = user?.username;
+
+  const isEditMode = !!existingReview;
+
+  const { mutate: addMachineReview, isPending: isAdding } =
+    useAddMachineReview(machineId);
+  const { mutate: updateMachineReview, isPending: isUpdating } =
+    useUpdateMachineReview(existingReview?.reviewId ?? 0, machineId);
+
+  const isPending = isAdding || isUpdating;
+
   if (!username) {
     return null;
   }
-  const { mutate: addMachineReview, isPending } =
-    useAddMachineReview(machineId);
 
   const handleSubmit = (
     data: RatingFormValues,
@@ -83,16 +94,27 @@ function MachineReview({
       ...(data.comment?.trim() ? { comment: data.comment.trim() } : {}),
     };
 
-    addMachineReview(payload, { onSuccess, onError });
+    if (isEditMode) {
+      updateMachineReview(payload, { onSuccess, onError });
+    } else {
+      addMachineReview(payload, { onSuccess, onError });
+    }
+  };
+
+  const initialValues: RatingFormValues = {
+    score: existingReview?.score ?? 0,
+    comment: existingReview?.comment ?? "",
   };
 
   return (
     <ExpandableReviewForm
-      title="Oceń kaucjomat"
+      title={isEditMode ? "Edytuj opinię" : "Oceń kaucjomat"}
       isPending={isPending}
+      isEditMode={isEditMode}
+      initialValues={initialValues}
       onSubmit={handleSubmit}
       entering={FadeInDown.delay(400).springify()}
-      isDefaultExpanded={isDefaultExpanded}
+      isDefaultExpanded={isDefaultExpanded || isEditMode}
     />
   );
 }
@@ -101,8 +123,16 @@ function UserReview({
   userId,
   offerId,
   isDefaultExpanded,
+  existingReview,
 }: Omit<UserReviewProps, "type">) {
-  const { mutate: addUserReview, isPending } = useAddUserReview(userId);
+  const isEditMode = !!existingReview;
+
+  const { mutate: addUserReview, isPending: isAdding } =
+    useAddUserReview(userId);
+  const { mutate: updateUserReview, isPending: isUpdating } =
+    useUpdateUserReview(existingReview?.reviewId ?? 0, userId);
+
+  const isPending = isAdding || isUpdating;
 
   const handleSubmit = (
     data: RatingFormValues,
@@ -115,14 +145,25 @@ function UserReview({
       ...(data.comment?.trim() ? { comment: data.comment.trim() } : {}),
     };
 
-    addUserReview(payload, { onSuccess, onError });
+    if (isEditMode) {
+      updateUserReview(payload, { onSuccess, onError });
+    } else {
+      addUserReview(payload, { onSuccess, onError });
+    }
+  };
+
+  const initialValues: RatingFormValues = {
+    score: existingReview?.score ?? 0,
+    comment: existingReview?.comment ?? "",
   };
 
   return (
     <ExpandableReviewForm
       isPending={isPending}
+      isEditMode={isEditMode}
+      initialValues={initialValues}
       onSubmit={handleSubmit}
-      isDefaultExpanded={isDefaultExpanded}
+      isDefaultExpanded={isDefaultExpanded || isEditMode}
       style={{
         shadowOpacity: 0,
         shadowRadius: 0,
@@ -138,6 +179,8 @@ function UserReview({
 interface ExpandableReviewFormProps {
   title?: string;
   isPending: boolean;
+  isEditMode?: boolean;
+  initialValues?: RatingFormValues;
   isDefaultExpanded?: boolean;
   onSubmit: (
     data: RatingFormValues,
@@ -151,19 +194,30 @@ interface ExpandableReviewFormProps {
 function ExpandableReviewForm({
   title,
   isPending,
+  isEditMode = false,
+  initialValues = { score: 0, comment: "" },
   isDefaultExpanded = false,
   onSubmit,
   style,
   entering,
 }: ExpandableReviewFormProps) {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const buttonText = isPending ? "Wysyłanie..." : "Dodaj opinię";
+
+  const buttonText = isPending
+    ? "Zapisywanie..."
+    : isEditMode
+      ? "Zapisz zmiany"
+      : "Dodaj opinię";
 
   const methods = useForm<RatingFormValues>({
     resolver: zodResolver(ratingSchema),
-    defaultValues: { score: 0, comment: "" },
+    defaultValues: initialValues,
     mode: "onSubmit",
   });
+
+  useEffect(() => {
+    methods.reset(initialValues);
+  }, [initialValues, methods]);
 
   const currentScore = useWatch({
     control: methods.control,
@@ -178,12 +232,14 @@ function ExpandableReviewForm({
       () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setIsSuccess(true);
-        methods.reset();
+        if (!isEditMode) {
+          methods.reset();
+        }
       },
       (error) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         console.error(`Error submitting: `, error);
-        Alert.alert("Błąd", "Nie udało się dodać oceny. Spróbuj ponownie.");
+        Alert.alert("Błąd", "Nie udało się zapisać oceny. Spróbuj ponownie.");
       },
     );
   };
@@ -195,7 +251,7 @@ function ExpandableReviewForm({
       style={[styles.card, style]}
     >
       {isSuccess ? (
-        <SuccessState />
+        <SuccessState isEditMode={isEditMode} />
       ) : (
         <FormProvider {...methods}>
           {title && <CardTitle>{title}</CardTitle>}
@@ -209,8 +265,7 @@ function ExpandableReviewForm({
                     rating={field.value}
                     onSelect={(val) => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      // Allows deselecting to collapse the card gracefully
-                      if (val === field.value) {
+                      if (val === field.value && !isEditMode) {
                         field.onChange(0);
                         return;
                       }
@@ -286,7 +341,7 @@ function SubmitButton({
   );
 }
 
-function SuccessState() {
+function SuccessState({ isEditMode }: { isEditMode: boolean }) {
   return (
     <Animated.View
       layout={layoutSpring}
@@ -301,9 +356,13 @@ function SuccessState() {
           <Text style={styles.iconText}>✓</Text>
         </View>
       </Animated.View>
-      <Text style={styles.successStateTitle}>Ocena dodana</Text>
+      <Text style={styles.successStateTitle}>
+        {isEditMode ? "Zmiany zapisane" : "Ocena dodana"}
+      </Text>
       <Text style={styles.successStateMessage}>
-        Dziękujemy, że jesteś częścią społeczności!
+        {isEditMode
+          ? "Twoja opinia została zaktualizowana."
+          : "Dziękujemy, że jesteś częścią społeczności!"}
       </Text>
     </Animated.View>
   );
