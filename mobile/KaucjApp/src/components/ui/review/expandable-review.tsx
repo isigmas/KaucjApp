@@ -31,6 +31,7 @@ import {
 import { MachineReviewPayload, UserReviewPayload } from "@/src/types";
 import CardTitle from "../../map/details/card-title";
 import { layoutSpring } from "@/src/constants";
+import { useAuth } from "@/src/auth/use-auth";
 
 type ReviewType = "machine" | "user";
 
@@ -63,6 +64,11 @@ function MachineReview({
   machineId,
   isDefaultExpanded,
 }: Omit<MachineReviewProps, "type">) {
+  const { user } = useAuth();
+  const username = user?.username;
+  if (!username) {
+    return null;
+  }
   const { mutate: addMachineReview, isPending } =
     useAddMachineReview(machineId);
 
@@ -72,6 +78,7 @@ function MachineReview({
     onError: (error: any) => void,
   ) => {
     const payload: MachineReviewPayload = {
+      reviewerUsername: username,
       score: data.score,
       ...(data.comment?.trim() ? { comment: data.comment.trim() } : {}),
     };
