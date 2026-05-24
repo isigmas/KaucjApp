@@ -12,12 +12,8 @@ export default function HasAddedMachineReview({
   machineId,
   isDefaultExpanded = false,
 }: MachineReviewCheckProps) {
-  const { data, isLoading } = useMachineReviewCheck(machineId);
+  const { data } = useMachineReviewCheck(machineId);
   const existingReview = data?.review ?? null;
-
-  if (isLoading) {
-    return null;
-  }
 
   if (existingReview) {
     return (
