@@ -65,6 +65,8 @@ export const useUserReviews = (userId: number) => {
   });
 };
 
+// ----- Machine Reviews -----
+
 export const useMachineReviews = (machineId: number) => {
   return useQuery({
     queryKey: ["machineReviews", machineId],
@@ -74,6 +76,18 @@ export const useMachineReviews = (machineId: number) => {
       );
       console.log(JSON.stringify(data, null, 2));
       return data as Review[];
+    },
+  });
+};
+
+export const useMachineReviewCheck = (machineId: number) => {
+  return useQuery({
+    queryKey: ["machineReviewCheck", machineId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/deposit/reviews/check`, {
+        params: { id: machineId },
+      });
+      return data as { alreadyReviewed: boolean; review: Review | null };
     },
   });
 };
