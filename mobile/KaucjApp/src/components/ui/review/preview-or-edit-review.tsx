@@ -1,11 +1,12 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import ReviewCard from "./review-list-card";
 import { Review } from "@/src/types";
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useState } from "react";
 import { layoutSpring } from "@/src/constants";
 import ExpandableReview from "./expandable-review";
+import { PencilIcon } from "lucide-react-native";
 
 interface PreviewOrEditReviewProps {
   machineId: number;
@@ -25,16 +26,26 @@ export default function PreviewOrEditReview({
       >
         Twoja opinia
       </Animated.Text>
-      <Animated.View layout={layoutSpring}>
+      <Animated.View
+        layout={layoutSpring}
+        entering={FadeInDown.delay(300).springify()}
+        style={styles.card}
+      >
         {isEditing ? (
           <ExpandableReview
             type="machine"
             machineId={machineId}
             isDefaultExpanded={true}
             existingReview={existingReview}
+            style={styles.editReview}
           />
         ) : (
-          <ReviewCard review={existingReview} key={existingReview.reviewId} />
+          <ReviewCard
+            review={existingReview}
+            key={existingReview.reviewId}
+            asCard={false}
+            onEdit={() => setIsEditing(true)}
+          />
         )}
       </Animated.View>
     </View>
@@ -42,6 +53,14 @@ export default function PreviewOrEditReview({
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.background.card || "#FFFFFF",
+    borderRadius: rounded.apple,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)",
+    ...shadows.light,
+  },
   container: { marginBottom: spacing.lg },
   sectionTitle: {
     fontSize: 20,
@@ -58,4 +77,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     paddingHorizontal: 0,
   },
+
+  reviewCardContainer: {},
 });

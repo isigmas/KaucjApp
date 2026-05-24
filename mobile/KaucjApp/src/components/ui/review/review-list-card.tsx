@@ -3,32 +3,50 @@ import { timeAgoInPolish } from "@/src/lib";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { Review } from "@/src/types";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
+import { PencilIcon } from "lucide-react-native";
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  ViewStyle,
+} from "react-native";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface ReviewCardProps {
   review: Review;
   index?: number;
-  style?: StyleProp<ViewStyle>;
+  onEdit?: () => void;
+  asCard?: boolean;
 }
 
 export default function ReviewCard({
   review,
   index = 1,
-  style,
+  asCard = true,
+  onEdit,
 }: ReviewCardProps) {
   return (
     <Animated.View
       layout={layoutSpring}
       entering={FadeInDown.delay(Math.min((index + 2) * 80, 400)).springify()}
-      style={[styles.card, style]}
+      style={asCard ? styles.card : {}}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.reviewerName} numberOfLines={1}>
           {review.reviewerUsername}
         </Text>
         <Text style={styles.dateText}>{timeAgoInPolish(review.createdAt)}</Text>
+        {onEdit ? (
+          <Pressable onPress={onEdit}>
+            <PencilIcon
+              size={20}
+              color={colors.text.primary}
+              style={styles.editIcon}
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.starsRow}>
