@@ -40,6 +40,7 @@ interface BaseExpandableReviewProps {
   type: ReviewType;
   isDefaultExpanded?: boolean;
   existingReview?: Review | null;
+  style?: StyleProp<ViewStyle>;
 }
 
 interface MachineReviewProps extends BaseExpandableReviewProps {
@@ -66,6 +67,7 @@ function MachineReview({
   machineId,
   isDefaultExpanded,
   existingReview,
+  style,
 }: Omit<MachineReviewProps, "type">) {
   const { user } = useAuth();
   const username = user?.username;
@@ -113,8 +115,9 @@ function MachineReview({
       isEditMode={isEditMode}
       initialValues={initialValues}
       onSubmit={handleSubmit}
-      entering={FadeInDown.delay(400).springify()}
+      entering={FadeInDown.delay(isEditMode ? 100 : 400).springify()}
       isDefaultExpanded={isDefaultExpanded || isEditMode}
+      style={style}
     />
   );
 }
@@ -124,6 +127,14 @@ function UserReview({
   offerId,
   isDefaultExpanded,
   existingReview,
+  style = {
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    marginBottom: 0,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: 0,
+  },
 }: Omit<UserReviewProps, "type">) {
   const isEditMode = !!existingReview;
 
@@ -164,14 +175,7 @@ function UserReview({
       initialValues={initialValues}
       onSubmit={handleSubmit}
       isDefaultExpanded={isDefaultExpanded || isEditMode}
-      style={{
-        shadowOpacity: 0,
-        shadowRadius: 0,
-        shadowOffset: { width: 0, height: 0 },
-        marginBottom: 0,
-        paddingBottom: spacing.sm,
-        paddingHorizontal: 0,
-      }}
+      style={style}
     />
   );
 }

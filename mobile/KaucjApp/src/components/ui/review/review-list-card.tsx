@@ -3,39 +3,32 @@ import { timeAgoInPolish } from "@/src/lib";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { Review } from "@/src/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface ReviewCardProps {
   review: Review;
   index?: number;
-  isEditable?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export default function ReviewCard({
   review,
   index = 1,
-  isEditable = false,
+  style,
 }: ReviewCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
   return (
     <Animated.View
       layout={layoutSpring}
       entering={FadeInDown.delay(Math.min((index + 2) * 80, 400)).springify()}
-      style={styles.card}
+      style={[styles.card, style]}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.reviewerName} numberOfLines={1}>
           {review.reviewerUsername}
         </Text>
         <Text style={styles.dateText}>{timeAgoInPolish(review.createdAt)}</Text>
-        {isEditable && (
-          <Pressable onPress={() => setIsEditing(true)}>
-            <Ionicons name="pencil" size={14} color={colors.text.primary} />
-          </Pressable>
-        )}
       </View>
 
       <View style={styles.starsRow}>
@@ -93,5 +86,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "400",
     color: colors.text.secondary,
+  },
+
+  editIcon: {
+    padding: spacing.xs,
+    marginLeft: spacing.sm,
   },
 });
