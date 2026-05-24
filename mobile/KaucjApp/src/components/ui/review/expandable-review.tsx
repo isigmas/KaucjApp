@@ -39,7 +39,7 @@ type ReviewType = "machine" | "user";
 interface BaseExpandableReviewProps {
   type: ReviewType;
   isDefaultExpanded?: boolean;
-  existingReview: Review | null;
+  existingReview?: Review | null;
 }
 
 interface MachineReviewProps extends BaseExpandableReviewProps {

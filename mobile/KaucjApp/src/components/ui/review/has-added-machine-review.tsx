@@ -1,24 +1,42 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import React from "react";
-import {
-  useMachineReviewCheck,
-  useUserReviewCheck,
-} from "@/src/api/hooks/use-rating";
+import { useMachineReviewCheck } from "@/src/api/hooks/use-rating";
 import ExpandableReview from "./expandable-review";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
+import ReviewCard from "./review-list-card";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-interface UserReviewCheckProps {
+interface MachineReviewCheckProps {
   machineId: number;
   isDefaultExpanded?: boolean;
 }
 export default function HasAddedMachineReview({
   machineId,
   isDefaultExpanded = false,
-}: UserReviewCheckProps) {
+}: MachineReviewCheckProps) {
   const { data, isLoading } = useMachineReviewCheck(machineId);
+  const existingReview = data?.review ?? null;
 
   if (isLoading) {
     return null;
+  }
+
+  if (existingReview) {
+    return (
+      <View style={styles.container}>
+        <Animated.Text
+          entering={FadeInDown.delay(300).springify()}
+          style={styles.sectionTitle}
+        >
+          Twoja opinia
+        </Animated.Text>
+        <ReviewCard
+          review={existingReview}
+          key={existingReview.reviewId}
+          isEditable={true}
+        />
+      </View>
+    );
   }
 
   return (
@@ -26,19 +44,17 @@ export default function HasAddedMachineReview({
       type="machine"
       machineId={machineId}
       isDefaultExpanded={isDefaultExpanded}
-      existingReview={data?.review ?? null}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {},
-  title: {
-    fontSize: 11,
+  container: { marginBottom: spacing.lg },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: "700",
-    color: colors.text.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 2,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
 });
