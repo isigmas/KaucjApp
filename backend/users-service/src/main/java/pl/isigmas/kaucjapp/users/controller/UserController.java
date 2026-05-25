@@ -331,10 +331,10 @@ public class UserController {
     @PostMapping("/me/profile-picture/confirm")
     public ResponseEntity<UserDTO> confirmUpload(
             @RequestHeader("X-User-Id") Long currentUserId,
-            @RequestBody ConfirmUploadDTO dto) {
+            @Valid @RequestBody ConfirmUploadDTO dto) {
 
         UserDTO current = userService.getUserById(currentUserId);
-        String publicUrl = buildPublicUrl(dto.blobName());
+        String publicUrl = azureBlobService.confirmProfilePicture(currentUserId, dto.blobName());
         azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
         UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
         return ResponseEntity.ok(updated);

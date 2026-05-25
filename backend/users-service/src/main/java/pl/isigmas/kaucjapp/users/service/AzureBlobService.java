@@ -3,7 +3,6 @@ package pl.isigmas.kaucjapp.users.service;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.PublicAccessType;
 import com.azure.storage.blob.options.BlobContainerCreateOptions;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.UploadUrlDTO;
-import pl.isigmas.kaucjapp.users.config.AzureBlobClientFactory;
 import pl.isigmas.kaucjapp.users.config.AzureStorageProperties;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 
@@ -61,15 +59,35 @@ public class AzureBlobService {
 
         BlobClient blobClient = container.getBlobClient(blobName);
 
-        BlobSasPermission permission = new BlobSasPermission().setWritePermission(true);
+        BlobSasPermission permission = new BlobSasPermission()
+                .setWritePermission(true)
+                .setCreatePermission(true);
         BlobServiceSasSignatureValues values = new BlobServiceSasSignatureValues(
                 OffsetDateTime.now().plusMinutes(10), permission)
                 .setContentType("image/jpeg");
 
         String sasToken = blobClient.generateSas(values);
-        String uploadUrl = blobClient.getBlobUrl() + "?" + sasToken;
+        String uploadUrl = buildPublicUrl(blobName) + "?" + sasToken;
 
         return new UploadUrlDTO(uploadUrl, blobName);
+    }
+
+    /**
+     * Validates ownership and existence of an uploaded blob, then returns the public URL to store in DB.
+     */
+    public String confirmProfilePicture(Long userId, String blobName) {
+        validateBlobNameForUser(userId, blobName);
+
+        BlobClient blobClient = blobServiceClient
+                .getBlobContainerClient(properties.getContainerName())
+                .getBlobClient(blobName);
+
+        if (!blobClient.exists()) {
+            throw new ProfilePictureUploadException(
+                    "Upload not found; PUT the image to the SAS URL before confirming");
+        }
+
+        return buildPublicUrl(blobName);
     }
 
     /**
@@ -155,6 +173,16 @@ public class AzureBlobService {
             case "image/webp" -> ".webp";
             default -> ".jpg";
         };
+    }
+
+    private void validateBlobNameForUser(Long userId, String blobName) {
+        String prefix = "user-" + userId + "-";
+        if (!StringUtils.hasText(blobName)
+                || !blobName.startsWith(prefix)
+                || blobName.contains("/")
+                || blobName.contains("..")) {
+            throw new ProfilePictureUploadException("Invalid blob name for this user");
+        }
     }
 
     private String buildPublicUrl(String blobName) {

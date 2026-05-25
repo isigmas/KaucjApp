@@ -1,3 +1,5 @@
 package pl.isigmas.kaucjapp.users.DTO;
 
-public record ConfirmUploadDTO(String blobName) {}
+import jakarta.validation.constraints.NotBlank;
+
+public record ConfirmUploadDTO(@NotBlank String blobName) {}
