@@ -17,7 +17,7 @@ public class AzureStorageProperties {
 
     /**
      * Azurite proxy host reachable from users-service.
-     * {@code compose.yaml} sets {@code http://azurite:10000} for Docker; local JVM uses {@code .env}.
+     * {@code compose.yaml} hardcodes {@code http://azurite:10000} in Docker; host JVM uses {@code .env} ({@code 127.0.0.1}).
      */
     private String developmentStorageProxyUri;
 
