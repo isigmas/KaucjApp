@@ -356,4 +356,22 @@ public class UserController {
         return ResponseEntity.ok(updated);
     }
 
+    @DeleteMapping("/me/profile-picture")
+    @Operation(
+            summary = "Remove my profile picture",
+            description = "Clears profile_picture_url in the database, then best-effort deletes the blob from storage. "
+                    + "Idempotent when no picture is set.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Profile picture removed."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<Void> deleteProfilePicture(
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        UserDTO current = userService.getUserById(currentUserId);
+        userService.clearProfilePicture(currentUserId);
+        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+        return ResponseEntity.noContent().build();
+    }
+
 }

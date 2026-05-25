@@ -119,6 +119,14 @@ public class UserService {
     }
 
     @Transactional
+    public UserDTO clearProfilePicture(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        user.setProfilePictureUrl(null);
+        return mapToDTO(user);
+    }
+
+    @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));

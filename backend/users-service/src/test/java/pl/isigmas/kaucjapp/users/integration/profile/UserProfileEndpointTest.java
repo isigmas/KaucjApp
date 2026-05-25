@@ -139,4 +139,58 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_code").value("BAD_REQUEST"));
     }
+
+    @Test
+    void deleteProfilePicture_clearsUrl() throws Exception {
+        String createdUserJson = """
+                {
+                    "user_id": 1006,
+                    "username": "picuser",
+                    "first_name": "P",
+                    "last_name": "U",
+                    "phone": "111222334",
+                    "email": "pic@example.com"
+                }
+                """;
+
+        postCreateUser(createdUserJson);
+
+        User user = userRepository.findAll().stream()
+                .filter(it -> "picuser".equals(it.getUsername()))
+                .findFirst()
+                .orElseThrow();
+        Long userId = user.getId();
+        user.setProfilePictureUrl("http://127.0.0.1:10000/devstoreaccount1/profile-pictures/user-6-test.jpg");
+        userRepository.saveAndFlush(user);
+
+        mockMvc.perform(delete("/api/user/me/profile-picture").header("X-User-Id", userId))
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findById(userId).orElseThrow().getProfilePictureUrl()).isNull();
+    }
+
+    @Test
+    void deleteProfilePicture_withoutPicture_isIdempotent() throws Exception {
+        String createdUserJson = """
+                {
+                    "user_id": 1007,
+                    "username": "nopic",
+                    "first_name": "N",
+                    "last_name": "P",
+                    "phone": "111222337",
+                    "email": "nopic@example.com"
+                }
+                """;
+
+        postCreateUser(createdUserJson);
+
+        Long userId = userRepository.findAll().stream()
+                .filter(it -> "nopic".equals(it.getUsername()))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+
+        mockMvc.perform(delete("/api/user/me/profile-picture").header("X-User-Id", userId))
+                .andExpect(status().isNoContent());
+    }
 }
