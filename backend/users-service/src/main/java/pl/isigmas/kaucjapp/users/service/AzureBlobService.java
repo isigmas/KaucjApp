@@ -7,16 +7,20 @@ import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.PublicAccessType;
 import com.azure.storage.blob.options.BlobContainerCreateOptions;
+import com.azure.storage.blob.sas.BlobSasPermission;
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import pl.isigmas.kaucjapp.users.DTO.UploadUrlDTO;
 import pl.isigmas.kaucjapp.users.config.AzureBlobClientFactory;
 import pl.isigmas.kaucjapp.users.config.AzureStorageProperties;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -48,28 +52,24 @@ public class AzureBlobService {
         );
     }
 
-    public String uploadProfilePicture(Long userId, MultipartFile file) throws IOException {
-        validateFile(file);
+    public UploadUrlDTO generateUploadUrl(Long userId) {
+        String blobName = "user-" + userId + "-" + UUID.randomUUID() + ".jpg";
 
-        BlobContainerClient container = blobServiceClient.getBlobContainerClient(properties.getContainerName());
+        BlobContainerClient container = blobServiceClient
+                .getBlobContainerClient(properties.getContainerName());
         ensureContainerReady(container);
 
-        String extension = resolveExtension(file);
-        String blobName = "user-" + userId + "-" + UUID.randomUUID() + extension;
         BlobClient blobClient = container.getBlobClient(blobName);
-        String contentType = resolveContentType(file);
 
-        log.info("Uploading profile picture: {}", blobName);
-        try {
-            BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
-            blobClient.upload(file.getInputStream(), file.getSize(), true);
-            blobClient.setHttpHeaders(headers);
-        } catch (BlobStorageException e) {
-            log.error("Blob upload failed for {}: {} {}", blobName, e.getErrorCode(), e.getMessage());
-            throw ProfilePictureUploadException.storageFailed();
-        }
+        BlobSasPermission permission = new BlobSasPermission().setWritePermission(true);
+        BlobServiceSasSignatureValues values = new BlobServiceSasSignatureValues(
+                OffsetDateTime.now().plusMinutes(10), permission)
+                .setContentType("image/jpeg");
 
-        return buildPublicUrl(blobName);
+        String sasToken = blobClient.generateSas(values);
+        String uploadUrl = blobClient.getBlobUrl() + "?" + sasToken;
+
+        return new UploadUrlDTO(uploadUrl, blobName);
     }
 
     /**

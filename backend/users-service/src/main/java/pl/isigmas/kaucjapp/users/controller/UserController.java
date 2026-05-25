@@ -321,30 +321,23 @@ public class UserController {
         return ResponseEntity.ok(ranking);
     }
 
-    @PostMapping(value = "/me/profile-picture", consumes = "multipart/form-data")
-    @Operation(
-            summary = "Upload my profile picture",
-            description = "Multipart form field `file` (JPEG/PNG/WebP, max 5MB). Stores image in Azure Blob / Azurite and saves URL on user profile.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Profile updated with new profile_picture_url."),
-            @ApiResponse(responseCode = "400", description = "Invalid file (USER_008) or missing X-User-Id."),
-            @ApiResponse(responseCode = "404", description = "User not found (USER_001)."),
-            @ApiResponse(responseCode = "500", description = "Blob storage upload failed (USER_009).")
-    })
-    public ResponseEntity<UserDTO> uploadProfilePicture(
+    @GetMapping("/me/profile-picture/upload-url")
+    public ResponseEntity<UploadUrlDTO> getUploadUrl(
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/me/profile-picture/confirm")
+    public ResponseEntity<UserDTO> confirmUpload(
             @RequestHeader("X-User-Id") Long currentUserId,
-            @RequestPart("file") MultipartFile file) {
-        try {
-            UserDTO current = userService.getUserById(currentUserId);
-            String imageUrl = azureBlobService.uploadProfilePicture(currentUserId, file);
-            azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
-            UserDTO updatedUser = userService.updateProfilePictureUrl(currentUserId, imageUrl);
-            log.info("User {} updated profile picture", currentUserId);
-            return ResponseEntity.ok(updatedUser);
-        } catch (IOException e) {
-            log.error("Failed to read profile picture for user {}", currentUserId, e);
-            throw ProfilePictureUploadException.storageFailed();
-        }
+            @RequestBody ConfirmUploadDTO dto) {
+
+        UserDTO current = userService.getUserById(currentUserId);
+        String publicUrl = buildPublicUrl(dto.blobName());
+        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+        UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
+        return ResponseEntity.ok(updated);
     }
 
 }
