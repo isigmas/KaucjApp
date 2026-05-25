@@ -87,11 +87,19 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - AZURE_STORAGE_USE_DEVELOPMENT_STORAGE=true
+      - AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI=http://azurite:10000
+      - AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT=http://127.0.0.1:10000/devstoreaccount1
+      - AZURE_STORAGE_PUBLIC_READ_ACCESS=true
+      - AZURE_STORAGE_ACCOUNT_NAME=devstoreaccount1
+      - AZURE_STORAGE_ACCOUNT_KEY=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KkM1jBgHAAQ==
     depends_on:
       users-db:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      azurite:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
       interval: 5s
@@ -216,6 +224,15 @@ services:
       retries: 20
       start_period: 30s
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: kaucjapp-azurite
+    ports:
+      - "10000:10000"
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    volumes:
+      - azurite_data:/data
+
   api-gateway:
     build:
       context: .
@@ -250,3 +267,5 @@ services:
         condition: service_healthy
       notification-service:
         condition: service_healthy
+volumes:
+  azurite_data:
