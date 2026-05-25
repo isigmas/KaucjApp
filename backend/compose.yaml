@@ -92,7 +92,7 @@ services:
       - AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT=http://127.0.0.1:10000/devstoreaccount1
       - AZURE_STORAGE_PUBLIC_READ_ACCESS=true
       - AZURE_STORAGE_ACCOUNT_NAME=devstoreaccount1
-      - AZURE_STORAGE_ACCOUNT_KEY=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KkM1jBgHAAQ==
+      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_KEY}
     depends_on:
       users-db:
         condition: service_healthy
