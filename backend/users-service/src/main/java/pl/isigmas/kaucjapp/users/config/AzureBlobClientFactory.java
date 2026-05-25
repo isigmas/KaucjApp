@@ -53,10 +53,8 @@ public final class AzureBlobClientFactory {
 
     private static BlobServiceClient createForAzurite(AzureStorageProperties properties) {
         String endpoint = normalizeProxyUri(properties.getDevelopmentStorageProxyUri()) + "/" + AZURITE_ACCOUNT_NAME;
-        String accountKey = StringUtils.hasText(properties.getAccountKey())
-                ? normalizeAccountKey(properties.getAccountKey())
-                : AZURITE_ACCOUNT_KEY;
-        StorageSharedKeyCredential credential = new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME, accountKey);
+        StorageSharedKeyCredential credential = new StorageSharedKeyCredential(
+                AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY);
         return new BlobServiceClientBuilder()
                 .endpoint(endpoint)
                 .credential(credential)
