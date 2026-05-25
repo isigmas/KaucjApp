@@ -11,15 +11,12 @@ import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.*;
-import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 import pl.isigmas.kaucjapp.users.service.AzureBlobService;
 import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -322,21 +319,40 @@ public class UserController {
     }
 
     @GetMapping("/me/profile-picture/upload-url")
+    @Operation(
+            summary = "Get SAS URL for profile picture upload",
+            description = "Returns a short-lived URL for direct PUT upload to blob storage. "
+                    + "Optional query content_type: image/jpeg (default), image/png, image/webp. "
+                    + "Mobile must PUT with matching Content-Type and x-ms-blob-type: BlockBlob.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "upload_url and blob_name for the client."),
+            @ApiResponse(responseCode = "400", description = "Unsupported content_type (USER_008)."),
+            @ApiResponse(responseCode = "500", description = "Blob storage unavailable (USER_009).")
+    })
     public ResponseEntity<UploadUrlDTO> getUploadUrl(
-            @RequestHeader("X-User-Id") Long currentUserId) {
-        UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId);
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestParam(value = "content_type", required = false, defaultValue = "image/jpeg") String contentType) {
+        UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId, contentType);
         return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/me/profile-picture/confirm")
+    @Operation(
+            summary = "Confirm profile picture upload",
+            description = "Validates the uploaded blob (ownership, size, JPEG/PNG/WebP), saves public URL, then deletes the previous blob.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Updated UserDTO with profile_picture_url."),
+            @ApiResponse(responseCode = "400", description = "Invalid blob_name or upload validation failed (USER_008)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
     public ResponseEntity<UserDTO> confirmUpload(
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody ConfirmUploadDTO dto) {
 
         UserDTO current = userService.getUserById(currentUserId);
         String publicUrl = azureBlobService.confirmProfilePicture(currentUserId, dto.blobName());
-        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
         UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
+        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
         return ResponseEntity.ok(updated);
     }
 
