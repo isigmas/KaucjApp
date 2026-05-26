@@ -17,6 +17,9 @@ public interface DepositMachineReviewRepository  extends JpaRepository<DepositMa
 
     Optional<DepositMachineReview> findByReviewerIdAndDepositMachineId(Long reviewerId, Long depositMachineId);
 
+    boolean existsByReviewerIdAndDepositMachineId(Long reviewerId, Long depositMachineId);
+
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE DepositMachineReview d

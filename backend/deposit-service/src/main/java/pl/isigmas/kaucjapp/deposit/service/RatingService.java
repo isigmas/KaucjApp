@@ -19,7 +19,6 @@ import pl.isigmas.kaucjapp.deposit.repository.RatingRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -34,6 +33,10 @@ public class RatingService {
     public void createReview(Long depositMachineId, Long reviewerId, @Valid ReviewRequestDTO dto) {
         Rating rating = ratingRepository.findById(depositMachineId)
                 .orElseThrow(() -> new DepositMachineNotFoundException(depositMachineId));
+
+        if(depositMachineReviewRepository.existsByReviewerIdAndDepositMachineId(reviewerId,depositMachineId)){
+            throw new ReviewForbiddenException("Review for this machine already exists for this user");
+        }
 
         DepositMachineReview review = DepositMachineReview.builder()
                 .depositMachineId(depositMachineId)
@@ -60,7 +63,7 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewResponseDTO> getDepositMachineReviews(Long depositMachineId) {
+    public List<ReviewResponseDTO> getDepositMachineReviews(Long depositMachineId, Long currentUserId) {
         if (!ratingRepository.existsById(depositMachineId)) {
             throw new DepositMachineNotFoundException(depositMachineId);
         }
@@ -68,6 +71,7 @@ public class RatingService {
         return depositMachineReviewRepository
                 .findByDepositMachineIdOrderByCreatedAtDesc(depositMachineId)
                 .stream()
+                .filter(review -> currentUserId == null || !currentUserId.equals(review.getReviewerId()))
                 .map(this::mapReviewToDTO)
                 .toList();
     }

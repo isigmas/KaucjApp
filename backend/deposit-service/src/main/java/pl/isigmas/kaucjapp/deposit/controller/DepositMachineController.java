@@ -96,9 +96,11 @@ public class DepositMachineController {
     }
 
     @GetMapping("/machine/{id}/reviews")
-    public ResponseEntity<List<ReviewResponseDTO>> getDepositMachineReviews(@PathVariable Long id) {
-        log.info("Fetching reviews for deposit machine {}", id);
-        return ResponseEntity.ok(ratingService.getDepositMachineReviews(id));
+    public ResponseEntity<List<ReviewResponseDTO>> getDepositMachineReviews(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        log.info("Fetching reviews for deposit machine {} for user {}", id, userId);
+        return ResponseEntity.ok(ratingService.getDepositMachineReviews(id,userId));
     }
 
     @PatchMapping("/reviews/{id}")

@@ -139,7 +139,7 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
     // ---------- Etap 3: GET /api/deposit/machine/{id}/reviews ----------
 
     @Test
-    void getReviews_returnsListWithReviewerIds() throws Exception {
+    void getReviews_withoutUserHeader_returnsAllReviews() throws Exception {
         Long machineId = createMachine();
         postReview(machineId, 2001L, 5, "great");
         postReview(machineId, 2002L, 3, "ok");
@@ -153,6 +153,59 @@ public class DepositMachineReviewEndpointTest extends BaseIntegrationTest {
         assertThat(depositMachineReviewRepository.findAll())
                 .extracting(r -> r.getScore().intValueExact())
                 .containsExactlyInAnyOrder(5, 3);
+    }
+
+    @Test
+    void getReviews_withUserHeader_excludesCallerReview() throws Exception {
+        Long machineId = createMachine();
+        postReview(machineId, 2001L, 5, "great");
+        postReview(machineId, 2002L, 3, "ok");
+
+        mockMvc.perform(get("/api/deposit/machine/{id}/reviews", machineId)
+                        .header("X-User-Id", 2001L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].reviewer_id").value(2002))
+                .andExpect(jsonPath("$[0].comment").value("ok"));
+    }
+
+    @Test
+    void getReviews_withUserHeader_whenOnlyOwnReview_returnsEmptyList() throws Exception {
+        Long machineId = createMachine();
+        postReview(machineId, 2001L, 4, "solo");
+
+        mockMvc.perform(get("/api/deposit/machine/{id}/reviews", machineId)
+                        .header("X-User-Id", 2001L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void checkReview_whenUserHasReview_returnsReviewDetails() throws Exception {
+        Long machineId = createMachine();
+        postReview(machineId, 2001L, 4, "my review");
+
+        mockMvc.perform(get("/api/deposit/reviews/check")
+                        .param("id", machineId.toString())
+                        .header("X-User-Id", 2001L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.already_reviewed").value(true))
+                .andExpect(jsonPath("$.review.reviewer_id").value(2001))
+                .andExpect(jsonPath("$.review.score").value(4))
+                .andExpect(jsonPath("$.review.comment").value("my review"));
+    }
+
+    @Test
+    void checkReview_whenUserHasNoReview_returnsNotReviewed() throws Exception {
+        Long machineId = createMachine();
+        postReview(machineId, 2002L, 3, "someone else");
+
+        mockMvc.perform(get("/api/deposit/reviews/check")
+                        .param("id", machineId.toString())
+                        .header("X-User-Id", 2001L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.already_reviewed").value(false))
+                .andExpect(jsonPath("$.review").isEmpty());
     }
 
     @Test

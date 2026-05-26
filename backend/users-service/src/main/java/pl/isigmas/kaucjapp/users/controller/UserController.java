@@ -11,15 +11,12 @@ import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import pl.isigmas.kaucjapp.users.DTO.*;
-import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 import pl.isigmas.kaucjapp.users.service.AzureBlobService;
 import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -321,30 +318,60 @@ public class UserController {
         return ResponseEntity.ok(ranking);
     }
 
-    @PostMapping(value = "/me/profile-picture", consumes = "multipart/form-data")
+    @GetMapping("/me/profile-picture/upload-url")
     @Operation(
-            summary = "Upload my profile picture",
-            description = "Multipart form field `file` (JPEG/PNG/WebP, max 5MB). Stores image in Azure Blob / Azurite and saves URL on user profile.")
+            summary = "Get SAS URL for profile picture upload",
+            description = "Returns a short-lived URL for direct PUT upload to blob storage. "
+                    + "Optional query content_type: image/jpeg (default), image/png, image/webp. "
+                    + "Mobile must PUT with matching Content-Type and x-ms-blob-type: BlockBlob.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Profile updated with new profile_picture_url."),
-            @ApiResponse(responseCode = "400", description = "Invalid file (USER_008) or missing X-User-Id."),
-            @ApiResponse(responseCode = "404", description = "User not found (USER_001)."),
-            @ApiResponse(responseCode = "500", description = "Blob storage upload failed (USER_009).")
+            @ApiResponse(responseCode = "200", description = "upload_url and blob_name for the client."),
+            @ApiResponse(responseCode = "400", description = "Unsupported content_type (USER_008)."),
+            @ApiResponse(responseCode = "500", description = "Blob storage unavailable (USER_009).")
     })
-    public ResponseEntity<UserDTO> uploadProfilePicture(
+    public ResponseEntity<UploadUrlDTO> getUploadUrl(
             @RequestHeader("X-User-Id") Long currentUserId,
-            @RequestPart("file") MultipartFile file) {
-        try {
-            UserDTO current = userService.getUserById(currentUserId);
-            String imageUrl = azureBlobService.uploadProfilePicture(currentUserId, file);
-            azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
-            UserDTO updatedUser = userService.updateProfilePictureUrl(currentUserId, imageUrl);
-            log.info("User {} updated profile picture", currentUserId);
-            return ResponseEntity.ok(updatedUser);
-        } catch (IOException e) {
-            log.error("Failed to read profile picture for user {}", currentUserId, e);
-            throw ProfilePictureUploadException.storageFailed();
-        }
+            @RequestParam(value = "content_type", required = false, defaultValue = "image/jpeg") String contentType) {
+        UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId, contentType);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/me/profile-picture/confirm")
+    @Operation(
+            summary = "Confirm profile picture upload",
+            description = "Validates the uploaded blob (ownership, size, JPEG/PNG/WebP), saves public URL, then deletes the previous blob.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Updated UserDTO with profile_picture_url."),
+            @ApiResponse(responseCode = "400", description = "Invalid blob_name or upload validation failed (USER_008)."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<UserDTO> confirmUpload(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody ConfirmUploadDTO dto) {
+
+        UserDTO current = userService.getUserById(currentUserId);
+        String publicUrl = azureBlobService.confirmProfilePicture(currentUserId, dto.blobName());
+        UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
+        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/me/profile-picture")
+    @Operation(
+            summary = "Remove my profile picture",
+            description = "Clears profile_picture_url in the database, then best-effort deletes the blob from storage. "
+                    + "Idempotent when no picture is set.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Profile picture removed."),
+            @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
+    })
+    public ResponseEntity<Void> deleteProfilePicture(
+            @RequestHeader("X-User-Id") Long currentUserId) {
+
+        UserDTO current = userService.getUserById(currentUserId);
+        userService.clearProfilePicture(currentUserId);
+        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
+        return ResponseEntity.noContent().build();
     }
 
 }
