@@ -63,7 +63,7 @@ public class RatingService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewResponseDTO> getDepositMachineReviews(Long depositMachineId) {
+    public List<ReviewResponseDTO> getDepositMachineReviews(Long depositMachineId, Long currentUserId) {
         if (!ratingRepository.existsById(depositMachineId)) {
             throw new DepositMachineNotFoundException(depositMachineId);
         }
@@ -71,6 +71,7 @@ public class RatingService {
         return depositMachineReviewRepository
                 .findByDepositMachineIdOrderByCreatedAtDesc(depositMachineId)
                 .stream()
+                .filter(review -> currentUserId == null || !currentUserId.equals(review.getReviewerId()))
                 .map(this::mapReviewToDTO)
                 .toList();
     }
