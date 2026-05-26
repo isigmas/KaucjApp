@@ -239,7 +239,13 @@ services:
     restart: "no"
     volumes:
       - ./monitor/src/main/resources/init.cql:/init.cql
-    command: /bin/bash -c "cqlsh monitor-db -f /init.cql"
+    command: >
+      /bin/bash -c "
+      until cqlsh monitor-db -e 'describe cluster' > /dev/null 2>&1; do
+        sleep 5
+      done &&
+      cqlsh monitor-db -f /init.cql
+      "
     depends_on:
       monitor-db:
         condition: service_healthy
