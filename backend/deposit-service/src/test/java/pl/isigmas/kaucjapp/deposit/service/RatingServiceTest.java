@@ -131,10 +131,70 @@ class RatingServiceTest {
         when(depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(machineId))
                 .thenReturn(List.of(anonymized));
 
-        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId,null);
+        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId, null);
 
         assertThat(result).singleElement()
                 .satisfies(dto -> assertThat(dto.getReviewerId()).isNull());
+    }
+
+    @Test
+    void getDepositMachineReviews_withCurrentUser_excludesOwnReview() {
+        Long machineId = 100L;
+        Long currentUserId = 11L;
+        DepositMachineReview own = buildReview(1L, machineId, currentUserId, new BigDecimal("5"), "mine");
+        DepositMachineReview other = buildReview(2L, machineId, 12L, new BigDecimal("3"), "theirs");
+
+        when(ratingRepository.existsById(machineId)).thenReturn(true);
+        when(depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(machineId))
+                .thenReturn(List.of(own, other));
+
+        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId, currentUserId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getReviewerId()).isEqualTo(12L);
+        assertThat(result.getFirst().getComment()).isEqualTo("theirs");
+    }
+
+    @Test
+    void getDepositMachineReviews_withoutCurrentUser_returnsAllReviews() {
+        Long machineId = 100L;
+        DepositMachineReview r1 = buildReview(1L, machineId, 11L, new BigDecimal("5"), "a");
+        DepositMachineReview r2 = buildReview(2L, machineId, 12L, new BigDecimal("3"), "b");
+
+        when(ratingRepository.existsById(machineId)).thenReturn(true);
+        when(depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(machineId))
+                .thenReturn(List.of(r1, r2));
+
+        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId, null);
+
+        assertThat(result).hasSize(2);
+    }
+
+    // ---------- getReviewForDepositMachine (check) ----------
+
+    @Test
+    void getReviewForDepositMachine_whenExists_returnsReview() {
+        Long machineId = 10L;
+        Long reviewerId = 20L;
+        DepositMachineReview review = buildReview(5L, machineId, reviewerId, new BigDecimal("4"), "my take");
+
+        when(depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(reviewerId, machineId))
+                .thenReturn(Optional.of(review));
+
+        Optional<ReviewResponseDTO> result = ratingService.getReviewForDepositMachine(reviewerId, machineId);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getReviewId()).isEqualTo(5L);
+        assertThat(result.get().getReviewerId()).isEqualTo(reviewerId);
+        assertThat(result.get().getComment()).isEqualTo("my take");
+    }
+
+    @Test
+    void getReviewForDepositMachine_whenMissing_returnsEmpty() {
+        when(depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(20L, 10L))
+                .thenReturn(Optional.empty());
+
+        assertThat(ratingService.getReviewForDepositMachine(20L, 10L)).isEmpty();
     }
 
     // ---------- updateReview ----------
