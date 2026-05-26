@@ -217,18 +217,23 @@ services:
       start_period: 30s
 
   monitor-db:
-    image: postgres:latest
+    image: cassandra:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: monitor_db
-    volumes:
-      - ./monitor/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+      CASSANDRA_CLUSTER_NAME: "MonitorCluster"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "nodetool status | grep UN" ]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  monitor-db-init:
+    image: cassandra:latest
+    volumes:
+      - ./monitor/src/main/resources/init.cql:/init.cql
+    command: /bin/bash -c "cqlsh monitor-db -f /init.cql"
+    depends_on:
+      monitor-db:
+        condition: service_healthy
 
   monitor-service:
     build:
@@ -240,9 +245,8 @@ services:
       - KAFKA_SERVERS=kafka:9092
       - SERVER_PORT=8080
       - SERVER_HOST=0.0.0.0
-      - DATASOURCE_USERNAME=${DB_USER}
-      - DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - DATASOURCE_URL=jdbc:postgresql://monitor-db:5432/monitor_db
+      - CASSANDRA_CONTACT_POINTS=monitor-db:9042
+      - CASSANDRA_DATACENTER=datacenter1
     depends_on:
       monitor-db:
         condition: service_healthy
