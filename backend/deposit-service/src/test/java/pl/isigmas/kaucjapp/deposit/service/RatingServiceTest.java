@@ -102,7 +102,7 @@ class RatingServiceTest {
         when(depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(machineId))
                 .thenReturn(List.of(r1, r2));
 
-        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId);
+        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId,null);
 
         assertThat(result).hasSize(2);
         assertThat(result)
@@ -116,7 +116,7 @@ class RatingServiceTest {
     void getDepositMachineReviews_unknownMachine_throwsDepositMachineNotFound() {
         when(ratingRepository.existsById(404L)).thenReturn(false);
 
-        assertThatThrownBy(() -> ratingService.getDepositMachineReviews(404L))
+        assertThatThrownBy(() -> ratingService.getDepositMachineReviews(404L,null))
                 .isInstanceOf(DepositMachineNotFoundException.class);
 
         verifyNoInteractions(depositMachineReviewRepository);
@@ -131,7 +131,7 @@ class RatingServiceTest {
         when(depositMachineReviewRepository.findByDepositMachineIdOrderByCreatedAtDesc(machineId))
                 .thenReturn(List.of(anonymized));
 
-        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId);
+        List<ReviewResponseDTO> result = ratingService.getDepositMachineReviews(machineId,null);
 
         assertThat(result).singleElement()
                 .satisfies(dto -> assertThat(dto.getReviewerId()).isNull());
