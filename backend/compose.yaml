@@ -222,9 +222,10 @@ services:
       CASSANDRA_CLUSTER_NAME: "MonitorCluster"
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status | grep UN" ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   monitor-db-init:
     image: cassandra:latest
@@ -257,7 +258,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
   gql-gateway:
     build:
