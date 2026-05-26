@@ -6,6 +6,8 @@ services:
       timeout: 15s
       retries: 10
       start_period: 60s
+    volumes:
+      - kafka_data:/var/lib/kafka/data
 
   monitor-db:
     healthcheck:
@@ -14,3 +16,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
+
+volumes:
+  kafka_data:
