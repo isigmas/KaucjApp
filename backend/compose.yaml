@@ -228,7 +228,7 @@ services:
     environment:
       CASSANDRA_CLUSTER_NAME: "MonitorCluster"
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status | grep UN" ]
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE CLUSTER'" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -267,6 +267,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      monitor-db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/monitor/status" ]
       interval: 10s

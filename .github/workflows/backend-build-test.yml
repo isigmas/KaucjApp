@@ -32,7 +32,10 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           TESTCONTAINERS_RYUK_DISABLED: true
-        run: ./mvnw test 
+        run: ./mvnw test
+
+      - name: Cleanup after tests
+        run: docker system prune -f
 
       - name: Build and launch containers
         env:

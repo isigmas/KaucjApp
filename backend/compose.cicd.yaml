@@ -10,6 +10,10 @@ services:
       - kafka_data:/var/lib/kafka/data
 
   monitor-db:
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_CLUSTER_NAME=MonitorCluster
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status | grep UN" ]
       interval: 10s
