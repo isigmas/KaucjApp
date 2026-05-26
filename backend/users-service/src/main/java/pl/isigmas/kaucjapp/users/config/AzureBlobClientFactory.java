@@ -12,12 +12,16 @@ public final class AzureBlobClientFactory {
 
     private static final String AZURITE_ACCOUNT_NAME = "devstoreaccount1";
 
+    /** Well-known Azurite account key (required for {@code generateSas()}). */
+    private static final String AZURITE_ACCOUNT_KEY =
+            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+
     private AzureBlobClientFactory() {
     }
 
     public static BlobServiceClient create(AzureStorageProperties properties) {
         if (properties.isUseDevelopmentStorage()) {
-            return createForAzurite(properties.getDevelopmentStorageProxyUri());
+            return createForAzurite(properties);
         }
         if (StringUtils.hasText(properties.getConnectionString())) {
             return new BlobServiceClientBuilder()
@@ -47,10 +51,13 @@ public final class AzureBlobClientFactory {
         return "UseDevelopmentStorage=true;DevelopmentStorageProxyUri=" + base + ";";
     }
 
-    private static BlobServiceClient createForAzurite(String proxyUri) {
-        String connectionString = buildAzuriteConnectionString(proxyUri);
+    private static BlobServiceClient createForAzurite(AzureStorageProperties properties) {
+        String endpoint = normalizeProxyUri(properties.getDevelopmentStorageProxyUri()) + "/" + AZURITE_ACCOUNT_NAME;
+        StorageSharedKeyCredential credential = new StorageSharedKeyCredential(
+                AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY);
         return new BlobServiceClientBuilder()
-                .connectionString(connectionString)
+                .endpoint(endpoint)
+                .credential(credential)
                 .buildClient();
     }
 
