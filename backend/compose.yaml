@@ -236,6 +236,7 @@ services:
 
   monitor-db-init:
     image: cassandra:latest
+    restart: "no"
     volumes:
       - ./monitor/src/main/resources/init.cql:/init.cql
     command: /bin/bash -c "cqlsh monitor-db -f /init.cql"
