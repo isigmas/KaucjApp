@@ -25,11 +25,17 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run Spring Boot Tests (including Testcontainers)
+      - name: Set up Docker Build
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run Spring Boot Tests
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           TESTCONTAINERS_RYUK_DISABLED: true
-        run: ./mvnw test 
+        run: ./mvnw test
+
+      - name: Cleanup after tests
+        run: docker system prune -f
 
       - name: Build and launch containers
         env:
@@ -41,7 +47,7 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           IT_SECRET: ${{ secrets.IT_SECRET }}
-        run: docker compose -f compose.yaml -f compose.cicd.yaml up --build -d --wait
+        run: docker compose -f compose.yaml -f compose.cicd.yaml up --build -d --wait --wait-timeout 300
 
       - name: Print logs on failure
         if: failure()

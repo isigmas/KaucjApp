@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.ResetPasswordEmailRequest;
 import pl.isigmas.kaucjapp.auth.service.AuthService;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 
 @Slf4j
 @RestController
@@ -21,6 +22,7 @@ import pl.isigmas.kaucjapp.auth.dto.request.User;
 public class AuthController {
 
     private final AuthService service;
+    private final Logger logger;
 
     @GetMapping("/status")
     public ResponseEntity<String> getStatus() {
@@ -38,6 +40,7 @@ public class AuthController {
     ) {
         service.create(newUser);
         log.info("New user created");
+        logger.info("New user created");
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -47,6 +50,8 @@ public class AuthController {
             @Valid @RequestBody LoginCredentials credentials
             ) {
         String token = service.login(credentials);
+
+        logger.important("Login successful " + credentials.getIdentifier());
 
         return ResponseEntity.ok(token);
     }
