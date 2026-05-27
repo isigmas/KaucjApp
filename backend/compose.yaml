@@ -224,18 +224,31 @@ services:
       start_period: 30s
 
   monitor-db:
-    image: postgres:latest
+    image: cassandra:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: monitor_db
-    volumes:
-      - ./monitor/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+      CASSANDRA_CLUSTER_NAME: "MonitorCluster"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE CLUSTER'" ]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
+
+  monitor-db-init:
+    image: cassandra:latest
+    restart: "no"
+    volumes:
+      - ./monitor/src/main/resources/init.cql:/init.cql
+    command: >
+      /bin/bash -c "
+      until cqlsh monitor-db -e 'describe cluster' > /dev/null 2>&1; do
+        sleep 5
+      done &&
+      cqlsh monitor-db -f /init.cql
+      "
+    depends_on:
+      monitor-db:
+        condition: service_healthy
 
   monitor-service:
     build:
@@ -247,23 +260,24 @@ services:
       - KAFKA_SERVERS=kafka:9092
       - SERVER_PORT=8080
       - SERVER_HOST=0.0.0.0
-      - DATASOURCE_USERNAME=${DB_USER}
-      - DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - DATASOURCE_URL=jdbc:postgresql://monitor-db:5432/monitor_db
+      - CASSANDRA_CONTACT_POINTS=monitor-db:9042
+      - CASSANDRA_DATACENTER=datacenter1
     depends_on:
       monitor-db:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      monitor-db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/monitor/status" ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
+      
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
-    container_name: kaucjapp-azurite
     ports:
       - "10000:10000"
     command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
