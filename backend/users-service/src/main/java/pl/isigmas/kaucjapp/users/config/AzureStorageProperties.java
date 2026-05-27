@@ -17,9 +17,9 @@ public class AzureStorageProperties {
 
     /**
      * Azurite proxy host reachable from users-service.
-     * Docker: {@code http://azurite:10000} — local JVM: {@code http://127.0.0.1:10000}.
+     * {@code compose.yaml} hardcodes {@code http://azurite:10000} in Docker; host JVM uses {@code .env} ({@code 127.0.0.1}).
      */
-    private String developmentStorageProxyUri = "http://127.0.0.1:10000";
+    private String developmentStorageProxyUri;
 
     /**
      * Azure Storage connection string (production). Ignored when {@link #useDevelopmentStorage} is true.
@@ -31,7 +31,7 @@ public class AzureStorageProperties {
      */
     private String blobEndpoint;
 
-    private String accountName = "devstoreaccount1";
+    private String accountName;
 
     private String accountKey;
 

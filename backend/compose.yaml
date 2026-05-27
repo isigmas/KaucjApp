@@ -87,11 +87,18 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - AZURE_STORAGE_USE_DEVELOPMENT_STORAGE=true
+      - AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI=http://azurite:10000
+      - AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT=${AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT:-http://127.0.0.1:10000/devstoreaccount1}
+      - AZURE_STORAGE_CONTAINER_NAME=profile-pictures
+      - AZURE_STORAGE_PUBLIC_READ_ACCESS=true
     depends_on:
       users-db:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      azurite:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
       interval: 5s
@@ -216,29 +223,75 @@ services:
       retries: 20
       start_period: 30s
 
-  api-gateway:
+  monitor-db:
+    image: cassandra:latest
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MonitorCluster"
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE CLUSTER'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  monitor-db-init:
+    image: cassandra:latest
+    restart: "no"
+    volumes:
+      - ./monitor/src/main/resources/init.cql:/init.cql
+    command: >
+      /bin/bash -c "
+      until cqlsh monitor-db -e 'describe cluster' > /dev/null 2>&1; do
+        sleep 5
+      done &&
+      cqlsh monitor-db -f /init.cql
+      "
+    depends_on:
+      monitor-db:
+        condition: service_healthy
+
+  monitor-service:
     build:
       context: .
-      dockerfile: api-gateway/Dockerfile
+      dockerfile: monitor/Dockerfile
+      args:
+        SERVICE_NAME: monitor-service
+    environment:
+      - KAFKA_SERVERS=kafka:9092
+      - SERVER_PORT=8080
+      - SERVER_HOST=0.0.0.0
+      - CASSANDRA_CONTACT_POINTS=monitor-db:9042
+      - CASSANDRA_DATACENTER=datacenter1
+    depends_on:
+      monitor-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      monitor-db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/monitor/status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+      
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
     ports:
-      - '8080:8080'
+      - "10000:10000"
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    volumes:
+      - azurite_data:/data
+
+  gql-gateway:
+    build:
+      context: .
+      dockerfile: gql-gateway/Dockerfile
+      args:
+        SERVICE_NAME: gql-gateway
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - GATEWAY_ROUTES_0_ID=users
-      - GATEWAY_ROUTES_0_URI=http://users-service:8080
-      - GATEWAY_ROUTES_0_PATH=/api/user/**
-      - GATEWAY_ROUTES_1_ID=offers
-      - GATEWAY_ROUTES_1_URI=http://offers-service:8080
-      - GATEWAY_ROUTES_1_PATH=/api/offer/**
-      - GATEWAY_ROUTES_2_ID=auth
-      - GATEWAY_ROUTES_2_URI=http://auth-service:8080
-      - GATEWAY_ROUTES_2_PATH=/api/auth/**
-      - GATEWAY_ROUTES_3_ID=deposit
-      - GATEWAY_ROUTES_3_URI=http://deposit-service:8080
-      - GATEWAY_ROUTES_3_PATH=/api/deposit/**
-      - GATEWAY_ROUTES_4_ID=notification
-      - GATEWAY_ROUTES_4_URI=http://notification-service:8080
-      - GATEWAY_ROUTES_4_PATH=/api/notification/**
     depends_on:
       offers-service:
         condition: service_healthy
@@ -250,3 +303,23 @@ services:
         condition: service_healthy
       notification-service:
         condition: service_healthy
+      monitor-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      gql-gateway:
+        condition: service_healthy
+volumes:
+  azurite_data:

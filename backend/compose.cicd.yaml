@@ -1,29 +1,25 @@
 services:
   kafka:
     healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 15s
       timeout: 15s
       retries: 10
       start_period: 60s
-
-  users-service:
-    environment:
-      AZURE_STORAGE_USE_DEVELOPMENT_STORAGE: "true"
-      AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI: "http://azurite:10000"
-      AZURE_STORAGE_CONTAINER_NAME: profile-pictures
-      AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT: "http://127.0.0.1:10000/devstoreaccount1"
-      AZURE_STORAGE_PUBLIC_READ_ACCESS: "true"
-    depends_on:
-      azurite:
-        condition: service_started
-
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    ports:
-      - "10000:10000"
-    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
     volumes:
-      - azurite_data:/data
+      - kafka_data:/var/lib/kafka/data
+
+  monitor-db:
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_CLUSTER_NAME=MonitorCluster
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status | grep UN" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
 
 volumes:
-  azurite_data:
+  kafka_data:
