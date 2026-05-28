@@ -13,9 +13,10 @@ export default function HasAddedMachineReview({
   isDefaultExpanded = false,
 }: MachineReviewCheckProps) {
   const { data } = useMachineReviewCheck(machineId);
+  const isReviewed = data?.alreadyReviewed ?? false;
   const existingReview = data?.review ?? null;
 
-  if (existingReview) {
+  if (isReviewed && existingReview) {
     return (
       <PreviewOrEditReview
         machineId={machineId}
