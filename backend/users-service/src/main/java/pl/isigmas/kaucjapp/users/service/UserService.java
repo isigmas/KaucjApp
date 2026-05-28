@@ -22,8 +22,6 @@ import pl.isigmas.kaucjapp.users.model.UserStats;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
-import pl.isigmas.kaucjapp.common.logger.Logger;
-
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -51,7 +49,6 @@ public class UserService {
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final Logger logger;
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
