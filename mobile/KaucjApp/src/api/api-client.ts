@@ -65,9 +65,10 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
+    console.debug(`[API Error] ${JSON.stringify(error, null, 2)}`);
 
     if (error.code === "ECONNABORTED" || error.message === "Network Error") {
-      console.error("[API Error] Global Network or Timeout issue.");
+      console.error(`[API Error] Global Network or Timeout issue`);
       return Promise.reject(error);
     }
 
