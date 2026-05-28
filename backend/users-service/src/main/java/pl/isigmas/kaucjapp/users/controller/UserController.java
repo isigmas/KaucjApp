@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +15,10 @@ import pl.isigmas.kaucjapp.users.service.AzureBlobService;
 import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 
 import java.util.List;
-import java.util.Map;
+
 
 @Slf4j
 @RestController
@@ -36,7 +36,7 @@ public class UserController {
     private final RatingService ratingService;
     private final AzureBlobService azureBlobService;
     private final UserPeriodStatsService userPeriodStatsService;
-    private final DefaultErrorAttributes defaultErrorAttributes;
+    private final Logger logger;
 
 
     @GetMapping("/me/addresses")
@@ -52,7 +52,7 @@ public class UserController {
     public ResponseEntity<List<UserAddressDTO>> getMyAddresses(
             @RequestHeader("X-User-Id") Long myUserId) {
 
-        log.info("Fetching addresses for user: {}", myUserId);
+        logger.info("Fetching addresses for user: "+ myUserId);
         return ResponseEntity.ok(userService.getUserAddresses(myUserId));
     }
 
@@ -69,7 +69,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-        log.info("Fetching user with ID: {}", id);
+        logger.info("Fetching user with ID: "+ id);
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
@@ -88,7 +88,7 @@ public class UserController {
     public ResponseEntity<UserDTO> getMe(
             @RequestHeader("X-User-Id") Long myUserId
     ) {
-        log.info("Fetching user with ID: {}",myUserId);
+        logger.info("Fetching user with ID: %d".formatted(myUserId));
         return ResponseEntity.ok(userService.getUserById(myUserId));
     }
 
@@ -105,7 +105,7 @@ public class UserController {
     public ResponseEntity<UserPeriodStatsDTO> getMyPeriodStats(
             @RequestHeader("X-User-Id") Long myUserId,
             @RequestParam(defaultValue = "30") int days) {
-        log.info("Fetching period stats for user {} (last {} days)", myUserId, days);
+        logger.info("Fetching period stats for user %d (last %d days)".formatted(myUserId, days));
         return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(myUserId, days));
     }
 
@@ -121,7 +121,7 @@ public class UserController {
     public ResponseEntity<UserPeriodStatsDTO> getUserPeriodStats(
             @PathVariable Long id,
             @RequestParam(defaultValue = "30") int days) {
-        log.info("Fetching period stats for user {} (last {} days)", id, days);
+        logger.info("Fetching period stats for user %d (last %d days)".formatted( id, days));
         return ResponseEntity.ok(userPeriodStatsService.getStatsForLastDays(id, days));
     }
 
@@ -159,7 +159,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long loggedInUserId) {
 
         userService.updateUser(loggedInUserId, updateUserDTO);
-        log.info("User updated, ID: {}", loggedInUserId);
+        logger.info("User updated, ID: %d".formatted(loggedInUserId));
         return ResponseEntity.noContent().build();
     }
 
@@ -178,7 +178,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long loggedInUserId) {
 
         userService.deleteUser(loggedInUserId);
-        log.info("User deleted, ID: {}", loggedInUserId);
+        logger.important("User deleted, ID: %d".formatted(loggedInUserId));
         return ResponseEntity.noContent().build();
     }
 
@@ -194,7 +194,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Rating aggregate not found (USER_002).")
     })
     public ResponseEntity<RatingDTO> getUserRating(@PathVariable Long id) {
-        log.info("Fetching rating for user ID: {}", id);
+        logger.info("Fetching rating for user ID: %d".formatted(id));
         return ResponseEntity.ok(ratingService.getRatingDTO(id));
     }
 
@@ -217,7 +217,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId) {
 
         ratingService.addReview(id, currentUserId, request);
-        log.info("User {} added review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
+        logger.info("User %d added review (score %f) for user ID: %d".formatted(currentUserId, request.getScore(), id));
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -235,7 +235,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId) {
 
         ratingService.updateReview(id, currentUserId, request);
-        log.info("User {} updated review (score {}) for user ID: {}", currentUserId, request.getScore(), id);
+        logger.info("User %d updated review (score %f) for user ID: %d".formatted(currentUserId, request.getScore(), id));
         return ResponseEntity.noContent().build();
     }
 
@@ -251,7 +251,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId) {
 
         ratingService.deleteReview(id, currentUserId);
-        log.info("User {} deleted review for user ID: {}", currentUserId, id);
+        logger.info("User %d deleted review for user ID: %d".formatted(currentUserId, id));
         return ResponseEntity.noContent().build();
     }
 
@@ -261,7 +261,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId) {
 
         var review = ratingService.getReview(id);
-        log.info("Getting review {} for user ID: {}", id, currentUserId);
+        logger.info("Fetching review %d for user ID: %d".formatted(id, currentUserId));
         return ResponseEntity.ok(review);
     }
 
@@ -273,6 +273,7 @@ public class UserController {
             @RequestParam Long offerId,
             @RequestHeader("X-User-Id") Long currentUserId) {
 
+        logger.info("Checking for review for user %d on offer %d".formatted(currentUserId,offerId));
         return ratingService.getReviewForOffer(currentUserId, offerId)
                 .map(review -> ResponseEntity.ok(
                         ReviewCheckResponseDTO.builder()
@@ -298,7 +299,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found (USER_001).")
     })
     public ResponseEntity<List<ReviewResponseDTO>> getUserReviews(@PathVariable Long id) {
-        log.info("Fetching reviews for user ID: {}", id);
+        logger.info("Fetching reviews for user ID: %d".formatted(id));
         return ResponseEntity.ok(ratingService.getUserReviews(id));
     }
 
@@ -313,7 +314,7 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        log.info("Getting stats ranking for type: {}, page: {}, size: {}", type, page, size);
+        logger.info("Fetching stats ranking for type: %s, page: %d, size: %d".formatted(type, page, size));
         List<UserPeriodStatsDTO> ranking = userService.getStatsRanking(type, days, page, size);
         return ResponseEntity.ok(ranking);
     }
@@ -332,6 +333,7 @@ public class UserController {
     public ResponseEntity<UploadUrlDTO> getUploadUrl(
             @RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam(value = "content_type", required = false, defaultValue = "image/jpeg") String contentType) {
+        logger.info("Getting upload url for profile picture for user %d".formatted(currentUserId));
         UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId, contentType);
         return ResponseEntity.ok(dto);
     }
@@ -349,6 +351,7 @@ public class UserController {
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody ConfirmUploadDTO dto) {
 
+        logger.info("Confirming upload of profile picture for user %d".formatted(currentUserId));
         UserDTO current = userService.getUserById(currentUserId);
         String publicUrl = azureBlobService.confirmProfilePicture(currentUserId, dto.blobName());
         UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
@@ -368,6 +371,7 @@ public class UserController {
     public ResponseEntity<Void> deleteProfilePicture(
             @RequestHeader("X-User-Id") Long currentUserId) {
 
+        logger.info("Deleting profile picture for user %d".formatted(currentUserId));
         UserDTO current = userService.getUserById(currentUserId);
         userService.clearProfilePicture(currentUserId);
         azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
