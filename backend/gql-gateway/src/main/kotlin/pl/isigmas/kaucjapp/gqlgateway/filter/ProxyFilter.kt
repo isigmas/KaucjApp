@@ -156,7 +156,7 @@ open class ProxyFilter(
             inputStream.copyTo(outputStream)
             val bytes = outputStream.toByteArray()
             if (bytes.isEmpty()) null else bytes
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
