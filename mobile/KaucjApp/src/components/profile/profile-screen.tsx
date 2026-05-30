@@ -117,15 +117,11 @@ export default function ProfileScreen() {
           onPress={() => router.push("/profile/bookings")}
         />
         <ProfileMenuItem
-          icon="telescope"
-          title="Test opini userid 3; offerid 1 jak chcesz zmienic to w pliku src/components/profile/profile-screen.tsx linijka 122 XD"
+          icon="trophy"
+          title="Ranking"
+          subtitle="Top użytkownicy"
           delay={600}
-          onPress={() =>
-            router.push({
-              pathname: "/profile/test-review",
-              params: { userId: 2, offerId: 1 },
-            })
-          }
+          onPress={() => router.push("/profile/ranking")}
         />
       </View>
 

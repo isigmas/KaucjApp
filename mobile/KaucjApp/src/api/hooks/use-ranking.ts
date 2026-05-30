@@ -1,6 +1,12 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { apiClient } from "../api-client";
 import { UserStats, RankingQueryParams } from "@/src/types/ranking";
+import { AxiosError } from "axios";
+import { ApiErrorResponse } from "@/src/types";
 
 export const rankingKeys = {
   all: () => ["ranking"] as const,
@@ -10,7 +16,7 @@ export const rankingKeys = {
 };
 
 export const useRanking = (params: RankingQueryParams = {}) => {
-  return useQuery({
+  return useQuery<UserStats[], AxiosError<ApiErrorResponse>>({
     queryKey: rankingKeys.list(params),
     queryFn: async () => {
       const { data } = await apiClient.get<UserStats[]>("/user/ranking", {
@@ -18,6 +24,9 @@ export const useRanking = (params: RankingQueryParams = {}) => {
       });
       return data;
     },
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 

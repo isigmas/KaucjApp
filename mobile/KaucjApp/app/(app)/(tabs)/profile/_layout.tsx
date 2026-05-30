@@ -34,10 +34,13 @@ export default function HomeLayout() {
       />
 
       <Stack.Screen
-        name="test-review"
+        name="ranking"
         options={{
-          headerShown: false,
-          presentation: "transparentModal",
+          headerShown: true,
+          headerTitle: "Ranking",
+          headerLargeTitleEnabled: true,
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
         }}
       />
 
