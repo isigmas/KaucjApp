@@ -2,6 +2,7 @@ package pl.isigmas.kaucjapp.deposit.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -21,6 +22,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RatingService {
@@ -62,6 +64,8 @@ public class RatingService {
         rating.setAvgScore(newAvg);
         rating.setFeedbackCount(newCount);
 
+        log.info("New avg for deposit machine {}: {} (feedback count: {})",
+                depositMachineId, newAvg, newCount);
         logger.important("Review created for deposit machine ID: %d by user ID: %d (new avg: %s, count: %d)".formatted(
                 depositMachineId, reviewerId, newAvg, newCount));
     }
@@ -120,6 +124,7 @@ public class RatingService {
 
         depositMachineReviewRepository.save(review);
 
+        log.info("Updated review {} for deposit machine {}", reviewId, review.getDepositMachineId());
         logger.important("Review updated, ID: %d for deposit machine ID: %d".formatted(reviewId, review.getDepositMachineId()));
     }
 
@@ -161,6 +166,8 @@ public class RatingService {
 
         depositMachineReviewRepository.delete(review);
 
+        log.info("Deleted review {} for deposit machine {} (new avg: {}, count: {})",
+                reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0));
         logger.important("Review deleted, ID: %d for deposit machine ID: %d (new avg: %s, count: %d)".formatted(
                 reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0)));
     }
@@ -179,6 +186,7 @@ public class RatingService {
 
     @Transactional(readOnly = true)
     public Optional<ReviewResponseDTO> getReviewForDepositMachine(Long reviewerId, Long depositMachineId) {
+        log.info("Fetching review for reviewer {} and deposit machine {}", reviewerId, depositMachineId);
         logger.info("Checking review for user ID: %d and deposit machine ID: %d".formatted(reviewerId, depositMachineId));
 
         return depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(reviewerId, depositMachineId)
@@ -187,6 +195,7 @@ public class RatingService {
 
     @Transactional
     public void deleteUserInfo(Long userId) {
+        log.info("Anonymizing reviews in deposit-service for deleted user {}", userId);
         depositMachineReviewRepository.anonymizeUserReviews(userId);
         logger.important("Anonymized deposit reviews for deleted user ID: %d".formatted(userId));
     }

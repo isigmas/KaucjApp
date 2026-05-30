@@ -2,6 +2,7 @@ package pl.isigmas.kaucjapp.deposit.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepositMachineService {
@@ -56,6 +58,7 @@ public class DepositMachineService {
                 .collect(Collectors.toList());
 
         if (rating == null) {
+            log.warn("Rating not found for deposit machine ID: {}", depositMachine.getId());
             logger.warn("Rating not found for deposit machine ID: %d".formatted(depositMachine.getId()));
             throw new RatingNotFoundException(depositMachine.getId());
         }
@@ -78,6 +81,7 @@ public class DepositMachineService {
         var depositMachine = new DepositMachine();
         var retail = retailNetworkRepository.findByName(depositMachineRequestDTO.getNetworkName())
                 .orElseThrow(() -> {
+                    log.warn("Retail network not found: {}", depositMachineRequestDTO.getNetworkName());
                     logger.warn("Retail network not found: %s".formatted(depositMachineRequestDTO.getNetworkName()));
                     return new RetailNetworkNotFoundException(depositMachineRequestDTO.getNetworkName());
                 });
@@ -105,6 +109,7 @@ public class DepositMachineService {
         rating.setFeedbackCount(0);
         ratingRepository.save(rating);
 
+        log.info("Deposit machine created, ID: {} at {}", depositMachine.getId(), depositMachineRequestDTO.getAddress());
         logger.important("Deposit machine created, ID: %d at %s".formatted(
                 depositMachine.getId(), depositMachineRequestDTO.getAddress()));
     }
@@ -113,17 +118,20 @@ public class DepositMachineService {
     public void updateMachine(Long id, UpdateMachineDTO dto) {
         DepositMachine depositMachine = depositMachineRepository.findWithOpeningHoursById(id)
                 .orElseThrow(() -> {
+                    log.warn("Deposit machine not found, ID: {}", id);
                     logger.warn("Deposit machine not found, ID: %d".formatted(id));
                     return new DepositMachineNotFoundException(id);
                 });
 
         if (dto.getNetworkName() != null) {
             if (dto.getNetworkName().isBlank()) {
+                log.warn("Deposit machine update rejected, blank networkName for ID: {}", id);
                 logger.warn("Deposit machine update rejected, blank networkName for ID: %d".formatted(id));
                 throw new DepositValidationException("networkName must not be blank when provided");
             }
             var retail = retailNetworkRepository.findByName(dto.getNetworkName())
                     .orElseThrow(() -> {
+                        log.warn("Retail network not found: {}", dto.getNetworkName());
                         logger.warn("Retail network not found: %s".formatted(dto.getNetworkName()));
                         return new RetailNetworkNotFoundException(dto.getNetworkName());
                     });
@@ -167,6 +175,7 @@ public class DepositMachineService {
             }
         }
 
+        log.info("Deposit machine updated, ID: {}", id);
         logger.info("Deposit machine updated, ID: %d".formatted(id));
     }
 
@@ -174,6 +183,7 @@ public class DepositMachineService {
     public void delete(Long id) {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("Deposit machine not found, ID: {}", id);
                     logger.warn("Deposit machine not found, ID: %d".formatted(id));
                     return new DepositMachineNotFoundException(id);
                 });
@@ -181,6 +191,7 @@ public class DepositMachineService {
         ratingRepository.findById(id).ifPresent(ratingRepository::delete);
         depositMachineRepository.delete(depositMachine);
 
+        log.info("Deposit machine deleted, ID: {}", id);
         logger.important("Deposit machine deleted, ID: %d".formatted(id));
     }
 
@@ -202,11 +213,13 @@ public class DepositMachineService {
     public DepositMachineResponseDTO getDepositMachine(Long id) {
         DepositMachine depositMachine = depositMachineRepository.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("Deposit machine not found, ID: {}", id);
                     logger.warn("Deposit machine not found, ID: %d".formatted(id));
                     return new DepositMachineNotFoundException(id);
                 });
         Rating rating = ratingRepository.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("Rating not found for deposit machine ID: {}", id);
                     logger.warn("Rating not found for deposit machine ID: %d".formatted(id));
                     return new RatingNotFoundException(id);
                 });
