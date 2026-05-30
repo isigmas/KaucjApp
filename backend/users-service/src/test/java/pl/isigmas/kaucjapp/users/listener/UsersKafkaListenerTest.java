@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.isigmas.kaucjapp.users.DTO.OfferCompletedEventDTO;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 
@@ -23,11 +23,14 @@ class UsersKafkaListenerTest {
     @Mock
     private UserStatsIngestService userStatsIngestService;
 
+    @Mock
+    private Logger logger;
+
     private UsersKafkaListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new UsersKafkaListener(userService, userStatsIngestService);
+        listener = new UsersKafkaListener(userService, userStatsIngestService, logger);
     }
 
     @Test

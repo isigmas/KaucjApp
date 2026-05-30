@@ -2,6 +2,8 @@ package pl.isigmas.kaucjapp.deposit.advice;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.deposit.DTO.error.ApiError;
 import pl.isigmas.kaucjapp.deposit.exception.KaucjappException;
 
@@ -21,7 +24,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
+@Slf4j
 public class RestExceptionHandler {
+
+    private final Logger logger;
 
     @ExceptionHandler(KaucjappException.class)
     public ResponseEntity<ApiError> handleKaucjappException(KaucjappException ex, HttpServletRequest request) {
@@ -120,6 +127,8 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled error on {}", request.getRequestURI(), ex);
+        logger.error("Unhandled error on %s: %s".formatted(request.getRequestURI(), ex.getMessage()));
         ApiError error = ApiError.builder()
                 .timestamp(Instant.now())
                 .errorCode("INTERNAL_ERR")

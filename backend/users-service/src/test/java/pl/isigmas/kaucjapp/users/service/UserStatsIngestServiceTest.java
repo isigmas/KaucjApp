@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.OfferCompletedEventDTO;
 import pl.isigmas.kaucjapp.users.repository.ProcessedOfferEventRepository;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
@@ -28,6 +29,9 @@ class UserStatsIngestServiceTest {
 
     @Mock
     private ProcessedOfferEventRepository processedOfferEventRepository;
+
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private UserStatsIngestService userStatsIngestService;

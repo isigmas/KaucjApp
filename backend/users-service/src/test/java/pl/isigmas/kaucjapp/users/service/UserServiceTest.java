@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserStats;
@@ -24,6 +25,9 @@ class UserServiceTest {
 
     @Mock
     private UserStatsRepository userStatsRepository;
+
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private UserService userService;
