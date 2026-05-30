@@ -26,7 +26,7 @@ export const useUserReviewCheck = (offerId: number, userId: number) => {
       const { data } = await apiClient.get(
         `/user/reviews/check?offerId=${offerId}`,
       );
-      return data as { alreadyReviewed: boolean };
+      return data as { alreadyReviewed: boolean; review: Review | null };
     },
   });
 };
