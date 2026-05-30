@@ -21,6 +21,8 @@ import { ActionButton } from "./offer-actions";
 import { useRouter } from "expo-router";
 import ComplaintCard from "./complaint-card";
 import UserReviewCheck from "../../ui/review/has-added-user-review";
+import Animated from "react-native-reanimated";
+import { layoutSpring } from "@/src/constants";
 
 interface OfferHeadlineProps {
   offer: Offer;
@@ -90,59 +92,61 @@ export default function OfferStatusSummaryCard({ offer }: OfferHeadlineProps) {
   };
 
   return (
-    <SectionCard style={styles.card}>
-      {showStatusPill && <OfferSatusPill status={offer.status} />}
+    <Animated.View layout={layoutSpring}>
+      <SectionCard style={styles.card}>
+        {showStatusPill && <OfferSatusPill status={offer.status} />}
 
-      <StatusHeader offer={offer} />
-      {isComplaint && <ComplaintCard offerId={offer.offerId} />}
+        <StatusHeader offer={offer} />
+        {isComplaint && <ComplaintCard offerId={offer.offerId} />}
 
-      {showCourierDetails ? (
-        <>
-          <View style={styles.hairline} />
-          <ContactCard
-            asCard={false}
-            userId={offer.collectorId}
-            header={courierHeaderText}
-            isTheUserCourier={true}
-            onUserProfileInfoPress={handleOnUserProfileInfoPress}
-          />
-          <View style={styles.hairline} />
-
-          {isReserved && offer.reservedTo && (
-            <ReservedState
-              expiresAt={offer.reservedTo}
-              onConfirm={handleComplete}
-              isPending={isPending}
-            />
-          )}
-
-          {isPendingConfirmation && !isConfirmedByCreator && (
-            <ActionButton
-              onPress={handleComplete}
-              disabled={isPending}
-              isPending={isPending}
-              label="Potwierdź odbiór kuriera"
-              icon={<CheckCircle size={18} color={colors.text.white} />}
-            />
-          )}
-          {isCompleted && (
-            <UserReviewCheck
+        {showCourierDetails ? (
+          <>
+            <View style={styles.hairline} />
+            <ContactCard
+              asCard={false}
               userId={offer.collectorId}
-              offerId={offer.offerId}
-              role="collector"
+              header={courierHeaderText}
+              isTheUserCourier={true}
+              onUserProfileInfoPress={handleOnUserProfileInfoPress}
             />
-          )}
+            <View style={styles.hairline} />
 
-          {!isCompleted && !isConfirmedByCreator && (
-            <Pressable onPress={handleComplaint}>
-              <Text style={styles.hintError}>Zgłoś problem</Text>
-            </Pressable>
-          )}
-        </>
-      ) : (
-        <DateRow offer={offer} />
-      )}
-    </SectionCard>
+            {isReserved && offer.reservedTo && (
+              <ReservedState
+                expiresAt={offer.reservedTo}
+                onConfirm={handleComplete}
+                isPending={isPending}
+              />
+            )}
+
+            {isPendingConfirmation && !isConfirmedByCreator && (
+              <ActionButton
+                onPress={handleComplete}
+                disabled={isPending}
+                isPending={isPending}
+                label="Potwierdź odbiór kuriera"
+                icon={<CheckCircle size={18} color={colors.text.white} />}
+              />
+            )}
+            {isCompleted && (
+              <UserReviewCheck
+                userId={offer.collectorId}
+                offerId={offer.offerId}
+                role="collector"
+              />
+            )}
+
+            {!isCompleted && !isConfirmedByCreator && (
+              <Pressable onPress={handleComplaint}>
+                <Text style={styles.hintError}>Zgłoś problem</Text>
+              </Pressable>
+            )}
+          </>
+        ) : (
+          <DateRow offer={offer} />
+        )}
+      </SectionCard>
+    </Animated.View>
   );
 }
 

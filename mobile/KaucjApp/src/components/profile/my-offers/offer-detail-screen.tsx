@@ -57,7 +57,7 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
+          refreshing={false} //idk if it is correct to leave it false
           onRefresh={refetch}
           tintColor={colors.primary.base}
           colors={[colors.primary.base]}

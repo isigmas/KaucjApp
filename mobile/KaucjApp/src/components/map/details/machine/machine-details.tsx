@@ -21,6 +21,7 @@ import Animated from "react-native-reanimated";
 import { layoutSpring } from "@/src/constants";
 import MachineQuickStats from "./quick-stats";
 import ExpandableReview from "@/src/components/ui/review/expandable-review";
+import HasAddedMachineReview from "@/src/components/ui/review/has-added-machine-review";
 
 export default function MachineDetails({ machineId }: { machineId: number }) {
   const {
@@ -105,7 +106,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 
       {/* <MachineImage /> */}
 
-      <ExpandableReview type="machine" machineId={machineId} />
+      <HasAddedMachineReview machineId={machineId} />
 
       <Animated.View layout={layoutSpring}>
         <ReviewsSection machineId={machineId} />
@@ -117,7 +118,7 @@ export default function MachineDetails({ machineId }: { machineId: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 100,
+    paddingBottom: 300,
     paddingTop: spacing.sm,
   },
 });

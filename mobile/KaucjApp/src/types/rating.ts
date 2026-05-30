@@ -11,6 +11,7 @@ export interface UserReviewPayload {
 }
 
 export interface MachineReviewPayload {
+  reviewerUsername: string;
   score: number;
   comment?: string;
 }

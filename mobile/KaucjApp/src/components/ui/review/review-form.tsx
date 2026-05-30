@@ -129,6 +129,8 @@ export const ReviewTextInput = ({
         multiline
         value={value}
         onChangeText={onChangeText}
+        returnKeyType="done"
+        blurOnSubmit={true}
         textAlignVertical="top"
         maxLength={300}
         selectionColor={colors.primary?.base || "#007AFF"}
