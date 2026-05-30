@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.deposit.service.RatingService;
 
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,8 @@ class DepositKafkaListenerTest {
 
     @Mock
     private RatingService ratingService;
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private DepositKafkaListener listener;

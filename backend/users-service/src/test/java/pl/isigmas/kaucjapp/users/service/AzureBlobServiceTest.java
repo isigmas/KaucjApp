@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.config.AzureStorageProperties;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
 
@@ -27,6 +28,8 @@ class AzureBlobServiceTest {
     private BlobClient blobClient;
     @Mock
     private BlobProperties blobProperties;
+    @Mock
+    private Logger logger;
 
     private AzureBlobService azureBlobService;
 
@@ -36,7 +39,7 @@ class AzureBlobServiceTest {
         properties.setContainerName("profile-pictures-test");
         properties.setPublicBlobEndpoint("http://127.0.0.1:10000/devstoreaccount1");
         properties.setMaxFileSizeBytes(5 * 1024 * 1024);
-        azureBlobService = new AzureBlobService(properties, blobServiceClient);
+        azureBlobService = new AzureBlobService(properties, blobServiceClient, logger);
     }
 
     @Test

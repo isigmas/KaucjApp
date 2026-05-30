@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.ReviewResponseDTO;
 import pl.isigmas.kaucjapp.deposit.DTO.UpdateReviewDTO;
@@ -28,13 +29,18 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
     private final DepositMachineReviewRepository depositMachineReviewRepository;
+    private final Logger logger;
 
     @Transactional
     public void createReview(Long depositMachineId, Long reviewerId, @Valid ReviewRequestDTO dto) {
         Rating rating = ratingRepository.findById(depositMachineId)
-                .orElseThrow(() -> new DepositMachineNotFoundException(depositMachineId));
+                .orElseThrow(() -> {
+                    logger.warn("Deposit machine not found, ID: %d".formatted(depositMachineId));
+                    return new DepositMachineNotFoundException(depositMachineId);
+                });
 
-        if(depositMachineReviewRepository.existsByReviewerIdAndDepositMachineId(reviewerId,depositMachineId)){
+        if (depositMachineReviewRepository.existsByReviewerIdAndDepositMachineId(reviewerId, depositMachineId)) {
+            logger.warn("Duplicate review forbidden for machine ID: %d by user ID: %d".formatted(depositMachineId, reviewerId));
             throw new ReviewForbiddenException("Review for this machine already exists for this user");
         }
 
@@ -60,11 +66,14 @@ public class RatingService {
 
         log.info("New avg for deposit machine {}: {} (feedback count: {})",
                 depositMachineId, newAvg, newCount);
+        logger.important("Review created for deposit machine ID: %d by user ID: %d (new avg: %s, count: %d)".formatted(
+                depositMachineId, reviewerId, newAvg, newCount));
     }
 
     @Transactional(readOnly = true)
     public List<ReviewResponseDTO> getDepositMachineReviews(Long depositMachineId, Long currentUserId) {
         if (!ratingRepository.existsById(depositMachineId)) {
+            logger.warn("Deposit machine not found, ID: %d".formatted(depositMachineId));
             throw new DepositMachineNotFoundException(depositMachineId);
         }
 
@@ -79,15 +88,22 @@ public class RatingService {
     @Transactional
     public void updateReview(Long reviewId, Long reviewerId, UpdateReviewDTO request) {
         DepositMachineReview review = depositMachineReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> {
+                    logger.warn("Review not found, ID: %d".formatted(reviewId));
+                    return new ReviewNotFoundException(reviewId);
+                });
 
         if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            logger.warn("Review update forbidden for review ID: %d by user ID: %d".formatted(reviewId, reviewerId));
             throw new ReviewForbiddenException("Only the author of the review can edit it");
         }
 
         if (request.getScore() != null) {
             Rating rating = ratingRepository.findById(review.getDepositMachineId())
-                    .orElseThrow(() -> new DepositMachineNotFoundException(review.getDepositMachineId()));
+                    .orElseThrow(() -> {
+                        logger.warn("Deposit machine not found, ID: %d".formatted(review.getDepositMachineId()));
+                        return new DepositMachineNotFoundException(review.getDepositMachineId());
+                    });
 
             BigDecimal currentAvg = rating.getAvgScore();
             int count = rating.getFeedbackCount();
@@ -109,19 +125,27 @@ public class RatingService {
         depositMachineReviewRepository.save(review);
 
         log.info("Updated review {} for deposit machine {}", reviewId, review.getDepositMachineId());
+        logger.important("Review updated, ID: %d for deposit machine ID: %d".formatted(reviewId, review.getDepositMachineId()));
     }
 
     @Transactional
     public void deleteReview(Long reviewId, Long reviewerId) {
         DepositMachineReview review = depositMachineReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> {
+                    logger.warn("Review not found, ID: %d".formatted(reviewId));
+                    return new ReviewNotFoundException(reviewId);
+                });
 
         if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            logger.warn("Review delete forbidden for review ID: %d by user ID: %d".formatted(reviewId, reviewerId));
             throw new ReviewForbiddenException("Only the author of the review can delete it");
         }
 
         Rating rating = ratingRepository.findById(review.getDepositMachineId())
-                .orElseThrow(() -> new DepositMachineNotFoundException(review.getDepositMachineId()));
+                .orElseThrow(() -> {
+                    logger.warn("Deposit machine not found, ID: %d".formatted(review.getDepositMachineId()));
+                    return new DepositMachineNotFoundException(review.getDepositMachineId());
+                });
 
         BigDecimal currentAvg = rating.getAvgScore();
         int oldCount = rating.getFeedbackCount();
@@ -144,8 +168,9 @@ public class RatingService {
 
         log.info("Deleted review {} for deposit machine {} (new avg: {}, count: {})",
                 reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0));
+        logger.important("Review deleted, ID: %d for deposit machine ID: %d (new avg: %s, count: %d)".formatted(
+                reviewId, review.getDepositMachineId(), newAvg, Math.max(newCount, 0)));
     }
-
 
     private ReviewResponseDTO mapReviewToDTO(DepositMachineReview review) {
         return ReviewResponseDTO.builder()
@@ -162,6 +187,7 @@ public class RatingService {
     @Transactional(readOnly = true)
     public Optional<ReviewResponseDTO> getReviewForDepositMachine(Long reviewerId, Long depositMachineId) {
         log.info("Fetching review for reviewer {} and deposit machine {}", reviewerId, depositMachineId);
+        logger.info("Checking review for user ID: %d and deposit machine ID: %d".formatted(reviewerId, depositMachineId));
 
         return depositMachineReviewRepository.findByReviewerIdAndDepositMachineId(reviewerId, depositMachineId)
                 .map(this::mapReviewToDTO);
@@ -171,5 +197,6 @@ public class RatingService {
     public void deleteUserInfo(Long userId) {
         log.info("Anonymizing reviews in deposit-service for deleted user {}", userId);
         depositMachineReviewRepository.anonymizeUserReviews(userId);
+        logger.important("Anonymized deposit reviews for deleted user ID: %d".formatted(userId));
     }
 }

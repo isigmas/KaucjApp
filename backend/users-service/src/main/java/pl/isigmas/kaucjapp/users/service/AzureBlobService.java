@@ -12,6 +12,7 @@ import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.UploadUrlDTO;
 import pl.isigmas.kaucjapp.users.config.AzureStorageProperties;
 import pl.isigmas.kaucjapp.users.exception.ProfilePictureUploadException;
@@ -27,16 +28,31 @@ public class AzureBlobService {
 
     private final BlobServiceClient blobServiceClient;
     private final AzureStorageProperties properties;
+    private final Logger logger;
 
-    public AzureBlobService(AzureStorageProperties properties, BlobServiceClient blobServiceClient) {
+    public AzureBlobService(
+            AzureStorageProperties properties,
+            BlobServiceClient blobServiceClient,
+            Logger logger
+    ) {
         this.properties = properties;
         this.blobServiceClient = blobServiceClient;
+        this.logger = logger;
         log.info(
                 "Azure Blob ready: mode={}, container={}, publicRead={}, publicBase={}",
                 properties.isUseDevelopmentStorage() ? "azurite" : "azure",
                 properties.getContainerName(),
                 properties.isPublicReadAccess(),
                 properties.getPublicBlobEndpoint()
+        );
+        logger.info(
+                "Azure Blob ready: mode=%s, container=%s, publicRead=%s, publicBase=%s"
+                        .formatted(
+                                properties.isUseDevelopmentStorage() ? "azurite" : "azure",
+                                properties.getContainerName(),
+                                properties.isPublicReadAccess(),
+                                properties.getPublicBlobEndpoint()
+                        )
         );
     }
 
@@ -76,6 +92,8 @@ public class AzureBlobService {
                 .getBlobClient(blobName);
 
         if (!blobClient.exists()) {
+            log.warn("Profile picture upload not found for user ID: {}, blob: {}", userId, blobName);
+            logger.warn("Profile picture upload not found for user ID: %d, blob: %s".formatted(userId, blobName));
             throw new ProfilePictureUploadException(
                     "Upload not found; PUT the image to the SAS URL before confirming");
         }
@@ -102,9 +120,11 @@ public class AzureBlobService {
             boolean deleted = container.getBlobClient(blobName).deleteIfExists();
             if (deleted) {
                 log.info("Deleted old profile picture blob: {}", blobName);
+                logger.info("Deleted old profile picture blob: %s".formatted(blobName));
             }
         } catch (BlobStorageException e) {
             log.warn("Could not delete old profile picture {}: {}", blobName, e.getMessage());
+            logger.warn("Could not delete old profile picture %s: %s".formatted(blobName, e.getMessage()));
         }
     }
 
@@ -114,15 +134,22 @@ public class AzureBlobService {
             blobProperties = blobClient.getProperties();
         } catch (BlobStorageException e) {
             log.error("Failed to read blob properties: {} {}", e.getErrorCode(), e.getMessage());
+            logger.error(
+                    "Failed to read blob properties: %s %s".formatted(e.getErrorCode(), e.getMessage())
+            );
             throw ProfilePictureUploadException.storageFailed();
         }
 
         Long size = blobProperties.getBlobSize();
         if (size == null || size <= 0 || size > properties.getMaxFileSizeBytes()) {
+            log.warn("Profile picture exceeds maximum allowed size");
+            logger.warn("Profile picture exceeds maximum allowed size");
             throw new ProfilePictureUploadException("Profile picture exceeds maximum allowed size");
         }
 
         if (!isAllowedImageContentType(blobProperties.getContentType())) {
+            log.warn("Profile picture has disallowed content type: {}", blobProperties.getContentType());
+            logger.warn("Profile picture has disallowed content type: %s".formatted(blobProperties.getContentType()));
             throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
         }
     }
@@ -134,12 +161,16 @@ public class AzureBlobService {
         return contentType.toLowerCase(Locale.ROOT).split(";")[0].trim();
     }
 
-    private static String extensionForContentType(String normalized) {
+    private String extensionForContentType(String normalized) {
         return switch (normalized) {
             case "image/png" -> "png";
             case "image/webp" -> "webp";
             case "image/jpeg", "image/jpg" -> "jpg";
-            default -> throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
+            default -> {
+                log.warn("Unsupported profile picture content type: {}", normalized);
+                logger.warn("Unsupported profile picture content type: %s".formatted(normalized));
+                throw new ProfilePictureUploadException("Only JPEG, PNG and WebP images are allowed");
+            }
         };
     }
 
@@ -167,11 +198,15 @@ public class AzureBlobService {
                 || !blobName.startsWith(prefix)
                 || blobName.contains("/")
                 || blobName.contains("..")) {
+            log.warn("Invalid blob name for user ID: {}", userId);
+            logger.warn("Invalid blob name for user ID: %d".formatted(userId));
             throw new ProfilePictureUploadException("Invalid blob name for this user");
         }
         String lower = blobName.toLowerCase(Locale.ROOT);
         if (!(lower.endsWith(".jpg") || lower.endsWith(".jpeg")
                 || lower.endsWith(".png") || lower.endsWith(".webp"))) {
+            log.warn("Invalid profile picture file extension for user ID: {}", userId);
+            logger.warn("Invalid profile picture file extension for user ID: %d".formatted(userId));
             throw new ProfilePictureUploadException("Invalid profile picture file extension");
         }
     }
@@ -188,6 +223,10 @@ public class AzureBlobService {
             }
         } catch (BlobStorageException e) {
             log.error("Failed to prepare container {}: {} {}", properties.getContainerName(), e.getErrorCode(), e.getMessage());
+            logger.error(
+                    "Failed to prepare container %s: %s %s"
+                            .formatted(properties.getContainerName(), e.getErrorCode(), e.getMessage())
+            );
             throw ProfilePictureUploadException.storageFailed();
         }
     }

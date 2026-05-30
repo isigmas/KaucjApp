@@ -1,1 +1,2 @@
 pl.isigmas.kaucjapp.common.config.CommonAutoConfiguration
+pl.isigmas.kaucjapp.common.config.TestLoggingAutoConfiguration

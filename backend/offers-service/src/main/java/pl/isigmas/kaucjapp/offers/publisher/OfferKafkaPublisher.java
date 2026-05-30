@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 
 @Slf4j
@@ -12,9 +13,11 @@ import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 public class OfferKafkaPublisher {
 
     private final KafkaTemplate<String, OfferCompletedEventDTO> kafkaTemplate;
+    private final Logger logger;
 
     public void sendOfferCompleted(OfferCompletedEventDTO event) {
-        log.info("Sending OfferCompletedEvent for offerId: {}", event.getOfferId());
         kafkaTemplate.send("offers.completed", event.getOfferId().toString(), event);
+        log.info("Published offers.completed for offer ID: {}", event.getOfferId());
+        logger.important("Published offers.completed for offer ID: %d".formatted(event.getOfferId()));
     }
 }

@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.service.OfferService;
 
@@ -27,6 +28,7 @@ import java.util.List;
 public class OfferController {
 
     private final OfferService service;
+    private final Logger logger;
 
 
 
@@ -62,6 +64,7 @@ public class OfferController {
 
         Long newId = service.create(userId, newOffer);
         log.info("New offer created with ID: {} by user: {}", newId, userId);
+        logger.info("New offer created with ID: %d by user: %d".formatted(newId, userId));
         return ResponseEntity.status(HttpStatus.CREATED).body(newId);
     }
 
@@ -90,6 +93,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId) {
         service.update(id, userId, updatedOffer);
         log.info("Offer updated, ID: {}", id);
+        logger.info("Offer updated, ID: %d".formatted(id));
         return ResponseEntity.ok().build();
     }
 
@@ -113,6 +117,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId) {
         service.remove(id, userId);
         log.info("Offer deleted, ID: {}", id);
+        logger.important("Offer deleted, ID: %d".formatted(id));
         return ResponseEntity.ok().build();
     }
 
@@ -122,6 +127,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId) {
         OfferResponseDTO offer = service.getOffer(id, userId);
         log.info("Fetched offer with ID: {} for user: {}", id, userId);
+        logger.info("Fetched offer with ID: %d for user: %d".formatted(id, userId));
         return ResponseEntity.ok(offer);
     }
 
@@ -149,6 +155,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId) {
         service.changeStatus(offerId, userId, newStatus);
         log.info("Status of offer {} changed to {} by user {}", offerId, newStatus, userId);
+        logger.info("Status of offer %d changed to %s by user %d".formatted(offerId, newStatus, userId));
         return ResponseEntity.ok().build();
     }
 
@@ -157,7 +164,8 @@ public class OfferController {
             @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId){
         service.confirmOffer(offerId,userId);
-        log.info("Confirmation of offer {} by user {}",offerId, userId);
+        log.info("Confirmation of offer {} by user {}", offerId, userId);
+        logger.info("Confirmation of offer %d by user %d".formatted(offerId, userId));
         return ResponseEntity.ok().build();
     }
 
@@ -190,6 +198,7 @@ public class OfferController {
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyOffers(@RequestHeader("X-User-Id") Long userId) {
         log.info("Listing my offers by user {}", userId);
+        logger.info("Listing my offers by user %d".formatted(userId));
         return ResponseEntity.ok(service.getAllByCreatorId(userId));
     }
 
@@ -208,6 +217,7 @@ public class OfferController {
     })
     public ResponseEntity<List<OfferResponseDTO>> getMyReservedOffers(@RequestHeader("X-User-Id") Long userId) {
         log.info("Listing my reserved offers by user {}", userId);
+        logger.info("Listing my reserved offers by user %d".formatted(userId));
         return ResponseEntity.ok(service.getReservedOffersByUserId(userId));
     }
 
@@ -230,6 +240,8 @@ public class OfferController {
             @RequestParam double neLon) {
 
         log.info("Searching for offers in Bounding Box: SW[{}, {}] to NE[{}, {}]", swLat, swLon, neLat, neLon);
+        logger.info("Searching for offers in bounding box: SW[%s, %s] to NE[%s, %s]"
+                .formatted(swLat, swLon, neLat, neLon));
         return ResponseEntity.ok(service.getOffersInArea(swLat, swLon, neLat, neLon));
     }
 
@@ -241,6 +253,7 @@ public class OfferController {
             ) {
         service.addComplaint(userId, id, complaintDTO);
         log.info("Creating complaint for offer {} by user {}", id, userId);
+        logger.important("Creating complaint for offer %d by user %d".formatted(id, userId));
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -250,6 +263,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         log.info("Listing my complaints for offer {} by user {}", offerId, userId);
+        logger.info("Listing my complaints for offer %d by user %d".formatted(offerId, userId));
 
         return ResponseEntity.ok(service.getMyComplaintsForOffer(offerId, userId));
     }
@@ -259,6 +273,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         log.info("Listing my offers history by user {}", userId);
+        logger.info("Listing my offers history by user %d".formatted(userId));
 
         return ResponseEntity.ok(service.getMyOffersHistory(userId));
     }
@@ -268,6 +283,7 @@ public class OfferController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         log.info("Listing my collected offers history by user {}", userId);
+        logger.info("Listing my collected offers history by user %d".formatted(userId));
 
         return ResponseEntity.ok(service.getMyCollectedOffersHistory(userId));
     }

@@ -11,6 +11,7 @@ import pl.isigmas.kaucjapp.offers.model.BottleType;
 import pl.isigmas.kaucjapp.offers.model.Offer;
 import pl.isigmas.kaucjapp.offers.model.OfferItem;
 import pl.isigmas.kaucjapp.offers.model.OfferStatus;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.offers.publisher.OfferKafkaPublisher;
 import pl.isigmas.kaucjapp.offers.repository.BottleTypeRepository;
 import pl.isigmas.kaucjapp.offers.repository.ComplaintRepository;
@@ -45,6 +46,9 @@ class OfferServiceKafkaUnitTest {
 
     @Mock
     private OfferKafkaPublisher offerKafkaPublisher;
+
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private OfferService offerService;
