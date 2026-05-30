@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.event.UserDeletedEvent;
 
 import pl.isigmas.kaucjapp.users.DTO.*;
@@ -49,6 +50,8 @@ public class UserService {
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Logger logger;
+
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
@@ -61,9 +64,11 @@ public class UserService {
     public void createUser(long id, CreateUserDTO userDTO) {
 
         if (userRepository.existsByEmail(userDTO.getEmail())) {
+            logger.warn("User with %s email already exists".formatted(userDTO.getEmail()));
             throw UserAlreadyExistsException.forEmail(userDTO.getEmail());
         }
         if (userRepository.existsByUsername(userDTO.getUsername())) {
+            logger.warn("User with %s username already exists".formatted(userDTO.getUsername()));
             throw UserAlreadyExistsException.forUsername(userDTO.getUsername());
         }
 
