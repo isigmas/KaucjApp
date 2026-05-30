@@ -1,3 +1,18 @@
+export type RankingActivityType =
+  | "returned_plastic"
+  | "returned_can"
+  | "collected_plastic"
+  | "collected_can"
+  | "returned_total"
+  | "collected_total";
+
+export interface RankingQueryParams {
+  type?: RankingActivityType;
+  days?: number;
+  page?: number;
+  size?: number;
+}
+
 export interface UserStats {
   userId: number;
   username: string;
