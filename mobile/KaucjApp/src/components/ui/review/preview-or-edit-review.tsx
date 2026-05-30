@@ -31,50 +31,42 @@ export default function PreviewOrEditReview(props: PreviewOrEditReviewProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <Animated.Text
-        entering={FadeInDown.delay(300).springify()}
-        style={styles.sectionTitle}
-      >
-        Twoja opinia
-      </Animated.Text>
-      <Animated.View
-        layout={layoutSpring}
-        entering={FadeInDown.delay(300).springify()}
-        style={styles.card}
-      >
-        {isEditing ? (
-          props.type === "machine" ? (
-            <ExpandableReview
-              type="machine"
-              machineId={props.machineId}
-              isDefaultExpanded={true}
-              existingReview={props.existingReview}
-              style={styles.editReview}
-              onEditCancel={() => setIsEditing(false)}
-            />
-          ) : (
-            <ExpandableReview
-              type="user"
-              userId={props.userId}
-              offerId={props.offerId}
-              isDefaultExpanded={true}
-              existingReview={props.existingReview}
-              style={styles.editReview}
-              onEditCancel={() => setIsEditing(false)}
-            />
-          )
-        ) : (
-          <ReviewCard
-            index={-1}
-            review={props.existingReview}
-            key={props.existingReview.reviewId}
-            asCard={false}
-            onEdit={() => setIsEditing(true)}
+    <Animated.View
+      layout={layoutSpring}
+      entering={FadeInDown.delay(300).springify()}
+      style={styles.card}
+    >
+      {isEditing ? (
+        props.type === "machine" ? (
+          <ExpandableReview
+            type="machine"
+            machineId={props.machineId}
+            isDefaultExpanded={true}
+            existingReview={props.existingReview}
+            style={styles.editReview}
+            onEditCancel={() => setIsEditing(false)}
           />
-        )}
-      </Animated.View>
-    </View>
+        ) : (
+          <ExpandableReview
+            type="user"
+            userId={props.userId}
+            offerId={props.offerId}
+            isDefaultExpanded={true}
+            existingReview={props.existingReview}
+            style={styles.editReview}
+            onEditCancel={() => setIsEditing(false)}
+          />
+        )
+      ) : (
+        <ReviewCard
+          index={-1}
+          review={props.existingReview}
+          key={props.existingReview.reviewId}
+          asCard={false}
+          onEdit={() => setIsEditing(true)}
+        />
+      )}
+    </Animated.View>
   );
 }
 
@@ -87,14 +79,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.03)",
     ...shadows.light,
   },
-  container: { marginBottom: spacing.lg },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
-  },
+
   editReview: {
     shadowOpacity: 0,
     shadowRadius: 0,

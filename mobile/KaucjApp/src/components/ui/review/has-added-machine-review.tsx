@@ -1,8 +1,10 @@
 import React from "react";
 import { useMachineReviewCheck } from "@/src/api/hooks/use-rating";
 import ExpandableReview from "./expandable-review";
-
 import PreviewOrEditReview from "./preview-or-edit-review";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { StyleSheet, View } from "react-native";
+import { colors, spacing } from "@/src/theme";
 
 interface MachineReviewCheckProps {
   machineId: number;
@@ -18,11 +20,13 @@ export default function HasAddedMachineReview({
 
   if (isReviewed && existingReview) {
     return (
-      <PreviewOrEditReview
-        type="machine"
-        machineId={machineId}
-        existingReview={existingReview}
-      />
+      <TitleAndReviewWrapper>
+        <PreviewOrEditReview
+          type="machine"
+          machineId={machineId}
+          existingReview={existingReview}
+        />
+      </TitleAndReviewWrapper>
     );
   }
 
@@ -34,3 +38,29 @@ export default function HasAddedMachineReview({
     />
   );
 }
+
+//helper
+function TitleAndReviewWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={styles.container}>
+      <Animated.Text
+        entering={FadeInDown.delay(300).springify()}
+        style={styles.sectionTitle}
+      >
+        Twoja opinia
+      </Animated.Text>
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { marginBottom: spacing.lg },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+});
