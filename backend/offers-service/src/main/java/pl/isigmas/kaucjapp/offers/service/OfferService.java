@@ -1,9 +1,9 @@
 package pl.isigmas.kaucjapp.offers.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.offers.DTO.*;
 import pl.isigmas.kaucjapp.offers.exception.BottleTypeNotFoundException;
 import pl.isigmas.kaucjapp.offers.exception.OfferAlreadyClaimedException;
@@ -16,7 +16,6 @@ import pl.isigmas.kaucjapp.offers.publisher.OfferKafkaPublisher;
 import pl.isigmas.kaucjapp.offers.repository.*;
 
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -25,7 +24,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OfferService {
@@ -38,6 +36,7 @@ public class OfferService {
     private final ComplaintRepository complaintRepository;
     private final GeoValidationService geoValidationService;
     private final OfferKafkaPublisher offerKafkaPublisher;
+    private final Logger logger;
 
     @Transactional
     public Long create(Long creatorId, OfferDTO dto) {
@@ -53,7 +52,10 @@ public class OfferService {
 
         dto.getItems().forEach(itemDto -> {
             BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                    .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
+                    .orElseThrow(() -> {
+                        logger.warn("Bottle type not found, ID: %d".formatted(itemDto.getBottleId()));
+                        return new BottleTypeNotFoundException(itemDto.getBottleId());
+                    });
 
             OfferItem item = new OfferItem();
             item.setQuantity(itemDto.getQuantity());
@@ -65,19 +67,25 @@ public class OfferService {
         });
 
         Offer savedOffer = offerRepository.save(offer);
+        logger.important("Offer created, ID: %d by user ID: %d".formatted(savedOffer.getId(), creatorId));
         return savedOffer.getId();
     }
 
     @Transactional
     public void update(Long id, Long userId, UpdateOfferDTO dto) {
         Offer offer = offerRepository.findById(id)
-                .orElseThrow(() -> new OfferNotFoundException(id));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(id));
+                    return new OfferNotFoundException(id);
+                });
 
         if (!offer.getCreatorId().equals(userId)) {
+            logger.warn("Offer update forbidden for offer ID: %d by user ID: %d".formatted(id, userId));
             throw new OfferForbiddenException("Only offer creator can update the offer");
         }
 
         if (offer.getStatus() != OfferStatus.OPEN) {
+            logger.warn("Offer update rejected, offer ID: %d is not OPEN".formatted(id));
             throw new OfferStateException("Only OPEN offers can be updated");
         }
 
@@ -113,7 +121,10 @@ public class OfferService {
                     existingItem.setUnitPrice(itemDto.getUnitPrice());
                 } else {
                     BottleType type = bottleTypeRepository.findById(itemDto.getBottleId())
-                            .orElseThrow(() -> new BottleTypeNotFoundException(itemDto.getBottleId()));
+                            .orElseThrow(() -> {
+                                logger.warn("Bottle type not found, ID: %d".formatted(itemDto.getBottleId()));
+                                return new BottleTypeNotFoundException(itemDto.getBottleId());
+                            });
 
                     OfferItem newItem = new OfferItem();
                     newItem.setQuantity(itemDto.getQuantity());
@@ -125,6 +136,8 @@ public class OfferService {
             });
             existingItems.values().forEach(offer::removeItem);
         }
+
+        logger.info("Offer updated, ID: %d".formatted(id));
     }
 
     @Transactional(readOnly = true)
@@ -246,32 +259,41 @@ public class OfferService {
     @Transactional
     public void changeStatus(Long offerId, Long userId, String newStatus) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
 
         OfferStatus targetStatus;
         try {
             targetStatus = OfferStatus.valueOf(newStatus.toUpperCase());
         } catch (IllegalArgumentException e) {
+            logger.warn("Invalid offer status: %s".formatted(newStatus));
             throw new OfferValidationException("Invalid offer status: " + newStatus);
         }
 
         OfferStatus currentStatus = offer.getStatus();
         if (currentStatus == OfferStatus.COMPLETED || currentStatus == OfferStatus.CANCELED) {
+            logger.warn("Offer status change rejected, offer ID: %d is terminal (%s)".formatted(offerId, currentStatus));
             throw new OfferStateException("Offer status can no longer be changed");
         }
 
         if (currentStatus == OfferStatus.OPEN && targetStatus == OfferStatus.COMPLETED) {
+            logger.warn("Cannot complete OPEN offer ID: %d".formatted(offerId));
             throw new OfferStateException("Cannot complete an OPEN offer");
         }
 
         if (targetStatus == OfferStatus.RESERVED) {
             if (offer.getCreatorId().equals(userId)) {
+                logger.warn("User ID: %d attempted to reserve own offer ID: %d".formatted(userId, offerId));
                 throw new OfferForbiddenException("You cannot reserve your own offer");
             }
             if (offer.getCollectorId() != null && !offer.getCollectorId().equals(userId)) {
+                logger.warn("Offer ID: %d already reserved by another user".formatted(offerId));
                 throw new OfferAlreadyClaimedException("Offer is already reserved by another user");
             }
             if (currentStatus != OfferStatus.OPEN) {
+                logger.warn("Only OPEN offers can be reserved, offer ID: %d is %s".formatted(offerId, currentStatus));
                 throw new OfferAlreadyClaimedException("Only OPEN offers can be reserved");
             }
             offer.setCollectorId(userId);
@@ -286,6 +308,7 @@ public class OfferService {
             if (currentStatus == OfferStatus.RESERVED
                     && offer.getCollectorId() != null
                     && !offer.getCollectorId().equals(userId)) {
+                logger.warn("Unreserve forbidden for offer ID: %d by user ID: %d".formatted(offerId, userId));
                 throw new OfferForbiddenException("Only current collector can unreserve the offer");
             }
             offer.setCollectorId(null);
@@ -297,32 +320,47 @@ public class OfferService {
         }
 
         if (targetStatus == OfferStatus.COMPLETED) {
+            logger.warn("Direct COMPLETED status change rejected for offer ID: %d".formatted(offerId));
             throw new OfferForbiddenException("Offer complete only by two way completing");
         }
 
         if (targetStatus == OfferStatus.CANCELED) {
             if (!offer.getCreatorId().equals(userId)) {
+                logger.warn("Cancel forbidden for offer ID: %d by user ID: %d".formatted(offerId, userId));
                 throw new OfferForbiddenException("Only offer creator can cancel the offer");
             }
         }
 
-        if(targetStatus == OfferStatus.PENDING_CONFIRMATION){
+        if (targetStatus == OfferStatus.PENDING_CONFIRMATION) {
+            logger.warn("PENDING_CONFIRMATION cannot be set via status endpoint for offer ID: %d".formatted(offerId));
             throw new OfferForbiddenException("Offer confirmation can be done only by confirm - cannot be done here");
         }
 
         if (targetStatus == OfferStatus.COMPLAINT) {
+            logger.warn("COMPLAINT cannot be set via status endpoint for offer ID: %d".formatted(offerId));
             throw new OfferForbiddenException("Offer complaint can be done only by specific endpoint with a message");
         }
 
         offer.setStatus(targetStatus);
+        if (targetStatus == OfferStatus.RESERVED) {
+            logger.important("Offer reserved, ID: %d by collector ID: %d".formatted(offerId, userId));
+        } else if (targetStatus == OfferStatus.CANCELED) {
+            logger.important("Offer canceled, ID: %d by creator ID: %d".formatted(offerId, userId));
+        } else {
+            logger.info("Offer status changed to %s, ID: %d by user ID: %d".formatted(targetStatus, offerId, userId));
+        }
     }
 
     @Transactional
     public void confirmOffer(Long offerId, Long currentUserId) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
 
         if (offer.getStatus() != OfferStatus.RESERVED && offer.getStatus() != OfferStatus.PENDING_CONFIRMATION) {
+            logger.warn("Confirm rejected for offer ID: %d with status %s".formatted(offerId, offer.getStatus()));
             throw new OfferForbiddenException("You can only confirm RESERVED or PENDING offers");
         }
 
@@ -331,6 +369,7 @@ public class OfferService {
         } else if (currentUserId.equals(offer.getCollectorId())) {
             offer.setCollectorConfirmed(true);
         } else {
+            logger.warn("Confirm forbidden for offer ID: %d by user ID: %d".formatted(offerId, currentUserId));
             throw new OfferForbiddenException("You are not part of this offer");
         }
 
@@ -342,6 +381,7 @@ public class OfferService {
         }
 
         offerRepository.save(offer);
+        logger.info("Offer confirmation recorded, ID: %d by user ID: %d".formatted(offerId, currentUserId));
     }
 
     /**
@@ -365,6 +405,10 @@ public class OfferService {
         offer.setConfirmationDeadline(null);
         offer.setTimeCompleted(completedAt);
         offerKafkaPublisher.sendOfferCompleted(buildOfferCompletedEvent(offer));
+        logger.important(
+                "Offer completed, ID: %d (creator ID: %d, collector ID: %d)"
+                        .formatted(offer.getId(), offer.getCreatorId(), offer.getCollectorId())
+        );
     }
 
     private OfferCompletedEventDTO buildOfferCompletedEvent(Offer offer) {
@@ -389,13 +433,18 @@ public class OfferService {
     @Transactional
     public void remove(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
 
         if (!offer.getCreatorId().equals(userId)) {
+            logger.warn("Offer delete forbidden for offer ID: %d by user ID: %d".formatted(offerId, userId));
             throw new OfferForbiddenException("Only offer creator can delete the offer");
         }
 
         offerRepository.delete(offer);
+        logger.important("Offer deleted, ID: %d by user ID: %d".formatted(offerId, userId));
     }
 
     private void validateLocation(BigDecimal lat, BigDecimal lon) {
@@ -403,6 +452,7 @@ public class OfferService {
         double lonD = lon.doubleValue();
 
         if (!geoValidationService.isInPoland(latD, lonD)) {
+            logger.warn("Offer location outside Poland: lat=%s, lon=%s".formatted(lat, lon));
             throw new OfferValidationException("Offer can only be created in Poland");
         }
     }
@@ -410,16 +460,21 @@ public class OfferService {
     @Transactional
     public void addComplaint(Long complainantId, Long offerId, ComplaintDTO complaint) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
 
         OfferStatus currentStatus = offer.getStatus();
 
         if (!Objects.equals(offer.getCreatorId(), complainantId)
                 && !Objects.equals(offer.getCollectorId(), complainantId)) {
+            logger.warn("Complaint forbidden for offer ID: %d by user ID: %d".formatted(offerId, complainantId));
             throw new OfferForbiddenException("Only offer creator or collector can make the complaint");
         }
 
         if (currentStatus != OfferStatus.RESERVED && currentStatus != OfferStatus.PENDING_CONFIRMATION && currentStatus != OfferStatus.COMPLAINT) {
+            logger.warn("Complaint rejected for offer ID: %d with status %s".formatted(offerId, currentStatus));
             throw new OfferStateException("Only RESERVED or PENDING_CONFIRMATION or already COMPLAINT offers can be complaint");
         }
 
@@ -438,6 +493,7 @@ public class OfferService {
         offerComplaint.setMessage(complaint.getMessage());
 
         complaintRepository.save(offerComplaint);
+        logger.important("Complaint filed for offer ID: %d by user ID: %d".formatted(offerId, complainantId));
     }
 
 
@@ -461,7 +517,10 @@ public class OfferService {
     @Transactional(readOnly = true)
     public List<ComplaintResponseDTO> getMyComplaintsForOffer(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
 
         Complainant userRole;
         if (userId.equals(offer.getCreatorId())) {
@@ -469,6 +528,7 @@ public class OfferService {
         } else if (userId.equals(offer.getCollectorId())) {
             userRole = Complainant.COLLECTOR;
         } else {
+            logger.warn("Complaints list forbidden for offer ID: %d by user ID: %d".formatted(offerId, userId));
             throw new OfferForbiddenException("You are not a part of this offer");
         }
 
@@ -480,7 +540,10 @@ public class OfferService {
     @Transactional(readOnly = true)
     public OfferResponseDTO getOffer(Long offerId, Long userId) {
         Offer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new OfferNotFoundException(offerId));
+                .orElseThrow(() -> {
+                    logger.warn("Offer not found, ID: %d".formatted(offerId));
+                    return new OfferNotFoundException(offerId);
+                });
         return mapToResponseDTO(offer);
     }
 }

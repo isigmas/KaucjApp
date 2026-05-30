@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.RatingDTO;
 import pl.isigmas.kaucjapp.users.DTO.ReviewRequestDTO;
 import pl.isigmas.kaucjapp.users.DTO.ReviewResponseDTO;
@@ -47,6 +48,9 @@ class RatingServiceTest {
     private UserReviewRepository userReviewRepository;
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private RatingService ratingService;

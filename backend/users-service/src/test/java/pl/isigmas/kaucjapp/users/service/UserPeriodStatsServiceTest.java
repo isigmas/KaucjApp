@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
@@ -30,6 +31,9 @@ class UserPeriodStatsServiceTest {
 
     @Mock
     private UserDailyStatsRepository userDailyStatsRepository;
+
+    @Mock
+    private Logger logger;
 
     @InjectMocks
     private UserPeriodStatsService userPeriodStatsService;
