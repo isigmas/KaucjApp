@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -15,6 +16,7 @@ import pl.isigmas.kaucjapp.common.logger.Logger;
 
 import java.io.InputStream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GeoValidationService {
@@ -26,6 +28,7 @@ public class GeoValidationService {
     @PostConstruct
     public void init() {
         try {
+            log.info("Loading Poland boundaries from GeoJSON...");
             logger.info("Loading Poland boundaries from GeoJSON...");
 
             InputStream inputStream = new ClassPathResource("poland.geo.json").getInputStream();
@@ -37,8 +40,10 @@ public class GeoValidationService {
             GeoJSONReader reader = new GeoJSONReader();
             this.polandGeometry = reader.read(geometryNode.toString());
 
+            log.info("Successfully loaded Poland boundaries.");
             logger.info("Successfully loaded Poland boundaries.");
         } catch (Exception e) {
+            log.error("Failed to load geojson boundaries. App might not validate locations correctly!", e);
             logger.error("Failed to load geojson boundaries. App might not validate locations correctly!");
             throw new RuntimeException("Could not initialize GeoValidationService", e);
         }

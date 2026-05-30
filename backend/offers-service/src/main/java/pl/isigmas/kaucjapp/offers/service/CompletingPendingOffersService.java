@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.offers.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,7 @@ import pl.isigmas.kaucjapp.common.logger.Logger;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CompletingPendingOffersService {
@@ -23,6 +25,7 @@ public class CompletingPendingOffersService {
         int completedCount = offerService.completeExpiredPendingOffers(now);
 
         if (completedCount > 0) {
+            log.info("Completed {} pending offers (Kafka stats published per offer).", completedCount);
             logger.info("Completed %d pending offers (Kafka stats published per offer).".formatted(completedCount));
         }
     }

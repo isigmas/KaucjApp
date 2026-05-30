@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.offers.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -9,6 +10,7 @@ import pl.isigmas.kaucjapp.offers.service.OfferService;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/offer/admin")
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class OfferAdminController {
 
     @GetMapping("/complaints")
     public ResponseEntity<List<ComplaintResponseDTO>> getComplaints(){
+        log.info("Getting all complaints");
         logger.info("Getting all complaints");
         return ResponseEntity.ok(service.getAllComplaints());
     }
