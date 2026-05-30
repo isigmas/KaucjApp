@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { UserStats, RankingActivityType } from "@/src/types/ranking";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import RankingAvatar from "./ranking-avatar";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 interface RankingListItemProps {
   user: UserStats;
@@ -17,6 +18,7 @@ export default function RankingListItem({
   rank,
   type,
 }: RankingListItemProps) {
+  const router = useRouter();
   const score = type.includes("returned")
     ? user.returnedTotalCount
     : user.collectedTotalCount;
@@ -32,8 +34,16 @@ export default function RankingListItem({
       <View style={styles.rankContainer}>
         <Text style={styles.rankText}>{rank}</Text>
       </View>
-
-      <RankingAvatar imageUrl={user.profilePictureUrl} size={48} />
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: "/profile/stats",
+            params: { userId: user.userId },
+          })
+        }
+      >
+        <RankingAvatar imageUrl={user.profilePictureUrl} size={48} />
+      </Pressable>
 
       <View style={styles.userInfo}>
         <Text style={styles.username} numberOfLines={1}>
@@ -54,7 +64,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.background.card,
-    borderRadius: rounded.xl,
+    borderRadius: rounded.apple,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,

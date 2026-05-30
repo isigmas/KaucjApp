@@ -10,6 +10,13 @@ interface MachineMarkerProps {
   onPress: (machine: DepositMachine) => void;
 }
 
+//a dictionary of a marker status and a marker image
+const markerImages = {
+  AVAILABLE: require("@/assets/images/markers/deposit_marker_green.png"),
+  FULL: require("@/assets/images/markers/deposit_marker_yellow.png"),
+  OUT_OF_ORDER: require("@/assets/images/markers/deposit_marker_red.png"),
+};
+
 export const MachineMarker = React.memo(
   ({ machine, onPress }: MachineMarkerProps) => {
     const [isTracking, setIsTracking] = useState(true);
@@ -29,20 +36,8 @@ export const MachineMarker = React.memo(
         }}
         onPress={() => onPress(machine)}
         tracksViewChanges={isTracking}
-        icon={undefined}
-      >
-        <View style={styles.container} onLayout={handleLayout}>
-          <View
-            style={[
-              styles.pinRing,
-              { borderColor: config.color, shadowColor: config.shadow },
-            ]}
-          >
-            <View style={[styles.pinCore, { backgroundColor: config.color }]} />
-          </View>
-          <View style={[styles.triangle, { borderTopColor: config.color }]} />
-        </View>
-      </Marker>
+        icon={markerImages[machine.status]}
+      />
     );
   },
   (prevProps, nextProps) =>

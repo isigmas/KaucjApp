@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
-    borderRadius: rounded.lg,
+    borderRadius: rounded.xl,
     width: "100%",
     ...shadows.light,
   },

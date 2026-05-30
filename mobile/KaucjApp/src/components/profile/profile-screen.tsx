@@ -95,7 +95,14 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       {user && (
-        <Pressable onPress={() => router.push("/profile/stats")}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/profile/stats",
+              params: { userId: user.userId },
+            })
+          }
+        >
           <UserProfile user={user} role="creator" />
         </Pressable>
       )}

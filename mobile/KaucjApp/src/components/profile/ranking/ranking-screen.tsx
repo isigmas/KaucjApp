@@ -17,8 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTabSelector from "../../ui/active-tab-selector";
 
 const TABS = [
-  { id: "collected_total", label: "Zgromadzone" },
-  { id: "returned_total", label: "Zwrócone" },
+  { id: "returned_total", label: "Wystawiający" },
+  { id: "collected_total", label: "Odbierający" },
 ] as const;
 
 export default function RankingScreen() {
@@ -72,7 +72,7 @@ export default function RankingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={top3}
+        data={remainingUsers}
         keyExtractor={(item: UserStats) => item.userId.toString()}
         renderItem={({ item, index }) => (
           <RankingListItem user={item} rank={index + 4} type={activityType} />
