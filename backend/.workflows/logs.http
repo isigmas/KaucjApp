@@ -1,6 +1,19 @@
-### Read live logs
-WEBSOCKET ws://localhost:8080/api/monitor/admin/ws/logs
+### Get admin ticket
+POST localhost:8080/api/gateway/admin/ticket
 Authorization: Bearer {{JWT_token_admin}}
+
+> {%
+    if (response.status == 200) {
+        client.global.set("ticket_admin", response.body);
+        client.test("Received admin ticket", function() {
+            client.assert(client.global.get("ticket_admin") !== undefined, "No ticket!");
+        });
+        client.log("Received admin ticket: " + client.global.get("ticket_admin"));
+    }
+%}
+
+### Read live logs
+WEBSOCKET ws://localhost:8080/api/monitor/admin/ws/logs?ticket={{ticket_admin}}
 
 ### Read last logs
 
