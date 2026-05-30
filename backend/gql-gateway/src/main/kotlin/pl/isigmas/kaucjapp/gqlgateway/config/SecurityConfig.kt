@@ -29,7 +29,8 @@ open class SecurityConfig(
                 val path = request.requestURI
                 path != null && (
                     (path.startsWith("/api/auth/") && !path.contains("/admin/")) ||
-                        path.startsWith("/api/notification/account/")
+                        path.startsWith("/api/notification/account/") ||
+                        path == "/api/gateway/status"
                     )
             }
             .csrf { it.disable() }
@@ -47,10 +48,13 @@ open class SecurityConfig(
             .authorizeHttpRequests { authorize ->
                 authorize
                     .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                    .requestMatchers({ request ->
+                        "websocket".equals(request.getHeader("Upgrade"), ignoreCase = true)
+                    }).permitAll()
                     .requestMatchers("/api/*/admin/**", "/api/*/*/admin/**").hasRole("ADMIN")
                     .requestMatchers("/graphql").permitAll()
                     .requestMatchers("/api/auth/status").permitAll()
-                    .requestMatchers("/status").permitAll()
+                    .requestMatchers("/api/gateway/status").permitAll()
                     .anyRequest().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->
