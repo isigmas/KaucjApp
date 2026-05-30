@@ -29,6 +29,9 @@ public class Logger {
     }
 
     private void send(String message, LogLevel level) {
+        if (kafkaTemplate == null) {
+            return;
+        }
         kafkaTemplate.send("system-logs", new SystemLog(
                 serviceName,
                 level,

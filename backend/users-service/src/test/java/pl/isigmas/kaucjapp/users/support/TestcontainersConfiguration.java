@@ -13,7 +13,7 @@ class TestcontainersConfiguration {
     @ServiceConnection
     @SuppressWarnings("resource")
     PostgreSQLContainer postgresContainer() {
-        return new PostgreSQLContainer(DockerImageName.parse("postgres:latest")).withInitScript("init.sql");
+        return new PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine")).withInitScript("init.sql");
     }
 
 }
