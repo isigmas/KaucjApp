@@ -25,7 +25,7 @@ export default function ReviewCard({
     <Animated.View
       layout={layoutSpring}
       entering={FadeInDown.delay(Math.min((index + 2) * 80, 400)).springify()}
-      style={asCard ? styles.card : {}}
+      style={asCard ? styles.card : { paddingTop: spacing.md }}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.reviewerName} numberOfLines={1}>

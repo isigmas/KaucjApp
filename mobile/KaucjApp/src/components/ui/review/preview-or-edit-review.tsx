@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import ReviewCard from "./review-list-card";
 import { Review } from "@/src/types";
@@ -12,6 +12,7 @@ type ReviewType = "machine" | "user";
 interface PreviewOrEditReviewBaseProps {
   type: ReviewType;
   existingReview: Review;
+  cardStyle?: StyleProp<ViewStyle>;
 }
 
 interface MachineReviewProps extends PreviewOrEditReviewBaseProps {
@@ -34,7 +35,7 @@ export default function PreviewOrEditReview(props: PreviewOrEditReviewProps) {
     <Animated.View
       layout={layoutSpring}
       entering={FadeInDown.delay(300).springify()}
-      style={styles.card}
+      style={[styles.card, props.cardStyle]}
     >
       {isEditing ? (
         props.type === "machine" ? (

@@ -136,6 +136,7 @@ function UserReview({
     shadowRadius: 0,
     shadowOffset: { width: 0, height: 0 },
     marginBottom: 0,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.sm,
     paddingHorizontal: 0,
   },

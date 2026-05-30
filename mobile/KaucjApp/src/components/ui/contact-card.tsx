@@ -69,7 +69,7 @@ export default function ContactCard({
         user={user}
         rating={userRating?.avgScore || 0}
         // TODO: add pickups count isted of rating count in this place
-        //pickupsCount={0}
+        // pickupsCount={0}
         ratingCount={userRating?.feedbackCount || 0}
         showCourierFrom={isTheUserCourier}
         onPress={onUserProfileInfoPress}
