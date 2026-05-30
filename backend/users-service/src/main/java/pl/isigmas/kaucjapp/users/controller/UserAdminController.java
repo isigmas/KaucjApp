@@ -2,6 +2,7 @@ package pl.isigmas.kaucjapp.users.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -11,6 +12,7 @@ import pl.isigmas.kaucjapp.users.service.UserService;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user/admin")
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class UserAdminController {
             description = "Returns all users located in db"
     )
     public ResponseEntity<List<UserAdminDTO>> getAllUsers(){
+        log.info("Getting all users");
         logger.info("Getting all users");
         return ResponseEntity.ok(userService.getAll());
     }
@@ -35,6 +38,7 @@ public class UserAdminController {
             summary = "Get all time stats"
     )
     public ResponseEntity<AdminStatsDTO> getAllStats(){
+        log.info("Getting all time stats for admin");
         logger.info("Getting all time stats for admin");
         return ResponseEntity.ok(userService.getAllStats());
 

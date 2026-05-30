@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.users.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -58,6 +60,7 @@ public class UserService {
         return userRepository.findById(id)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", id);
                     logger.warn("User not found, ID: %d".formatted(id));
                     return new UserNotFoundException(id);
                 });
@@ -67,10 +70,12 @@ public class UserService {
     public void createUser(long id, CreateUserDTO userDTO) {
 
         if (userRepository.existsByEmail(userDTO.getEmail())) {
+            log.warn("User with {} email already exists", userDTO.getEmail());
             logger.warn("User with %s email already exists".formatted(userDTO.getEmail()));
             throw UserAlreadyExistsException.forEmail(userDTO.getEmail());
         }
         if (userRepository.existsByUsername(userDTO.getUsername())) {
+            log.warn("User with {} username already exists", userDTO.getUsername());
             logger.warn("User with %s username already exists".formatted(userDTO.getUsername()));
             throw UserAlreadyExistsException.forUsername(userDTO.getUsername());
         }
@@ -95,6 +100,7 @@ public class UserService {
         stats.setUserId(user.getId());
         userStatsRepository.save(stats);
 
+        log.info("User created, ID: {}", id);
         logger.important("User created, ID: %d".formatted(id));
     }
 
@@ -102,6 +108,7 @@ public class UserService {
     public void updateUser(Long id, UpdateUserDTO dto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", id);
                     logger.warn("User not found, ID: %d".formatted(id));
                     return new UserNotFoundException(id);
                 });
@@ -122,6 +129,7 @@ public class UserService {
             });
         }
 
+        log.info("User updated, ID: {}", id);
         logger.important("User updated, ID: %d".formatted(id));
     }
 
@@ -129,10 +137,12 @@ public class UserService {
     public UserDTO updateProfilePictureUrl(Long userId, String imageUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
                     return new UserNotFoundException(userId);
                 });
         user.setProfilePictureUrl(imageUrl);
+        log.info("Profile picture updated for user ID: {}", userId);
         logger.important("Profile picture updated for user ID: %d".formatted(userId));
         return mapToDTO(user);
     }
@@ -141,10 +151,12 @@ public class UserService {
     public UserDTO clearProfilePicture(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
                     return new UserNotFoundException(userId);
                 });
         user.setProfilePictureUrl(null);
+        log.info("Profile picture cleared for user ID: {}", userId);
         logger.important("Profile picture cleared for user ID: %d".formatted(userId));
         return mapToDTO(user);
     }
@@ -153,11 +165,13 @@ public class UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", id);
                     logger.warn("User not found, ID: %d".formatted(id));
                     return new UserNotFoundException(id);
                 });
 
         if (user.getUsername().startsWith("deleted-user-")) {
+            log.info("User already deleted, ID: {}", id);
             logger.info("User already deleted, ID: %d".formatted(id));
             return;
         }
@@ -170,6 +184,7 @@ public class UserService {
 
         applicationEventPublisher.publishEvent(new UserDeletedEvent(id));
 
+        log.info("User deleted, ID: {}", id);
         logger.important("User deleted, ID: %d".formatted(id));
     }
 
@@ -237,6 +252,7 @@ public class UserService {
     public List<UserAddressDTO> getUserAddresses(Long myUserId) {
         User user = userRepository.findById(myUserId)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", myUserId);
                     logger.warn("User not found, ID: %d".formatted(myUserId));
                     return new UserNotFoundException(myUserId);
                 });
@@ -317,6 +333,7 @@ public class UserService {
             case "returned_total" -> "returnedTotalCount";
             case "collected_total" -> "collectedTotalCount";
             default -> {
+                log.warn("Invalid ranking type: {}", sortType);
                 logger.warn("Invalid ranking type: %s".formatted(sortType));
                 throw new InvalidRankingType("Invalid ranking type: " + sortType);
             }
@@ -353,6 +370,7 @@ public class UserService {
     private String normalizeRankingType(String type) {
         String normalized = type.toLowerCase();
         if (!VALID_RANKING_TYPES.contains(normalized)) {
+            log.warn("Invalid ranking type: {}", type);
             logger.warn("Invalid ranking type: %s".formatted(type));
             throw new InvalidRankingType("Invalid ranking type: " + type);
         }
@@ -361,6 +379,7 @@ public class UserService {
 
     private void validateRankingPeriodDays(int days) {
         if (days < 1 || days > UserPeriodStatsService.MAX_PERIOD_DAYS) {
+            log.warn("Invalid stats period days: {} (allowed 1-{})", days, UserPeriodStatsService.MAX_PERIOD_DAYS);
             logger.warn(
                     "Invalid stats period days: %d (allowed 1-%d)".formatted(days, UserPeriodStatsService.MAX_PERIOD_DAYS)
             );

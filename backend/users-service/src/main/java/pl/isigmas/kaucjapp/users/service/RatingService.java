@@ -1,6 +1,7 @@
 package pl.isigmas.kaucjapp.users.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -21,6 +22,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RatingService {
@@ -33,11 +35,13 @@ public class RatingService {
     @Transactional
     public void addReview(Long revieweeId, Long reviewerId, ReviewRequestDTO request) {
         if (revieweeId.equals(reviewerId)) {
+            log.warn("Self-rating forbidden for user ID: {}", revieweeId);
             logger.warn("Self-rating forbidden for user ID: %d".formatted(revieweeId));
             throw new SelfRatingForbiddenException();
         }
 
         if (userReviewRepository.existsByReviewerIdAndOfferId(reviewerId, request.getOfferId())) {
+            log.warn("Duplicate review for offer {} by reviewer ID: {}", request.getOfferId(), reviewerId);
             logger.warn(
                     "Duplicate review for offer %d by reviewer ID: %d".formatted(request.getOfferId(), reviewerId)
             );
@@ -46,6 +50,7 @@ public class RatingService {
 
         Rating rating = ratingRepository.findById(revieweeId)
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", revieweeId);
                     logger.warn("User not found, ID: %d".formatted(revieweeId));
                     return new UserNotFoundException(revieweeId);
                 });
@@ -70,6 +75,8 @@ public class RatingService {
         rating.setAvgScore(newAvg);
         rating.setFeedbackCount(newCount);
 
+        log.info("Review added for user ID: {} by reviewer ID: {} (score {}, offer {})",
+                revieweeId, reviewerId, request.getScore(), request.getOfferId());
         logger.important(
                 "Review added for user ID: %d by reviewer ID: %d (score %s, offer %d)"
                         .formatted(revieweeId, reviewerId, request.getScore(), request.getOfferId())
@@ -79,6 +86,7 @@ public class RatingService {
     @Transactional(readOnly = true)
     public List<ReviewResponseDTO> getUserReviews(Long userId) {
         if (!ratingRepository.existsById(userId)) {
+            log.warn("User not found, ID: {}", userId);
             logger.warn("User not found, ID: %d".formatted(userId));
             throw new UserNotFoundException(userId);
         }
@@ -104,11 +112,13 @@ public class RatingService {
     public void updateReview(Long reviewId, Long reviewerId, UpdateReviewDTO request) {
         UserReview review = userReviewRepository.findById(reviewId)
                 .orElseThrow(() -> {
+                    log.warn("Review not found, ID: {}", reviewId);
                     logger.warn("Review not found, ID: %d".formatted(reviewId));
                     return new ReviewNotFoundException(reviewId);
                 });
 
         if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            log.warn("Review edit forbidden for review ID: {} by user ID: {}", reviewId, reviewerId);
             logger.warn("Review edit forbidden for review ID: %d by user ID: %d".formatted(reviewId, reviewerId));
             throw new ReviewForbiddenException("Only the author of the review can edit it");
         }
@@ -116,6 +126,7 @@ public class RatingService {
         if (request.getScore() != null) {
             Rating rating = ratingRepository.findById(review.getRevieweeId())
                     .orElseThrow(() -> {
+                        log.warn("User not found, ID: {}", review.getRevieweeId());
                         logger.warn("User not found, ID: %d".formatted(review.getRevieweeId()));
                         return new UserNotFoundException(review.getRevieweeId());
                     });
@@ -138,6 +149,7 @@ public class RatingService {
         }
         userReviewRepository.save(review);
 
+        log.info("Review updated, ID: {} by reviewer ID: {}", reviewId, reviewerId);
         logger.important("Review updated, ID: %d by reviewer ID: %d".formatted(reviewId, reviewerId));
     }
 
@@ -145,17 +157,20 @@ public class RatingService {
     public void deleteReview(Long reviewId, Long reviewerId) {
         UserReview review = userReviewRepository.findById(reviewId)
                 .orElseThrow(() -> {
+                    log.warn("Review not found, ID: {}", reviewId);
                     logger.warn("Review not found, ID: %d".formatted(reviewId));
                     return new ReviewNotFoundException(reviewId);
                 });
 
         if (review.getReviewerId() == null || !review.getReviewerId().equals(reviewerId)) {
+            log.warn("Review delete forbidden for review ID: {} by user ID: {}", reviewId, reviewerId);
             logger.warn("Review delete forbidden for review ID: %d by user ID: %d".formatted(reviewId, reviewerId));
             throw new ReviewForbiddenException("Only the author of the review can delete it");
         }
 
         Rating rating = ratingRepository.findById(review.getRevieweeId())
                 .orElseThrow(() -> {
+                    log.warn("User not found, ID: {}", review.getRevieweeId());
                     logger.warn("User not found, ID: %d".formatted(review.getRevieweeId()));
                     return new UserNotFoundException(review.getRevieweeId());
                 });
@@ -179,6 +194,7 @@ public class RatingService {
 
         userReviewRepository.delete(review);
 
+        log.info("Review deleted, ID: {} by reviewer ID: {}", reviewId, reviewerId);
         logger.important("Review deleted, ID: %d by reviewer ID: %d".formatted(reviewId, reviewerId));
     }
 
@@ -186,6 +202,7 @@ public class RatingService {
     public ReviewResponseDTO getReview(Long reviewId) {
         UserReview review = userReviewRepository.findById(reviewId)
                 .orElseThrow(() -> {
+                    log.warn("Review not found, ID: {}", reviewId);
                     logger.warn("Review not found, ID: %d".formatted(reviewId));
                     return new ReviewNotFoundException(reviewId);
                 });
@@ -197,6 +214,7 @@ public class RatingService {
         return ratingRepository.findById(userId)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> {
+                    log.warn("Rating not found for user ID: {}", userId);
                     logger.warn("Rating not found for user ID: %d".formatted(userId));
                     return new RatingNotFoundException(userId);
                 });
