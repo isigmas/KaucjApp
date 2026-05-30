@@ -12,7 +12,7 @@ import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 @RequiredArgsConstructor
 public class OfferKafkaPublisher {
 
-    private final KafkaTemplate<String, OfferCompletedEventDTO> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Logger logger;
 
     public void sendOfferCompleted(OfferCompletedEventDTO event) {
