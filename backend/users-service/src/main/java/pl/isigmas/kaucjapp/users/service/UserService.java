@@ -57,7 +57,10 @@ public class UserService {
     public UserDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(this::mapToDTO)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(id));
+                    return new UserNotFoundException(id);
+                });
     }
 
     @Transactional
@@ -91,12 +94,17 @@ public class UserService {
         UserStats stats = new UserStats();
         stats.setUserId(user.getId());
         userStatsRepository.save(stats);
+
+        logger.important("User created, ID: %d".formatted(id));
     }
 
     @Transactional
     public void updateUser(Long id, UpdateUserDTO dto) {
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(id));
+                    return new UserNotFoundException(id);
+                });
 
         if (dto.getFirstName() != null) existingUser.setFirstName(dto.getFirstName());
         if (dto.getLastName() != null) existingUser.setLastName(dto.getLastName());
@@ -113,30 +121,44 @@ public class UserService {
                 existingUser.addAddress(address);
             });
         }
+
+        logger.important("User updated, ID: %d".formatted(id));
     }
 
     @Transactional
     public UserDTO updateProfilePictureUrl(Long userId, String imageUrl) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(userId));
+                    return new UserNotFoundException(userId);
+                });
         user.setProfilePictureUrl(imageUrl);
+        logger.important("Profile picture updated for user ID: %d".formatted(userId));
         return mapToDTO(user);
     }
 
     @Transactional
     public UserDTO clearProfilePicture(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(userId));
+                    return new UserNotFoundException(userId);
+                });
         user.setProfilePictureUrl(null);
+        logger.important("Profile picture cleared for user ID: %d".formatted(userId));
         return mapToDTO(user);
     }
 
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(id));
+                    return new UserNotFoundException(id);
+                });
 
         if (user.getUsername().startsWith("deleted-user-")) {
+            logger.info("User already deleted, ID: %d".formatted(id));
             return;
         }
 
@@ -147,6 +169,8 @@ public class UserService {
         user.setPhone(null);
 
         applicationEventPublisher.publishEvent(new UserDeletedEvent(id));
+
+        logger.important("User deleted, ID: %d".formatted(id));
     }
 
     private UserDTO mapToDTO(User user) {
@@ -212,7 +236,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserAddressDTO> getUserAddresses(Long myUserId) {
         User user = userRepository.findById(myUserId)
-                .orElseThrow(() -> new UserNotFoundException(myUserId));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(myUserId));
+                    return new UserNotFoundException(myUserId);
+                });
         return user.getAddresses().stream()
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
@@ -289,7 +316,10 @@ public class UserService {
             case "collected_can" -> "collectedCanCount";
             case "returned_total" -> "returnedTotalCount";
             case "collected_total" -> "collectedTotalCount";
-            default -> throw new InvalidRankingType("Invalid ranking type: " + sortType);
+            default -> {
+                logger.warn("Invalid ranking type: %s".formatted(sortType));
+                throw new InvalidRankingType("Invalid ranking type: " + sortType);
+            }
         };
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortByField));
@@ -320,16 +350,20 @@ public class UserService {
         }).toList();
     }
 
-    private static String normalizeRankingType(String type) {
+    private String normalizeRankingType(String type) {
         String normalized = type.toLowerCase();
         if (!VALID_RANKING_TYPES.contains(normalized)) {
+            logger.warn("Invalid ranking type: %s".formatted(type));
             throw new InvalidRankingType("Invalid ranking type: " + type);
         }
         return normalized;
     }
 
-    private static void validateRankingPeriodDays(int days) {
+    private void validateRankingPeriodDays(int days) {
         if (days < 1 || days > UserPeriodStatsService.MAX_PERIOD_DAYS) {
+            logger.warn(
+                    "Invalid stats period days: %d (allowed 1-%d)".formatted(days, UserPeriodStatsService.MAX_PERIOD_DAYS)
+            );
             throw new InvalidStatsPeriodException(
                     "days must be between 1 and " + UserPeriodStatsService.MAX_PERIOD_DAYS + ", got: " + days
             );

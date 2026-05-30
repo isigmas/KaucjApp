@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.users.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.DailyStatsCounts;
 import pl.isigmas.kaucjapp.users.DTO.UserPeriodStatsDTO;
 import pl.isigmas.kaucjapp.users.exception.InvalidStatsPeriodException;
@@ -22,6 +23,7 @@ public class UserPeriodStatsService {
 
     private final UserRepository userRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
+    private final Logger logger;
 
     @Transactional(readOnly = true)
     public UserPeriodStatsDTO getStatsForLastDays(Long userId, int days) {
@@ -34,10 +36,12 @@ public class UserPeriodStatsService {
     @Transactional(readOnly = true)
     public UserPeriodStatsDTO getStatsForPeriod(Long userId, LocalDate startDate, LocalDate endDate) {
         if (startDate.isAfter(endDate)) {
+            logger.warn("Invalid stats period: startDate %s is after endDate %s".formatted(startDate, endDate));
             throw new InvalidStatsPeriodException("startDate must not be after endDate");
         }
         long inclusiveDays = endDate.toEpochDay() - startDate.toEpochDay() + 1;
         if (inclusiveDays > MAX_PERIOD_DAYS) {
+            logger.warn("Invalid stats period length: %d days (max %d)".formatted(inclusiveDays, MAX_PERIOD_DAYS));
             throw new InvalidStatsPeriodException("Period must not exceed " + MAX_PERIOD_DAYS + " days");
         }
         return getStatsForPeriod(userId, startDate, endDate, (int) inclusiveDays);
@@ -45,7 +49,10 @@ public class UserPeriodStatsService {
 
     private UserPeriodStatsDTO getStatsForPeriod(Long userId, LocalDate startDate, LocalDate endDate, int periodDays) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() -> {
+                    logger.warn("User not found, ID: %d".formatted(userId));
+                    return new UserNotFoundException(userId);
+                });
 
         DailyStatsCounts aggregation = userDailyStatsRepository.getStatsForPeriod(userId, startDate, endDate);
 
@@ -70,8 +77,9 @@ public class UserPeriodStatsService {
                 .build();
     }
 
-    private static void validatePeriodDays(int days) {
+    private void validatePeriodDays(int days) {
         if (days < 1 || days > MAX_PERIOD_DAYS) {
+            logger.warn("Invalid stats period days: %d (allowed 1-%d)".formatted(days, MAX_PERIOD_DAYS));
             throw new InvalidStatsPeriodException(
                     "days must be between 1 and " + MAX_PERIOD_DAYS + ", got: " + days
             );

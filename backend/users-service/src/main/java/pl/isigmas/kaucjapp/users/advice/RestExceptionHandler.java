@@ -2,8 +2,10 @@ package pl.isigmas.kaucjapp.users.advice;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -24,7 +26,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class RestExceptionHandler {
+
+    private final Logger logger;
 
     @ExceptionHandler(KaucjappException.class)
     public ResponseEntity<ApiError> handleKaucjappException(KaucjappException ex, HttpServletRequest request) {
@@ -164,6 +169,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         log.error("Unhandled error on {}", request.getRequestURI(), ex);
+        logger.error("Unhandled error on %s: %s".formatted(request.getRequestURI(), ex.getMessage()));
         ApiError error = ApiError.builder()
                 .timestamp(Instant.now())
                 .errorCode("INTERNAL_ERR")
