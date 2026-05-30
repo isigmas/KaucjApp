@@ -34,6 +34,11 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: true
         run: ./mvnw test
 
+      - name: Dump Surefire reports on failure
+        if: failure()
+        working-directory: ./backend/users-service
+        run: cat target/surefire-reports/pl.isigmas.kaucjapp.users.smoke.KaucjappApplicationTests.txt
+
       - name: Cleanup after tests
         run: docker system prune -f
 
