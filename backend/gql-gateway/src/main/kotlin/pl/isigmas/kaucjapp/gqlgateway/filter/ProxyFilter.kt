@@ -45,7 +45,7 @@ open class ProxyFilter(
         // Skip GraphQL, WebSocket upgrade, and status endpoints
         if (requestPath.startsWith("/graphql") ||
             request.getHeader("Upgrade") != null ||
-            requestPath == "/status"
+            requestPath == "/api/gateway/status"
         ) {
             filterChain.doFilter(request, response)
             return
