@@ -64,6 +64,12 @@ export const useUpdateUserReview = (reviewId: number, userId: number) => {
       queryClient.invalidateQueries({
         queryKey: ["userRating", userId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["userReviewCheck", userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userReviews", userId],
+      });
     },
   });
 };

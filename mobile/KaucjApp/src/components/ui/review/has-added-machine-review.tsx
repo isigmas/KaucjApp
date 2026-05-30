@@ -19,6 +19,7 @@ export default function HasAddedMachineReview({
   if (isReviewed && existingReview) {
     return (
       <PreviewOrEditReview
+        type="machine"
         machineId={machineId}
         existingReview={existingReview}
       />

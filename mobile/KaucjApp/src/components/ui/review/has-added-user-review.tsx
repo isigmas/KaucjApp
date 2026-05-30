@@ -2,8 +2,9 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import { useUserReviewCheck } from "@/src/api/hooks/use-rating";
 import ExpandableReview from "./expandable-review";
-import { colors, spacing } from "@/src/theme";
+import { colors } from "@/src/theme";
 import { UserRole } from "@/src/types/user";
+import PreviewOrEditReview from "./preview-or-edit-review";
 
 interface UserReviewCheckProps {
   role: UserRole;
@@ -23,11 +24,19 @@ export default function UserReviewCheck({
 
   const { data, isLoading } = useUserReviewCheck(offerId, userId);
   const isReviewPosted = data?.alreadyReviewed;
+  const existingReview = data?.review ?? null;
   if (isLoading) {
     return null;
   }
-  if (isReviewPosted) {
-    return <Text>Ocena dodana, docelowo wyswietlic tutaj ocene</Text>;
+  if (isReviewPosted && existingReview) {
+    return (
+      <PreviewOrEditReview
+        existingReview={existingReview}
+        type="user"
+        userId={userId}
+        offerId={offerId}
+      />
+    );
   }
 
   return (

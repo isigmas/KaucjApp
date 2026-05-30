@@ -41,12 +41,12 @@ interface BaseExpandableReviewProps {
   isDefaultExpanded?: boolean;
   existingReview?: Review | null;
   style?: StyleProp<ViewStyle>;
+  onEditCancel?: () => void;
 }
 
 interface MachineReviewProps extends BaseExpandableReviewProps {
   type: "machine";
   machineId: number;
-  onEditCancel?: () => void;
 }
 
 interface UserReviewProps extends BaseExpandableReviewProps {
@@ -130,6 +130,7 @@ function UserReview({
   offerId,
   isDefaultExpanded,
   existingReview,
+  onEditCancel,
   style = {
     shadowOpacity: 0,
     shadowRadius: 0,
@@ -179,6 +180,7 @@ function UserReview({
       onSubmit={handleSubmit}
       isDefaultExpanded={isDefaultExpanded || isEditMode}
       style={style}
+      onEditCancel={onEditCancel}
     />
   );
 }
@@ -404,6 +406,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.background.card,
     borderRadius: rounded.apple,
+    paddingTop: spacing.md,
     padding: spacing.md,
     marginBottom: spacing.lg,
     ...shadows.light,

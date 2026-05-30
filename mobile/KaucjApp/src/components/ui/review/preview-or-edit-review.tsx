@@ -7,14 +7,27 @@ import { useState } from "react";
 import { layoutSpring } from "@/src/constants";
 import ExpandableReview from "./expandable-review";
 
-interface PreviewOrEditReviewProps {
-  machineId: number;
+type ReviewType = "machine" | "user";
+
+interface PreviewOrEditReviewBaseProps {
+  type: ReviewType;
   existingReview: Review;
 }
-export default function PreviewOrEditReview({
-  machineId,
-  existingReview,
-}: PreviewOrEditReviewProps) {
+
+interface MachineReviewProps extends PreviewOrEditReviewBaseProps {
+  type: "machine";
+  machineId: number;
+}
+
+interface UserReviewProps extends PreviewOrEditReviewBaseProps {
+  type: "user";
+  userId: number;
+  offerId: number;
+}
+
+type PreviewOrEditReviewProps = MachineReviewProps | UserReviewProps;
+
+export default function PreviewOrEditReview(props: PreviewOrEditReviewProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -31,19 +44,31 @@ export default function PreviewOrEditReview({
         style={styles.card}
       >
         {isEditing ? (
-          <ExpandableReview
-            type="machine"
-            machineId={machineId}
-            isDefaultExpanded={true}
-            existingReview={existingReview}
-            style={styles.editReview}
-            onEditCancel={() => setIsEditing(false)}
-          />
+          props.type === "machine" ? (
+            <ExpandableReview
+              type="machine"
+              machineId={props.machineId}
+              isDefaultExpanded={true}
+              existingReview={props.existingReview}
+              style={styles.editReview}
+              onEditCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <ExpandableReview
+              type="user"
+              userId={props.userId}
+              offerId={props.offerId}
+              isDefaultExpanded={true}
+              existingReview={props.existingReview}
+              style={styles.editReview}
+              onEditCancel={() => setIsEditing(false)}
+            />
+          )
         ) : (
           <ReviewCard
             index={-1}
-            review={existingReview}
-            key={existingReview.reviewId}
+            review={props.existingReview}
+            key={props.existingReview.reviewId}
             asCard={false}
             onEdit={() => setIsEditing(true)}
           />
