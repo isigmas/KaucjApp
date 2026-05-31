@@ -5,7 +5,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import pl.isigmas.kaucjapp.common.dto.WarningDTO;
 import pl.isigmas.kaucjapp.notification.dto.MailRequest;
-import pl.isigmas.kaucjapp.notification.service.MailService;
+import pl.isigmas.kaucjapp.notification.service.EmailRetryService;
 import pl.isigmas.kaucjapp.notification.service.WarningService;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
 
@@ -13,12 +13,12 @@ import pl.isigmas.kaucjapp.notification.util.TemplateType;
 @RequiredArgsConstructor
 public class NotificationKafkaListener {
 
-    private final MailService mailService;
+    private final EmailRetryService emailRetryService;
     private final WarningService warningService;
 
     @KafkaListener(topics = "notification.mail.welcome", groupId = "notification-group")
     public void handleWelcomeEmail(MailRequest mailRequest) {
-        mailService.sendMail(
+        emailRetryService.sendWithRetry(
                 "Aktywacja konta",
                 mailRequest.getUsername(),
                 mailRequest.getEmailTo(),
@@ -29,7 +29,7 @@ public class NotificationKafkaListener {
 
     @KafkaListener(topics = "notification.mail.resetpassword", groupId = "notification-group")
     public void handleResetPasswordEmail(MailRequest mailRequest) {
-        mailService.sendMail(
+        emailRetryService.sendWithRetry(
                 "Reset hasła",
                 mailRequest.getUsername(),
                 mailRequest.getEmailTo(),
