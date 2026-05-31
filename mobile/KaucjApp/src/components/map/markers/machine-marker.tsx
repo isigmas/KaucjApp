@@ -1,8 +1,9 @@
 import { getMachineStatusConfig } from "@/src/lib";
-import { DepositMachine } from "@/src/types";
+import { DepositMachine, DepositMachineStatus } from "@/src/types";
 import { preventAutoHideAsync } from "expo-splash-screen";
 import React, { useState, useCallback } from "react";
-import { StyleSheet, View } from "react-native";
+// Add Image to your react-native imports
+import { ImageSourcePropType, StyleSheet, View, Image } from "react-native";
 import { Marker } from "react-native-maps";
 
 interface MachineMarkerProps {
@@ -10,8 +11,8 @@ interface MachineMarkerProps {
   onPress: (machine: DepositMachine) => void;
 }
 
-//a dictionary of a marker status and a marker image
-const markerImages = {
+// A dictionary of a marker status and a marker image
+const markerImages: Record<DepositMachineStatus, ImageSourcePropType> = {
   AVAILABLE: require("@/assets/images/markers/deposit_marker_green.png"),
   FULL: require("@/assets/images/markers/deposit_marker_yellow.png"),
   OUT_OF_ORDER: require("@/assets/images/markers/deposit_marker_red.png"),
@@ -36,8 +37,14 @@ export const MachineMarker = React.memo(
         }}
         onPress={() => onPress(machine)}
         tracksViewChanges={isTracking}
-        icon={markerImages[machine.status]}
-      />
+      >
+        <Image
+          source={markerImages[machine.status]}
+          onLoad={handleLayout} // Stops tracking once the image successfully loads
+          style={{ width: 50, height: 50 }} // Adjust dimensions to match your asset sizes
+          resizeMode="contain"
+        />
+      </Marker>
     );
   },
   (prevProps, nextProps) =>
