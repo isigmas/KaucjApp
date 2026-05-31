@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.notification.entity.EmailRetryTask;
 import pl.isigmas.kaucjapp.notification.repository.EmailRetryTaskRepository;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
@@ -20,6 +21,7 @@ public class EmailRetryService {
 
     private final MailService mailService;
     private final EmailRetryTaskRepository emailRetryTaskRepository;
+    private final Logger logger;
 
     @Transactional
     public void sendWithRetry(String subject, String username, String email, String message, TemplateType templateType) {
@@ -58,11 +60,12 @@ public class EmailRetryService {
         if (task.getAttemptCount() + 1 >= EmailRetryBackoffPolicy.MAX_ATTEMPTS) {
             // TODO: zaimplementować mechanizm ochronny (np. tabelę failed_emails), gdy ostatnia próba nie przejdzie, żeby e-mail ostatecznie nie uciekł
             emailRetryTaskRepository.delete(task);
-            log.warn(
-                    "Email to {} discarded after {} failed attempts",
+            String discardMessage = "Email to %s discarded after %d failed attempts".formatted(
                     task.getRecipientEmail(),
                     EmailRetryBackoffPolicy.MAX_ATTEMPTS
             );
+            log.warn(discardMessage);
+            logger.error(discardMessage);
             return;
         }
 
@@ -70,13 +73,14 @@ public class EmailRetryService {
         task.setAttemptCount(nextAttemptCount);
         task.setNextAttemptAt(now.plus(EmailRetryBackoffPolicy.intervalAfterAttempt(nextAttemptCount)));
         emailRetryTaskRepository.save(task);
-        log.warn(
-                "Email to {} failed (attempt {}/{}), next retry at {}",
+        String retryMessage = "Email to %s failed (attempt %d/%d), next retry at %s".formatted(
                 task.getRecipientEmail(),
                 nextAttemptCount,
                 EmailRetryBackoffPolicy.MAX_ATTEMPTS,
                 task.getNextAttemptAt()
         );
+        log.warn(retryMessage);
+        logger.warn(retryMessage);
     }
 
     private void scheduleRetry(
@@ -101,12 +105,13 @@ public class EmailRetryService {
                 .build();
 
         emailRetryTaskRepository.save(task);
-        log.warn(
-                "Email to {} failed (attempt {}/{}), scheduled retry at {}",
+        String scheduleMessage = "Email to %s failed (attempt %d/%d), scheduled retry at %s".formatted(
                 email,
                 attemptCount,
                 EmailRetryBackoffPolicy.MAX_ATTEMPTS,
                 task.getNextAttemptAt()
         );
+        log.warn(scheduleMessage);
+        logger.warn(scheduleMessage);
     }
 }

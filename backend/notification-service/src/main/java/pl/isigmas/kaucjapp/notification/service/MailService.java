@@ -1,6 +1,5 @@
 package pl.isigmas.kaucjapp.notification.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
 
 @Slf4j
@@ -25,6 +25,7 @@ public class MailService {
 
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
+    private final Logger logger;
 
     public boolean trySendMail(String subject, String username, String email, String message, TemplateType templateType) {
         try {
@@ -48,7 +49,9 @@ public class MailService {
             javaMailSender.send(mimeMessage);
             return true;
         } catch (Exception e) {
-            log.warn("Failed to send email to {}: {}", email, e.getMessage());
+            String failureMessage = "Failed to send email to %s: %s".formatted(email, e.getMessage());
+            log.warn(failureMessage);
+            logger.warn(failureMessage);
             return false;
         }
     }
