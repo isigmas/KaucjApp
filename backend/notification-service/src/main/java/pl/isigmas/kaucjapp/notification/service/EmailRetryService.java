@@ -53,7 +53,6 @@ public class EmailRetryService {
 
         if (sent) {
             emailRetryTaskRepository.delete(task);
-            log.info("Email sent successfully on retry to {}", task.getRecipientEmail());
             return;
         }
 

@@ -47,6 +47,9 @@ public class MailService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
+            String successMessage = "Email sent successfully to %s (subject: %s)".formatted(email, subject);
+            log.info(successMessage);
+            logger.info(successMessage);
             return true;
         } catch (Exception e) {
             String failureMessage = "Failed to send email to %s: %s".formatted(email, e.getMessage());
