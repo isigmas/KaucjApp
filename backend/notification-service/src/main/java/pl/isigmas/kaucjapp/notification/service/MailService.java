@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.notification.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -11,6 +12,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -24,7 +26,7 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
 
-    public void sendMail(String subject, String username,String email, String message, TemplateType templateType) {
+    public boolean trySendMail(String subject, String username, String email, String message, TemplateType templateType) {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
@@ -44,9 +46,10 @@ public class MailService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
-
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error while sending email to: " + email, e);
+            return true;
+        } catch (Exception e) {
+            log.warn("Failed to send email to {}: {}", email, e.getMessage());
+            return false;
         }
     }
 }
