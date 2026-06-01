@@ -49,7 +49,6 @@ param monitorServiceImageName string = ''
 var helloWorldImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 var uniqueSuffix = uniqueString(resourceGroup().id)
 
-// Shared JAAS config so Spring Boot services can authenticate to Event Hubs over the Kafka protocol.
 var kafkaJaasConfig = 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${eventhubs.outputs.connectionString}";'
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
