@@ -77,7 +77,7 @@ resource topicSystemLogs 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = 
 }
 
 resource cgSystemLogs 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
-  name: 'monitor-group'
+  name: 'event-monitor'
   parent: topicSystemLogs
 }
 

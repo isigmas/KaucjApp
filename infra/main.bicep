@@ -10,19 +10,34 @@ param acrName string
 @description('Database Administrator User')
 param dbUser string = 'postgres_admin'
 
-@description('API Gateway public URL')
+@description('Public URL of the GraphQL gateway, used for links in e-mails')
 param baseUrl string
 
 @secure()
+@description('Database password')
 param dbPassword string
 @secure()
+@description('JWT signing secret')
 param jwtSecret string
 @secure()
+@description('Internal service-to-service token')
 param itSecret string
 @secure()
+@description('Password salt used by auth-service')
 param passwordSalt string
+@secure()
+@description('Resend SMTP API key (spring.mail.password)')
+param mailPassword string
+@secure()
+@description('Bootstrap admin username')
+param adminUsername string
+@secure()
+@description('Bootstrap admin e-mail')
+param adminEmail string
+@secure()
+@description('Bootstrap admin password')
+param adminPassword string
 
-param apiGatewayImageName string = ''
 param authServiceImageName string = ''
 param offersServiceImageName string = ''
 param usersServiceImageName string = ''
@@ -34,6 +49,9 @@ param monitorServiceImageName string = ''
 var helloWorldImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 var uniqueSuffix = uniqueString(resourceGroup().id)
 
+// Shared JAAS config so Spring Boot services can authenticate to Event Hubs over the Kafka protocol.
+var kafkaJaasConfig = 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${eventhubs.outputs.connectionString}";'
+
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
   name: acrName
   location: location
@@ -41,7 +59,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
   properties: { adminUserEnabled: true }
 }
 
-module env 'env.bicep' = {
+module env 'modules/env.bicep' = {
   name: 'env-deployment'
   params: {
     location: location
@@ -50,18 +68,18 @@ module env 'env.bicep' = {
   }
 }
 
-module db 'db.bicep' = {
+module db 'modules/db.bicep' = {
   name: 'db-deployment'
   params: {
     location: location
     serverName: 'psql-${environmentName}-${uniqueSuffix}'
     dbUser: dbUser
     dbPassword: dbPassword
-    databaseNames: ['users_db', 'offers_db', 'deposit_db', 'auth_db']
+    databaseNames: ['users_db', 'offers_db', 'deposit_db', 'auth_db', 'notification_db']
   }
 }
 
-module eventhubs 'eventhubs.bicep' = {
+module eventhubs 'modules/eventhubs.bicep' = {
   name: 'eventhubs-deployment'
   params: {
     location: location
@@ -69,7 +87,7 @@ module eventhubs 'eventhubs.bicep' = {
   }
 }
 
-module redis 'redis.bicep' = {
+module redis 'modules/redis.bicep' = {
   name: 'redis-deployment'
   params: {
     location: location
@@ -77,7 +95,7 @@ module redis 'redis.bicep' = {
   }
 }
 
-module cassandra 'cassandra.bicep' = {
+module cassandra 'modules/cassandra.bicep' = {
   name: 'cassandra-deployment'
   params: {
     location: location
@@ -85,7 +103,7 @@ module cassandra 'cassandra.bicep' = {
   }
 }
 
-module storage 'storage.bicep' = {
+module storage 'modules/storage.bicep' = {
   name: 'storage-deployment'
   params: {
     location: location
@@ -93,7 +111,7 @@ module storage 'storage.bicep' = {
   }
 }
 
-module offersApp 'app.bicep' = {
+module offersApp 'modules/app.bicep' = {
   name: 'offers-app-deployment'
   params: {
     appName: 'offers-service'
@@ -104,21 +122,27 @@ module offersApp 'app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
+    // offers-service runs scheduled jobs that publish per-offer Kafka events; keep it single-instance.
+    minReplicas: 1
+    maxReplicas: 1
     appSecrets: [
       { name: 'db-password', value: dbPassword }
-      { name: 'kafka-conn', value: eventhubs.outputs.eventHubConnectionString }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/offers_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
-      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.eventHubFqdn }
-      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-conn' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
     ]
   }
 }
 
-module usersApp 'app.bicep' = {
+module usersApp 'modules/app.bicep' = {
   name: 'users-app-deployment'
   params: {
     appName: 'users-service'
@@ -129,48 +153,141 @@ module usersApp 'app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
+    minReplicas: 1
+    maxReplicas: 3
     appSecrets: [
-      { name: 'jwt-secret', value: jwtSecret }
+      { name: 'it-secret', value: itSecret }
       { name: 'db-password', value: dbPassword }
       { name: 'storage-conn', value: storage.outputs.connectionString }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
-      { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
+      { name: 'IT_SECRET', secretRef: 'it-secret' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/users_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+      { name: 'AZURE_STORAGE_USE_DEVELOPMENT_STORAGE', value: 'false' }
       { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-conn' }
+      { name: 'AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT', value: storage.outputs.blobEndpoint }
+      { name: 'AZURE_STORAGE_CONTAINER_NAME', value: 'profile-pictures' }
+      { name: 'AZURE_STORAGE_PUBLIC_READ_ACCESS', value: 'true' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
     ]
   }
 }
 
-module gqlGatewayApp 'app.bicep' = {
-  name: 'gql-gateway-deployment'
+module authApp 'modules/app.bicep' = {
+  name: 'auth-app-deployment'
   params: {
-    appName: 'gql-gateway'
-    azdServiceName: 'gql-gateway'
+    appName: 'auth-service'
+    azdServiceName: 'auth-service'
     location: location
     environmentId: env.outputs.id
-    containerImage: !empty(gqlGatewayImageName) ? gqlGatewayImageName : helloWorldImage
+    containerImage: !empty(authServiceImageName) ? authServiceImageName : helloWorldImage
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
+    minReplicas: 1
+    maxReplicas: 3
     appSecrets: [
+      { name: 'db-password', value: dbPassword }
       { name: 'jwt-secret', value: jwtSecret }
-      { name: 'redis-password', value: redis.outputs.primaryKey }
+      { name: 'it-secret', value: itSecret }
+      { name: 'password-salt', value: passwordSalt }
+      { name: 'admin-username', value: adminUsername }
+      { name: 'admin-email', value: adminEmail }
+      { name: 'admin-password', value: adminPassword }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/auth_db?sslmode=require' }
+      { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
+      { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
-      { name: 'SPRING_DATA_REDIS_HOST', value: redis.outputs.hostName }
-      { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
-      { name: 'SPRING_DATA_REDIS_PASSWORD', secretRef: 'redis-password' }
-      { name: 'SPRING_DATA_REDIS_SSL', value: 'true' }
+      { name: 'IT_SECRET', secretRef: 'it-secret' }
+      { name: 'PASSWORD_SALT', secretRef: 'password-salt' }
+      { name: 'ADMIN_USERNAME', secretRef: 'admin-username' }
+      { name: 'ADMIN_EMAIL', secretRef: 'admin-email' }
+      { name: 'ADMIN_PASSWORD', secretRef: 'admin-password' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
     ]
   }
 }
 
-module monitorApp 'app.bicep' = {
-  name: 'monitor-service-deployment'
+module depositApp 'modules/app.bicep' = {
+  name: 'deposit-app-deployment'
+  params: {
+    appName: 'deposit-service'
+    azdServiceName: 'deposit-service'
+    location: location
+    environmentId: env.outputs.id
+    containerImage: !empty(depositServiceImageName) ? depositServiceImageName : helloWorldImage
+    acrServer: acr.properties.loginServer
+    acrUsername: acr.name
+    acrPassword: acr.listCredentials().passwords[0].value
+    minReplicas: 1
+    maxReplicas: 3
+    appSecrets: [
+      { name: 'db-password', value: dbPassword }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
+    ]
+    envVars: [
+      { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/deposit_db?sslmode=require' }
+      { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
+      { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
+    ]
+  }
+}
+
+module notificationApp 'modules/app.bicep' = {
+  name: 'notification-app-deployment'
+  params: {
+    appName: 'notification-service'
+    azdServiceName: 'notification-service'
+    location: location
+    environmentId: env.outputs.id
+    containerImage: !empty(notificationServiceImageName) ? notificationServiceImageName : helloWorldImage
+    acrServer: acr.properties.loginServer
+    acrUsername: acr.name
+    acrPassword: acr.listCredentials().passwords[0].value
+    // The e-mail retry scheduler polls the DB every 5s and is not safe to run on multiple instances.
+    minReplicas: 1
+    maxReplicas: 1
+    appSecrets: [
+      { name: 'db-password', value: dbPassword }
+      { name: 'mail-password', value: mailPassword }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
+    ]
+    envVars: [
+      { name: 'BASE_URL', value: baseUrl }
+      { name: 'MAIL_PASSWORD', secretRef: 'mail-password' }
+      { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/notification_db?sslmode=require' }
+      { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
+      { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
+      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
+    ]
+  }
+}
+
+module monitorApp 'modules/app.bicep' = {
+  name: 'monitor-app-deployment'
   params: {
     appName: 'monitor-service'
     azdServiceName: 'monitor-service'
@@ -180,47 +297,58 @@ module monitorApp 'app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
+    // Single log consumer (system-logs has 1 partition) backed by a single Cassandra writer.
+    minReplicas: 1
+    maxReplicas: 1
     appSecrets: [
       { name: 'cassandra-password', value: cassandra.outputs.password }
-      { name: 'kafka-conn', value: eventhubs.outputs.eventHubConnectionString }
     ]
     envVars: [
-      { name: 'SPRING_CASSANDRA_CONTACT_POINTS', value: cassandra.outputs.contactPoint }
-      { name: 'SPRING_CASSANDRA_PORT', value: cassandra.outputs.port }
-      { name: 'SPRING_CASSANDRA_USERNAME', value: cassandra.outputs.username }
-      { name: 'SPRING_CASSANDRA_PASSWORD', secretRef: 'cassandra-password' }
-      { name: 'SPRING_CASSANDRA_SSL', value: 'true' }
-      { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.eventHubFqdn }
-      { name: 'SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG', secretRef: 'kafka-conn' }
+      { name: 'SERVER_HOST', value: '0.0.0.0' }
+      { name: 'SERVER_PORT', value: '8080' }
+      { name: 'KAFKA_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'CASSANDRA_CONTACT_POINTS', value: '${cassandra.outputs.contactPoint}:${cassandra.outputs.port}' }
+      { name: 'CASSANDRA_DATACENTER', value: location }
+      { name: 'CASSANDRA_USERNAME', value: cassandra.outputs.username }
+      { name: 'CASSANDRA_PASSWORD', secretRef: 'cassandra-password' }
     ]
   }
 }
 
-module apiGatewayApp 'app.bicep' = {
-  name: 'api-gateway-deployment'
+module gqlGatewayApp 'modules/app.bicep' = {
+  name: 'gql-gateway-deployment'
   params: {
-    appName: 'api-gateway'
-    azdServiceName: 'api-gateway'
+    appName: 'gql-gateway'
+    azdServiceName: 'gql-gateway'
     location: location
     environmentId: env.outputs.id
-    containerImage: !empty(apiGatewayImageName) ? apiGatewayImageName : helloWorldImage
-    isExternalIngress: true // Tylko Gateway jest widoczny w internecie
+    containerImage: !empty(gqlGatewayImageName) ? gqlGatewayImageName : helloWorldImage
+    isExternalIngress: true // gql-gateway is the only public entry point (api-gateway is not used in prod)
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
+    minReplicas: 1
+    maxReplicas: 3
     appSecrets: [
       { name: 'jwt-secret', value: jwtSecret }
+      { name: 'redis-password', value: redis.outputs.primaryKey }
     ]
     envVars: [
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
-      { name: 'GATEWAY_ROUTES_0_ID', value: 'users' }
+      { name: 'SPRING_DATA_REDIS_HOST', value: redis.outputs.hostName }
+      { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
+      { name: 'SPRING_DATA_REDIS_PASSWORD', secretRef: 'redis-password' }
+      { name: 'SPRING_DATA_REDIS_SSL_ENABLED', value: 'true' }
+      // Override the internal route URIs (paths stay as defined in application.yml).
       { name: 'GATEWAY_ROUTES_0_URI', value: 'http://${usersApp.outputs.fqdn}' }
-      { name: 'GATEWAY_ROUTES_1_ID', value: 'offers' }
       { name: 'GATEWAY_ROUTES_1_URI', value: 'http://${offersApp.outputs.fqdn}' }
-      { name: 'GATEWAY_ROUTES_GQL_ID', value: 'graphql' }
-      { name: 'GATEWAY_ROUTES_GQL_URI', value: 'http://${gqlGatewayApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_2_URI', value: 'http://${authApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_3_URI', value: 'http://${depositApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_4_URI', value: 'http://${notificationApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_5_URI', value: 'http://${monitorApp.outputs.fqdn}' }
     ]
   }
 }
 
-output apiGatewayUrl string = apiGatewayApp.outputs.fqdn
+output gqlGatewayUrl string = 'https://${gqlGatewayApp.outputs.fqdn}'
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = acr.properties.loginServer

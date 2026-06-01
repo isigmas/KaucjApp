@@ -5,16 +5,6 @@ infra:
   path: .
 
 services:
-  api-gateway:
-    project: ../backend
-    language: java
-    host: containerapp
-    docker:
-      path: Dockerfile.native
-      context: .
-      buildArgs:
-        - SERVICE_NAME=api-gateway
-
   auth-service:
     project: ../backend
     language: java
