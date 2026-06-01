@@ -53,6 +53,34 @@ resource cgNotificationReset 'Microsoft.EventHub/namespaces/eventhubs/consumergr
   parent: topicNotificationReset
 }
 
+resource topicNotificationAdmin 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
+  name: 'notification.admin'
+  parent: eventHubNamespace
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
+resource cgNotificationAdmin 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+  name: 'notification-group'
+  parent: topicNotificationAdmin
+}
+
+resource topicSystemLogs 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
+  name: 'system-logs'
+  parent: eventHubNamespace
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
+resource cgSystemLogs 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+  name: 'monitor-group'
+  parent: topicSystemLogs
+}
+
 resource topicUsersSync 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
   name: 'users.sync'
   parent: eventHubNamespace

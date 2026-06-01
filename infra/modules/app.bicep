@@ -41,6 +41,12 @@ param cpuCore string = '0.25'
 @description('Memory allocation')
 param memorySize string = '0.5Gi'
 
+@description('Minimum container replicas (use 1 for services with @Scheduled jobs)')
+param minReplicas int = 0
+
+@description('Maximum container replicas')
+param maxReplicas int = 10
+
 var allSecrets = concat([{ name: 'acr-password', value: acrPassword }], appSecrets)
 
 resource app 'Microsoft.App/containerApps@2023-05-01' = {
@@ -67,6 +73,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ]
     }
     template: {
+      scale: {
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+      }
       containers: [
         {
           name: appName

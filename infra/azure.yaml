@@ -64,3 +64,23 @@ services:
       context: .
       buildArgs:
         - SERVICE_NAME=notification-service
+
+  gql-gateway:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=gql-gateway
+
+  monitor-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    docker:
+      path: Dockerfile.native
+      context: .
+      buildArgs:
+        - SERVICE_NAME=monitor-service
