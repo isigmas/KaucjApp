@@ -121,7 +121,6 @@ module offersApp 'modules/app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
-    // offers-service runs scheduled jobs that publish per-offer Kafka events; keep it single-instance.
     minReplicas: 1
     maxReplicas: 1
     appSecrets: [
@@ -262,7 +261,6 @@ module notificationApp 'modules/app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
-    // The e-mail retry scheduler polls the DB every 5s and is not safe to run on multiple instances.
     minReplicas: 1
     maxReplicas: 1
     appSecrets: [
@@ -296,7 +294,6 @@ module monitorApp 'modules/app.bicep' = {
     acrServer: acr.properties.loginServer
     acrUsername: acr.name
     acrPassword: acr.listCredentials().passwords[0].value
-    // Single log consumer (system-logs has 1 partition) backed by a single Cassandra writer.
     minReplicas: 1
     maxReplicas: 1
     appSecrets: [
@@ -338,7 +335,6 @@ module gqlGatewayApp 'modules/app.bicep' = {
       { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
       { name: 'SPRING_DATA_REDIS_PASSWORD', secretRef: 'redis-password' }
       { name: 'SPRING_DATA_REDIS_SSL_ENABLED', value: 'true' }
-      // Override the internal route URIs (paths stay as defined in application.yml).
       { name: 'GATEWAY_ROUTES_0_URI', value: 'http://${usersApp.outputs.fqdn}' }
       { name: 'GATEWAY_ROUTES_1_URI', value: 'http://${offersApp.outputs.fqdn}' }
       { name: 'GATEWAY_ROUTES_2_URI', value: 'http://${authApp.outputs.fqdn}' }
