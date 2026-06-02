@@ -11,6 +11,7 @@ import pl.isigmas.kaucjapp.common.logger.{LogLevel, SystemLog}
 import pl.isigmas.kaucjapp.monitor.db.LogRepository
 
 import scala.concurrent.duration.*
+import com.typesafe.config.Config
 
 object DatabaseLogSaver {
   def start(implicit system: ActorSystem[?]): Unit = {
@@ -50,6 +51,6 @@ object DatabaseLogSaver {
   }
 }
 
-extension (settings: ConsumerSettings[?, ?, ?])
-  private def withPropertyIfExists(config: com.typesafe.config.Config, key: String, path: String) =
+extension [K, V](settings: ConsumerSettings[K, V])
+  private def withPropertyIfExists(config: Config, key: String, path: String): ConsumerSettings[K, V] =
     if (config.hasPath(path)) settings.withProperty(key, config.getString(path)) else settings

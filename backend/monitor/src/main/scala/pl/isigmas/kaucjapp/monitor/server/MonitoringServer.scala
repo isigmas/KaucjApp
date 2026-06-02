@@ -16,6 +16,7 @@ import pl.isigmas.kaucjapp.monitor.db.LogRepository
 
 import java.util.UUID
 import scala.util.{Failure, Success}
+import com.typesafe.config.Config
 
 object MonitoringServer {
   def start(implicit system: ActorSystem[?]): Unit =
@@ -107,6 +108,6 @@ object MonitoringServer {
     }
 }
 
-extension (settings: ConsumerSettings[?, ?, ?])
-  private def withPropertyIfExists(config: com.typesafe.config.Config, key: String, path: String) =
+extension [K, V](settings: ConsumerSettings[K, V])
+  private def withPropertyIfExists(config: Config, key: String, path: String): ConsumerSettings[K, V] =
     if (config.hasPath(path)) settings.withProperty(key, config.getString(path)) else settings
