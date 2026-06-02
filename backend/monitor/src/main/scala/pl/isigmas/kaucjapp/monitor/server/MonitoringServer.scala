@@ -42,6 +42,9 @@ object MonitoringServer {
         .withBootstrapServers(kafkaServers)
         .withGroupId(uniqueGroupId)
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+        .withPropertyIfExists(config, "security.protocol", "app.kafka.security-protocol")
+        .withPropertyIfExists(config, "sasl.mechanism", "app.kafka.sasl-mechanism")
+        .withPropertyIfExists(config, "sasl.jaas.config", "app.kafka.sasl-jaas-config")
 
       val kafkaSource: Source[String, ?] = Consumer
         .plainSource(consumerSettings, Subscriptions.topics(kafkaTopic))
@@ -103,3 +106,7 @@ object MonitoringServer {
         system.log.error(s"Failed to start server", ex)
     }
 }
+
+extension (settings: ConsumerSettings[?, ?, ?])
+  private def withPropertyIfExists(config: com.typesafe.config.Config, key: String, path: String) =
+    if (config.hasPath(path)) settings.withProperty(key, config.getString(path)) else settings

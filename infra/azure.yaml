@@ -70,7 +70,7 @@ services:
     language: java
     host: containerapp
     docker:
-      path: Dockerfile.native
+      path: monitor/Dockerfile
       context: .
       buildArgs:
         - SERVICE_NAME=monitor-service

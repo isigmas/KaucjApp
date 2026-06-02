@@ -298,15 +298,21 @@ module monitorApp 'modules/app.bicep' = {
     maxReplicas: 1
     appSecrets: [
       { name: 'cassandra-password', value: cassandra.outputs.password }
+      { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
       { name: 'SERVER_HOST', value: '0.0.0.0' }
       { name: 'SERVER_PORT', value: '8080' }
       { name: 'KAFKA_SERVERS', value: eventhubs.outputs.fqdn }
+      { name: 'KAFKA_SECURITY_PROTOCOL', value: 'SASL_SSL' }
+      { name: 'KAFKA_SASL_MECHANISM', value: 'PLAIN' }
+      { name: 'KAFKA_SASL_JAAS_CONFIG', secretRef: 'kafka-jaas' }
       { name: 'CASSANDRA_CONTACT_POINTS', value: '${cassandra.outputs.contactPoint}:${cassandra.outputs.port}' }
-      { name: 'CASSANDRA_DATACENTER', value: location }
+      { name: 'CASSANDRA_DATACENTER', value: 'datacenter1' }
       { name: 'CASSANDRA_USERNAME', value: cassandra.outputs.username }
       { name: 'CASSANDRA_PASSWORD', secretRef: 'cassandra-password' }
+      { name: 'CASSANDRA_SSL_ENGINE_FACTORY_CLASS', value: 'com.datastax.oss.driver.internal.core.ssl.DefaultSslEngineFactory' }
+      { name: 'CASSANDRA_AUTH_PROVIDER_CLASS', value: 'com.datastax.oss.driver.api.core.auth.PlainTextAuthProvider' }
     ]
   }
 }

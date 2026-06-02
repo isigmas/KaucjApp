@@ -20,8 +20,11 @@ object DatabaseLogSaver {
 
     val dbConsumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(config.getString("app.kafka.bootstrap-servers"))
-      .withGroupId("kaucjapp-db-saver-group")
+      .withGroupId(config.getString("app.kafka.group-id"))
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+      .withPropertyIfExists(config, "security.protocol", "app.kafka.security-protocol")
+      .withPropertyIfExists(config, "sasl.mechanism", "app.kafka.sasl-mechanism")
+      .withPropertyIfExists(config, "sasl.jaas.config", "app.kafka.sasl-jaas-config")
 
     val kafkaTopic = config.getString("app.kafka.topic")
 
@@ -46,3 +49,7 @@ object DatabaseLogSaver {
       .runWith(Sink.ignore)
   }
 }
+
+extension (settings: ConsumerSettings[?, ?, ?])
+  private def withPropertyIfExists(config: com.typesafe.config.Config, key: String, path: String) =
+    if (config.hasPath(path)) settings.withProperty(key, config.getString(path)) else settings
