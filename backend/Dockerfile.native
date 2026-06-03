@@ -10,7 +10,8 @@ ARG SERVICE_NAME
 
 COPY . .
 
-RUN ./mvnw -pl ${SERVICE_NAME} -am native:compile -Pnative -DskipTests
+RUN ./mvnw -pl common -am install -DskipTests \
+    && cd ${SERVICE_NAME} && ../mvnw native:compile -Pnative -DskipTests
 
 FROM ubuntu:24.04
 WORKDIR /app
