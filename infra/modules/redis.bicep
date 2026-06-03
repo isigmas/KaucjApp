@@ -1,20 +1,30 @@
+// Azure Cache for Redis is retired; use Azure Managed Redis (redisEnterprise).
 param location string
 param redisName string
 
-resource redisCache 'Microsoft.Cache/Redis@2023-08-01' = {
+resource redis 'Microsoft.Cache/redisEnterprise@2025-04-01' = {
   name: redisName
   location: location
+  sku: {
+    name: 'Balanced_B0'
+  }
   properties: {
-    sku: {
-      name: 'Basic'
-      family: 'C'
-      capacity: 0
-    }
-    enableNonSslPort: false
     minimumTlsVersion: '1.2'
+    highAvailability: 'Disabled'
   }
 }
 
-output hostName string = redisCache.properties.hostName
-output sslPort int = redisCache.properties.sslPort
-output primaryKey string = redisCache.listKeys().primaryKey
+resource redisDatabase 'Microsoft.Cache/redisEnterprise/databases@2025-04-01' = {
+  parent: redis
+  name: 'default'
+  properties: {
+    clientProtocol: 'Encrypted'
+    clusteringPolicy: 'OSSCluster'
+    evictionPolicy: 'AllKeysLRU'
+  }
+}
+
+output hostName string = redis.properties.hostName
+output sslPort int = redisDatabase.properties.port
+@secure()
+output primaryKey string = redisDatabase.listKeys().primaryKey

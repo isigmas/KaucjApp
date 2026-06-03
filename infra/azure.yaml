@@ -12,6 +12,7 @@ services:
     docker:
       path: Dockerfile.native
       context: .
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=auth
 
@@ -22,6 +23,7 @@ services:
     docker:
       path: Dockerfile.native
       context: .
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=offers-service
 
@@ -30,9 +32,11 @@ services:
     language: java
     host: containerapp
     docker:
-      # JVM image: azure-storage-blob + jackson-dataformat-xml breaks GraalVM native (Base64Variant heap).
-      path: users-service/Dockerfile
+      path: Dockerfile.native
       context: .
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=users-service
 
   deposit-service:
     project: ../backend
@@ -40,7 +44,8 @@ services:
     host: containerapp
     docker:
       path: Dockerfile.native
-      context: .
+      context: .  
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=deposit-service
 
@@ -50,7 +55,8 @@ services:
     host: containerapp
     docker:
       path: Dockerfile.native
-      context: .
+      context: .    
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=notification-service
 
@@ -60,7 +66,8 @@ services:
     host: containerapp
     docker:
       path: Dockerfile.native
-      context: .
+      context: .  
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=gql-gateway
 
@@ -70,6 +77,7 @@ services:
     host: containerapp
     docker:
       path: monitor/Dockerfile
-      context: .
+      context: .  
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=monitor-service

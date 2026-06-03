@@ -90,7 +90,7 @@ module redis 'modules/redis.bicep' = {
   name: 'redis-deployment'
   params: {
     location: location
-    redisName: 'redis-${environmentName}-${uniqueSuffix}'
+    redisName: 'amr-${environmentName}-${uniqueSuffix}'
   }
 }
 
