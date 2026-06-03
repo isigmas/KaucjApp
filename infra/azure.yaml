@@ -30,10 +30,9 @@ services:
     language: java
     host: containerapp
     docker:
-      path: Dockerfile.native
+      # JVM image: azure-storage-blob + jackson-dataformat-xml breaks GraalVM native (Base64Variant heap).
+      path: users-service/Dockerfile
       context: .
-      buildArgs:
-        - SERVICE_NAME=users-service
 
   deposit-service:
     project: ../backend
