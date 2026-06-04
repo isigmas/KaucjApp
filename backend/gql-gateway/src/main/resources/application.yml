@@ -1,9 +1,11 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: gql-gateway
+  main:
+    cloud-platform: none
   config:
     import: optional:classpath:application-local.yml
   threads:

@@ -128,6 +128,7 @@ module offersApp 'modules/app.bicep' = {
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/offers_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
@@ -160,6 +161,7 @@ module usersApp 'modules/app.bicep' = {
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'IT_SECRET', secretRef: 'it-secret' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/users_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
@@ -202,6 +204,7 @@ module authApp 'modules/app.bicep' = {
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/auth_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
@@ -238,6 +241,7 @@ module depositApp 'modules/app.bicep' = {
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/deposit_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
@@ -269,6 +273,7 @@ module notificationApp 'modules/app.bicep' = {
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'BASE_URL', value: baseUrl }
       { name: 'MAIL_PASSWORD', secretRef: 'mail-password' }
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/notification_db?sslmode=require' }
@@ -336,6 +341,7 @@ module gqlGatewayApp 'modules/app.bicep' = {
       { name: 'redis-password', value: redis.outputs.primaryKey }
     ]
     envVars: [
+      { name: 'SERVER_PORT', value: '8080' }
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
       { name: 'SPRING_DATA_REDIS_HOST', value: redis.outputs.hostName }
       { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
