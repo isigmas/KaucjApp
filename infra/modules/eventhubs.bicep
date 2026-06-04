@@ -95,8 +95,8 @@ resource cgUsersSync 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@202
   parent: topicUsersSync
 }
 
-resource topicUsersDelete 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
-  name: 'users.delete'
+resource topicUsersDeleteCommand 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
+  name: 'users.delete.command'
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
@@ -104,9 +104,42 @@ resource topicUsersDelete 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' =
   }
 }
 
-resource cgUsersDelete 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+resource cgUsersDeleteCommand 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
   name: 'users-group'
-  parent: topicUsersDelete
+  parent: topicUsersDeleteCommand
+}
+
+resource topicUsersDeletedEvent 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
+  name: 'users.deleted.event'
+  parent: eventHubNamespace
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
+resource cgUsersDeletedEventAuth 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+  name: 'auth-group'
+  parent: topicUsersDeletedEvent
+}
+
+resource cgUsersDeletedEventDeposit 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+  name: 'deposit-group'
+  parent: topicUsersDeletedEvent
+}
+
+resource topicOffersCompleted 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
+  name: 'offers.completed'
+  parent: eventHubNamespace
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
+resource cgOffersCompleted 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
+  name: 'users-group'
+  parent: topicOffersCompleted
 }
 
 output fqdn string = '${eventHubNamespace.name}.servicebus.windows.net:9093'
