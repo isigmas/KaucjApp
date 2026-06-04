@@ -12,6 +12,15 @@ public class DtoRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+        // Kafka resolves this serializer via Class.forName() from the
+        // spring.kafka.producer.value-serializer property string, so it must be
+        // reachable and reflectively instantiable in the native image.
+        hints.reflection().registerType(
+                CustomKafkaJsonSerializer.class,
+                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                MemberCategory.INVOKE_DECLARED_METHODS
+        );
+
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 
         // find all classes within dto packages
