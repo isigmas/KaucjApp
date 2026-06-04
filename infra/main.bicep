@@ -347,11 +347,23 @@ module gqlGatewayApp 'modules/app.bicep' = {
       { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
       { name: 'SPRING_DATA_REDIS_PASSWORD', secretRef: 'redis-password' }
       { name: 'SPRING_DATA_REDIS_SSL_ENABLED', value: 'true' }
+      { name: 'GATEWAY_ROUTES_0_ID', value: 'users-service' }
+      { name: 'GATEWAY_ROUTES_0_PATH', value: '/api/user/**' }
       { name: 'GATEWAY_ROUTES_0_URI', value: 'http://${usersApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_1_ID', value: 'offers-service' }
+      { name: 'GATEWAY_ROUTES_1_PATH', value: '/api/offer/**' }
       { name: 'GATEWAY_ROUTES_1_URI', value: 'http://${offersApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_2_ID', value: 'auth-service' }
+      { name: 'GATEWAY_ROUTES_2_PATH', value: '/api/auth/**' }
       { name: 'GATEWAY_ROUTES_2_URI', value: 'http://${authApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_3_ID', value: 'deposit-service' }
+      { name: 'GATEWAY_ROUTES_3_PATH', value: '/api/deposit/**' }
       { name: 'GATEWAY_ROUTES_3_URI', value: 'http://${depositApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_4_ID', value: 'notification-service' }
+      { name: 'GATEWAY_ROUTES_4_PATH', value: '/api/notification/**' }
       { name: 'GATEWAY_ROUTES_4_URI', value: 'http://${notificationApp.outputs.fqdn}' }
+      { name: 'GATEWAY_ROUTES_5_ID', value: 'monitor-service' }
+      { name: 'GATEWAY_ROUTES_5_PATH', value: '/api/monitor/**' }
       { name: 'GATEWAY_ROUTES_5_URI', value: 'http://${monitorApp.outputs.fqdn}' }
     ]
   }
