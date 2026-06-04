@@ -26,7 +26,7 @@ public class SystemLogKafkaConfig {
     private final Map<String, Object> baseProducerProperties;
 
     public SystemLogKafkaConfig(KafkaProperties kafkaProperties) {
-        this.baseProducerProperties = kafkaProperties.buildProducerProperties(null);
+        this.baseProducerProperties = kafkaProperties.buildProducerProperties();
     }
 
     @Bean
