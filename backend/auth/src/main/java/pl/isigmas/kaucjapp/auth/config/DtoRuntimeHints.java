@@ -5,6 +5,7 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import pl.isigmas.kaucjapp.auth.validation.ProfanityValidator;
 import pl.isigmas.kaucjapp.common.logger.LogLevel;
 import pl.isigmas.kaucjapp.common.logger.SystemLog;
 
@@ -33,6 +34,15 @@ public class DtoRuntimeHints implements RuntimeHintsRegistrar {
         hints.reflection().registerType(
                 LogLevel.class,
                 MemberCategory.INVOKE_PUBLIC_METHODS
+        );
+
+        // Hibernate Validator must reflectively instantiate @Component constraint validators in native.
+        hints.reflection().registerType(
+                ProfanityValidator.class,
+                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.INVOKE_DECLARED_METHODS,
+                MemberCategory.DECLARED_FIELDS
         );
 
         // JJWT loads impl classes reflectively (Jwts.builder(), signing, Jackson serde).
