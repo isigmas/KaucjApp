@@ -6,7 +6,7 @@ COPY . .
 
 COPY offers-service offers-service
 
-RUN ./mvnw install -DskipTests -pl offers-service -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl offers-service -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

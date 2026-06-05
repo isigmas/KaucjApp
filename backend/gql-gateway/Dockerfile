@@ -6,7 +6,7 @@ COPY . .
 
 COPY gql-gateway gql-gateway
 
-RUN ./mvnw install -DskipTests -pl gql-gateway -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl gql-gateway -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine
