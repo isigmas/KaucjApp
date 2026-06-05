@@ -26,11 +26,6 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-storage-blob</artifactId>
-            <version>12.25.1</version>
-        </dependency>
-        <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
             <version>2.2.30</version>
@@ -137,10 +132,7 @@
                 <artifactId>native-maven-plugin</artifactId>
                 <configuration>
                     <buildArgs combine.children="append">
-                        <buildArg>--initialize-at-build-time=com.fasterxml.jackson.core,org.slf4j,ch.qos.logback,com.azure.core.util.logging</buildArg>
-                        <buildArg>--initialize-at-run-time=com.fasterxml.jackson.dataformat.xml.util.StaxUtil$Base64Mapper</buildArg>
-                        <buildArg>--initialize-at-run-time=org.codehaus.stax2.typed.Base64Variants</buildArg>
-                        <buildArg>--initialize-at-run-time=io.netty,com.azure.core.http.netty</buildArg>
+                        <buildArg>--initialize-at-build-time=com.fasterxml.jackson.core,org.slf4j,ch.qos.logback</buildArg>
                         <buildArg>-march=compatibility</buildArg>
                     </buildArgs>
                 </configuration>

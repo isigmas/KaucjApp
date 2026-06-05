@@ -159,7 +159,6 @@ module usersApp 'modules/app.bicep' = {
     appSecrets: [
       { name: 'it-secret', value: itSecret }
       { name: 'db-password', value: dbPassword }
-      { name: 'storage-conn', value: storage.outputs.connectionString }
       { name: 'kafka-jaas', value: kafkaJaasConfig }
     ]
     envVars: [
@@ -171,11 +170,6 @@ module usersApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
       { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
-      { name: 'AZURE_STORAGE_USE_DEVELOPMENT_STORAGE', value: 'false' }
-      { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-conn' }
-      { name: 'AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT', value: storage.outputs.blobEndpoint }
-      { name: 'AZURE_STORAGE_CONTAINER_NAME', value: 'profile-pictures' }
-      { name: 'AZURE_STORAGE_PUBLIC_READ_ACCESS', value: 'true' }
       { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
       { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
       { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }
