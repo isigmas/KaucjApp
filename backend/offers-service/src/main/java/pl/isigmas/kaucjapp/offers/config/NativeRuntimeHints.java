@@ -33,5 +33,26 @@ public class NativeRuntimeHints implements RuntimeHintsRegistrar {
         hints.reflection().registerType(UUID[].class);
 
         hints.resources().registerPattern("poland.geo.json");
+
+        // jts2geojson / wololo.geojson instantiate geometry types via reflection from JSON "type".
+        for (String typeName : new String[]{
+                "org.wololo.geojson.Polygon",
+                "org.wololo.geojson.MultiPolygon",
+                "org.wololo.geojson.GeometryCollection",
+                "org.wololo.geojson.Feature",
+                "org.wololo.geojson.FeatureCollection"
+        }) {
+            try {
+                Class<?> type = Class.forName(typeName, false, classLoader);
+                hints.reflection().registerType(
+                        type,
+                        MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                        MemberCategory.INVOKE_PUBLIC_METHODS,
+                        MemberCategory.DECLARED_FIELDS
+                );
+            } catch (ClassNotFoundException ignored) {
+                // optional types not on classpath
+            }
+        }
     }
 }

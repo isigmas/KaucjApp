@@ -12,12 +12,19 @@ public class NativeRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+        // SystemLog / LogLevel: also @RegisterReflectionForBinding on types in common (Jackson + native).
         hints.reflection().registerType(
                 SystemLog.class,
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
-                MemberCategory.INVOKE_PUBLIC_METHODS
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.INVOKE_DECLARED_METHODS,
+                MemberCategory.DECLARED_FIELDS
         );
-        hints.reflection().registerType(LogLevel.class, MemberCategory.DECLARED_FIELDS);
+        hints.reflection().registerType(
+                LogLevel.class,
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.DECLARED_FIELDS
+        );
 
         // Kafka instantiates the custom serializer via its no-arg constructor
         // using reflection (Utils.newInstance), so register it for native.
