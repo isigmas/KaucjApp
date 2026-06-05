@@ -132,6 +132,8 @@ module offersApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/offers_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
       { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
@@ -166,6 +168,8 @@ module usersApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/users_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'AZURE_STORAGE_USE_DEVELOPMENT_STORAGE', value: 'false' }
       { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-conn' }
@@ -208,6 +212,8 @@ module authApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/auth_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
       { name: 'IT_SECRET', secretRef: 'it-secret' }
@@ -245,6 +251,8 @@ module depositApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/deposit_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
       { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
@@ -279,6 +287,8 @@ module notificationApp 'modules/app.bicep' = {
       { name: 'SPRING_DATASOURCE_URL', value: 'jdbc:postgresql://${db.outputs.fqdn}:5432/notification_db?sslmode=require' }
       { name: 'SPRING_DATASOURCE_USERNAME', value: dbUser }
       { name: 'SPRING_DATASOURCE_PASSWORD', secretRef: 'db-password' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE', value: '2' }
+      { name: 'SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE', value: '1' }
       { name: 'SPRING_JPA_HIBERNATE_DDL_AUTO', value: 'update' }
       { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
       { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
