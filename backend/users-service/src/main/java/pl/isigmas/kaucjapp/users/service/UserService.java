@@ -106,7 +106,7 @@ public class UserService {
 
     @Transactional
     public void updateUser(Long id, UpdateUserDTO dto) {
-        User existingUser = userRepository.findById(id)
+        User existingUser = userRepository.findByIdWithAddresses(id)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", id);
                     logger.warn("User not found, ID: %d".formatted(id));
@@ -135,7 +135,7 @@ public class UserService {
 
     @Transactional
     public UserDTO updateProfilePictureUrl(Long userId, String imageUrl) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithAddresses(userId)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
@@ -149,7 +149,7 @@ public class UserService {
 
     @Transactional
     public UserDTO clearProfilePicture(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithAddresses(userId)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
