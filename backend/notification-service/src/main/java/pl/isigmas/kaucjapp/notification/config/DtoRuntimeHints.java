@@ -19,9 +19,15 @@ public class DtoRuntimeHints implements RuntimeHintsRegistrar {
         hints.reflection().registerType(
                 SystemLog.class,
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
-                MemberCategory.INVOKE_PUBLIC_METHODS
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.INVOKE_DECLARED_METHODS,
+                MemberCategory.DECLARED_FIELDS
         );
-        hints.reflection().registerType(LogLevel.class, MemberCategory.DECLARED_FIELDS);
+        hints.reflection().registerType(
+                LogLevel.class,
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.DECLARED_FIELDS
+        );
 
         // Hibernate's multi-id loader reflectively instantiates UUID[] for
         // entities with a UUID identifier (native reachability gap).
