@@ -1,16 +1,18 @@
 package pl.isigmas.kaucjapp.notification.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.notification.util.TemplateType;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -23,8 +25,9 @@ public class MailService {
 
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
+    private final Logger logger;
 
-    public void sendMail(String subject, String username,String email, String message, TemplateType templateType) {
+    public boolean trySendMail(String subject, String username, String email, String message, TemplateType templateType) {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
@@ -44,9 +47,15 @@ public class MailService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
-
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error while sending email to: " + email, e);
+            String successMessage = "Email sent successfully to %s (subject: %s)".formatted(email, subject);
+            log.info(successMessage);
+            logger.info(successMessage);
+            return true;
+        } catch (Exception e) {
+            String failureMessage = "Failed to send email to %s: %s".formatted(email, e.getMessage());
+            log.warn(failureMessage);
+            logger.warn(failureMessage);
+            return false;
         }
     }
 }
