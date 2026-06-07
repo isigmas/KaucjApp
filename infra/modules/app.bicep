@@ -47,6 +47,9 @@ param minReplicas int = 0
 @description('Maximum container replicas')
 param maxReplicas int = 10
 
+@description('Allow HTTP ingress (disable for public entry points)')
+param allowInsecure bool = true
+
 var allSecrets = concat([{ name: 'acr-password', value: acrPassword }], appSecrets)
 
 resource app 'Microsoft.App/containerApps@2023-05-01' = {
@@ -61,7 +64,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ingress: {
         external: isExternalIngress
         targetPort: targetPort
-        allowInsecure: true
+        allowInsecure: allowInsecure
       }
       secrets: allSecrets
       registries: [
