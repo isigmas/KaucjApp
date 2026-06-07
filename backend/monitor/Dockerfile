@@ -6,7 +6,7 @@ COPY . .
 
 COPY monitor monitor
 
-RUN ./mvnw package -DskipTests -pl monitor -am
+RUN ./mvnw package -Dmaven.test.skip=true -pl monitor -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

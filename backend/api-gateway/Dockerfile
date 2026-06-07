@@ -6,7 +6,7 @@ COPY . .
 
 COPY api-gateway api-gateway
 
-RUN ./mvnw install -DskipTests -pl api-gateway -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl api-gateway -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

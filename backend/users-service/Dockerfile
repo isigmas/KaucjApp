@@ -6,7 +6,7 @@ COPY . .
 
 COPY users-service users-service
 
-RUN ./mvnw install -DskipTests -pl users-service -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl users-service -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

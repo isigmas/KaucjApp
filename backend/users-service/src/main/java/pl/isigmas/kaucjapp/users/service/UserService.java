@@ -57,7 +57,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
-        return userRepository.findById(id)
+        return userRepository.findByIdWithAddresses(id)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", id);
@@ -106,7 +106,7 @@ public class UserService {
 
     @Transactional
     public void updateUser(Long id, UpdateUserDTO dto) {
-        User existingUser = userRepository.findById(id)
+        User existingUser = userRepository.findByIdWithAddresses(id)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", id);
                     logger.warn("User not found, ID: %d".formatted(id));
@@ -135,7 +135,7 @@ public class UserService {
 
     @Transactional
     public UserDTO updateProfilePictureUrl(Long userId, String imageUrl) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithAddresses(userId)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
@@ -149,7 +149,7 @@ public class UserService {
 
     @Transactional
     public UserDTO clearProfilePicture(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithAddresses(userId)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", userId);
                     logger.warn("User not found, ID: %d".formatted(userId));
@@ -193,7 +193,7 @@ public class UserService {
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
 
-        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
+        UserStats userStats = loadUserStats(user.getId());
 
         return UserDTO.builder()
                 .id(user.getId())
@@ -213,12 +213,26 @@ public class UserService {
                 .build();
     }
 
+    private UserStats loadUserStats(Long userId) {
+        return userStatsRepository.findById(userId).orElseGet(() -> {
+            UserStats empty = new UserStats();
+            empty.setUserId(userId);
+            return empty;
+        });
+    }
+
     private UserAdminDTO mapToAdminDTO(User user) {
+        return mapToAdminDTO(user, loadUserStats(user.getId()));
+    }
+
+    private UserAdminDTO mapToAdminDTO(User user, UserStats userStats) {
+        if (userStats == null) {
+            userStats = loadUserStats(user.getId());
+        }
+
         List<UserAddressDTO> addressDTOs = user.getAddresses().stream()
                 .map(this::mapAddressToDTO)
                 .collect(Collectors.toList());
-
-        UserStats userStats = userStatsRepository.getReferenceById(user.getId());
 
         return UserAdminDTO.builder()
                 .id(user.getId())
@@ -250,7 +264,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserAddressDTO> getUserAddresses(Long myUserId) {
-        User user = userRepository.findById(myUserId)
+        User user = userRepository.findByIdWithAddresses(myUserId)
                 .orElseThrow(() -> {
                     log.warn("User not found, ID: {}", myUserId);
                     logger.warn("User not found, ID: %d".formatted(myUserId));
@@ -263,8 +277,11 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserAdminDTO> getAll() {
-        return userRepository.findAll().stream()
-                .map(this::mapToAdminDTO)
+        Map<Long, UserStats> statsByUserId = userStatsRepository.findAll().stream()
+                .collect(Collectors.toMap(UserStats::getUserId, stats -> stats));
+
+        return userRepository.findAllWithAddresses().stream()
+                .map(user -> mapToAdminDTO(user, statsByUserId.get(user.getId())))
                 .collect(Collectors.toList());
     }
 

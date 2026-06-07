@@ -42,4 +42,25 @@
 		<java.version>25</java.version>
 	</properties>
 
+	<profiles>
+		<profile>
+			<id>native</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.graalvm.buildtools</groupId>
+							<artifactId>native-maven-plugin</artifactId>
+							<configuration>
+								<buildArgs combine.children="append">
+									<buildArg>-march=compatibility</buildArg>
+								</buildArgs>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+	</profiles>
+
 </project>

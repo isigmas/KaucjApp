@@ -2,7 +2,8 @@ package pl.isigmas.kaucjapp.auth.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class ProfanityValidator implements ConstraintValidator<CleanUsername, String> {
 
     private static final Map<Character, Character> LEET = Map.of(
@@ -23,17 +25,15 @@ public class ProfanityValidator implements ConstraintValidator<CleanUsername, St
             '8', 'b'
     );
 
-    @Value("${validation.profanity.words}")
-    private String profanityRaw;
-
-    @Value("${validation.profanity.reserved}")
-    private String reservedRaw;
+    private final Environment environment;
 
     private List<String> profanity;
     private Set<String> reserved;
 
     @Override
     public void initialize(CleanUsername annotation) {
+        String profanityRaw = environment.getProperty("validation.profanity.words");
+        String reservedRaw = environment.getProperty("validation.profanity.reserved");
         if (profanityRaw == null || reservedRaw == null) {
             throw new IllegalStateException(
                     "validation.profanity.words / validation.profanity.reserved must be set in application.properties");

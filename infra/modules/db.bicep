@@ -12,13 +12,13 @@ param dbUser string
 param dbPassword string
 
 @description('Table with the names of the databases to be created')
-param databaseNames array
+param databaseNames array = ['users_db', 'offers_db', 'deposit_db', 'auth_db', 'notification_db']
 
 resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = {
   name: serverName
   location: location
   sku: {
-    name: 'Standard_B1ms'
+    name: 'Standard_B2s'
     tier: 'Burstable'
   }
   properties: {

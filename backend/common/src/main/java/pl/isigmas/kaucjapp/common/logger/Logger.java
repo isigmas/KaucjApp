@@ -32,11 +32,16 @@ public class Logger {
         if (kafkaTemplate == null) {
             return;
         }
-        kafkaTemplate.send("system-logs", new SystemLog(
-                serviceName,
-                level,
-                message,
-                System.currentTimeMillis()
-        ));
+        try {
+            kafkaTemplate.send("system-logs", new SystemLog(
+                    serviceName,
+                    level,
+                    message,
+                    System.currentTimeMillis()
+            ));
+        } catch (Exception ignored) {
+            // Must not propagate: a failed system-logs publish must not fail the caller
+            // (e.g. Kafka listener retry re-sending welcome emails).
+        }
     }
 }

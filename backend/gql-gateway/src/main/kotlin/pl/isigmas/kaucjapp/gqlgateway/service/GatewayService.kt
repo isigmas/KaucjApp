@@ -4,9 +4,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import pl.isigmas.kaucjapp.gqlgateway.entity.UserTicket
 import pl.isigmas.kaucjapp.gqlgateway.repository.UserTicketRepository
+import java.time.Instant
 import java.util.UUID
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
 
 @Service
 class GatewayService(
@@ -20,7 +19,7 @@ class GatewayService(
         val userTicket = UserTicket(
             userId = userId,
             ticket = ticket,
-            expiration = Clock.System.now().plus(2.minutes)
+            expiration = Instant.now().plusSeconds(120)
         )
         ticketRepository.save(userTicket)
 
