@@ -30,7 +30,7 @@ resource topicNotificationWelcome 'Microsoft.EventHub/namespaces/eventhubs@2021-
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -44,7 +44,7 @@ resource topicNotificationReset 'Microsoft.EventHub/namespaces/eventhubs@2021-11
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -58,7 +58,7 @@ resource topicNotificationAdmin 'Microsoft.EventHub/namespaces/eventhubs@2021-11
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -72,7 +72,7 @@ resource topicSystemLogs 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = 
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -86,7 +86,7 @@ resource topicUsersSync 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -100,7 +100,7 @@ resource topicUsersDeleteCommand 'Microsoft.EventHub/namespaces/eventhubs@2021-1
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -114,7 +114,7 @@ resource topicUsersDeletedEvent 'Microsoft.EventHub/namespaces/eventhubs@2021-11
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
@@ -133,7 +133,7 @@ resource topicOffersCompleted 'Microsoft.EventHub/namespaces/eventhubs@2021-11-0
   parent: eventHubNamespace
   properties: {
     messageRetentionInDays: 1
-    partitionCount: 3
+    partitionCount: 1
   }
 }
 
