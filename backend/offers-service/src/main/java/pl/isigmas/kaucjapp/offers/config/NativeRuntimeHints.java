@@ -32,6 +32,7 @@ public class NativeRuntimeHints implements RuntimeHintsRegistrar {
         // entities with a UUID identifier (native reachability gap).
         hints.reflection().registerType(UUID[].class);
 
+        hints.resources().registerPattern("db/migration/*");
         hints.resources().registerPattern("poland.geo.json");
 
         // jts2geojson / wololo.geojson instantiate geometry types via reflection from JSON "type".
