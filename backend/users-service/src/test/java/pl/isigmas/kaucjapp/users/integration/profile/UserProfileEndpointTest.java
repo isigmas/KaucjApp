@@ -141,7 +141,7 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
     }
 
     @Test
-    void deleteProfilePicture_clearsUrl() throws Exception {
+    void deleteProfilePicture_returnsNotImplemented() throws Exception {
         String createdUserJson = """
                 {
                     "user_id": 1006,
@@ -155,42 +155,13 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
 
         postCreateUser(createdUserJson);
 
-        User user = userRepository.findAll().stream()
-                .filter(it -> "picuser".equals(it.getUsername()))
-                .findFirst()
-                .orElseThrow();
-        Long userId = user.getId();
-        user.setProfilePictureUrl("http://127.0.0.1:10000/devstoreaccount1/profile-pictures/user-6-test.jpg");
-        userRepository.saveAndFlush(user);
-
-        mockMvc.perform(delete("/api/user/me/profile-picture").header("X-User-Id", userId))
-                .andExpect(status().isNoContent());
-
-        assertThat(userRepository.findById(userId).orElseThrow().getProfilePictureUrl()).isNull();
-    }
-
-    @Test
-    void deleteProfilePicture_withoutPicture_isIdempotent() throws Exception {
-        String createdUserJson = """
-                {
-                    "user_id": 1007,
-                    "username": "nopic",
-                    "first_name": "N",
-                    "last_name": "P",
-                    "phone": "111222337",
-                    "email": "nopic@example.com"
-                }
-                """;
-
-        postCreateUser(createdUserJson);
-
         Long userId = userRepository.findAll().stream()
-                .filter(it -> "nopic".equals(it.getUsername()))
+                .filter(it -> "picuser".equals(it.getUsername()))
                 .findFirst()
                 .orElseThrow()
                 .getId();
 
         mockMvc.perform(delete("/api/user/me/profile-picture").header("X-User-Id", userId))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNotImplemented());
     }
 }

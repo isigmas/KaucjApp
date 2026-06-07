@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.users.DTO.*;
-import pl.isigmas.kaucjapp.users.service.AzureBlobService;
 import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
@@ -34,7 +33,6 @@ public class UserController {
 
     private final UserService userService;
     private final RatingService ratingService;
-    private final AzureBlobService azureBlobService;
     private final UserPeriodStatsService userPeriodStatsService;
     private final Logger logger;
 
@@ -348,10 +346,7 @@ public class UserController {
     public ResponseEntity<UploadUrlDTO> getUploadUrl(
             @RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam(value = "content_type", required = false, defaultValue = "image/jpeg") String contentType) {
-        log.info("Getting upload url for profile picture for user {}", currentUserId);
-        logger.info("Getting upload url for profile picture for user %d".formatted(currentUserId));
-        UploadUrlDTO dto = azureBlobService.generateUploadUrl(currentUserId, contentType);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @PostMapping("/me/profile-picture/confirm")
@@ -366,14 +361,7 @@ public class UserController {
     public ResponseEntity<UserDTO> confirmUpload(
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody ConfirmUploadDTO dto) {
-
-        log.info("Confirming upload of profile picture for user {}", currentUserId);
-        logger.info("Confirming upload of profile picture for user %d".formatted(currentUserId));
-        UserDTO current = userService.getUserById(currentUserId);
-        String publicUrl = azureBlobService.confirmProfilePicture(currentUserId, dto.blobName());
-        UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
-        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @DeleteMapping("/me/profile-picture")
@@ -387,13 +375,7 @@ public class UserController {
     })
     public ResponseEntity<Void> deleteProfilePicture(
             @RequestHeader("X-User-Id") Long currentUserId) {
-
-        log.info("Deleting profile picture for user {}", currentUserId);
-        logger.info("Deleting profile picture for user %d".formatted(currentUserId));
-        UserDTO current = userService.getUserById(currentUserId);
-        userService.clearProfilePicture(currentUserId);
-        azureBlobService.deleteByStoredUrl(current.getProfilePictureUrl());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
 }

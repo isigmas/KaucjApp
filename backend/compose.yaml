@@ -28,8 +28,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: offers_db
-    volumes:
-      - ./offers-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
@@ -66,8 +64,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: users_db
-    volumes:
-      - ./users-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
@@ -87,18 +83,11 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - AZURE_STORAGE_USE_DEVELOPMENT_STORAGE=true
-      - AZURE_STORAGE_DEVELOPMENT_STORAGE_PROXY_URI=http://azurite:10000
-      - AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT=${AZURE_STORAGE_PUBLIC_BLOB_ENDPOINT:-http://127.0.0.1:10000/devstoreaccount1}
-      - AZURE_STORAGE_CONTAINER_NAME=profile-pictures
-      - AZURE_STORAGE_PUBLIC_READ_ACCESS=true
     depends_on:
       users-db:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      azurite:
-        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
       interval: 5s
@@ -129,7 +118,7 @@ services:
       - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - JWT_SECRET=${JWT_SECRET}
       - PASSWORD_SALT=${PASSWORD_SALT}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
@@ -154,8 +143,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: deposit_db
-    volumes:
-      - ./deposit-service/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 5s
@@ -208,6 +195,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/notification_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - BASE_URL=http://localhost:8080
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092

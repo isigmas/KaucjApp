@@ -86,7 +86,7 @@ class OfferServiceKafkaUnitTest {
         canItem.setUnitPrice(BigDecimal.valueOf(0.5));
         offer.addItem(canItem);
 
-        when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
+        when(offerRepository.findByIdWithItems(offerId)).thenReturn(Optional.of(offer));
 
         // When — first confirmation (creator only)
         offerService.confirmOffer(offerId, creatorId);

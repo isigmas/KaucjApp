@@ -16,6 +16,7 @@ import pl.isigmas.kaucjapp.monitor.db.LogRepository
 
 import java.util.UUID
 import scala.util.{Failure, Success}
+import com.typesafe.config.Config
 
 object MonitoringServer {
   def start(implicit system: ActorSystem[?]): Unit =
@@ -42,6 +43,9 @@ object MonitoringServer {
         .withBootstrapServers(kafkaServers)
         .withGroupId(uniqueGroupId)
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+        .withPropertyIfExists(config, "security.protocol", "app.kafka.security-protocol")
+        .withPropertyIfExists(config, "sasl.mechanism", "app.kafka.sasl-mechanism")
+        .withPropertyIfExists(config, "sasl.jaas.config", "app.kafka.sasl-jaas-config")
 
       val kafkaSource: Source[String, ?] = Consumer
         .plainSource(consumerSettings, Subscriptions.topics(kafkaTopic))
@@ -103,3 +107,7 @@ object MonitoringServer {
         system.log.error(s"Failed to start server", ex)
     }
 }
+
+extension [K, V](settings: ConsumerSettings[K, V])
+  private def withPropertyIfExists(config: Config, key: String, path: String): ConsumerSettings[K, V] =
+    if (config.hasPath(path)) settings.withProperty(key, config.getString(path)) else settings

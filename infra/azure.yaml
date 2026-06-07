@@ -5,23 +5,16 @@ infra:
   path: .
 
 services:
-  api-gateway:
-    project: ../backend
-    language: java
-    host: containerapp
-    docker:
-      path: Dockerfile.native
-      context: .
-      buildArgs:
-        - SERVICE_NAME=api-gateway
-
   auth-service:
     project: ../backend
     language: java
     host: containerapp
+    deployTimeout: 3600
     docker:
+      remoteBuild: true
       path: Dockerfile.native
       context: .
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=auth
 
@@ -29,9 +22,12 @@ services:
     project: ../backend
     language: java
     host: containerapp
+    deployTimeout: 3600
     docker:
+      remoteBuild: true
       path: Dockerfile.native
       context: .
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=offers-service
 
@@ -39,9 +35,12 @@ services:
     project: ../backend
     language: java
     host: containerapp
+    deployTimeout: 3600
     docker:
+      remoteBuild: true
       path: Dockerfile.native
       context: .
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=users-service
 
@@ -49,9 +48,12 @@ services:
     project: ../backend
     language: java
     host: containerapp
+    deployTimeout: 3600
     docker:
+      remoteBuild: true
       path: Dockerfile.native
-      context: .
+      context: .  
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=deposit-service
 
@@ -59,8 +61,37 @@ services:
     project: ../backend
     language: java
     host: containerapp
+    deployTimeout: 3600
     docker:
+      remoteBuild: true
       path: Dockerfile.native
-      context: .
+      context: .    
+      platform: linux/amd64
       buildArgs:
         - SERVICE_NAME=notification-service
+
+  gql-gateway:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .  
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=gql-gateway
+
+  monitor-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 1800
+    docker:
+      remoteBuild: true
+      path: monitor/Dockerfile
+      context: .  
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=monitor-service

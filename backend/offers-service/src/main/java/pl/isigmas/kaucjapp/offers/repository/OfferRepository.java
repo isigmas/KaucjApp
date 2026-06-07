@@ -10,9 +10,33 @@ import pl.isigmas.kaucjapp.offers.model.OfferStatus;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OfferRepository extends JpaRepository<Offer, Long> {
+
+    @Query("SELECT DISTINCT o FROM Offer o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.bottleType WHERE o.id = :id")
+    Optional<Offer> findByIdWithItems(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT o FROM Offer o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.bottleType")
+    List<Offer> findAllWithItems();
+
+    @Query("SELECT DISTINCT o FROM Offer o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.bottleType " +
+            "WHERE o.creatorId = :creatorId AND o.status IN :statuses")
+    List<Offer> findByCreatorIdAndStatusInWithItems(
+            @Param("creatorId") Long creatorId,
+            @Param("statuses") List<OfferStatus> statuses
+    );
+
+    @Query("SELECT DISTINCT o FROM Offer o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.bottleType " +
+            "WHERE o.collectorId = :collectorId AND o.status IN :statuses")
+    List<Offer> findByCollectorIdAndStatusInWithItems(
+            @Param("collectorId") Long collectorId,
+            @Param("statuses") List<OfferStatus> statuses
+    );
+
+    @Query("SELECT DISTINCT o FROM Offer o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.bottleType WHERE o.id IN :ids")
+    List<Offer> findAllByIdInWithItems(@Param("ids") List<Long> ids);
 
     List<Offer> findByCreatorId(Long creatorId);
 

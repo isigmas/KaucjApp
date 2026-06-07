@@ -6,7 +6,7 @@ COPY . .
 
 COPY auth auth
 
-RUN ./mvnw install -DskipTests -pl auth -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl auth -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

@@ -72,7 +72,7 @@ public class OfferController {
 
 
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id:\\d+}")
     @Operation(
             summary = "Partially update offer",
             description = "Partial update of an OPEN offer. Any omitted field keeps its current value. "
@@ -100,7 +100,7 @@ public class OfferController {
 
 
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @Operation(
             summary = "Delete offer by id",
             description = "Hard-deletes the offer when X-User-Id matches creator_id.")
@@ -121,7 +121,7 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<OfferResponseDTO> getOffer(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId) {
@@ -133,7 +133,7 @@ public class OfferController {
 
 
 
-    @PostMapping("/{offerId}/status/{newStatus}")
+    @PostMapping("/{offerId:\\d+}/status/{newStatus}")
     @Operation(
             summary = "Change offer status",
             description = "Path newStatus: case-insensitive enum name (e.g. OPEN, RESERVED, COMPLETED, CANCELED). "
@@ -159,7 +159,7 @@ public class OfferController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/confirm/{offerId}")
+    @PostMapping("/confirm/{offerId:\\d+}")
     public ResponseEntity<Void> confirmOffer(
             @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId){
@@ -245,7 +245,7 @@ public class OfferController {
         return ResponseEntity.ok(service.getOffersInArea(swLat, swLon, neLat, neLon));
     }
 
-    @PostMapping("/complaint/{id}")
+    @PostMapping("/complaint/{id:\\d+}")
     public ResponseEntity<Void> makeComplaint(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
@@ -257,7 +257,7 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/{offerId}/complaints")
+    @GetMapping("/{offerId:\\d+}/complaints")
     public ResponseEntity<List<ComplaintResponseDTO>> listMyComplaintsForOffer(
             @PathVariable Long offerId,
             @RequestHeader("X-User-Id") Long userId

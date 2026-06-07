@@ -13,7 +13,7 @@ import pl.isigmas.kaucjapp.auth.config.DtoRuntimeHints;
 @ImportRuntimeHints(DtoRuntimeHints.class)
 public class AuthServiceApplication {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(AuthServiceApplication.class, args);
     }
 

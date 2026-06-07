@@ -6,7 +6,7 @@ COPY . .
 
 COPY deposit-service deposit-service
 
-RUN ./mvnw install -DskipTests -pl deposit-service -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl deposit-service -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

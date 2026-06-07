@@ -41,6 +41,15 @@ param cpuCore string = '0.25'
 @description('Memory allocation')
 param memorySize string = '0.5Gi'
 
+@description('Minimum container replicas (use 1 for services with @Scheduled jobs)')
+param minReplicas int = 0
+
+@description('Maximum container replicas')
+param maxReplicas int = 10
+
+@description('Allow HTTP ingress (disable for public entry points)')
+param allowInsecure bool = true
+
 var allSecrets = concat([{ name: 'acr-password', value: acrPassword }], appSecrets)
 
 resource app 'Microsoft.App/containerApps@2023-05-01' = {
@@ -55,7 +64,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ingress: {
         external: isExternalIngress
         targetPort: targetPort
-        allowInsecure: true
+        allowInsecure: allowInsecure
       }
       secrets: allSecrets
       registries: [
@@ -67,6 +76,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ]
     }
     template: {
+      scale: {
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+      }
       containers: [
         {
           name: appName

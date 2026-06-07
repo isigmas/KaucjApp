@@ -77,7 +77,7 @@ public class OfferService {
 
     @Transactional
     public void update(Long id, Long userId, UpdateOfferDTO dto) {
-        Offer offer = offerRepository.findById(id)
+        Offer offer = offerRepository.findByIdWithItems(id)
                 .orElseThrow(() -> {
                     log.warn("Offer not found, ID: {}", id);
                     logger.warn("Offer not found, ID: %d".formatted(id));
@@ -151,7 +151,7 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getAll() {
-        return offerRepository.findAll().stream()
+        return offerRepository.findAllWithItems().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -164,7 +164,7 @@ public class OfferService {
                 OfferStatus.PENDING_CONFIRMATION,
                 OfferStatus.COMPLAINT
         );
-        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
+        return offerRepository.findByCreatorIdAndStatusInWithItems(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -176,14 +176,21 @@ public class OfferService {
                 OfferStatus.PENDING_CONFIRMATION,
                 OfferStatus.COMPLAINT
         );
-        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
+        return offerRepository.findByCollectorIdAndStatusInWithItems(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<OfferResponseDTO> getOffersInArea(double swLat, double swLon, double neLat, double neLon) {
-        return offerRepository.findOpenOffersInBoundingBox(swLat, swLon, neLat, neLon).stream()
+        List<Long> offerIds = offerRepository.findOpenOffersInBoundingBox(swLat, swLon, neLat, neLon).stream()
+                .map(Offer::getId)
+                .distinct()
+                .toList();
+        if (offerIds.isEmpty()) {
+            return List.of();
+        }
+        return offerRepository.findAllByIdInWithItems(offerIds).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -194,7 +201,7 @@ public class OfferService {
                 OfferStatus.COMPLETED,
                 OfferStatus.CANCELED
         );
-        return offerRepository.findByCreatorIdAndStatusIn(userId, statuses).stream()
+        return offerRepository.findByCreatorIdAndStatusInWithItems(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -204,7 +211,7 @@ public class OfferService {
         List<OfferStatus> statuses = List.of(
                 OfferStatus.COMPLETED
         );
-        return offerRepository.findByCollectorIdAndStatusIn(userId, statuses).stream()
+        return offerRepository.findByCollectorIdAndStatusInWithItems(userId, statuses).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -377,7 +384,7 @@ public class OfferService {
 
     @Transactional
     public void confirmOffer(Long offerId, Long currentUserId) {
-        Offer offer = offerRepository.findById(offerId)
+        Offer offer = offerRepository.findByIdWithItems(offerId)
                 .orElseThrow(() -> {
                     log.warn("Offer not found, ID: {}", offerId);
                     logger.warn("Offer not found, ID: %d".formatted(offerId));
@@ -536,7 +543,7 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public List<ComplaintResponseDTO> getAllComplaints() {
-        return complaintRepository.findAllByOrderByIdDesc().stream()
+        return complaintRepository.findAllWithOfferOrderByIdDesc().stream()
                 .map(this::mapToComplaintResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -571,14 +578,14 @@ public class OfferService {
             throw new OfferForbiddenException("You are not a part of this offer");
         }
 
-        return complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, userRole).stream()
+        return complaintRepository.findAllByOfferIdAndComplainantWithOfferOrderByIdDesc(offerId, userRole).stream()
                 .map(this::mapToComplaintResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public OfferResponseDTO getOffer(Long offerId, Long userId) {
-        Offer offer = offerRepository.findById(offerId)
+        Offer offer = offerRepository.findByIdWithItems(offerId)
                 .orElseThrow(() -> {
                     log.warn("Offer not found, ID: {}", offerId);
                     logger.warn("Offer not found, ID: %d".formatted(offerId));

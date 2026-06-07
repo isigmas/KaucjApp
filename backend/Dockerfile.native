@@ -10,7 +10,8 @@ ARG SERVICE_NAME
 
 COPY . .
 
-RUN cd ${SERVICE_NAME} && ../mvnw native:compile -Pnative -DskipTests
+RUN ./mvnw -pl common -am install -Dmaven.test.skip=true \
+    && cd ${SERVICE_NAME} && ../mvnw native:compile -Pnative -Dmaven.test.skip=true
 
 FROM ubuntu:24.04
 WORKDIR /app

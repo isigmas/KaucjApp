@@ -6,7 +6,7 @@ COPY . .
 
 COPY notification-service notification-service
 
-RUN ./mvnw install -DskipTests -pl notification-service -am
+RUN ./mvnw install -Dmaven.test.skip=true -pl notification-service -am
 
 # RUN
 FROM eclipse-temurin:25-jre-alpine

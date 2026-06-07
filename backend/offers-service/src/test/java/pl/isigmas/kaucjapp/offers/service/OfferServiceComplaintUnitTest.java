@@ -210,7 +210,7 @@ class OfferServiceComplaintUnitTest {
         newer.setMessage("second");
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
-        when(complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+        when(complaintRepository.findAllByOfferIdAndComplainantWithOfferOrderByIdDesc(offerId, Complainant.CREATOR))
                 .thenReturn(List.of(newer, older));
 
         List<ComplaintResponseDTO> dto = offerService.getMyComplaintsForOffer(offerId, creatorId);
@@ -234,7 +234,7 @@ class OfferServiceComplaintUnitTest {
         offer.setCollectorId(collectorId);
 
         when(offerRepository.findById(offerId)).thenReturn(Optional.of(offer));
-        when(complaintRepository.findAllByOffer_IdAndComplainantOrderByIdDesc(offerId, Complainant.CREATOR))
+        when(complaintRepository.findAllByOfferIdAndComplainantWithOfferOrderByIdDesc(offerId, Complainant.CREATOR))
                 .thenReturn(List.of());
 
         assertThat(offerService.getMyComplaintsForOffer(offerId, creatorId)).isEmpty();
