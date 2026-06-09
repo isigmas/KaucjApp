@@ -70,9 +70,10 @@ export default function RankingScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
-        data={remainingUsers}
+        data={top3}
+        contentInsetAdjustmentBehavior="automatic"
         keyExtractor={(item: UserStats) => item.userId.toString()}
         renderItem={({ item, index }) => (
           <RankingListItem user={item} rank={index + 4} type={activityType} />
@@ -98,7 +99,7 @@ export default function RankingScreen() {
           ) : null
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
