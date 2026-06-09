@@ -1,20 +1,23 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useLayoutEffect } from "react";
 import {
   View,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import { useInfiniteRanking } from "@/src/api/hooks/use-ranking";
 import { RankingActivityType, UserStats } from "@/src/types/ranking";
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import Podium from "./podium";
 import RankingListItem from "./ranking-list-item";
 import LoadingState from "@/src/components/states/loading-state";
 import ErrorState from "@/src/components/states/error-state";
-import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTabSelector from "../../ui/active-tab-selector";
+import { useNavigation } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import RankingInfoModal from "./ranking-info-modal";
 
 const TABS = [
   { id: "returned_total", label: "Wystawiający" },
@@ -22,6 +25,8 @@ const TABS = [
 ] as const;
 
 export default function RankingScreen() {
+  const navigation = useNavigation();
+  const [isInfoVisible, setIsInfoVisible] = useState(false);
   const [activityType, setActivityType] =
     useState<RankingActivityType>("returned_total");
 
@@ -42,6 +47,24 @@ export default function RankingScreen() {
 
   const top3 = allUsers.slice(0, 3);
   const remainingUsers = allUsers.slice(3);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setIsInfoVisible(true)}
+          style={styles.infoButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color={colors.text.primary}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   if (isLoading && allUsers.length === 0) {
     return <LoadingState title="Wczytywanie rankingu..." />;
@@ -72,7 +95,7 @@ export default function RankingScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={top3}
+        data={remainingUsers}
         contentInsetAdjustmentBehavior="automatic"
         keyExtractor={(item: UserStats) => item.userId.toString()}
         renderItem={({ item, index }) => (
@@ -98,6 +121,11 @@ export default function RankingScreen() {
             <Text style={styles.emptyText}>Brak danych w rankingu.</Text>
           ) : null
         }
+      />
+
+      <RankingInfoModal
+        visible={isInfoVisible}
+        onClose={() => setIsInfoVisible(false)}
       />
     </View>
   );
@@ -130,5 +158,11 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginTop: spacing.xl,
     fontSize: 16,
+  },
+  infoButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 40,
+    height: 40,
   },
 });

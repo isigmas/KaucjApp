@@ -56,6 +56,13 @@ export default function Podium({ topUsers, type }: PodiumProps) {
                 <Ionicons name="leaf" size={12} color={colors.primary.dark} />
                 <Text style={styles.scoreText}>{getScore(user)}</Text>
               </View>
+              {isFirst && (
+                <Text style={styles.scoreTextSecondary}>
+                  {type.includes("returned")
+                    ? "największa liczba wystawionych opakowań PET"
+                    : "największa liczba odebranych opakowań PET"}
+                </Text>
+              )}
             </View>
           </Animated.View>
         );
@@ -117,5 +124,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: colors.primary.dark,
+  },
+  scoreTextSecondary: {
+    marginTop: spacing.xs,
+    textAlign: "center",
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.text.secondary,
   },
 });

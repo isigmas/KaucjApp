@@ -38,7 +38,6 @@ export default function HomeLayout() {
         options={{
           headerShown: true,
           headerTitle: "Ranking",
-          headerLargeTitleEnabled: true,
           headerBackButtonDisplayMode: "minimal",
           headerTransparent: true,
         }}
