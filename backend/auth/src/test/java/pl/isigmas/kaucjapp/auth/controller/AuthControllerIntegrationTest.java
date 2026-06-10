@@ -511,6 +511,77 @@ class AuthControllerIntegrationTest {
         }
 
         @Test
+        @DisplayName("Should block login after 10 failed attempts")
+        void shouldBlockLoginAfterTenFailedAttempts() throws Exception {
+            // given
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
+
+            LoginCredentials credentials = new LoginCredentials();
+            credentials.setIdentifier("existinguser");
+            credentials.setPassword("wrongPassword");
+
+            // when - 10 failed attempts
+            for (int i = 0; i < 10; i++) {
+                mockMvc.perform(post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(credentials)))
+                        .andExpect(status().isBadRequest());
+            }
+
+            // then - 11th attempt should be blocked
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(credentials)))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(content().string(containsString("Too many login attempts")));
+        }
+
+        @Test
+        @DisplayName("Should reset failed login attempts after successful login")
+        void shouldResetLoginAttemptsAfterSuccessfulLogin() throws Exception {
+            // given
+            Account account = createTestAccount();
+            account.setStatus(AccountStatus.ACTIVE);
+            accountRepository.save(account);
+
+            LoginCredentials wrongCredentials = new LoginCredentials();
+            wrongCredentials.setIdentifier("existinguser");
+            wrongCredentials.setPassword("wrongPassword");
+
+            LoginCredentials correctCredentials = new LoginCredentials();
+            correctCredentials.setIdentifier("existinguser");
+            correctCredentials.setPassword("correctPassword123!");
+
+            // when - 9 failed attempts
+            for (int i = 0; i < 9; i++) {
+                mockMvc.perform(post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(wrongCredentials)))
+                        .andExpect(status().isBadRequest());
+            }
+
+            // then - 1 successful attempt
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(correctCredentials)))
+                    .andExpect(status().isOk());
+
+            // then - next failed attempt shouldn't be blocked (would be 10th if not reset)
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(wrongCredentials)))
+                    .andExpect(status().isBadRequest());
+
+            // one more shouldn't be blocked either
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(wrongCredentials)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         @DisplayName("Username should not be case-sensitive")
         void usernameShouldNotBeCaseSensitive() throws Exception {
             // given

@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.auth.dto.request.LoginCredentials;
 import pl.isigmas.kaucjapp.auth.dto.request.ResetPasswordEmailRequest;
 import pl.isigmas.kaucjapp.auth.service.AuthService;
 import pl.isigmas.kaucjapp.auth.dto.request.User;
+import pl.isigmas.kaucjapp.auth.service.LoginLimiter;
 import pl.isigmas.kaucjapp.common.logger.Logger;
 
 @Slf4j
@@ -22,6 +23,7 @@ import pl.isigmas.kaucjapp.common.logger.Logger;
 public class AuthController {
 
     private final AuthService service;
+    private final LoginLimiter loginLimitter;
     private final Logger logger;
 
     @GetMapping("/status")
@@ -49,9 +51,18 @@ public class AuthController {
     public ResponseEntity<String> login(
             @Valid @RequestBody LoginCredentials credentials
             ) {
+        if (loginLimitter.isBlocked(credentials.getIdentifier().toLowerCase().trim())) {
+            long timeLeft = loginLimitter.getRemainingAlertTime(credentials.getIdentifier());
+
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Too many login attempts. Please try again in " + timeLeft + " minutes");
+        }
+
+        loginLimitter.incrementAttempts(credentials.getIdentifier().toLowerCase().trim());
         String token = service.login(credentials);
 
         logger.important("Login successful " + credentials.getIdentifier());
+        loginLimitter.clearAttempts(credentials.getIdentifier().toLowerCase().trim());
 
         return ResponseEntity.ok(token);
     }

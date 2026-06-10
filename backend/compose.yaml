@@ -107,6 +107,16 @@ services:
       timeout: 5s
       retries: 5
 
+  redis-auth:
+    image: redis:alpine
+    volumes:
+      - redis_data_auth:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   auth-service:
     build:
       context: .
@@ -125,6 +135,8 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATA_REDIS_HOST=redis-auth
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       auth-db:
         condition: service_healthy
@@ -274,8 +286,6 @@ services:
 
   redis-gateway:
     image: redis:alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -329,4 +339,6 @@ services:
 volumes:
   azurite_data:
   redis_data:
+    driver: local
+  redis_data_auth:
     driver: local

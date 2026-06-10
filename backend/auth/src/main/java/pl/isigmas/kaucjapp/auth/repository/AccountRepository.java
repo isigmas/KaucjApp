@@ -1,8 +1,5 @@
 package pl.isigmas.kaucjapp.auth.repository;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
 import pl.isigmas.kaucjapp.auth.entity.Account;
 import pl.isigmas.kaucjapp.auth.entity.enums.AccountRole;
