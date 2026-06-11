@@ -37,9 +37,9 @@ class UsersKafkaListenerTest {
     }
 
     @Test
-    void handleUserSync_authWireFormat_createsUser() throws Exception {
+    void handleUserSync_snakeCaseWireFormat_createsUser() throws Exception {
         String userJson = """
-                {"username":"testuser","firstName":"Anthony","lastName":"Gordon","email":"test@example.com","user_id":2,"phone":"7281299723"}
+                {"username":"testuser","first_name":"Anthony","last_name":"Gordon","email":"test@example.com","user_id":2,"phone":"7281299723"}
                 """;
 
         listener.handleUserSync(userJson);

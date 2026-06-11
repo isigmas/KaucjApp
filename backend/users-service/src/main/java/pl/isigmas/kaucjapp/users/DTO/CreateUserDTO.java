@@ -25,11 +25,11 @@ public class CreateUserDTO {
     private String username;
 
     @NotBlank(message = "First name cannot be blank")
-    @JsonAlias("first_name")
+    @JsonAlias({"first_name", "firstName"})
     private String firstName;
 
     @NotBlank(message = "Last name cannot be blank")
-    @JsonAlias("last_name")
+    @JsonAlias({"last_name", "lastName"})
     private String lastName;
 
     @NotBlank(message = "Phone number cannot be blank")
