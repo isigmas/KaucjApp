@@ -104,7 +104,7 @@ public class DepositMachineService {
         depositMachineRepository.saveAndFlush(depositMachine);
 
         Rating rating = new Rating();
-        rating.setDepositMachine(depositMachine);
+        rating.setDepositMachineId(depositMachine.getId());
         rating.setAvgScore(BigDecimal.ZERO);
         rating.setFeedbackCount(0);
         ratingRepository.save(rating);

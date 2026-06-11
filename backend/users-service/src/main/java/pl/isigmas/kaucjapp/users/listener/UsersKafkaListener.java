@@ -19,7 +19,7 @@ public class UsersKafkaListener {
     private final UserService userService;
     private final UserStatsIngestService userStatsIngestService;
     private final Logger logger;
-    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "users.sync", groupId = "users-group")
     public void handleUserSync(String newUserJson) {
@@ -49,12 +49,29 @@ public class UsersKafkaListener {
 
     @KafkaListener(topics = "offers.completed", groupId = "users-group")
     public void handleOfferCompleted(String eventJson) {
+        OfferCompletedEventDTO event;
         try {
-            OfferCompletedEventDTO event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
-            userStatsIngestService.ingestOfferCompleted(event);
+            event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
         } catch (Exception e) {
             log.error("Failed to parse offer completed message: {}", eventJson, e);
             logger.error("Failed to parse offer completed message: %s".formatted(eventJson));
+            return;
+        }
+
+        log.info(
+                "Parsed offers.completed: offerId={}, creatorId={}, collectorId={}, plastic={}, cans={}",
+                event.getOfferId(),
+                event.getCreatorId(),
+                event.getCollectorId(),
+                event.getPlasticQuantity(),
+                event.getCanQuantity()
+        );
+
+        try {
+            userStatsIngestService.ingestOfferCompleted(event);
+        } catch (Exception e) {
+            log.error("Failed to ingest stats for offer completed message: {}", eventJson, e);
+            logger.error("Failed to ingest stats for offer completed message: %s".formatted(eventJson));
         }
     }
 }

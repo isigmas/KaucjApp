@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.users.listener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -26,11 +27,13 @@ class UsersKafkaListenerTest {
     @Mock
     private Logger logger;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private UsersKafkaListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new UsersKafkaListener(userService, userStatsIngestService, logger);
+        listener = new UsersKafkaListener(userService, userStatsIngestService, logger, objectMapper);
     }
 
     @Test
