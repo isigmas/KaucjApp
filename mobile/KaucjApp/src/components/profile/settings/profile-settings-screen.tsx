@@ -6,41 +6,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Keyboard,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
 
-import { useAuth } from "@/src/auth/use-auth";
-import { useUpdateUser } from "@/src/api/hooks/use-user";
-import { UpdateUserFormValues, UpdateUserSchema } from "@/src/validation/user";
+import { useProfileSettingsForm } from "./use-profile-settings";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 
 export default function ProfileSettingsScreen() {
-  const { user } = useAuth();
-  const { mutate: updateUser, isPending } = useUpdateUser();
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isDirty, isValid },
-  } = useForm<UpdateUserFormValues>({
-    resolver: zodResolver(UpdateUserSchema),
-    mode: "onTouched",
-    reValidateMode: "onChange",
-    defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-    },
-  });
-
-  const onSubmit = (data: UpdateUserFormValues) => {
-    Keyboard.dismiss();
-    updateUser(data);
-  };
-
-  const isSaveDisabled = !isDirty || !isValid || isPending;
+  const { control, errors, onSubmit, isSaveDisabled, isPending } =
+    useProfileSettingsForm();
 
   return (
     <ScrollView
@@ -88,10 +63,10 @@ export default function ProfileSettingsScreen() {
                   onChangeText={onChange}
                   value={value ?? ""}
                   placeholder="Wprowadź nazwisko"
-                  placeholderTextColor={colors.text?.muted || "#999999"}
+                  placeholderTextColor={colors.text.muted}
                   autoCorrect={false}
                   returnKeyType="done"
-                  onSubmitEditing={handleSubmit(onSubmit)}
+                  onSubmitEditing={onSubmit}
                 />
               </View>
             )}
@@ -112,7 +87,7 @@ export default function ProfileSettingsScreen() {
 
       <TouchableOpacity
         style={[styles.saveButton, isSaveDisabled && styles.saveButtonDisabled]}
-        onPress={handleSubmit(onSubmit)}
+        onPress={onSubmit}
         disabled={isSaveDisabled}
         activeOpacity={0.8}
       >
