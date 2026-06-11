@@ -50,6 +50,16 @@ export default function HomeLayout() {
       />
 
       <Stack.Screen
+        name="faq"
+        options={{
+          headerShown: true,
+          headerTitle: "FAQ",
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
+        }}
+      />
+
+      <Stack.Screen
         name="stats"
         options={{
           headerShown: false,

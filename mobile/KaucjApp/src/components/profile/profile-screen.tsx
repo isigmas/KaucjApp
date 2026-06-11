@@ -67,14 +67,15 @@ export default function ProfileScreen() {
         <ProfileMenuItem
           icon="settings"
           title="Ustawienia"
+          subtitle="Zarządzaj swoim kontem"
           delay={700}
           onPress={() => router.push("/profile/settings")}
         />
         <ProfileMenuItem
           icon="help-circle"
-          title="Pomoc i wsparcie"
+          title="FAQ"
           delay={800}
-          onPress={() => console.log("Pomoc")}
+          onPress={() => router.push("/profile/faq")}
         />
         <ProfileMenuItem
           icon="log-out"
