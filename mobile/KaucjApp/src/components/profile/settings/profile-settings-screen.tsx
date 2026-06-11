@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.main,
   },
   contentContainer: {
-    padding: spacing?.md || 16,
+    padding: spacing.md,
     paddingTop: 24,
     paddingBottom: 40,
   },
@@ -113,8 +113,10 @@ const styles = StyleSheet.create({
   },
   cardGroup: {
     backgroundColor: colors.background.card,
-    borderRadius: rounded.lg,
+    borderRadius: rounded.xl,
     padding: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.status.border,
     ...shadows.light,
   },
   inputRow: {

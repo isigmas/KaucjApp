@@ -10,7 +10,11 @@ import {
   layoutSpring,
   type FaqItem as FaqItemType,
 } from "@/src/constants";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeInRight,
+  FadeInUp,
+} from "react-native-reanimated";
 
 export default function FaqScreen() {
   return (
@@ -28,7 +32,7 @@ export default function FaqScreen() {
 
           <Animated.View
             layout={layoutSpring}
-            entering={FadeInUp.delay(sectionIndex * 100)}
+            entering={FadeInUp.delay((sectionIndex + 1) * 100)}
             style={styles.sectionContent}
           >
             {section.items.map((item, itemIndex) => (
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xxl || 64,
   },
   title: {
@@ -131,7 +135,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   sectionContent: {
-    borderRadius: rounded.apple,
+    borderRadius: rounded.xl,
+    borderWidth: 1,
+    borderColor: colors.status.border,
     backgroundColor: colors.background.card,
     ...shadows.light,
   },
