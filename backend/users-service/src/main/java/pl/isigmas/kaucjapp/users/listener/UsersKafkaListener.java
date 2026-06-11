@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.users.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -19,6 +20,7 @@ public class UsersKafkaListener {
     private final UserService userService;
     private final UserStatsIngestService userStatsIngestService;
     private final Logger logger;
+    @Qualifier("kafkaObjectMapper")
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "users.sync", groupId = "users-group")

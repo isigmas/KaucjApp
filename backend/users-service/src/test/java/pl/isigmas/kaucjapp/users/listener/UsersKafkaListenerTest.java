@@ -37,6 +37,27 @@ class UsersKafkaListenerTest {
     }
 
     @Test
+    void handleUserSync_authWireFormat_createsUser() throws Exception {
+        String userJson = """
+                {"username":"testuser","firstName":"Anthony","lastName":"Gordon","email":"test@example.com","user_id":2,"phone":"7281299723"}
+                """;
+
+        listener.handleUserSync(userJson);
+
+        verify(userService).createUser(
+                2L,
+                argThat(user ->
+                        user.getId().equals(2L)
+                                && "testuser".equals(user.getUsername())
+                                && "Anthony".equals(user.getFirstName())
+                                && "Gordon".equals(user.getLastName())
+                                && "test@example.com".equals(user.getEmail())
+                                && "7281299723".equals(user.getPhone())
+                )
+        );
+    }
+
+    @Test
     void handleOfferCompleted_validJson_delegatesToIngestService() {
         String eventJson = """
                 {"offer_id":1,"creator_id":10,"collector_id":20,"plastic_quantity":3,"can_quantity":2}
