@@ -4,22 +4,31 @@ import { User } from "@/src/types/user";
 import { UpdateUserFormValues } from "@/src/validation/user";
 import { useAuthStore } from "@/src/auth/auth-store";
 
+export const userKeys = {
+  all: ["users"] as const,
+  me: () => [...userKeys.all, "me"] as const,
+  byId: (userId: number) => [...userKeys.all, userId] as const,
+};
+
 export const useUserDetails = () => {
+  const queryClient = useQueryClient();
+
   return useQuery({
-    queryKey: ["userDetails"],
+    queryKey: userKeys.me(),
     queryFn: async () => {
       const { data } = await apiClient.get("/user/me");
-      return data as User;
+      const user = data as User;
+      queryClient.setQueryData(userKeys.byId(user.userId), user);
+      return user;
     },
   });
 };
 
 export const useUserById = (userId: number) => {
   return useQuery({
-    queryKey: ["userById", userId],
+    queryKey: userKeys.byId(userId),
     queryFn: async () => {
       const { data } = await apiClient.get(`/user/${userId}`);
-      console.log("data", JSON.stringify(data, null, 2));
       return data as User;
     },
   });
@@ -35,7 +44,7 @@ export const useUpdateUser = () => {
     },
     onSuccess: (payload) => {
       queryClient.invalidateQueries({
-        queryKey: ["userDetails"],
+        queryKey: userKeys.me(),
       });
 
       const updates: Partial<User> = {};
