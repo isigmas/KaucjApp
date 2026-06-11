@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api-client";
 import { User } from "@/src/types/user";
+import { UpdateUserFormValues } from "@/src/validation/user";
 
 export const useUserDetails = () => {
   return useQuery({
@@ -19,6 +20,20 @@ export const useUserById = (userId: number) => {
       const { data } = await apiClient.get(`/user/${userId}`);
       console.log("data", JSON.stringify(data, null, 2));
       return data as User;
+    },
+  });
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: UpdateUserFormValues) => {
+      await apiClient.patch("/user/me", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userDetails"],
+      });
     },
   });
 };
