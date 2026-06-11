@@ -16,6 +16,7 @@ import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 @Component
 @RequiredArgsConstructor
 public class UsersKafkaListener {
+    
 
     private final UserService userService;
     private final UserStatsIngestService userStatsIngestService;
