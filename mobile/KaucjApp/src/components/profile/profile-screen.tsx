@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
 import UserProfile from "../ui/user-profile";
@@ -38,51 +38,62 @@ export default function ProfileScreen() {
 
       <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Twoja aktywność</Text>
-        <ProfileMenuItem
-          icon="list"
-          title="Moje ogłoszenia"
-          subtitle="Aktywne i zakończone"
-          delay={500}
-          onPress={() => router.push("/profile/offers")}
-        />
-        <ProfileMenuItem
-          icon="calendar"
-          title="Moje rezerwacje"
-          subtitle="Oczekujące odbiory"
-          delay={400}
-          onPress={() => router.push("/profile/bookings")}
-        />
-        <ProfileMenuItem
-          icon="trophy"
-          title="Ranking"
-          subtitle="Top użytkownicy"
-          delay={600}
-          onPress={() => router.push("/profile/ranking")}
-        />
+        <View style={styles.itemsSection}>
+          <ProfileMenuItem
+            icon="list"
+            title="Moje ogłoszenia"
+            subtitle="Aktywne i zakończone"
+            delay={500}
+            onPress={() => router.push("/profile/offers")}
+          />
+          <View style={styles.separator} />
+          <ProfileMenuItem
+            icon="calendar"
+            title="Moje rezerwacje"
+            subtitle="Oczekujące odbiory"
+            delay={400}
+            onPress={() => router.push("/profile/bookings")}
+          />
+          <View style={styles.separator} />
+
+          <ProfileMenuItem
+            icon="trophy"
+            title="Ranking"
+            subtitle="Top użytkownicy"
+            delay={600}
+            onPress={() => router.push("/profile/ranking")}
+          />
+        </View>
       </View>
 
       <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Konto</Text>
 
-        <ProfileMenuItem
-          icon="settings"
-          title="Ustawienia"
-          delay={700}
-          onPress={() => router.push("/profile/settings")}
-        />
-        <ProfileMenuItem
-          icon="help-circle"
-          title="Pomoc i wsparcie"
-          delay={800}
-          onPress={() => console.log("Pomoc")}
-        />
-        <ProfileMenuItem
-          icon="log-out"
-          title="Wyloguj się"
-          isDestructive={true}
-          delay={900}
-          onPress={() => signOut()}
-        />
+        <View style={styles.itemsSection}>
+          <ProfileMenuItem
+            icon="settings"
+            title="Ustawienia"
+            delay={700}
+            onPress={() => router.push("/profile/settings")}
+          />
+          <View style={styles.separator} />
+
+          <ProfileMenuItem
+            icon="help-circle"
+            title="Pomoc i wsparcie"
+            delay={800}
+            onPress={() => console.log("Pomoc")}
+          />
+          <View style={styles.separator} />
+
+          <ProfileMenuItem
+            icon="log-out"
+            title="Wyloguj się"
+            isDestructive={true}
+            delay={900}
+            onPress={() => signOut()}
+          />
+        </View>
       </View>
     </ScrollView>
   );
@@ -149,7 +160,7 @@ const ProfileMenuItem = ({
           >
             {title}
           </Text>
-          {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+          {/* {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>} */}
         </View>
 
         <Ionicons name="chevron-forward" size={20} color={colors.text.muted} />
@@ -215,8 +226,7 @@ const styles = StyleSheet.create({
 
   // Menu Styles
   menuSection: {
-    marginTop: 20,
-    marginBottom: 16,
+    marginVertical: spacing.md,
   },
   sectionTitle: {
     fontSize: 14,
@@ -227,29 +237,31 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginLeft: 8,
   },
+  itemsSection: {
+    padding: spacing.sm,
+    flexDirection: "column",
+    backgroundColor: colors.background.card,
+    borderRadius: rounded.apple,
+    ...shadows.medium,
+    gap: spacing.sm,
+  },
+  separator: {
+    height: 0.6,
+    backgroundColor: colors.status.border,
+  },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background.card,
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.status.border,
-    shadowColor: colors.text.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
+
+    padding: spacing.sm,
   },
   menuIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: colors.background.main,
+    width: 32,
+    height: 32,
+    borderRadius: rounded.apple,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 14,
+    marginRight: spacing.sm,
   },
   menuIconBoxDestructive: {
     backgroundColor: "#FEF2F2", // Very light red

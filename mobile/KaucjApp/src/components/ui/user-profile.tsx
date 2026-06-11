@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import BottleCapAvatar from "./user-avatar";
 import { User, UserRole } from "@/src/types/user";
 import { useUserRating } from "@/src/api/hooks/use-rating";
@@ -50,11 +50,14 @@ export default function UserProfile({
         />
       )}
 
-      {showDetailedStats ? (
+      {/* {showDetailedStats ? (
         <UserStats user={user} />
       ) : (
         <StatsBadge user={user} role={role} color={color} />
-      )}
+      )} */}
+      <View style={styles.detailsButton}>
+        <Text style={styles.detailsButtonText}>Zobacz szczegóły</Text>
+      </View>
     </View>
   );
 }
@@ -153,5 +156,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingVertical: spacing.md,
+  },
+  detailsButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: rounded.apple,
+    backgroundColor: colors.background.card,
+    ...shadows.light,
+    shadowOffset: { width: -4, height: 8 },
+  },
+  detailsButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
