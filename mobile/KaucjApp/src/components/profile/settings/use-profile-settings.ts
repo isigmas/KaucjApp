@@ -27,7 +27,7 @@ export const useProfileSettingsForm = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      const timer = setTimeout(() => setIsSuccess(false), 3000);
+      const timer = setTimeout(() => setIsSuccess(false), 1500);
       return () => clearTimeout(timer);
     }
   }, [isSuccess]);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Controller } from "react-hook-form";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+  Easing,
+} from "react-native-reanimated";
 
 import { useProfileSettingsForm } from "./use-profile-settings";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
@@ -16,6 +24,65 @@ import { colors, rounded, shadows, spacing } from "@/src/theme";
 export default function ProfileSettingsScreen() {
   const { control, errors, onSubmit, isSaveDisabled, isPending, isSuccess } =
     useProfileSettingsForm();
+  const { width: windowWidth } = useWindowDimensions();
+
+  const paddingHorizontal = spacing.md;
+  const initialWidth = windowWidth - paddingHorizontal * 2;
+  const circleSize = 54;
+
+  const animationProgress = useSharedValue(0);
+
+  useEffect(() => {
+    if (isSuccess) {
+      animationProgress.value = withTiming(1, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 1, 0.5, 1),
+      });
+    } else {
+      animationProgress.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 1, 0.5, 1),
+      });
+    }
+  }, [isSuccess]);
+
+  const animatedButtonStyles = useAnimatedStyle(() => {
+    const currentWidth =
+      animationProgress.value * (circleSize - initialWidth) + initialWidth;
+    const currentRadius =
+      animationProgress.value * (circleSize / 2 - rounded.apple) +
+      rounded.apple;
+
+    const backgroundColor = interpolateColor(
+      animationProgress.value,
+      [0, 1],
+      [
+        isSaveDisabled ? colors.primary.light : colors.primary.base,
+        colors.status.success,
+      ],
+    );
+
+    return {
+      width: currentWidth,
+      borderRadius: currentRadius,
+      backgroundColor: backgroundColor,
+    };
+  });
+
+  const animatedTextStyles = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(isSuccess ? 0 : 1, { duration: 150 }),
+    };
+  });
+
+  const animatedCheckmarkStyles = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(isSuccess ? 1 : 0, { duration: 200 }),
+      transform: [
+        { scale: withTiming(isSuccess ? 1 : 0.5, { duration: 250 }) },
+      ],
+    };
+  });
 
   return (
     <ScrollView
@@ -85,24 +152,37 @@ export default function ProfileSettingsScreen() {
         )}
       </View>
 
-      <TouchableOpacity
-        style={[
-          styles.saveButton,
-          isSaveDisabled && styles.saveButtonDisabled,
-          isSuccess && styles.saveButtonSuccess,
-        ]}
-        onPress={onSubmit}
-        disabled={isSaveDisabled}
-        activeOpacity={0.8}
-      >
-        {isPending ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : isSuccess ? (
-          <Text style={styles.saveButtonText}>✓ Zapisano pomyślnie</Text>
-        ) : (
-          <Text style={styles.saveButtonText}>Zapisz zmiany</Text>
-        )}
-      </TouchableOpacity>
+      <View style={styles.buttonCenteringContainer}>
+        <TouchableOpacity
+          onPress={onSubmit}
+          disabled={isSaveDisabled}
+          activeOpacity={0.85}
+        >
+          <Animated.View style={[styles.saveButton, animatedButtonStyles]}>
+            {isPending ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Animated.Text
+                  style={[styles.saveButtonText, animatedTextStyles]}
+                >
+                  Zapisz zmiany
+                </Animated.Text>
+
+                {/*  checkmark  */}
+                <Animated.View
+                  style={[
+                    styles.checkmarkAbsoluteContainer,
+                    animatedCheckmarkStyles,
+                  ]}
+                >
+                  <Text style={styles.checkmarkIcon}>✓</Text>
+                </Animated.View>
+              </>
+            )}
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -167,27 +247,32 @@ const styles = StyleSheet.create({
     color: colors.status.error,
     marginTop: 4,
   },
+
+  buttonCenteringContainer: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   saveButton: {
-    backgroundColor: colors.primary.base,
-    borderRadius: rounded.apple,
-    paddingVertical: spacing.md,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
     ...shadows.medium,
-  },
-  saveButtonDisabled: {
-    backgroundColor: colors.primary.light,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  saveButtonSuccess: {
-    backgroundColor: colors.status.success,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   saveButtonText: {
     color: colors.text.white,
     fontSize: 17,
     fontWeight: "600",
+    position: "absolute",
+  },
+  checkmarkAbsoluteContainer: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkmarkIcon: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "bold",
   },
 });
