@@ -18,9 +18,11 @@ interface AuthState {
   ) => Promise<void>;
   purgeAuth: () => Promise<void>;
   hydrate: (apiClient: AxiosInstance) => Promise<void>;
+
+  patchUser: (updates: Partial<User>) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isHydrating: true,
@@ -44,7 +46,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, accessToken: null, isHydrating: false });
   },
 
-  // On app startup, check if we have tokens in SecureStore and validate them
+  patchUser: async (updates) => {
+    const currentUser = get().user;
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, ...updates };
+
+    await authStorage.setUserData(updatedUser);
+    set({ user: updatedUser });
+  },
+
   hydrate: async (apiClient) => {
     try {
       const token = await tokenStorage.getAccessToken();

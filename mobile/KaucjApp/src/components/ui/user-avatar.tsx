@@ -1,4 +1,4 @@
-import { colors, spacing } from "@/src/theme";
+import { colors, shadows, spacing } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
 
@@ -46,10 +46,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.md,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    ...shadows.medium,
+    shadowOffset: { width: -4, height: 8 },
+    shadowOpacity: 0.3,
   },
   capInner: {
     width: 86,
