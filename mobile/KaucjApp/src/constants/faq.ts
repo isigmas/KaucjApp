@@ -23,7 +23,7 @@ export const FAQ_DATA = [
           "KaucjApp umożliwia wystawianie ofert z dwoma typami opakowań kaucyjnych:",
         list: ["Plastikowe butelki (PET)", "Metalowe puszki"],
         note: "Ważne! Opakowania muszą być oznaczone jako kaucyjne.",
-        image: "deposit-mark", // np. asset pokazujący poprawne/niepoprawne oznaczenie
+        image: "deposit-mark",
       },
       {
         question: "Czy mogę anulować wystawioną ofertę?",
@@ -82,3 +82,5 @@ export const FAQ_DATA = [
     ],
   },
 ] as const;
+
+export type FaqItem = (typeof FAQ_DATA)[number]["items"][number];
