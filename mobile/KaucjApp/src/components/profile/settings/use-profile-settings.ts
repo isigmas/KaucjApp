@@ -1,4 +1,4 @@
-// use-profile-settings.ts
+import { useState, useEffect } from "react";
 import { Keyboard } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { UpdateUserFormValues, UpdateUserSchema } from "@/src/validation/user";
 
 export const useProfileSettingsForm = () => {
   const { user } = useAuth();
+  const [isSuccess, setIsSuccess] = useState(false);
   const { mutate: updateUser, isPending } = useUpdateUser();
 
   const form = useForm<UpdateUserFormValues>({
@@ -22,14 +23,24 @@ export const useProfileSettingsForm = () => {
   });
 
   const { isDirty, isValid } = form.formState;
-
-  // Computed state
   const isSaveDisabled = !isDirty || !isValid || isPending;
 
-  // Handlers
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => setIsSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
+
   const onSubmit = form.handleSubmit((data: UpdateUserFormValues) => {
     Keyboard.dismiss();
-    updateUser(data);
+
+    updateUser(data, {
+      onSuccess: () => {
+        setIsSuccess(true);
+        form.reset(data);
+      },
+    });
   });
 
   return {
@@ -38,5 +49,6 @@ export const useProfileSettingsForm = () => {
     onSubmit,
     isSaveDisabled,
     isPending,
+    isSuccess,
   };
 };

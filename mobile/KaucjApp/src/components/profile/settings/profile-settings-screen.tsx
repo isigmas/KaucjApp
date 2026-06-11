@@ -14,7 +14,7 @@ import { useProfileSettingsForm } from "./use-profile-settings";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 
 export default function ProfileSettingsScreen() {
-  const { control, errors, onSubmit, isSaveDisabled, isPending } =
+  const { control, errors, onSubmit, isSaveDisabled, isPending, isSuccess } =
     useProfileSettingsForm();
 
   return (
@@ -86,13 +86,19 @@ export default function ProfileSettingsScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.saveButton, isSaveDisabled && styles.saveButtonDisabled]}
+        style={[
+          styles.saveButton,
+          isSaveDisabled && styles.saveButtonDisabled,
+          isSuccess && styles.saveButtonSuccess,
+        ]}
         onPress={onSubmit}
         disabled={isSaveDisabled}
         activeOpacity={0.8}
       >
         {isPending ? (
           <ActivityIndicator color="#FFFFFF" />
+        ) : isSuccess ? (
+          <Text style={styles.saveButtonText}>✓ Zapisano pomyślnie</Text>
         ) : (
           <Text style={styles.saveButtonText}>Zapisz zmiany</Text>
         )}
@@ -104,7 +110,6 @@ export default function ProfileSettingsScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-
     backgroundColor: colors.background.main,
   },
   contentContainer: {
@@ -172,6 +177,11 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     backgroundColor: colors.primary.light,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  saveButtonSuccess: {
+    backgroundColor: colors.status.success,
     shadowOpacity: 0,
     elevation: 0,
   },
