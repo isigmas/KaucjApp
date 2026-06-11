@@ -67,6 +67,11 @@ public class UsersKafkaListener {
                 event.getCanQuantity()
         );
 
+        if (event.getOfferId() == null) {
+            log.warn("Offer completed payload deserialized without ids, raw json={}", eventJson);
+            logger.warn("Offer completed payload deserialized without ids, raw json=%s".formatted(eventJson));
+        }
+
         try {
             userStatsIngestService.ingestOfferCompleted(event);
         } catch (Exception e) {
