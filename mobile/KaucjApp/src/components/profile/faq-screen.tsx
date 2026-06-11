@@ -3,14 +3,14 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Info } from "lucide-react-native";
 import { Image } from "expo-image";
 
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import ExpandableCard from "../ui/expandable-card";
 import {
   FAQ_DATA,
   layoutSpring,
   type FaqItem as FaqItemType,
 } from "@/src/constants";
-import Animated, { FadeInLeft } from "react-native-reanimated";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 export default function FaqScreen() {
   return (
@@ -20,17 +20,26 @@ export default function FaqScreen() {
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      {FAQ_DATA.map((section) => (
+      {FAQ_DATA.map((section, sectionIndex) => (
         <View key={section.category} style={styles.section}>
           <Animated.View layout={layoutSpring}>
             <Text style={styles.sectionTitle}>{section.category}</Text>
           </Animated.View>
 
-          <View style={styles.sectionContent}>
+          <Animated.View
+            layout={layoutSpring}
+            entering={FadeInUp.delay(sectionIndex * 100)}
+            style={styles.sectionContent}
+          >
             {section.items.map((item, itemIndex) => (
-              <FaqItem key={item.question} item={item} index={itemIndex} />
+              <>
+                <FaqItem key={item.question} item={item} index={itemIndex} />
+                {itemIndex !== section.items.length - 1 && (
+                  <Animated.View layout={layoutSpring} style={styles.divider} />
+                )}
+              </>
             ))}
-          </View>
+          </Animated.View>
         </View>
       ))}
     </ScrollView>
@@ -42,10 +51,10 @@ const FaqItem = ({ item, index }: { item: FaqItemType; index: number }) => {
     <ExpandableCard
       title={item.question}
       titleStyle={styles.title}
-      entering={FadeInLeft.delay(index * 50)}
-      style={styles.cardSpacing}
+      style={styles.card}
+      defaultExpanded={item.question === "Jaka jest misja KaucjApp?"}
     >
-      <View style={styles.answerContainer}>
+      <View>
         <Text style={styles.answerText}>{item.answer}</Text>
 
         {/* Optional Bulleted List */}
@@ -122,16 +131,23 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   sectionContent: {
-    gap: spacing.sm, // Standardizes gap between cards without needing margins
+    borderRadius: rounded.apple,
+    backgroundColor: colors.background.card,
+    ...shadows.light,
   },
-  cardSpacing: {
-    marginBottom: 0, // Overrides the default marginBottom in ExpandableCard to rely on parent gap
+  card: {
+    borderRadius: 0,
+    borderWidth: 0,
+    margin: 0,
+    marginBottom: 0,
+    backgroundColor: "transparent",
+    padding: spacing.sm,
+  },
+  divider: {
+    height: 0.8,
+    backgroundColor: colors.status.border,
   },
 
-  // Card Interior Styles
-  answerContainer: {
-    paddingTop: spacing.xs,
-  },
   answerText: {
     fontSize: 15,
     color: colors.text.secondary || "#3C3C43",
