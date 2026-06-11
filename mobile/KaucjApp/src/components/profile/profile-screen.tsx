@@ -1,4 +1,3 @@
-import Reactś from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInLeft,
@@ -11,6 +10,83 @@ import { colors } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
 import UserProfile from "../ui/user-profile";
+
+export default function ProfileScreen() {
+  const { signOut } = useAuth();
+  const { user } = useAuth();
+
+  const router = useRouter();
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {user && (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/profile/stats",
+              params: { userId: user.userId },
+            })
+          }
+        >
+          <UserProfile user={user} role="creator" />
+        </Pressable>
+      )}
+
+      <View style={styles.menuSection}>
+        <Text style={styles.sectionTitle}>Twoja aktywność</Text>
+        <ProfileMenuItem
+          icon="list"
+          title="Moje ogłoszenia"
+          subtitle="Aktywne i zakończone"
+          delay={500}
+          onPress={() => router.push("/profile/offers")}
+        />
+        <ProfileMenuItem
+          icon="calendar"
+          title="Moje rezerwacje"
+          subtitle="Oczekujące odbiory"
+          delay={400}
+          onPress={() => router.push("/profile/bookings")}
+        />
+        <ProfileMenuItem
+          icon="trophy"
+          title="Ranking"
+          subtitle="Top użytkownicy"
+          delay={600}
+          onPress={() => router.push("/profile/ranking")}
+        />
+      </View>
+
+      <View style={styles.menuSection}>
+        <Text style={styles.sectionTitle}>Konto</Text>
+
+        <ProfileMenuItem
+          icon="settings"
+          title="Ustawienia"
+          delay={700}
+          onPress={() => router.push("/profile/settings")}
+        />
+        <ProfileMenuItem
+          icon="help-circle"
+          title="Pomoc i wsparcie"
+          delay={800}
+          onPress={() => console.log("Pomoc")}
+        />
+        <ProfileMenuItem
+          icon="log-out"
+          title="Wyloguj się"
+          isDestructive={true}
+          delay={900}
+          onPress={() => signOut()}
+        />
+      </View>
+    </ScrollView>
+  );
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -81,83 +157,6 @@ const ProfileMenuItem = ({
     </Animated.View>
   );
 };
-
-export default function ProfileScreen() {
-  const { signOut } = useAuth();
-  const { user } = useAuth();
-
-  const router = useRouter();
-
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      {user && (
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: "/profile/stats",
-              params: { userId: user.userId },
-            })
-          }
-        >
-          <UserProfile user={user} role="creator" />
-        </Pressable>
-      )}
-
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Twoja aktywność</Text>
-        <ProfileMenuItem
-          icon="list"
-          title="Moje ogłoszenia"
-          subtitle="Aktywne i zakończone"
-          delay={500}
-          onPress={() => router.push("/profile/offers")}
-        />
-        <ProfileMenuItem
-          icon="calendar"
-          title="Moje rezerwacje"
-          subtitle="Oczekujące odbiory"
-          delay={400}
-          onPress={() => router.push("/profile/bookings")}
-        />
-        <ProfileMenuItem
-          icon="trophy"
-          title="Ranking"
-          subtitle="Top użytkownicy"
-          delay={600}
-          onPress={() => router.push("/profile/ranking")}
-        />
-      </View>
-
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Konto</Text>
-
-        <ProfileMenuItem
-          icon="settings"
-          title="Ustawienia"
-          delay={700}
-          onPress={() => console.log("Ustawienia")}
-        />
-        <ProfileMenuItem
-          icon="help-circle"
-          title="Pomoc i wsparcie"
-          delay={800}
-          onPress={() => console.log("Pomoc")}
-        />
-        <ProfileMenuItem
-          icon="log-out"
-          title="Wyloguj się"
-          isDestructive={true}
-          delay={900}
-          onPress={() => signOut()}
-        />
-      </View>
-    </ScrollView>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
