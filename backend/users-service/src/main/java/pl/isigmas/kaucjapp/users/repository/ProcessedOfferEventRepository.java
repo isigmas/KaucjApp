@@ -14,6 +14,10 @@ public interface ProcessedOfferEventRepository extends JpaRepository<ProcessedOf
      * @return 1 if this offer was recorded for the first time, 0 if already processed
      */
     @Modifying(flushAutomatically = true)
-    @Query(value = "INSERT INTO processed_offer_events (offer_id) VALUES (:offerId) ON CONFLICT DO NOTHING", nativeQuery = true)
+    @Query(value = """
+            INSERT INTO processed_offer_events (offer_id, processed_at)
+            VALUES (:offerId, NOW())
+            ON CONFLICT DO NOTHING
+            """, nativeQuery = true)
     int tryMarkProcessed(@Param("offerId") Long offerId);
 }
