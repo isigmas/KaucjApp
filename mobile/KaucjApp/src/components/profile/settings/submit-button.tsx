@@ -62,7 +62,7 @@ export const AnimatedSaveButton: React.FC<AnimatedSaveButtonProps> = ({
         isSaveDisabled
           ? isPending
             ? colors.primary.base
-            : colors.primary.light
+            : colors.background.disabled
           : colors.primary.base,
         colors.status.success,
       ],
