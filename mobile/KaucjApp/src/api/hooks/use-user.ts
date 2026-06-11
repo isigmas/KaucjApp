@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api-client";
 import { User } from "@/src/types/user";
 import { UpdateUserFormValues } from "@/src/validation/user";
+import { useAuthStore } from "@/src/auth/auth-store";
 
 export const useUserDetails = () => {
   return useQuery({
@@ -26,14 +27,26 @@ export const useUserById = (userId: number) => {
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: UpdateUserFormValues) => {
       await apiClient.patch("/user/me", payload);
+      return payload;
     },
-    onSuccess: () => {
+    onSuccess: (payload) => {
       queryClient.invalidateQueries({
         queryKey: ["userDetails"],
       });
+
+      const updates: Partial<User> = {};
+      if (payload.firstName !== undefined) {
+        updates.firstName = payload.firstName ?? "";
+      }
+      if (payload.lastName !== undefined) {
+        updates.lastName = payload.lastName ?? "";
+      }
+
+      useAuthStore.getState().patchUser(updates);
     },
   });
 };
