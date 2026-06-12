@@ -4,6 +4,7 @@ import { queryClient } from "@/src/api/query-client";
 import { useAuth } from "@/src/auth/use-auth";
 import { useAppBootstrap } from "@/src/auth/auth-storage-init";
 import { useAppStore } from "@/src/state/app-store";
+import OfflineBanner from "@/src/components/ui/offline-banner";
 
 // COMENTED OUT FOR NOW, EXPO GO DOES NOT SUPPORT REACT QUERY PERSISTENCE, BUT THIS IS HOW IT WOULD LOOK LIKE
 // import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
@@ -43,6 +44,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayoutAuth />
+      <OfflineBanner />
     </QueryClientProvider>
   );
 }

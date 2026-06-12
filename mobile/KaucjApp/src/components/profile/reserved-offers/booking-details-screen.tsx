@@ -44,7 +44,7 @@ export default function BookingDetailsScreen({
     return (
       <ErrorState
         title="Nie udało się załadować rezerwacji"
-        message={error?.response?.data?.message || "Spróbuj ponownie."}
+        message={error?.message || "Spróbuj ponownie."}
         onRetry={refetch}
       />
     );

@@ -107,7 +107,6 @@ export default function MapScreen({
 
   if (isOffersError) {
     const errorMessage =
-      offersError?.response?.data?.message ||
       offersError?.message ||
       "An unexpected error occurred while loading offers.";
 
@@ -122,7 +121,6 @@ export default function MapScreen({
 
   if (isMachinesError) {
     const errorMessage =
-      machinesError?.response?.data?.message ||
       machinesError?.message ||
       "An unexpected error occurred while loading kaucjomatów.";
 
