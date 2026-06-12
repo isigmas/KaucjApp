@@ -1,0 +1,25 @@
+### Create tester account
+POST {{azureAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{testerUsername}}",
+  "email": "{{testerEmail}}",
+  "password": "{{testerPassword}}",
+  "phone": "000000000",
+  "first_name": "Jan",
+  "last_name": "Kowalski"
+}
+
+### Activate tester account
+@token = token value from email
+GET {{azureAddress}}/api/auth/activate/{{token}}
+
+### Test tester login
+POST {{azureAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "{{testerUsername}}",
+  "password": "{{testerPassword}}"
+}
