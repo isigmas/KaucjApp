@@ -22,17 +22,6 @@ export const machineKeys = {
   detail: (id: number) => [...machineKeys.all(), "detail", id] as const,
 };
 
-export const useAllMachines = () => {
-  return useQuery<DepositMachine[], AxiosError<ApiErrorResponse>>({
-    queryKey: machineKeys.lists(),
-    queryFn: async () => {
-      const { data } =
-        await apiClient.get<DepositMachine[]>("/deposit/machines");
-      return data;
-    },
-  });
-};
-
 export const useSearchMachines = (
   box: MachineSearchBBox,
   enabled: boolean = true,
