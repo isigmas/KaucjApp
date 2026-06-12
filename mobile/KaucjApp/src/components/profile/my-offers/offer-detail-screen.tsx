@@ -37,7 +37,7 @@ export default function OfferDetailScreen({ offerId }: OfferDetailScreenProps) {
     return (
       <ErrorState
         title="Nie udało się załadować oferty"
-        message={error?.response?.data?.message || "Spróbuj ponownie."}
+        message={error?.message || "Spróbuj ponownie."}
         onRetry={refetch}
       />
     );

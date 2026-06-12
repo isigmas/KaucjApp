@@ -25,3 +25,9 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
 }
+
+// GET /user/reviews/check & GET /deposit/reviews/check
+export interface ReviewCheck {
+  alreadyReviewed: boolean;
+  review: Review | null;
+}

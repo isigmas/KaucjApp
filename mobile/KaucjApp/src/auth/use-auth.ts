@@ -4,7 +4,7 @@ import { useAuthStore } from "./auth-store";
 import { apiClient } from "@/src/api/api-client";
 
 import { tokenStorage } from "./secure-storage";
-import { AuthError, parseAuthError } from "@/src/api/api-error";
+import { ApiError, parseAuthError } from "@/src/api/api-error";
 import { SignInValues, SignUpValues } from "../validation";
 import { User } from "@/src/types/user";
 
@@ -18,7 +18,7 @@ export const useAuth = () => {
 
   const signIn = useMutation<
     { accessToken: string; refreshToken: string; user: User },
-    AuthError,
+    ApiError,
     SignInValues
   >({
     mutationFn: async (credentials) => {
@@ -65,7 +65,7 @@ export const useAuth = () => {
     },
   });
 
-  const signUp = useMutation<void, AuthError, SignUpValues>({
+  const signUp = useMutation<void, ApiError, SignUpValues>({
     mutationFn: async (credentials) => {
       try {
         const payload = {
@@ -90,7 +90,7 @@ export const useAuth = () => {
     },
   });
 
-  const signOut = useMutation<void, AuthError, void>({
+  const signOut = useMutation<void, ApiError, void>({
     mutationFn: async () => {
       try {
         const refreshToken = await tokenStorage.getRefreshToken();
@@ -108,7 +108,7 @@ export const useAuth = () => {
     },
   });
 
-  const resetPassword = useMutation<void, AuthError, string>({
+  const resetPassword = useMutation<void, ApiError, string>({
     mutationFn: async (email) => {
       try {
         const payload = { emailTo: email };
@@ -142,7 +142,7 @@ export const useAuth = () => {
     isSigningOut: signOut.isPending,
     isPasswordResetting: resetPassword.isPending,
 
-    // AuthError | null
+    // ApiError | null
     signInError: signIn.error,
     signUpError: signUp.error,
     resetPasswordError: resetPassword.error,

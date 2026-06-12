@@ -7,7 +7,14 @@ import { useAuthStore } from "@/src/auth/auth-store";
 export const userKeys = {
   all: ["users"] as const,
   me: () => [...userKeys.all, "me"] as const,
-  byId: (userId: number) => [...userKeys.all, userId] as const,
+  details: () => [...userKeys.all, "detail"] as const,
+  byId: (userId: number) => [...userKeys.details(), userId] as const,
+  rating: (userId: number) => [...userKeys.all, "rating", userId] as const,
+  reviews: (userId: number) => [...userKeys.all, "reviews", userId] as const,
+  reviewChecks: (userId: number) =>
+    [...userKeys.all, "review-check", userId] as const,
+  reviewCheck: (userId: number, offerId: number) =>
+    [...userKeys.reviewChecks(userId), offerId] as const,
 };
 
 export const useUserDetails = () => {
@@ -16,10 +23,9 @@ export const useUserDetails = () => {
   return useQuery({
     queryKey: userKeys.me(),
     queryFn: async () => {
-      const { data } = await apiClient.get("/user/me");
-      const user = data as User;
-      queryClient.setQueryData(userKeys.byId(user.userId), user);
-      return user;
+      const { data } = await apiClient.get<User>("/user/me");
+      queryClient.setQueryData(userKeys.byId(data.userId), data);
+      return data;
     },
   });
 };
@@ -28,9 +34,10 @@ export const useUserById = (userId: number) => {
   return useQuery({
     queryKey: userKeys.byId(userId),
     queryFn: async () => {
-      const { data } = await apiClient.get(`/user/${userId}`);
-      return data as User;
+      const { data } = await apiClient.get<User>(`/user/${userId}`);
+      return data;
     },
+    enabled: !!userId,
   });
 };
 
@@ -43,9 +50,7 @@ export const useUpdateUser = () => {
       return payload;
     },
     onSuccess: (payload) => {
-      queryClient.invalidateQueries({
-        queryKey: userKeys.me(),
-      });
+      queryClient.invalidateQueries({ queryKey: userKeys.me() });
 
       const updates: Partial<User> = {};
       if (payload.firstName !== undefined) {

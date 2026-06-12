@@ -45,8 +45,7 @@ export default function BookingActions({
                 },
                 onError: (error) => {
                   const message =
-                    error.response?.data?.message ||
-                    "Nie udało się anulować rezerwacji.";
+                    error.message || "Nie udało się anulować rezerwacji.";
                   Alert.alert("Błąd", message);
                 },
               },

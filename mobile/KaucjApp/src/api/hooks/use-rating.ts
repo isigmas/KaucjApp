@@ -1,86 +1,86 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api-client";
+
 import {
   UserRating,
   Review,
+  ReviewCheck,
   UserReviewPayload,
   MachineReviewPayload,
 } from "@/src/types";
+import { userKeys } from "./use-user";
 import { machineKeys } from "./use-machines";
 
+// ----- User Reviews -----
 export const useUserRating = (userId: number) => {
   return useQuery({
-    queryKey: ["userRating", userId],
+    queryKey: userKeys.rating(userId),
     queryFn: async () => {
-      const { data } = await apiClient.get(`/user/${userId}/rating`);
-      console.log(JSON.stringify(data, null, 2));
-      return data as UserRating;
+      const { data } = await apiClient.get<UserRating>(
+        `/user/${userId}/rating`,
+      );
+      return data;
     },
+    enabled: !!userId,
+  });
+};
+
+export const useUserReviews = (userId: number) => {
+  return useQuery({
+    queryKey: userKeys.reviews(userId),
+    queryFn: async () => {
+      const { data } = await apiClient.get<Review[]>(`/user/${userId}/reviews`);
+      return data;
+    },
+    enabled: !!userId,
   });
 };
 
 export const useUserReviewCheck = (offerId: number, userId: number) => {
   return useQuery({
-    queryKey: ["userReviewCheck", userId, offerId],
+    queryKey: userKeys.reviewCheck(userId, offerId),
     queryFn: async () => {
-      const { data } = await apiClient.get(
-        `/user/reviews/check?offerId=${offerId}`,
-      );
-      return data as { alreadyReviewed: boolean; review: Review | null };
+      const { data } = await apiClient.get<ReviewCheck>(`/user/reviews/check`, {
+        params: { offerId },
+      });
+      return data;
     },
+    enabled: !!offerId && !!userId,
   });
 };
 
+const invalidateUserRatings = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  userId: number,
+) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: userKeys.rating(userId) }),
+    queryClient.invalidateQueries({ queryKey: userKeys.reviews(userId) }),
+    queryClient.invalidateQueries({ queryKey: userKeys.reviewChecks(userId) }),
+  ]);
+
 export const useAddUserReview = (userId: number) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: UserReviewPayload) => {
       await apiClient.post(`/user/${userId}/rating`, payload);
     },
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["userRating", userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["userReviews", userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["userReviewCheck", userId],
-        }),
-        ,
-      ]);
+      await invalidateUserRatings(queryClient, userId);
     },
   });
 };
 
 export const useUpdateUserReview = (reviewId: number, userId: number) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: UserReviewPayload) => {
       await apiClient.patch(`/user/reviews/${reviewId}`, payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["userRating", userId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["userReviewCheck", userId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["userReviews", userId],
-      });
-    },
-  });
-};
-
-export const useUserReviews = (userId: number) => {
-  return useQuery({
-    queryKey: ["userReviews", userId],
-    queryFn: async () => {
-      const { data } = await apiClient.get(`/user/${userId}/reviews`);
-      console.log(JSON.stringify(data, null, 2));
-      return data as Review[];
+    onSuccess: async () => {
+      await invalidateUserRatings(queryClient, userId);
     },
   });
 };
@@ -89,31 +89,34 @@ export const useUserReviews = (userId: number) => {
 
 export const useMachineReviews = (machineId: number) => {
   return useQuery({
-    queryKey: ["machineReviews", machineId],
+    queryKey: machineKeys.reviews(machineId),
     queryFn: async () => {
-      const { data } = await apiClient.get(
+      const { data } = await apiClient.get<Review[]>(
         `/deposit/machine/${machineId}/reviews`,
       );
-      console.log(JSON.stringify(data, null, 2));
-      return data as Review[];
+      return data;
     },
+    enabled: !!machineId,
   });
 };
 
 export const useMachineReviewCheck = (machineId: number) => {
   return useQuery({
-    queryKey: ["machineReviewCheck", machineId],
+    queryKey: machineKeys.reviewCheck(machineId),
     queryFn: async () => {
-      const { data } = await apiClient.get(`/deposit/reviews/check`, {
-        params: { id: machineId },
-      });
-      return data as { alreadyReviewed: boolean; review: Review | null };
+      const { data } = await apiClient.get<ReviewCheck>(
+        `/deposit/reviews/check`,
+        { params: { id: machineId } },
+      );
+      return data;
     },
+    enabled: !!machineId,
   });
 };
 
 export const useAddMachineReview = (machineId: number) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: MachineReviewPayload) => {
       await apiClient.post(`/deposit/machine/${machineId}/rating`, payload);
@@ -124,13 +127,13 @@ export const useAddMachineReview = (machineId: number) => {
           queryKey: machineKeys.detail(machineId),
         }),
         queryClient.invalidateQueries({
-          queryKey: ["machineReviews", machineId],
+          queryKey: machineKeys.reviews(machineId),
         }),
       ]);
-      // The timeout here is to show the SuccessState for 3 seconds, consider changing it to a more elegant solution in the future.
+      // The timeout here is to show the SuccessState for 3 seconds, TODO: future improvement.
       setTimeout(() => {
         queryClient.invalidateQueries({
-          queryKey: ["machineReviewCheck", machineId],
+          queryKey: machineKeys.reviewCheck(machineId),
         });
       }, 3000);
     },
@@ -139,6 +142,7 @@ export const useAddMachineReview = (machineId: number) => {
 
 export const useUpdateMachineReview = (reviewId: number, machineId: number) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: MachineReviewPayload) => {
       await apiClient.patch(`/deposit/reviews/${reviewId}`, payload);
@@ -149,10 +153,10 @@ export const useUpdateMachineReview = (reviewId: number, machineId: number) => {
           queryKey: machineKeys.detail(machineId),
         }),
         queryClient.invalidateQueries({
-          queryKey: ["machineReviews", machineId],
+          queryKey: machineKeys.reviews(machineId),
         }),
         queryClient.invalidateQueries({
-          queryKey: ["machineReviewCheck", machineId],
+          queryKey: machineKeys.reviewCheck(machineId),
         }),
       ]);
     },

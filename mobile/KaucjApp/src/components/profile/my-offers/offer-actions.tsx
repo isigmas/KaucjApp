@@ -41,8 +41,7 @@ export default function OfferActions({ offer }: OfferActionsProps) {
                 },
                 onError: (error) => {
                   const message =
-                    error.response?.data?.message ||
-                    "Nie udało się anulować oferty.";
+                    error.message || "Nie udało się anulować oferty.";
                   Alert.alert("Błąd", message);
                 },
               },

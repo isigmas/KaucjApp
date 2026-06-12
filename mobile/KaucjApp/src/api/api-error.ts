@@ -1,7 +1,8 @@
 import { AxiosError } from "axios";
+import { camelizeKeys } from "humps";
 import { ApiErrorResponse } from "@/src/types";
 
-export const AUTH_ERROR_CODES = {
+export const API_ERROR_CODES = {
   INVALID_CREDENTIALS: "AU_001",
   ACCOUNT_NOT_ACTIVE: "AU_004",
   ACCOUNT_ALREADY_EXISTS: "AU_007",
@@ -9,34 +10,49 @@ export const AUTH_ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERR",
   SERVER_ERROR: "INTERNAL_ERR",
 } as const;
-type AuthErrorCode = (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES];
 
-const USER_MESSAGES: Record<AuthErrorCode, string> = {
-  [AUTH_ERROR_CODES.INVALID_CREDENTIALS]:
-    "Nieprawidłowy email lub hasło. Spróbuj ponownie.",
-  [AUTH_ERROR_CODES.ACCOUNT_NOT_ACTIVE]:
-    "Twoje konto nie jest jeszcze aktywne. Sprawdź skrzynkę email.",
-  [AUTH_ERROR_CODES.ACCOUNT_ALREADY_EXISTS]:
-    "Konto z tym adresem email lub nazwą użytkownika już istnieje.",
-  [AUTH_ERROR_CODES.ACCOUNT_NOT_FOUND]:
-    "Nie znaleziono konta. Sprawdź dane lub zarejestruj się.",
-  [AUTH_ERROR_CODES.VALIDATION_ERROR]:
+export type ApiErrorCode =
+  (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
+
+/** Codes every endpoint can return, mapped to user-friendly Polish copy. */
+const GLOBAL_USER_MESSAGES: Partial<Record<string, string>> = {
+  [API_ERROR_CODES.VALIDATION_ERROR]:
     "Sprawdź poprawność wprowadzonych danych.",
-  [AUTH_ERROR_CODES.SERVER_ERROR]:
-    "500 - Coś poszło nie tak po stronie serwera. Spróbuj ponowie później",
+  [API_ERROR_CODES.SERVER_ERROR]:
+    "Coś poszło nie tak po stronie serwera. Spróbuj ponownie później.",
 };
 
-const FALLBACK_MESSAGE = "Coś poszło nie tak. Spróbuj ponownie.";
-const NETWORK_MESSAGE =
-  "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.";
+/** Auth-specific copy, applied on top of the global map by parseAuthError. */
+const AUTH_USER_MESSAGES: Partial<Record<string, string>> = {
+  [API_ERROR_CODES.INVALID_CREDENTIALS]:
+    "Nieprawidłowy email lub hasło. Spróbuj ponownie.",
+  [API_ERROR_CODES.ACCOUNT_NOT_ACTIVE]:
+    "Twoje konto nie jest jeszcze aktywne. Sprawdź skrzynkę email.",
+  [API_ERROR_CODES.ACCOUNT_ALREADY_EXISTS]:
+    "Konto z tym adresem email lub nazwą użytkownika już istnieje.",
+  [API_ERROR_CODES.ACCOUNT_NOT_FOUND]:
+    "Nie znaleziono konta. Sprawdź dane lub zarejestruj się.",
+};
 
-// Error subclass that replaces the raw AxiosError React Query mutation.error will always be this shape
-export class AuthError extends Error {
+export const FALLBACK_MESSAGE = "Coś poszło nie tak. Spróbuj ponownie.";
+export const NETWORK_MESSAGE =
+  "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.";
+export const TIMEOUT_MESSAGE =
+  "Serwer zbyt długo nie odpowiada. Spróbuj ponownie za chwilę.";
+
+// ApiError — the single error shape the whole app sees
+
+export class ApiError extends Error {
   readonly errorCode: string | undefined;
+  /** User-friendly, renderable message. Identical to `message`. */
   readonly userMessage: string;
+  /** Per-field validation errors keyed by (camelized) field name. */
   readonly validationErrors: Record<string, string> | undefined;
   readonly httpStatus: number | undefined;
+  /** True when the request never reached the backend (offline / timeout). */
   readonly isNetworkError: boolean;
+  /** True when the request timed out (subset of network errors). */
+  readonly isTimeout: boolean;
 
   constructor(params: {
     userMessage: string;
@@ -44,68 +60,103 @@ export class AuthError extends Error {
     validationErrors?: Record<string, string>;
     httpStatus?: number;
     isNetworkError?: boolean;
+    isTimeout?: boolean;
   }) {
     super(params.userMessage);
-    this.name = "AuthError";
+    this.name = "ApiError";
     this.errorCode = params.errorCode;
     this.userMessage = params.userMessage;
     this.validationErrors = params.validationErrors;
     this.httpStatus = params.httpStatus;
     this.isNetworkError = params.isNetworkError ?? false;
+    this.isTimeout = params.isTimeout ?? false;
+  }
+
+  get isServerError(): boolean {
+    return this.httpStatus !== undefined && this.httpStatus >= 500;
+  }
+
+  get isClientError(): boolean {
+    return (
+      this.httpStatus !== undefined &&
+      this.httpStatus >= 400 &&
+      this.httpStatus < 500
+    );
   }
 }
 
-//      (a) Already an AuthError           → return as-is (idempotent)
-//      (b) AxiosError, no response        → network / timeout error
-//      (c) AxiosError, VALIDATION_ERR     → include the per-field error map
-//      (d) AxiosError, known error code   → map to user-friendly copy
-//      (e) AxiosError, unknown error code → fall back to the server's message
-//      (f) Anything else                  → generic fallback
+// Parsing
 
-export function parseAuthError(error: unknown): AuthError {
-  if (error instanceof AuthError) {
-    return error; // (a)
+const isTimeoutError = (error: AxiosError): boolean =>
+  error.code === "ECONNABORTED" || error.code === "ETIMEDOUT";
+
+/**
+ * Converts any thrown value into an `ApiError`.
+ *
+ *  (a) Already an ApiError            → remap copy if a domain map knows the code
+ *  (b) AxiosError, no response        → network / timeout error
+ *  (c) AxiosError, known error code   → user-friendly copy (+ validation map)
+ *  (d) AxiosError, unknown error code → backend's own message
+ *  (e) Anything else                  → generic fallback
+ *
+ * @param messages optional domain-specific overrides (e.g. auth copy) that
+ *                 take precedence over the global error-code map.
+ */
+export function parseApiError(
+  error: unknown,
+  messages?: Partial<Record<string, string>>,
+): ApiError {
+  // (a) Idempotent: re-wrap only to apply more specific domain copy
+  if (error instanceof ApiError) {
+    const override = error.errorCode ? messages?.[error.errorCode] : undefined;
+    if (!override || override === error.userMessage) return error;
+    return new ApiError({
+      userMessage: override,
+      errorCode: error.errorCode,
+      validationErrors: error.validationErrors,
+      httpStatus: error.httpStatus,
+      isNetworkError: error.isNetworkError,
+      isTimeout: error.isTimeout,
+    });
   }
 
   if (error instanceof AxiosError) {
+    // (b) Request never reached the backend
     if (!error.response) {
-      return new AuthError({
-        userMessage: NETWORK_MESSAGE,
+      const isTimeout = isTimeoutError(error);
+      return new ApiError({
+        userMessage: isTimeout ? TIMEOUT_MESSAGE : NETWORK_MESSAGE,
         isNetworkError: true,
-      }); // (b)
+        isTimeout,
+      });
     }
 
-    const body = error.response.data;
+    // The backend serializes errors in snake_case; normalize to camelCase
+    const raw = error.response.data;
+    const body = (
+      raw && typeof raw === "object" ? camelizeKeys(raw) : {}
+    ) as ApiErrorResponse;
     const httpStatus = error.response.status;
-    const errorCode = body?.error_code;
+    const errorCode = body.errorCode;
 
-    if (errorCode === AUTH_ERROR_CODES.VALIDATION_ERROR) {
-      return new AuthError({
-        // (c)
-        errorCode,
-        httpStatus,
-        validationErrors: body?.validationErrors,
-        userMessage: USER_MESSAGES[AUTH_ERROR_CODES.VALIDATION_ERROR],
-      });
-    }
+    const mappedMessage = errorCode
+      ? (messages?.[errorCode] ?? GLOBAL_USER_MESSAGES[errorCode])
+      : undefined;
 
-    if (errorCode && errorCode in USER_MESSAGES) {
-      return new AuthError({
-        // (d)
-        errorCode,
-        httpStatus,
-        userMessage: USER_MESSAGES[errorCode as AuthErrorCode],
-      });
-    }
-
-    if (body?.message) {
-      return new AuthError({
-        errorCode,
-        httpStatus,
-        userMessage: body.message,
-      }); // (e)
-    }
+    // (c) + (d)
+    return new ApiError({
+      userMessage: mappedMessage ?? body.message ?? FALLBACK_MESSAGE,
+      errorCode,
+      httpStatus,
+      validationErrors: body.validationErrors,
+    });
   }
 
-  return new AuthError({ userMessage: FALLBACK_MESSAGE }); // (f)
+  // (e)
+  return new ApiError({ userMessage: FALLBACK_MESSAGE });
+}
+
+// Auth flows get more specific copy for auth error codes.
+export function parseAuthError(error: unknown): ApiError {
+  return parseApiError(error, AUTH_USER_MESSAGES);
 }
