@@ -192,6 +192,7 @@ module authApp 'modules/app.bicep' = {
       { name: 'admin-email', value: adminEmail }
       { name: 'admin-password', value: adminPassword }
       { name: 'kafka-jaas', value: kafkaJaasConfig }
+      { name: 'redis-password', value: redis.outputs.primaryKey }
     ]
     envVars: [
       { name: 'SERVER_PORT', value: '8080' }
@@ -207,6 +208,10 @@ module authApp 'modules/app.bicep' = {
       { name: 'ADMIN_USERNAME', secretRef: 'admin-username' }
       { name: 'ADMIN_EMAIL', secretRef: 'admin-email' }
       { name: 'ADMIN_PASSWORD', secretRef: 'admin-password' }
+      { name: 'SPRING_DATA_REDIS_HOST', value: redis.outputs.hostName }
+      { name: 'SPRING_DATA_REDIS_PORT', value: string(redis.outputs.sslPort) }
+      { name: 'SPRING_DATA_REDIS_PASSWORD', secretRef: 'redis-password' }
+      { name: 'SPRING_DATA_REDIS_SSL_ENABLED', value: 'true' }
       { name: 'SPRING_KAFKA_BOOTSTRAP_SERVERS', value: eventhubs.outputs.fqdn }
       { name: 'SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL', value: 'SASL_SSL' }
       { name: 'SPRING_KAFKA_PROPERTIES_SASL_MECHANISM', value: 'PLAIN' }

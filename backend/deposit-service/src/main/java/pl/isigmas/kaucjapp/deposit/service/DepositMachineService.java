@@ -181,7 +181,7 @@ public class DepositMachineService {
 
     @Transactional
     public void delete(Long id) {
-        DepositMachine depositMachine = depositMachineRepository.findById(id)
+        DepositMachine depositMachine = depositMachineRepository.findWithOpeningHoursById(id)
                 .orElseThrow(() -> {
                     log.warn("Deposit machine not found, ID: {}", id);
                     logger.warn("Deposit machine not found, ID: %d".formatted(id));
