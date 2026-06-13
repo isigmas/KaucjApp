@@ -12,6 +12,7 @@ import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -45,7 +46,7 @@ class UsersKafkaListenerTest {
         listener.handleUserSync(userJson);
 
         verify(userService).createUser(
-                2L,
+                eq(2L),
                 argThat(user ->
                         user.getId().equals(2L)
                                 && "testuser".equals(user.getUsername())
