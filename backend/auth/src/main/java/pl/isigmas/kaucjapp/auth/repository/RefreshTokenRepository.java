@@ -13,5 +13,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("SELECT t FROM RefreshToken t JOIN FETCH t.account WHERE t.token = :token")
     Optional<RefreshToken> findByToken(@Param("token") String token);
 
-    List<RefreshToken> findAllByAccount(Account account);
+    @Query("SELECT t FROM RefreshToken t JOIN FETCH t.account WHERE t.account = :account")
+    List<RefreshToken> findAllByAccount(@Param("account") Account account);
 }
