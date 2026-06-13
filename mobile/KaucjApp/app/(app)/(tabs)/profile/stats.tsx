@@ -1,13 +1,12 @@
 import React from "react";
 
 import ProfileDetailsScreen from "@/src/components/standalone-screens/profile-details-screen";
-import { router } from "expo-router";
-import { useAuth } from "@/src/auth/use-auth";
+import { router, useLocalSearchParams } from "expo-router";
 import ErrorState from "@/src/components/states/error-state";
 
 export default function ProfileDetailsSheet() {
-  const { user } = useAuth();
-  if (!user) {
+  const { userId } = useLocalSearchParams<{ userId: string }>();
+  if (!userId) {
     return (
       <ErrorState
         title="Wystąpił błąd"
@@ -19,7 +18,7 @@ export default function ProfileDetailsSheet() {
 
   return (
     <ProfileDetailsScreen
-      userId={String(user.userId)}
+      userId={userId}
       role="creator"
       color="primary"
       showDetailedStats={true}

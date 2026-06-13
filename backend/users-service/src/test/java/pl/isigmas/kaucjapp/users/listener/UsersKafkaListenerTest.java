@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.users.listener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -11,6 +12,7 @@ import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -26,11 +28,34 @@ class UsersKafkaListenerTest {
     @Mock
     private Logger logger;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private UsersKafkaListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new UsersKafkaListener(userService, userStatsIngestService, logger);
+        listener = new UsersKafkaListener(userService, userStatsIngestService, logger, objectMapper);
+    }
+
+    @Test
+    void handleUserSync_snakeCaseWireFormat_createsUser() throws Exception {
+        String userJson = """
+                {"username":"testuser","first_name":"Anthony","last_name":"Gordon","email":"test@example.com","user_id":2,"phone":"7281299723"}
+                """;
+
+        listener.handleUserSync(userJson);
+
+        verify(userService).createUser(
+                eq(2L),
+                argThat(user ->
+                        user.getId().equals(2L)
+                                && "testuser".equals(user.getUsername())
+                                && "Anthony".equals(user.getFirstName())
+                                && "Gordon".equals(user.getLastName())
+                                && "test@example.com".equals(user.getEmail())
+                                && "7281299723".equals(user.getPhone())
+                )
+        );
     }
 
     @Test

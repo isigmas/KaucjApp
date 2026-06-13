@@ -1,5 +1,6 @@
 package pl.isigmas.kaucjapp.users.DTO;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,9 +25,11 @@ public class CreateUserDTO {
     private String username;
 
     @NotBlank(message = "First name cannot be blank")
+    @JsonAlias({"first_name", "firstName"})
     private String firstName;
 
     @NotBlank(message = "Last name cannot be blank")
+    @JsonAlias({"last_name", "lastName"})
     private String lastName;
 
     @NotBlank(message = "Phone number cannot be blank")

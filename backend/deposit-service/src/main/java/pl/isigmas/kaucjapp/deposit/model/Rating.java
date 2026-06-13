@@ -17,14 +17,9 @@ public class Rating {
     @Column(name = "deposit_machine_id")
     private Long depositMachineId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "deposit_machine_id")
-    private DepositMachine depositMachine;
-
     @Column(name = "avg_score", precision = 3, scale = 2)
-    private BigDecimal avgScore=BigDecimal.ZERO;
+    private BigDecimal avgScore = BigDecimal.ZERO;
 
     @Column(name = "feedback_count")
-    private Integer feedbackCount=0;
+    private Integer feedbackCount = 0;
 }

@@ -16,6 +16,12 @@ import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 import pl.isigmas.kaucjapp.offers.repository.BottleTypeRepository;
 import pl.isigmas.kaucjapp.offers.repository.OfferRepository;
 
+import java.util.concurrent.CompletableFuture;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @ActiveProfiles("test")
@@ -44,6 +50,9 @@ public abstract class BaseIntegrationTest {
 
     @BeforeEach
     void setUpBase() {
+        when(kafkaTemplate.send(anyString(), anyString(), any(OfferCompletedEventDTO.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         offerRepository.deleteAll();
         plasticBottleId = bottleTypeRepository.findByName("plastic").orElseThrow().getId();

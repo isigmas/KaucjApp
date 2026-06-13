@@ -5,6 +5,7 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import pl.isigmas.kaucjapp.common.logger.LogLevel;
 import pl.isigmas.kaucjapp.common.logger.SystemLog;
+import pl.isigmas.kaucjapp.offers.DTO.OfferCompletedEventDTO;
 
 import java.util.UUID;
 
@@ -27,6 +28,14 @@ public class NativeRuntimeHints implements RuntimeHintsRegistrar {
                 MemberCategory.INVOKE_PUBLIC_METHODS
         );
         hints.reflection().registerType(LogLevel.class, MemberCategory.DECLARED_FIELDS);
+
+        hints.reflection().registerType(
+                OfferCompletedEventDTO.class,
+                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.INVOKE_DECLARED_METHODS,
+                MemberCategory.DECLARED_FIELDS
+        );
 
         // Hibernate's multi-id loader reflectively instantiates UUID[] for
         // entities with a UUID identifier (native reachability gap).

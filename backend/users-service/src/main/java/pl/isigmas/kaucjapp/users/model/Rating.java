@@ -17,14 +17,9 @@ public class Rating {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private User user;
-
     @Column(name = "avg_score", precision = 3, scale = 2)
-    private BigDecimal avgScore=BigDecimal.ZERO;
+    private BigDecimal avgScore = BigDecimal.ZERO;
 
     @Column(name = "feedback_count")
-    private Integer feedbackCount=0;
+    private Integer feedbackCount = 0;
 }
