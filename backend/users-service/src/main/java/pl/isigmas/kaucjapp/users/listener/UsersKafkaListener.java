@@ -3,6 +3,7 @@ package pl.isigmas.kaucjapp.users.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import pl.isigmas.kaucjapp.common.logger.Logger;
@@ -15,11 +16,13 @@ import pl.isigmas.kaucjapp.users.service.UserStatsIngestService;
 @Component
 @RequiredArgsConstructor
 public class UsersKafkaListener {
+    
 
     private final UserService userService;
     private final UserStatsIngestService userStatsIngestService;
     private final Logger logger;
-    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    @Qualifier("kafkaObjectMapper")
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "users.sync", groupId = "users-group")
     public void handleUserSync(String newUserJson) {
@@ -49,12 +52,34 @@ public class UsersKafkaListener {
 
     @KafkaListener(topics = "offers.completed", groupId = "users-group")
     public void handleOfferCompleted(String eventJson) {
+        OfferCompletedEventDTO event;
         try {
-            OfferCompletedEventDTO event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
-            userStatsIngestService.ingestOfferCompleted(event);
+            event = objectMapper.readValue(eventJson, OfferCompletedEventDTO.class);
         } catch (Exception e) {
             log.error("Failed to parse offer completed message: {}", eventJson, e);
             logger.error("Failed to parse offer completed message: %s".formatted(eventJson));
+            return;
+        }
+
+        log.info(
+                "Parsed offers.completed: offerId={}, creatorId={}, collectorId={}, plastic={}, cans={}",
+                event.getOfferId(),
+                event.getCreatorId(),
+                event.getCollectorId(),
+                event.getPlasticQuantity(),
+                event.getCanQuantity()
+        );
+
+        if (event.getOfferId() == null) {
+            log.warn("Offer completed payload deserialized without ids, raw json={}", eventJson);
+            logger.warn("Offer completed payload deserialized without ids, raw json=%s".formatted(eventJson));
+        }
+
+        try {
+            userStatsIngestService.ingestOfferCompleted(event);
+        } catch (Exception e) {
+            log.error("Failed to ingest stats for offer completed message: {}", eventJson, e);
+            logger.error("Failed to ingest stats for offer completed message: %s".formatted(eventJson));
         }
     }
 }

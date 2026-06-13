@@ -7,8 +7,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.isigmas.kaucjapp.common.logger.Logger;
 import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
+import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserStats;
+import pl.isigmas.kaucjapp.users.repository.RatingRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
 
@@ -22,6 +24,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RatingRepository ratingRepository;
 
     @Mock
     private UserStatsRepository userStatsRepository;
@@ -52,6 +57,7 @@ class UserServiceTest {
 
         // Then
         verify(userRepository, times(1)).save(any(User.class));
+        verify(ratingRepository, times(1)).save(any(Rating.class));
         verify(userStatsRepository, times(1)).save(any(UserStats.class));
     }
 }

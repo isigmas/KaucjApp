@@ -21,6 +21,7 @@ import pl.isigmas.kaucjapp.users.model.Rating;
 import pl.isigmas.kaucjapp.users.model.User;
 import pl.isigmas.kaucjapp.users.model.UserAddress;
 import pl.isigmas.kaucjapp.users.model.UserStats;
+import pl.isigmas.kaucjapp.users.repository.RatingRepository;
 import pl.isigmas.kaucjapp.users.repository.UserDailyStatsRepository;
 import pl.isigmas.kaucjapp.users.repository.UserRepository;
 import pl.isigmas.kaucjapp.users.repository.UserStatsRepository;
@@ -49,6 +50,7 @@ public class UserService {
     );
 
     private final UserRepository userRepository;
+    private final RatingRepository ratingRepository;
     private final UserStatsRepository userStatsRepository;
     private final UserDailyStatsRepository userDailyStatsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -89,12 +91,13 @@ public class UserService {
         user.setPhone(userDTO.getPhone());
 
 
+        userRepository.save(user);
+
         Rating initialRating = new Rating();
+        initialRating.setUserId(user.getId());
         initialRating.setAvgScore(BigDecimal.ZERO);
         initialRating.setFeedbackCount(0);
-        user.setRating(initialRating);
-
-        userRepository.save(user);
+        ratingRepository.save(initialRating);
 
         UserStats stats = new UserStats();
         stats.setUserId(user.getId());

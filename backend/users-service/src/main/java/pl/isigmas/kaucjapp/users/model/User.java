@@ -60,9 +60,6 @@ public class User {
         return List.copyOf(addresses);
     }
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Rating rating;
-
     public void addAddress(UserAddress address) {
         addresses.add(address);
         address.setUser(this);
@@ -71,12 +68,5 @@ public class User {
     public void removeAddress(UserAddress address) {
         addresses.remove(address);
         address.setUser(null);
-    }
-
-    public void setRating(Rating rating) {
-        this.rating = rating;
-        if (rating != null) {
-            rating.setUser(this);
-        }
     }
 }

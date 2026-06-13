@@ -8,6 +8,8 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter;
 
 import pl.isigmas.kaucjapp.common.logger.LogLevel;
 import pl.isigmas.kaucjapp.common.logger.SystemLog;
+import pl.isigmas.kaucjapp.users.DTO.CreateUserDTO;
+import pl.isigmas.kaucjapp.users.DTO.OfferCompletedEventDTO;
 
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -34,6 +36,16 @@ public class DtoRuntimeHints implements RuntimeHintsRegistrar {
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
                 MemberCategory.INVOKE_DECLARED_METHODS
         );
+
+        for (Class<?> kafkaDto : new Class<?>[]{OfferCompletedEventDTO.class, CreateUserDTO.class}) {
+            hints.reflection().registerType(
+                    kafkaDto,
+                    MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                    MemberCategory.INVOKE_PUBLIC_METHODS,
+                    MemberCategory.INVOKE_DECLARED_METHODS,
+                    MemberCategory.DECLARED_FIELDS
+            );
+        }
 
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 
