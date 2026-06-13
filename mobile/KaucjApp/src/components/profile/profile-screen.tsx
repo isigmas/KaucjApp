@@ -1,4 +1,3 @@
-import Reactś from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInLeft,
@@ -7,10 +6,88 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
 import UserProfile from "../ui/user-profile";
+
+export default function ProfileScreen() {
+  const { signOut } = useAuth();
+  const { user } = useAuth();
+
+  const router = useRouter();
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {user && (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/profile/stats",
+              params: { userId: user.userId },
+            })
+          }
+        >
+          <UserProfile user={user} role="creator" />
+        </Pressable>
+      )}
+
+      <View style={styles.menuSection}>
+        <Text style={styles.sectionTitle}>Twoja aktywność</Text>
+        <ProfileMenuItem
+          icon="list"
+          title="Moje ogłoszenia"
+          subtitle="Aktywne i zakończone"
+          delay={500}
+          onPress={() => router.push("/profile/offers")}
+        />
+        <ProfileMenuItem
+          icon="calendar"
+          title="Moje rezerwacje"
+          subtitle="Oczekujące odbiory"
+          delay={400}
+          onPress={() => router.push("/profile/bookings")}
+        />
+        <ProfileMenuItem
+          icon="trophy"
+          title="Ranking"
+          subtitle="Top użytkownicy"
+          delay={600}
+          onPress={() => router.push("/profile/ranking")}
+        />
+      </View>
+
+      <View style={styles.menuSection}>
+        <Text style={styles.sectionTitle}>Konto</Text>
+
+        <ProfileMenuItem
+          icon="settings"
+          title="Ustawienia"
+          subtitle="Zarządzaj swoim kontem"
+          delay={700}
+          onPress={() => router.push("/profile/settings")}
+        />
+        <ProfileMenuItem
+          icon="help-circle"
+          title="FAQ"
+          delay={800}
+          onPress={() => router.push("/profile/faq")}
+        />
+        <ProfileMenuItem
+          icon="log-out"
+          title="Wyloguj się"
+          isDestructive={true}
+          delay={900}
+          onPress={() => signOut()}
+        />
+      </View>
+    </ScrollView>
+  );
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -82,142 +159,19 @@ const ProfileMenuItem = ({
   );
 };
 
-export default function ProfileScreen() {
-  const { signOut } = useAuth();
-  const { user } = useAuth();
-
-  const router = useRouter();
-
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      {user && (
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: "/profile/stats",
-              params: { userId: user.userId },
-            })
-          }
-        >
-          <UserProfile user={user} role="creator" />
-        </Pressable>
-      )}
-
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Twoja aktywność</Text>
-        <ProfileMenuItem
-          icon="list"
-          title="Moje ogłoszenia"
-          subtitle="Aktywne i zakończone"
-          delay={500}
-          onPress={() => router.push("/profile/offers")}
-        />
-        <ProfileMenuItem
-          icon="calendar"
-          title="Moje rezerwacje"
-          subtitle="Oczekujące odbiory"
-          delay={400}
-          onPress={() => router.push("/profile/bookings")}
-        />
-        <ProfileMenuItem
-          icon="trophy"
-          title="Ranking"
-          subtitle="Top użytkownicy"
-          delay={600}
-          onPress={() => router.push("/profile/ranking")}
-        />
-      </View>
-
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Konto</Text>
-
-        <ProfileMenuItem
-          icon="settings"
-          title="Ustawienia"
-          delay={700}
-          onPress={() => console.log("Ustawienia")}
-        />
-        <ProfileMenuItem
-          icon="help-circle"
-          title="Pomoc i wsparcie"
-          delay={800}
-          onPress={() => console.log("Pomoc")}
-        />
-        <ProfileMenuItem
-          icon="log-out"
-          title="Wyloguj się"
-          isDestructive={true}
-          delay={900}
-          onPress={() => signOut()}
-        />
-      </View>
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.main,
   },
   contentContainer: {
-    paddingTop: 100,
+    paddingTop: 80,
     paddingBottom: 40,
-    paddingHorizontal: 20,
-  },
-  headerSection: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  // Typography
-  userName: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: colors.text.primary,
-    marginBottom: 6,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  starsRow: {
-    flexDirection: "row",
-    gap: 2,
-  },
-  ratingText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  ratingCount: {
-    fontWeight: "400",
-    color: colors.text.secondary,
-  },
-  statsBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primary.light,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 6,
-  },
-  statsText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.primary.dark,
+    paddingHorizontal: spacing.md,
   },
 
-  // Menu Styles
   menuSection: {
-    marginTop: 20,
-    marginBottom: 16,
+    marginTop: spacing.lg,
   },
   sectionTitle: {
     fontSize: 14,
@@ -232,28 +186,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.background.card,
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 8,
+    padding: spacing.md,
+    borderRadius: rounded.xl,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.status.border,
-    shadowColor: colors.text.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
+    ...shadows.light,
+    shadowOpacity: 0.1,
   },
   menuIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: rounded.lg,
     backgroundColor: colors.background.main,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 14,
+    marginRight: spacing.md,
   },
   menuIconBoxDestructive: {
-    backgroundColor: "#FEF2F2", // Very light red
+    backgroundColor: "#FEF2F2",
   },
   menuTextContainer: {
     flex: 1,

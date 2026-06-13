@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import { tokenStorage } from "../auth/secure-storage";
 import { useAuthStore } from "../auth/auth-store";
 import { camelizeKeys, decamelizeKeys } from "humps";
+import { parseApiError } from "./api-error";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -40,10 +41,10 @@ apiClient.interceptors.request.use((config) => {
 
 // Handle 401 Expiration & Queue
 let isRefreshing = false;
-let failedQueue: Array<{
+let failedQueue: {
   resolve: (value?: unknown) => void;
   reject: (reason?: any) => void;
-}> = [];
+}[] = [];
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
@@ -69,7 +70,7 @@ apiClient.interceptors.response.use(
 
     if (error.code === "ECONNABORTED" || error.message === "Network Error") {
       console.error(`[API Error] Global Network or Timeout issue`);
-      return Promise.reject(error);
+      return Promise.reject(parseApiError(error));
     }
 
     if (error.response) {
@@ -140,15 +141,17 @@ apiClient.interceptors.response.use(
         console.error(
           "[Auth Refresh] Refresh failed. Purging auth state and redirecting to login.",
         );
-        processQueue(refreshError, null);
+        const parsedRefreshError = parseApiError(refreshError);
+        processQueue(parsedRefreshError, null);
         await useAuthStore.getState().purgeAuth(); // Kick user out to trigger RootLayout redirect
-        return Promise.reject(refreshError);
+        return Promise.reject(parsedRefreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    // 4. Reject any other errors so React Query's onError gets triggered
-    return Promise.reject(error);
+    // Normalize every other failure into an ApiError so React Query consumers
+    // always receive a renderable, typed error (never a raw AxiosError).
+    return Promise.reject(parseApiError(error));
   },
 );

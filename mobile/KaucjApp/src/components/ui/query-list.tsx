@@ -2,9 +2,8 @@ import EmptyState from "@/src/components/states/empty-state";
 import ErrorState from "@/src/components/states/error-state";
 import LoadingState from "@/src/components/states/loading-state";
 import { spacing } from "@/src/theme";
-import { ApiErrorResponse } from "@/src/types";
+import { ApiError } from "@/src/api/api-error";
 import { UseQueryResult } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -17,7 +16,7 @@ export interface QueryListCopy {
 }
 
 interface QueryListProps<T> {
-  query: UseQueryResult<T[], AxiosError<ApiErrorResponse>>;
+  query: UseQueryResult<T[], ApiError>;
   fallbackStates: QueryListCopy;
   renderItem: (item: T) => React.ReactNode;
   keyExtractor: (item: T) => string;
@@ -40,8 +39,7 @@ function QueryList<T>({
   }
 
   if (isError) {
-    const message =
-      error?.response?.data?.message || fallbackStates.errorMessage;
+    const message = error?.message || fallbackStates.errorMessage;
     return (
       <View>
         <ErrorState

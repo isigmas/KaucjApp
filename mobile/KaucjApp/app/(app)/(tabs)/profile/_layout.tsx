@@ -8,8 +8,14 @@ export default function HomeLayout() {
         options={{ headerShown: false, headerLargeTitleEnabled: false }}
       />
       <Stack.Screen
-        name="profileSettings/index"
-        options={{ headerShown: false, headerLargeTitleEnabled: false }}
+        name="settings"
+        options={{
+          headerShown: true,
+          headerLargeTitleEnabled: false,
+          headerTitle: "Ustawienia",
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
+        }}
       />
 
       <Stack.Screen
@@ -38,6 +44,16 @@ export default function HomeLayout() {
         options={{
           headerShown: true,
           headerTitle: "Ranking",
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: true,
+        }}
+      />
+
+      <Stack.Screen
+        name="faq"
+        options={{
+          headerShown: true,
+          headerTitle: "FAQ",
           headerBackButtonDisplayMode: "minimal",
           headerTransparent: true,
         }}

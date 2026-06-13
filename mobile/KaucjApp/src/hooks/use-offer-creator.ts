@@ -102,7 +102,7 @@ export function useOfferCreator() {
         onSuccess: () => setIsSuccess(true),
         onError: (error) => {
           const message =
-            error.response?.data?.message ??
+            error.message ||
             "Nie udało się opublikować oferty. Spróbuj ponownie.";
           Alert.alert("Błąd", message);
         },

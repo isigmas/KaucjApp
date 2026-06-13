@@ -80,9 +80,7 @@ export default function ExpandableCard({
         {icon && <View style={styles.iconChip}>{icon}</View>}
 
         <View style={styles.titleColumn}>
-          <Text style={[styles.title, titleStyle]} numberOfLines={1}>
-            {title}
-          </Text>
+          <Text style={[styles.title, titleStyle]}>{title}</Text>
           {subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>
               {subtitle}
