@@ -1,6 +1,14 @@
-import requests
+import argparse
 import json
 import time
+
+import requests
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Format fetched shop data for the deposit machine API.")
+    parser.add_argument("--city", required=True, help='City name, e.g. "Wrocław"')
+    return parser.parse_args()
 
 
 def get_address_from_coords(lat, lon):
@@ -112,8 +120,9 @@ def parse_opening_hours(oh_string):
     return output
 
 if __name__ == "__main__":
-    city = "Kraków"
-    with open(f'shops_{city}.json', 'r') as f:
+    city = parse_args().city
+
+    with open(f"shops_{city}.json", encoding="utf-8") as f:
         shops_in_city = json.load(f)
 
     shops_formatted = []
@@ -123,10 +132,10 @@ if __name__ == "__main__":
 
         street = shop['street'] or ""
         housenumber = shop['housenumber'] or ""
-        city = shop['city'] or ""
+        shop_city = shop['city'] or ""
 
         if street and housenumber:
-            address = f"{street} {housenumber}{', ' + city if city else ''}"
+            address = f"{street} {housenumber}{', ' + shop_city if shop_city else ''}"
         else:
             address = get_address_from_coords(shop['lat'], shop['lon'])
             time.sleep(1)
@@ -135,7 +144,14 @@ if __name__ == "__main__":
         longitude = shop['lon']
         opening_hours = parse_opening_hours(shop["opening_hours"])
 
-        body = {'network_name': network_name,'status':'AVAILABLE', 'address': address, 'latitude': latitude, 'longitude': longitude,'opening_hours': opening_hours}
+        body = {
+            'network_name': network_name,
+            'status': 'AVAILABLE',
+            'address': address,
+            'latitude': latitude,
+            'longitude': longitude,
+            'opening_hours': opening_hours,
+        }
 
         shops_formatted.append(body)
 

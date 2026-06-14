@@ -1,11 +1,20 @@
-import requests
+import argparse
 import json
 
+import requests
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fetch shop data from OpenStreetMap for a given city.")
+    parser.add_argument("--city", required=True, help='City name, e.g. "Wrocław"')
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
+    city = parse_args().city
+
     brands = {"Żabka", "Biedronka", "Lidl", "Carrefour", "Aldi", "Dino", "Netto", "Kaufland"}
     brand_regex = "|".join(brands)
-
-    city = "Kraków"
 
     query = f"""
     [out:json][timeout:120];
