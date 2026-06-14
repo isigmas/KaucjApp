@@ -138,7 +138,7 @@ if __name__ == "__main__":
             address = f"{street} {housenumber}{', ' + shop_city if shop_city else ''}"
         else:
             address = get_address_from_coords(shop['lat'], shop['lon'])
-            time.sleep(1)
+            time.sleep(1) # sleep here cause of limiting in api
 
         latitude = shop['lat']
         longitude = shop['lon']
