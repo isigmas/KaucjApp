@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import time
 
 import requests
@@ -39,6 +40,47 @@ def get_address_from_coords(lat, lon):
     return data.get("display_name", "brak")
 
 
+def _normalize_time(value):
+    value = value.strip()
+    if "+" in value:
+        value = value.split("+", 1)[0].strip()
+    if value.count(":") == 1:
+        value += ":00"
+    if value == "24:00:00":
+        value = "23:59:59"
+    return value
+
+
+TIME_RANGE_RE = re.compile(
+    r"(\d{1,2}:\d{2})(?::\d{2})?\s*-\s*(\d{1,2}:\d{2})(?::\d{2})?(?:\+\d+)?"
+)
+
+
+def _parse_time_ranges(time_part):
+    ranges = []
+    for match in TIME_RANGE_RE.finditer(time_part):
+        open_t = _normalize_time(match.group(1))
+        close_t = _normalize_time(match.group(2))
+        ranges.append((open_t, close_t))
+    return ranges
+
+
+def _merge_time_ranges(ranges):
+    if not ranges:
+        return None
+    if len(ranges) == 1:
+        open_t, close_t = ranges[0]
+        if open_t >= close_t:
+            return ("00:00:00", "23:59:59", True)
+        return (open_t, close_t, False)
+
+    open_t = min(r[0] for r in ranges)
+    close_t = max(r[1] for r in ranges)
+    if open_t >= close_t:
+        return ("00:00:00", "23:59:59", True)
+    return (open_t, close_t, False)
+
+
 def parse_opening_hours(oh_string):
     DAY_MAP = {"Mo": 1, "Tu": 2, "We": 3, "Th": 4, "Fr": 5, "Sa": 6, "Su": 7}
 
@@ -48,7 +90,7 @@ def parse_opening_hours(oh_string):
         "is_closed": True
     }
 
-    if oh_string is None:
+    if oh_string is None or not str(oh_string).strip():
         return [{"day_of_week": i, **CLOSED_DAY} for i in range(1, 8)]
 
     result = {}
@@ -93,22 +135,14 @@ def parse_opening_hours(oh_string):
             for d in days:
                 result[d] = ("00:00:00", "23:59:59", True)
             continue
-        if "-" not in time_part:
+
+        time_ranges = _parse_time_ranges(time_part)
+        merged = _merge_time_ranges(time_ranges)
+        if merged is None:
             continue
 
-        open_t, close_t = time_part.split("-")
-        open_t = open_t.strip() + ":00"
-        close_t = close_t.strip() + ":00"
-        if close_t == "24:00:00":
-            close_t = "23:59:59"
-        if open_t == "24:00:00":
-            open_t = "23:59:59"
-
         for d in days:
-            if open_t >= close_t:
-                result[d] = ("00:00:00", "23:59:59", True)
-            else:
-                result[d] = (open_t, close_t, False)
+            result[d] = merged
 
     output = []
     for i in range(1, 8):
