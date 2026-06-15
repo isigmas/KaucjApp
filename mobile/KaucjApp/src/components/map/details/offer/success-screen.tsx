@@ -5,6 +5,8 @@ import { colors, rounded, spacing } from "@/src/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Easing } from "react-native-reanimated";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
+import ConfirmationCheck from "@/src/components/ui/confirmation-check";
+import ConfettiBurst from "./booking/confetti-burst";
 
 export default function EmailSentScreen() {
   const params = useLocalSearchParams<{ totalIncome: string }>();
@@ -22,9 +24,8 @@ export default function EmailSentScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
-        <View style={styles.imageContainer}>
-          <LottieView source={animation} autoPlay loop style={styles.lottie} />
-        </View>
+        <ConfettiBurst active />
+        <ConfirmationCheck style={{ height: 128, width: 128 }} />
 
         <View style={styles.textContainer}>
           <Text style={styles.title}>Zarezerwowano!</Text>
