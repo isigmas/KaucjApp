@@ -11,7 +11,7 @@ import Animated, { Easing, FadeInUp } from "react-native-reanimated";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import AnimatedRollingNumber from "react-native-animated-rolling-numbers";
 import { useFormContext, useWatch } from "react-hook-form";
-import { colors } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import { OfferFormValues } from "@/src/validation";
 import { computeOfferTotals } from "@/src/hooks/use-offer-creator";
 
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     alignItems: "center",
-    marginBottom: 100,
+    marginBottom: spacing.xs,
   },
   buttonDisabled: {
     backgroundColor: colors.primary.light,

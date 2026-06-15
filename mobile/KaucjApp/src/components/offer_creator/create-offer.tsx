@@ -82,6 +82,6 @@ const styles = StyleSheet.create({
   },
   animatedWrapper: {
     flex: 1,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
 });

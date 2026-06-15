@@ -1,9 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Text, StyleSheet, Pressable } from "react-native";
 import React from "react";
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { layoutSpring } from "@/src/constants";
-import { ArrowRightIcon } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface NavigationButtonsProps {
@@ -17,7 +16,7 @@ export default function NavigationButtons({
   onPrevious,
   onNext,
 }: NavigationButtonsProps) {
-  return (
+  return currentStep !== 3 ? (
     <Animated.View
       entering={FadeIn.duration(800).delay(100)}
       layout={layoutSpring}
@@ -33,7 +32,7 @@ export default function NavigationButtons({
           Wstecz
         </Text>
       </Pressable>
-      <Pressable style={styles.button} onPress={onNext}>
+      <Pressable style={[styles.button]} onPress={onNext}>
         <Text style={styles.buttonText}>
           Dalej{" "}
           <Ionicons
@@ -44,6 +43,16 @@ export default function NavigationButtons({
         </Text>
       </Pressable>
     </Animated.View>
+  ) : (
+    <Animated.View
+      entering={FadeIn.duration(800).delay(100)}
+      layout={layoutSpring}
+      style={styles.finalContainer}
+    >
+      <Pressable style={styles.buttonSecondary} onPress={onPrevious}>
+        <Text style={styles.buttonTextSecondary}>Edytuj ofertę</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -52,7 +61,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: 100,
+  },
+  finalContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 100,
   },
   button: {
     paddingVertical: 12,
@@ -63,6 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: spacing.sm,
+    ...shadows.light,
   },
   buttonText: {
     color: colors.text.white,
@@ -71,5 +88,17 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+
+  buttonSecondary: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.xs,
+  },
+  buttonTextSecondary: {
+    color: colors.text.secondary,
+    fontWeight: "600",
+    fontSize: 16,
+    textDecorationLine: "underline",
   },
 });

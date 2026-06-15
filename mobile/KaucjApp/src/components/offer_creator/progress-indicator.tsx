@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 
 const STEPS = [
   { number: 1, label: "Ilość i cena" },
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   progressOuter: {
     flexDirection: "row",
     alignItems: "flex-start",
-    paddingHorizontal: 28,
+    paddingHorizontal: spacing.md,
     marginBottom: 20,
     marginTop: 45,
   },

@@ -162,7 +162,7 @@ export function useOfferCreator() {
         {
           translateX: slideAnim.interpolate({
             inputRange: [0, 1],
-            outputRange: [50, 0],
+            outputRange: [20, 0],
           }),
         },
       ],

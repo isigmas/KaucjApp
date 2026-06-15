@@ -16,10 +16,11 @@ import Animated, {
 } from "react-native-reanimated";
 import Slider from "@react-native-community/slider";
 import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
-import { colors } from "@/src/theme";
+import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { OfferFormValues, PRICE_MAX } from "@/src/validation";
 import { computeOfferTotals } from "@/src/hooks/use-offer-creator";
 import NavigationButtons from "./navigation-buttons";
+import { layoutSpring } from "@/src/constants";
 
 type ItemKey = "plastic" | "cans";
 
@@ -64,22 +65,19 @@ export default function Step1Quantity() {
   const showTotals = totals.userPrice > 0;
 
   return (
-    <>
-      <View style={styles.rowsContainer}>
-        {ROWS.map((row) => (
-          <ItemRow
-            key={row.id}
-            row={row}
-            isExpanded={expandedRow === row.id}
-            onToggle={() =>
-              setExpandedRow((prev) => (prev === row.id ? null : row.id))
-            }
-          />
-        ))}
-      </View>
-
+    <View style={styles.rowsContainer}>
+      {ROWS.map((row) => (
+        <ItemRow
+          key={row.id}
+          row={row}
+          isExpanded={expandedRow === row.id}
+          onToggle={() =>
+            setExpandedRow((prev) => (prev === row.id ? null : row.id))
+          }
+        />
+      ))}
       {showTotals && <TotalsCard totals={totals} />}
-    </>
+    </View>
   );
 }
 
@@ -97,7 +95,7 @@ function ItemRow({ row, isExpanded, onToggle }: ItemRowProps) {
 
   return (
     <Animated.View
-      layout={Layout.springify().damping(50).stiffness(500).mass(2.5)}
+      layout={layoutSpring}
       style={[styles.rowCard, isExpanded && styles.rowCardExpanded]}
     >
       <Pressable style={styles.rowHeader} onPress={onToggle}>
@@ -218,8 +216,7 @@ function TotalsCard({ totals }: TotalsCardProps) {
   return (
     <Animated.View
       entering={FadeIn}
-      exiting={FadeOut}
-      layout={Layout.springify()}
+      layout={layoutSpring}
       style={styles.totalContainer}
     >
       {rows.map((row) => (
@@ -250,18 +247,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.main,
   },
   rowsContainer: {
-    gap: 12,
+    gap: spacing.md,
   },
   rowCard: {
     backgroundColor: colors.background.card,
-    borderRadius: 26,
+    borderRadius: rounded.apple,
     borderWidth: 1,
     borderColor: colors.status.border,
-    overflow: "hidden",
   },
-  rowCardExpanded: {
-    borderColor: colors.primary.base,
-  },
+  rowCardExpanded: { ...shadows.light },
   rowHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -379,11 +373,9 @@ const styles = StyleSheet.create({
   totalContainer: {
     flexDirection: "column",
     gap: 8,
-    marginTop: 24,
-    padding: 16,
-    paddingVertical: 20,
+    padding: spacing.md,
     backgroundColor: colors.primary.light,
-    borderRadius: 26,
+    borderRadius: rounded.apple,
     borderWidth: 1,
     borderColor: colors.primary.base,
   },
