@@ -27,6 +27,7 @@ export const OfferMarker = React.memo(
         //those props move the marker up so it reflects correct position on the map
         anchor={{ x: 0.5, y: 1 }}
         centerOffset={{ x: 0, y: -20 }}
+        zIndex={10}
       >
         <View style={styles.markerContainer} onLayout={onRendered}>
           <View style={styles.bubble}>
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   markerContainer: {
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1, // Ensure the marker is above the map layer
+    zIndex: 10, // Ensure the marker is above the map layer
   },
   bubble: {
     backgroundColor: "#FFFFFF",

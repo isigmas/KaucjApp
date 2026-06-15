@@ -38,8 +38,8 @@ export const useUserLocation = () => {
           setInitialRegion({
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.015,
           });
         }
       } catch (error) {

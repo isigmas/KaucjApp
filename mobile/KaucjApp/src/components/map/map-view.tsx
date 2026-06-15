@@ -68,7 +68,7 @@ function MapSurface({
         showsUserLocation
         showsMyLocationButton
         moveOnMarkerPress={false}
-        minZoomLevel={9}
+        minZoomLevel={11}
       >
         {offers.map((offer) => (
           <OfferMarker
