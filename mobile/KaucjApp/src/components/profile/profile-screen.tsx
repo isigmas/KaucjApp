@@ -66,7 +66,7 @@ export default function ProfileScreen() {
 
         <ProfileMenuItem
           icon="settings"
-          title="Ustawienia"
+          title="Moje dane"
           subtitle="Zarządzaj swoim kontem"
           delay={700}
           onPress={() => router.push("/profile/settings")}
