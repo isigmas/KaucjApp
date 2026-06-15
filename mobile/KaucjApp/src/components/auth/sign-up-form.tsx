@@ -44,6 +44,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         placeholder="Email"
         keyboardType="email-address"
         autoCapitalize="none"
+        autoComplete="email"
         returnKeyType="next"
         blurOnSubmit={false}
         onSubmitEditing={() => firstNameRef.current?.focus()}
@@ -57,6 +58,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
             name="firstName"
             icon="user"
             placeholder="Imię"
+            autoComplete="given-name"
             returnKeyType="next"
             blurOnSubmit={false}
             onSubmitEditing={() => lastNameRef.current?.focus()}
@@ -69,6 +71,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
             name="lastName"
             icon="user"
             placeholder="Nazwisko"
+            autoComplete="family-name"
             returnKeyType="next"
             blurOnSubmit={false}
             onSubmitEditing={() => userNameRef.current?.focus()}
@@ -83,6 +86,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         icon="at-sign"
         placeholder="Nazwa użytkownika"
         autoCapitalize="none"
+        autoComplete="off"
         returnKeyType="next"
         blurOnSubmit={false}
         onSubmitEditing={() => phoneNumberRef.current?.focus()}
@@ -95,6 +99,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         icon="phone"
         placeholder="Numer telefonu"
         keyboardType="numeric"
+        autoComplete="tel"
         returnKeyType="next"
         blurOnSubmit={false}
         onSubmitEditing={() => passwordRef.current?.focus()}
@@ -107,6 +112,7 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         icon="lock"
         placeholder="Hasło"
         isPassword
+        autoComplete="password"
         returnKeyType="done"
         onSubmitEditing={onSubmit}
         hideErrorMessage={true}

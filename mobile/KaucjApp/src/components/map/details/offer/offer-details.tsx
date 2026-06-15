@@ -1,6 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { Offer } from "@/src/types";
+import { View, StyleSheet } from "react-native";
 import { formatDate } from "@/src/lib";
 import DetailHeader from "../details-header";
 import StatusBadge from "./status-badge";
@@ -12,12 +11,10 @@ import { useGetOffer } from "@/src/api/hooks/use-offer";
 import LoadingState from "@/src/components/states/loading-state";
 import EmptyState from "@/src/components/states/empty-state";
 import { useAuth } from "@/src/auth/use-auth";
-import SectionCard from "@/src/components/ui/section-card";
-import { colors, rounded, spacing } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 import WarningBanner from "../warning-banner";
 
 interface OfferDetailsProps {
-  offer: Offer;
   offerId: number;
 }
 
@@ -31,7 +28,10 @@ export default function OfferDetails({ offerId }: OfferDetailsProps) {
     return <EmptyState title="Ta oferta jest już niedostępna." />;
   }
 
-  const isReserved = offer.status === "RESERVED";
+  const isNotAvailable =
+    offer.status === "RESERVED" ||
+    offer.status === "COMPLETED" ||
+    offer.status === "CANCELED";
   const isTheUserOwner = offer.creatorId === user?.userId;
   return (
     <View style={styles.container}>
@@ -55,7 +55,7 @@ export default function OfferDetails({ offerId }: OfferDetailsProps) {
 
       <OfferSummaryCard offer={offer} />
 
-      {!isTheUserOwner && !isReserved && (
+      {!isTheUserOwner && !isNotAvailable && (
         <ReserveOffer offerId={offer.offerId} totalIncome={offer.totalIncome} />
       )}
     </View>

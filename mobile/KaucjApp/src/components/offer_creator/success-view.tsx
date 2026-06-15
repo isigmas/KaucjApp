@@ -7,6 +7,7 @@ import Animated, {
   Layout,
 } from "react-native-reanimated";
 import { colors, spacing } from "@/src/theme";
+import ConfirmationCheck from "../ui/confirmation-check";
 
 const { width } = Dimensions.get("window");
 
@@ -19,14 +20,7 @@ export function SuccessView({ onGoHome, onCreateAnother }: SuccessViewProps) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Animated.View
-          entering={BounceIn.duration(800).delay(100)}
-          style={styles.iconContainer}
-        >
-          <View style={styles.iconBackground}>
-            <Text style={styles.iconText}>✓</Text>
-          </View>
-        </Animated.View>
+        <ConfirmationCheck />
 
         <Animated.View
           entering={FadeInDown.duration(600).delay(400).springify()}
@@ -68,29 +62,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 32,
   },
-  iconContainer: {
-    marginBottom: 32,
-    shadowColor: colors.primary.base,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  iconBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.primary.base,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 6,
-    borderColor: colors.primary.light,
-  },
-  iconText: {
-    fontSize: 48,
-    color: colors.text.white,
-    fontWeight: "900",
-  },
+
   textContainer: {
     alignItems: "center",
   },

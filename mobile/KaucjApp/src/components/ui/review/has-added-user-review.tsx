@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     borderRadius: rounded.lg,
     borderColor: colors.status.border,
     borderWidth: 0.5,
-    paddingTop: 0,
+    padding: spacing.md,
     shadowOpacity: 0.1,
   },
   sectionLabel: {

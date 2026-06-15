@@ -16,7 +16,7 @@ import {
 import { router } from "expo-router";
 import { apiClient } from "../api-client";
 
-const offerKeys = {
+export const offerKeys = {
   all: ["offers"] as const,
   searches: () => [...offerKeys.all, "search"] as const,
   search: (bbox: OfferSearchBBox) => [...offerKeys.searches(), bbox] as const,

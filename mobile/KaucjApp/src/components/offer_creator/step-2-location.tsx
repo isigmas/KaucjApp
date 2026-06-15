@@ -11,7 +11,7 @@ import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
-import { colors } from "@/src/theme";
+import { colors, rounded, spacing } from "@/src/theme";
 import type { PickedLocation } from "./location-bottom-sheet";
 import { OfferFormValues } from "@/src/validation";
 
@@ -27,16 +27,9 @@ export default function Step2Location({
   onOpenLocationPicker,
 }: Step2LocationProps) {
   const { control } = useFormContext<OfferFormValues>();
-  const initialNotes = useWatch({ control, name: "pickupInstructions" });
-
-  const [isNotesExpanded, setIsNotesExpanded] = useState(() => !!initialNotes);
 
   return (
-    <ScrollView
-      style={styles.stepContainer}
-      showsVerticalScrollIndicator={false}
-      automaticallyAdjustKeyboardInsets={true}
-    >
+    <View style={styles.stepContainer}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Gdzie odbiór?</Text>
         <Text style={styles.headerSubtitle}>
@@ -50,77 +43,64 @@ export default function Step2Location({
         onPress={onOpenLocationPicker}
       />
 
-      <Controller
-        control={control}
-        name="pickupAddress"
-        render={({
-          field: { value, onChange, onBlur },
-          fieldState: { error },
-        }) => (
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Adres odbioru (ulica i numer)</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                {
-                  borderColor: error
-                    ? colors.status.error
-                    : colors.status.border,
-                },
-              ]}
-              placeholder="ul. Studencka 4"
-              placeholderTextColor={colors.text.muted}
-              value={value ?? ""}
-              onChangeText={onChange}
-              onBlur={onBlur}
-            />
-          </View>
-        )}
-      />
+      <View style={styles.inputGroup}>
+        <Controller
+          control={control}
+          name="pickupAddress"
+          render={({
+            field: { value, onChange, onBlur },
+            fieldState: { error },
+          }) => (
+            <View>
+              <Text style={styles.inputLabel}>
+                Adres odbioru (ulica i numer)
+              </Text>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  {
+                    borderColor: error
+                      ? colors.status.error
+                      : colors.status.border,
+                  },
+                ]}
+                placeholder="ul. Studencka 4"
+                placeholderTextColor={colors.text.muted}
+                value={value ?? ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+              />
+            </View>
+          )}
+        />
 
-      <Animated.View
-        layout={Layout.springify().damping(50).stiffness(500).mass(2.5)}
-        style={styles.notesContainer}
-      >
-        <Pressable
-          style={styles.notesHeader}
-          onPress={() => setIsNotesExpanded((prev) => !prev)}
-        >
-          <View style={styles.notesHeaderLeft}>
-            <Text style={styles.notesTitle}>
-              Dodatkowe informacje (Opcjonalne)
-            </Text>
-          </View>
-          <Text style={styles.chevronText}>{isNotesExpanded ? "−" : "+"}</Text>
-        </Pressable>
-
-        {isNotesExpanded && (
-          <Animated.View
-            entering={FadeIn.delay(100)}
-            exiting={FadeOut}
-            style={styles.notesContent}
-          >
-            <Controller
-              control={control}
-              name="pickupInstructions"
-              render={({ field: { value, onChange, onBlur } }) => (
-                <TextInput
-                  style={[styles.textInput, styles.textArea]}
-                  placeholder="Jestem w domu od 18:00, ale mogę się dostosować..."
-                  placeholderTextColor={colors.text.muted}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                  value={value ?? ""}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                />
-              )}
-            />
-          </Animated.View>
-        )}
-      </Animated.View>
-    </ScrollView>
+        <Controller
+          control={control}
+          name="pickupInstructions"
+          render={({
+            field: { value, onChange, onBlur },
+            fieldState: { error },
+          }) => (
+            <View>
+              <Text style={styles.inputLabel}>
+                Dodatkowe informacje (Opcjonalne)
+              </Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                placeholder="Jestem w domu od 18:00, ale mogę się dostosować..."
+                placeholderTextColor={colors.text.muted}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                value={value ?? ""}
+                onChangeText={onChange}
+                onBlur={onBlur}
+              />
+            </View>
+          )}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -277,59 +257,25 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   inputGroup: {
-    marginBottom: 24,
+    gap: spacing.md,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: "600",
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   textInput: {
     backgroundColor: colors.background.card,
     borderWidth: 1,
     borderColor: colors.status.border,
-    borderRadius: 12,
+    borderRadius: rounded.lg,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     color: colors.text.primary,
   },
-  notesContainer: {
-    backgroundColor: colors.background.subtle,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.status.border,
-    overflow: "hidden",
-    marginBottom: 40,
-  },
-  notesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-  },
-  notesHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  notesTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.text.secondary,
-  },
-  chevronText: {
-    fontSize: 24,
-    color: colors.text.muted,
-    fontWeight: "300",
-  },
-  notesContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
   textArea: {
     minHeight: 100,
-    paddingTop: 14,
   },
 });

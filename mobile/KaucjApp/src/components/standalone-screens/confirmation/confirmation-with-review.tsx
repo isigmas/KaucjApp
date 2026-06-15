@@ -69,7 +69,6 @@ export default function ConfirmationWithReview({
   return (
     <FormProvider {...methods}>
       <ActionConfirmationLayout
-        animationSource={require("@/assets/animations/email-sent.json")}
         title={"Pomyślnie zakończono!"}
         description={"Ten odbiór został pomyślnie zakończony. Dziękujemy!"}
         buttonText={buttonText}

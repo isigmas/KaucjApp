@@ -1,9 +1,10 @@
 import { Offer } from "@/src/types";
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Marker } from "react-native-maps";
 import { colors } from "@/src/theme";
 import { formatPrice } from "@/src/lib";
+import { useMarkerTracking } from "./use-marker-tracking";
 
 interface OfferMarkerProps {
   offer: Offer;
@@ -12,23 +13,23 @@ interface OfferMarkerProps {
 
 export const OfferMarker = React.memo(
   ({ offer, onPress }: OfferMarkerProps) => {
-    const [isTracking, setIsTracking] = useState(true);
-
-    const handleLayout = useCallback(() => {
-      if (isTracking) {
-        setIsTracking(false);
-      }
-    }, [isTracking]);
+    // Re-snapshot whenever any visible value changes so the bubble never goes stale.
+    const { tracksViewChanges, onRendered } = useMarkerTracking(
+      `${offer.totalQuantity}-${offer.totalIncome}-${offer.status}`,
+    );
 
     return (
       <Marker
         identifier={`offer-${offer.offerId}`}
         coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}
         onPress={() => onPress(offer)}
-        tracksViewChanges={isTracking}
-        icon={undefined}
+        tracksViewChanges={tracksViewChanges}
+        //those props move the marker up so it reflects correct position on the map
+        anchor={{ x: 0.5, y: 1 }}
+        centerOffset={{ x: 0, y: -20 }}
+        zIndex={10}
       >
-        <View style={styles.markerContainer} onLayout={handleLayout}>
+        <View style={styles.markerContainer} onLayout={onRendered}>
           <View style={styles.bubble}>
             <Text style={styles.bubbleText} numberOfLines={1}>
               {offer.totalQuantity} sztuk +{formatPrice(offer.totalIncome)}
@@ -48,11 +49,13 @@ export const OfferMarker = React.memo(
     prevProps.offer.totalPrize === nextProps.offer.totalPrize,
 );
 
+OfferMarker.displayName = "OfferMarker";
+
 const styles = StyleSheet.create({
   markerContainer: {
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1, // Ensure the marker is above the map layer
+    zIndex: 10, // Ensure the marker is above the map layer
   },
   bubble: {
     backgroundColor: "#FFFFFF",

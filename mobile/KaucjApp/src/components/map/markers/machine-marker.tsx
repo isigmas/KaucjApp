@@ -1,17 +1,14 @@
-import { getMachineStatusConfig } from "@/src/lib";
 import { DepositMachine, DepositMachineStatus } from "@/src/types";
-import { preventAutoHideAsync } from "expo-splash-screen";
-import React, { useState, useCallback } from "react";
-// Add Image to your react-native imports
-import { ImageSourcePropType, StyleSheet, View, Image } from "react-native";
+import React from "react";
+import { ImageSourcePropType, StyleSheet, Image } from "react-native";
 import { Marker } from "react-native-maps";
+import { useMarkerTracking } from "./use-marker-tracking";
 
 interface MachineMarkerProps {
   machine: DepositMachine;
   onPress: (machine: DepositMachine) => void;
 }
 
-// A dictionary of a marker status and a marker image
 const markerImages: Record<DepositMachineStatus, ImageSourcePropType> = {
   AVAILABLE: require("@/assets/images/markers/deposit_marker_green.png"),
   FULL: require("@/assets/images/markers/deposit_marker_yellow.png"),
@@ -20,13 +17,8 @@ const markerImages: Record<DepositMachineStatus, ImageSourcePropType> = {
 
 export const MachineMarker = React.memo(
   ({ machine, onPress }: MachineMarkerProps) => {
-    const [isTracking, setIsTracking] = useState(true);
-
-    const handleLayout = useCallback(() => {
-      if (isTracking) setIsTracking(false);
-    }, [isTracking]);
-
-    const config = getMachineStatusConfig(machine.status);
+    // this forces a fresh native snapshot - in other words - it forces the marker to be re-rendered and updates the color of the marker.
+    const { tracksViewChanges, onRendered } = useMarkerTracking(machine.status);
 
     return (
       <Marker
@@ -36,57 +28,35 @@ export const MachineMarker = React.memo(
           longitude: machine.longitude,
         }}
         onPress={() => onPress(machine)}
-        tracksViewChanges={isTracking}
+        tracksViewChanges={tracksViewChanges}
+        //those props move the marker up so it reflects correct position on the map
+        anchor={{ x: 0.5, y: 1 }}
+        centerOffset={{ x: 0, y: -20 }}
       >
         <Image
           source={markerImages[machine.status]}
-          onLoad={handleLayout} // Stops tracking once the image successfully loads
-          style={{ width: 50, height: 50 }} // Adjust dimensions to match your asset sizes
+          onLoad={onRendered}
+          style={styles.pin}
           resizeMode="contain"
+          // Android needs this to avoid re-decoding the asset on every redraw.
+          fadeDuration={0}
         />
       </Marker>
     );
   },
   (prevProps, nextProps) =>
     prevProps.machine.id === nextProps.machine.id &&
-    prevProps.machine.status === nextProps.machine.status,
+    prevProps.machine.status === nextProps.machine.status &&
+    prevProps.machine.latitude === nextProps.machine.latitude &&
+    prevProps.machine.longitude === nextProps.machine.longitude,
 );
 
+MachineMarker.displayName = "MachineMarker";
+
+const MARKER_SIZE = 50;
 const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 2,
-  },
-  pinRing: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 3,
-    alignItems: "center",
-    justifyContent: "center",
-    // Shadows
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 6,
-  },
-  pinCore: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  triangle: {
-    width: 0,
-    height: 0,
-    backgroundColor: "transparent",
-    borderStyle: "solid",
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    marginTop: -2, // Pull it up slightly to overlap the circle seamlessly
+  pin: {
+    width: MARKER_SIZE,
+    height: MARKER_SIZE,
   },
 });

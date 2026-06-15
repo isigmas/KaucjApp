@@ -122,6 +122,13 @@ export function useOfferCreator() {
 
   // LIFECYCLE ---------------------------------------------------------------------------
 
+  const nextStep = () => {
+    setCurrentStep((prev) => Math.min(prev + 1, 3));
+  };
+  const previousStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
   const reset = useCallback(() => {
     form.reset(defaultOfferFormValues);
     setCurrentStep(1);
@@ -155,7 +162,7 @@ export function useOfferCreator() {
         {
           translateX: slideAnim.interpolate({
             inputRange: [0, 1],
-            outputRange: [50, 0],
+            outputRange: [20, 0],
           }),
         },
       ],
@@ -167,6 +174,8 @@ export function useOfferCreator() {
     form,
     currentStep,
     goToStep: setCurrentStep,
+    nextStep,
+    previousStep,
     isSuccess,
     isSubmitting: isPending,
     locationSheetRef,

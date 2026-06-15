@@ -89,6 +89,4 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     paddingHorizontal: 0,
   },
-
-  reviewCardContainer: {},
 });
