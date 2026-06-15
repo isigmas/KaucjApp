@@ -4,7 +4,10 @@ import { useAuthStore } from "../auth/auth-store";
 import { camelizeKeys, decamelizeKeys } from "humps";
 import { parseApiError } from "./api-error";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+if (!API_URL) {
+  console.warn("Warning: EXPO_PUBLIC_API_URL is not defined!");
+}
 
 export const apiClient = axios.create({
   baseURL: API_URL,
