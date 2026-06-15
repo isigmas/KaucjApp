@@ -41,7 +41,6 @@ export default function ConfirmationScreen() {
 const CancelConfirmation = () => {
   return (
     <ActionConfirmationLayout
-      animationSource={require("@/assets/animations/email-sent.json")}
       title={"Anulowano!"}
       description={
         "Twoja oferta została pomyślnie anulowana. Nie będzie już widoczna dla kurierów."

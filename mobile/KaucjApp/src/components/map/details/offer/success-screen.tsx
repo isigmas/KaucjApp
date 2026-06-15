@@ -30,7 +30,6 @@ export default function EmailSentScreen() {
         <View style={styles.textContainer}>
           <Text style={styles.title}>Zarezerwowano!</Text>
 
-          {/* Karta z zyskiem - ulepszony wygląd */}
           <View style={styles.earningsCard}>
             <Text style={styles.earningsLabel}>Twój potencjalny zysk</Text>
             <View style={styles.amountWrapper}>

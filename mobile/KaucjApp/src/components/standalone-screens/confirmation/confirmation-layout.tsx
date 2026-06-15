@@ -1,10 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
-import LottieView from "lottie-react-native";
 import { colors, rounded, spacing } from "@/src/theme";
+import ConfirmationCheck from "@/src/components/ui/confirmation-check";
 
 export interface ActionConfirmationLayoutProps {
-  animationSource: any;
   title: string;
   description?: string;
   buttonText: string;
@@ -15,7 +14,6 @@ export interface ActionConfirmationLayoutProps {
 }
 
 export default function ActionConfirmationLayout({
-  animationSource,
   title,
   description,
   buttonText,
@@ -34,14 +32,7 @@ export default function ActionConfirmationLayout({
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets={true}
       >
-        <View style={styles.imageContainer}>
-          <LottieView
-            source={animationSource}
-            autoPlay
-            loop
-            style={styles.lottie}
-          />
-        </View>
+        <ConfirmationCheck style={{ height: 110, width: 110 }} />
 
         <View style={styles.textContainer}>
           <Text style={styles.title}>{title}</Text>
