@@ -32,11 +32,7 @@ export default function Step2Location({
   const [isNotesExpanded, setIsNotesExpanded] = useState(() => !!initialNotes);
 
   return (
-    <ScrollView
-      style={styles.stepContainer}
-      showsVerticalScrollIndicator={false}
-      automaticallyAdjustKeyboardInsets={true}
-    >
+    <>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Gdzie odbiór?</Text>
         <Text style={styles.headerSubtitle}>
@@ -120,7 +116,7 @@ export default function Step2Location({
           </Animated.View>
         )}
       </Animated.View>
-    </ScrollView>
+    </>
   );
 }
 

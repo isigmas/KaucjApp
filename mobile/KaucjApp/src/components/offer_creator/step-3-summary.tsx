@@ -31,10 +31,7 @@ export default function Step3Summary({
   const hasLocation = values.latitude !== null && values.longitude !== null;
 
   return (
-    <ScrollView
-      style={styles.stepContainer}
-      showsVerticalScrollIndicator={false}
-    >
+    <>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Podsumowanie</Text>
         <Text style={styles.headerSubtitle}>
@@ -181,7 +178,7 @@ export default function Step3Summary({
           <Text style={styles.buttonText}>Opublikuj</Text>
         )}
       </Pressable>
-    </ScrollView>
+    </>
   );
 }
 

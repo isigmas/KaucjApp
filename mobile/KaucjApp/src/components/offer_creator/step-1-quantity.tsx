@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import Animated, {
   Easing,
@@ -12,6 +19,7 @@ import { AnimatedRollingNumber } from "react-native-animated-rolling-numbers";
 import { colors } from "@/src/theme";
 import { OfferFormValues, PRICE_MAX } from "@/src/validation";
 import { computeOfferTotals } from "@/src/hooks/use-offer-creator";
+import NavigationButtons from "./navigation-buttons";
 
 type ItemKey = "plastic" | "cans";
 
@@ -56,7 +64,7 @@ export default function Step1Quantity() {
   const showTotals = totals.userPrice > 0;
 
   return (
-    <View style={styles.stepContainer}>
+    <>
       <View style={styles.rowsContainer}>
         {ROWS.map((row) => (
           <ItemRow
@@ -71,7 +79,7 @@ export default function Step1Quantity() {
       </View>
 
       {showTotals && <TotalsCard totals={totals} />}
-    </View>
+    </>
   );
 }
 
