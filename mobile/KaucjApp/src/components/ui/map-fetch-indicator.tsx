@@ -2,20 +2,21 @@ import { colors } from "@/src/theme";
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-export default function MapFetchIndicator({
-  isFetching,
-}: {
+interface MapFetchIndicatorProps {
   isFetching: boolean;
-}) {
-  if (isFetching) {
-    return (
-      <View style={styles.spinnerContainer}>
-        <ActivityIndicator size="small" color={colors.primary.base} />
-      </View>
-    );
-  }
-  return null;
 }
+
+function MapFetchIndicator({ isFetching }: MapFetchIndicatorProps) {
+  if (!isFetching) return null;
+
+  return (
+    <View style={styles.spinnerContainer}>
+      <ActivityIndicator size="small" color={colors.primary.base} />
+    </View>
+  );
+}
+
+export default React.memo(MapFetchIndicator);
 
 const styles = StyleSheet.create({
   spinnerContainer: {

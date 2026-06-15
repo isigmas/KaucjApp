@@ -1,49 +1,74 @@
-import React, { useState, useRef, useCallback } from "react";
-import { View, StyleSheet } from "react-native";
-import BottomSheet from "@gorhom/bottom-sheet";
-import { Offer, DepositMachine } from "@/src/types";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
-import MapScreen from "./map-screen";
+import ErrorState from "@/src/components/states/error-state";
+import LoadingState from "@/src/components/states/loading-state";
+
+import MapSurface from "./map-view";
 import DetailsSheet from "./details-sheet";
+import { useMapController } from "./hooks/use-map-controller";
 
-export type SelectedMapItem =
-  | { type: "offer"; data: Offer; id: number }
-  | { type: "machine"; data: DepositMachine; id: number };
-
+// MAIN MAP CONTAINER - MAP PARENT
 export default function MapContainer() {
-  const [selectedItem, setSelectedItem] = useState<SelectedMapItem | null>(
-    null,
-  );
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const {
+    initialRegion,
+    isLocationLoading,
+    onRegionChange,
+    offers,
+    machines,
+    isFetching,
+    offersError,
+    machinesError,
+    selection,
+  } = useMapController();
 
-  const handleOfferPress = useCallback((offer: Offer) => {
-    setSelectedItem({ type: "offer", data: offer, id: offer.offerId });
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
+  if (isLocationLoading || !initialRegion) {
+    return <LoadingState title="Ładowanie lokalizacji..." />;
+  }
 
-  const handleMachinePress = useCallback((machine: DepositMachine) => {
-    setSelectedItem({ type: "machine", data: machine, id: machine.id });
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
+  if (offersError.isError) {
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania ofert."
+        message={
+          offersError.error?.message ||
+          "An unexpected error occurred while loading offers."
+        }
+        onRetry={offersError.refetch}
+      />
+    );
+  }
 
-  const handleSheetChange = useCallback((index: number) => {
-    if (index === -1) {
-      setSelectedItem(null);
-    }
-  }, []);
+  if (machinesError.isError) {
+    return (
+      <ErrorState
+        title="Oops! Coś poszło nie tak podczas ładowania kaucjomatów."
+        message={
+          machinesError.error?.message ||
+          "An unexpected error occurred while loading kaucjomatów."
+        }
+        onRetry={machinesError.refetch}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <MapScreen
-        selectedItem={selectedItem}
-        onOfferPress={handleOfferPress}
-        onMachinePress={handleMachinePress}
+      <MapSurface
+        initialRegion={initialRegion}
+        offers={offers}
+        machines={machines}
+        isFetching={isFetching}
+        selectedItem={selection.selectedItem}
+        onRegionChange={onRegionChange}
+        onOfferPress={selection.selectOffer}
+        onMachinePress={selection.selectMachine}
       />
 
       <DetailsSheet
-        ref={bottomSheetRef}
-        selectedItem={selectedItem}
-        onChange={handleSheetChange}
+        ref={selection.bottomSheetRef}
+        selectedItem={selection.selectedItem}
+        onChange={selection.handleSheetChange}
       />
     </View>
   );

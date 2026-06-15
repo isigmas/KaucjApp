@@ -2,7 +2,7 @@ import React, { forwardRef, useMemo } from "react";
 import { Text, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { rounded, spacing } from "@/src/theme";
-import { SelectedMapItem } from "./map-container";
+import { SelectedMapItem } from "@/src/types";
 import OfferDetails from "./details/offer/offer-details";
 import MachineDetails from "./details/machine/machine-details";
 
@@ -23,9 +23,7 @@ const DetailsSheet = forwardRef<BottomSheet, DetailsSheetProps>(
       }
 
       if (selectedItem.type === "offer") {
-        return (
-          <OfferDetails offer={selectedItem.data} offerId={selectedItem.id} />
-        );
+        return <OfferDetails offerId={selectedItem.id} />;
       }
 
       if (selectedItem.type === "machine") {
@@ -49,6 +47,8 @@ const DetailsSheet = forwardRef<BottomSheet, DetailsSheetProps>(
     );
   },
 );
+
+DetailsSheet.displayName = "DetailsSheet";
 
 export default DetailsSheet;
 
