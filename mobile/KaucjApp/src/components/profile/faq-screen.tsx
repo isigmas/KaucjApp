@@ -10,11 +10,7 @@ import {
   layoutSpring,
   type FaqItem as FaqItemType,
 } from "@/src/constants";
-import Animated, {
-  FadeInDown,
-  FadeInRight,
-  FadeInUp,
-} from "react-native-reanimated";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 export default function FaqScreen() {
   return (
@@ -36,12 +32,12 @@ export default function FaqScreen() {
             style={styles.sectionContent}
           >
             {section.items.map((item, itemIndex) => (
-              <>
-                <FaqItem key={item.question} item={item} index={itemIndex} />
+              <React.Fragment key={item.question}>
+                <FaqItem item={item} index={itemIndex} />
                 {itemIndex !== section.items.length - 1 && (
                   <Animated.View layout={layoutSpring} style={styles.divider} />
                 )}
-              </>
+              </React.Fragment>
             ))}
           </Animated.View>
         </View>
