@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView, { Region } from "react-native-maps";
+import Constants from "expo-constants";
 
-import { DepositMachine, Offer, SelectedMapItem } from "@/src/types";
+import { DepositMachine, MapFilter, Offer, SelectedMapItem } from "@/src/types";
 import { OfferMarker } from "./markers/offer-marker";
 import { MachineMarker } from "./markers/machine-marker";
-import MapFetchIndicator from "../ui/map-fetch-indicator";
+import MapFetchIndicator from "./overlay/map-fetch-indicator";
+import MapFilterControl from "./overlay/map-filter";
 
 interface MapViewProps {
   initialRegion: Region;
@@ -13,10 +15,14 @@ interface MapViewProps {
   machines: DepositMachine[];
   isFetching: boolean;
   selectedItem: SelectedMapItem | null;
+  filter: MapFilter;
+  onFilterChange: (filter: MapFilter) => void;
   onRegionChange: (region: Region) => void;
   onOfferPress: (offer: Offer) => void;
   onMachinePress: (machine: DepositMachine) => void;
 }
+
+const FILTER_TOP_OFFSET = (Constants.statusBarHeight ?? 0) + 8;
 
 // this is the zoom level when an item is selected.
 const SELECTION_LATITUDE_DELTA = 0.003;
@@ -29,6 +35,8 @@ function MapSurface({
   machines,
   isFetching,
   selectedItem,
+  filter,
+  onFilterChange,
   onRegionChange,
   onOfferPress,
   onMachinePress,
@@ -79,6 +87,10 @@ function MapSurface({
         ))}
       </MapView>
 
+      <View style={styles.filterZone} pointerEvents="box-none">
+        <MapFilterControl value={filter} onChange={onFilterChange} />
+      </View>
+
       <MapFetchIndicator isFetching={isFetching} />
     </View>
   );
@@ -93,5 +105,11 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  filterZone: {
+    position: "absolute",
+    top: FILTER_TOP_OFFSET,
+    left: 16,
+    right: 16,
   },
 });

@@ -5,6 +5,7 @@ import { useMapMarkers } from "./use-map-markers";
 import { useMapRegion } from "./use-map-region";
 import { useMapSearch } from "./use-map-search";
 import { useMapSelection } from "./use-map-selection";
+import { useMapErrors } from "./use-map-errors";
 
 export function useMapController() {
   const [filter, setFilter] = useState<MapFilter>("all");
@@ -17,6 +18,19 @@ export function useMapController() {
   });
 
   const { offers, machines } = useMapMarkers(filter);
+
+  const offersError = {
+    isError: offersQuery.isError,
+    error: offersQuery.error,
+    refetch: offersQuery.refetch,
+  };
+  const machinesError = {
+    isError: machinesQuery.isError,
+    error: machinesQuery.error,
+    refetch: machinesQuery.refetch,
+  };
+
+  const errors = useMapErrors({ filter, offersError, machinesError });
 
   const selection = useMapSelection();
 
@@ -36,16 +50,7 @@ export function useMapController() {
     isFetching,
 
     // error surfaces for each category
-    offersError: {
-      isError: offersQuery.isError,
-      error: offersQuery.error,
-      refetch: offersQuery.refetch,
-    },
-    machinesError: {
-      isError: machinesQuery.isError,
-      error: machinesQuery.error,
-      refetch: machinesQuery.refetch,
-    },
+    errors,
 
     // this is the bridge between the map and the bottom sheet.
     selection,
