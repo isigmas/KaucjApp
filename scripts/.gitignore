@@ -1,0 +1,6 @@
+# generated shop data
+deposit_machines_processing/shops_*.json
+
+# python
+deposit_machines_processing/.venv/
+deposit_machines_processing/__pycache__/
