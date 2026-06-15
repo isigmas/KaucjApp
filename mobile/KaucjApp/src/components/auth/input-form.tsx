@@ -19,6 +19,14 @@ export type AuthInputProps<T extends FieldValues> = TextInputProps & {
   icon: keyof typeof Feather.glyphMap;
   isPassword?: boolean;
   hideErrorMessage?: boolean;
+  autoComplete?:
+    | "email"
+    | "family-name"
+    | "given-name"
+    | "username"
+    | "password"
+    | "tel"
+    | "off";
 };
 
 const AuthInputInner = <T extends FieldValues>(
@@ -28,6 +36,7 @@ const AuthInputInner = <T extends FieldValues>(
     icon,
     isPassword,
     hideErrorMessage,
+    autoComplete = "off",
     ...textInputProps
   }: AuthInputProps<T>,
   ref: React.ForwardedRef<TextInput>,
@@ -82,6 +91,7 @@ const AuthInputInner = <T extends FieldValues>(
                     animateFocus(0);
                     onBlur();
                   }}
+                  autoComplete={autoComplete}
                   secureTextEntry={isPassword && !isPasswordVisible}
                   {...textInputProps}
                 />
