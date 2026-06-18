@@ -34,6 +34,14 @@ const AUTH_USER_MESSAGES: Partial<Record<string, string>> = {
     "Nie znaleziono konta. Sprawdź dane lub zarejestruj się.",
 };
 
+/* Raw backend validation messages mapped to polish copy.*/
+const VALIDATION_FIELD_MESSAGES: Partial<Record<string, string>> = {
+  "Username contains inappropriate words":
+    "Nazwa użytkownika zawiera niedozwolone słowa.",
+  "Phone number must consist of 9-15 digits":
+    "Numer telefonu musi składać się z 9-15 cyfr bez spacji.",
+};
+
 export const FALLBACK_MESSAGE = "Coś poszło nie tak. Spróbuj ponownie.";
 export const NETWORK_MESSAGE =
   "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.";
@@ -143,12 +151,20 @@ export function parseApiError(
       ? (messages?.[errorCode] ?? GLOBAL_USER_MESSAGES[errorCode])
       : undefined;
 
+    const specificValidationMessage = pickValidationMessage(
+      body.validationErrors,
+    );
+
     // (c) + (d)
     return new ApiError({
-      userMessage: mappedMessage ?? body.message ?? FALLBACK_MESSAGE,
+      userMessage:
+        specificValidationMessage ??
+        mappedMessage ??
+        body.message ??
+        FALLBACK_MESSAGE,
       errorCode,
       httpStatus,
-      validationErrors: body.validationErrors,
+      validationErrors: translateValidationErrors(body.validationErrors),
     });
   }
 
@@ -159,4 +175,31 @@ export function parseApiError(
 // Auth flows get more specific copy for auth error codes.
 export function parseAuthError(error: unknown): ApiError {
   return parseApiError(error, AUTH_USER_MESSAGES);
+}
+
+// ------ validation helpers ------
+/** Applies VALIDATION_FIELD_MESSAGES to each field in a validation map,
+ *  falling back to the backend's own text for messages we don't know. */
+function translateValidationErrors(
+  validationErrors: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!validationErrors) return undefined;
+  return Object.fromEntries(
+    Object.entries(validationErrors).map(([field, message]) => [
+      field,
+      VALIDATION_FIELD_MESSAGES[message] ?? message,
+    ]),
+  );
+}
+
+// Returns the first known per-field translation, if any.
+function pickValidationMessage(
+  validationErrors: Record<string, string> | undefined,
+): string | undefined {
+  if (!validationErrors) return undefined;
+  for (const message of Object.values(validationErrors)) {
+    const translated = VALIDATION_FIELD_MESSAGES[message];
+    if (translated) return translated;
+  }
+  return undefined;
 }
