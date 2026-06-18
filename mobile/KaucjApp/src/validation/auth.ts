@@ -5,9 +5,12 @@ export const signUpSchema = z.object({
   lastName: z.string().trim().min(2, "Podaj swoje nazwisko."),
   userName: z
     .string()
-    .trim()
     .min(6, "Nazwa użytkownika musi mieć co najmniej 6 znaków.")
-    .regex(/^\S+$/, "Nazwa użytkownika nie może zawierać spacji."),
+    .regex(/^\S+$/, "Nazwa użytkownika nie może zawierać spacji.")
+    .regex(
+      /^[a-zA-Z0-9]+$/,
+      "Nazwa użytkownika może zawierać wyłącznie litery i cyfry.",
+    ),
   phoneNumber: z.string().trim().min(9, "Podaj poprawny numer telefonu."),
   email: z.string().trim().email("Wprowadź poprawny adres email."),
   password: z
