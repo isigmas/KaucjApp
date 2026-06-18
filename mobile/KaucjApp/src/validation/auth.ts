@@ -21,6 +21,9 @@ export const signUpSchema = z.object({
       /[^a-zA-Z0-9]/,
       "Hasło musi zawierać co najmniej jeden znak specjalny.",
     ),
+  acceptTerms: z.boolean().refine((value) => value, {
+    message: "Musisz zaakceptować regulamin i politykę prywatności.",
+  }),
 });
 export const signInSchema = z.object({
   email: z.string().trim().email("Wprowadź poprawny adres email."),

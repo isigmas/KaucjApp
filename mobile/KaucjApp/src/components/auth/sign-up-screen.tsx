@@ -11,7 +11,6 @@ import { AuthFormWrapper } from "@/src/components/auth/auth-form-wrapper";
 import { AuthFooter } from "@/src/components/auth/auth-footer";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import { SignUpForm } from "@/src/components/auth/sign-up-form";
-import { useEffect } from "react";
 import { signUpSchema, SignUpValues } from "@/src/validation";
 
 export default function SignUpScreen() {
@@ -28,6 +27,7 @@ export default function SignUpScreen() {
       phoneNumber: "",
       email: "",
       password: "",
+      acceptTerms: false,
     },
   });
 

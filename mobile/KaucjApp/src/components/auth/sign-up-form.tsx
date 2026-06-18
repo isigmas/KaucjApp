@@ -7,6 +7,7 @@ import { AuthInput } from "@/src/components/auth/input-form";
 import { AuthButton } from "@/src/components/auth/auth-button";
 import { ErrorBanner } from "@/src/components/auth/error-banner";
 import PasswordChecklist from "./password-checklist";
+import { AuthCheckbox } from "@/src/components/auth/auth-checkbox";
 import { SignUpValues } from "@/src/validation";
 
 type Props = {
@@ -118,6 +119,8 @@ export function SignUpForm({ control, onSubmit, isLoading, error }: Props) {
         hideErrorMessage={true}
       />
       <PasswordChecklist password={passwordValue} />
+
+      <AuthCheckbox control={control} name="acceptTerms" />
 
       <AuthButton
         label="Zarejestruj się"
