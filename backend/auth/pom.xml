@@ -11,7 +11,7 @@
 
     <artifactId>auth</artifactId>
     <properties>
-        <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <spring-cloud.version>2025.1.3</spring-cloud.version>
     </properties>
     <dependencyManagement>
         <dependencies>
