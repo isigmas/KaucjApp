@@ -116,7 +116,7 @@ jobs:
 
       - name: Build and push
         if: ${{ matrix.build || steps.retag.outcome == 'failure' }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: backend
           file: backend/${{ matrix.dockerfile }}
