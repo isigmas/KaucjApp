@@ -77,7 +77,7 @@ services:
     logging: *logging
 
   kafka:
-    image: apache/kafka:4.1.2
+    image: apache/kafka:4.3.1
     restart: unless-stopped
     environment:
       KAFKA_NODE_ID: "1"
@@ -106,7 +106,7 @@ services:
     logging: *logging
 
   kafka-init:
-    image: apache/kafka:4.1.2
+    image: apache/kafka:4.3.1
     restart: "no"
     entrypoint: ["/bin/sh", "/create-topics.sh"]
     volumes:
