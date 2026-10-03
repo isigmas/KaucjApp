@@ -55,7 +55,8 @@ Settings → Environments → create `production` (optionally with required revi
 | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET` | `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_HEALTHCHECK_URL` |
 
 Use generated alphanumeric values for secrets (`openssl rand -hex 32`); the workflow rejects whitespace, `$`, `#`, quotes and backslashes
-because Compose `.env` files treat them specially. The stack starts with empty databases; the bootstrap admin
+because Compose `.env` files treat them specially. Exception: `PASSWORD_SALT` is appended to every password before BCrypt, which
+rejects inputs over 72 bytes, so keep it short (`openssl rand -hex 8`). The stack starts with empty databases; the bootstrap admin
 is created from `ADMIN_*` on first start.
 
 The repository also needs the secrets used by the existing test workflow (`backend-build-test.yml`).
