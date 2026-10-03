@@ -80,6 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firstName: userData.firstName,
               lastName: userData.lastName,
               phone: userData.phone,
+              profilePictureUrl: userData.profilePictureUrl ?? null,
               addresses: userData.addresses,
               createdAt: userData.createdAt,
               collectedBottleCount: userData.collectedBottleCount,
