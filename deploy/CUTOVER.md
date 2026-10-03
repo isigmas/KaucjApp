@@ -15,7 +15,7 @@ The Azure environment holds no data worth keeping, so there is **no data migrati
    * WebSocket: GraphQL subscriptions on `wss://<domain>/graphql` and the admin log stream `wss://<domain>/api/monitor/admin/ws/logs`
      go through Caddy; connect with the mobile app (or `wscat`) and check that messages arrive.
    * Memory: `docker stats --no-stream` after the checks. The sum should stay well below the server RAM; `free -m` should show little swap use.
-   * Backup: `sudo systemctl start kaucjapp-backup.service`, then `scripts/restore.sh drill`.
+   * Backup (as `deploy`, which has no sudo): `/opt/kaucjapp/scripts/backup.sh`, then `/opt/kaucjapp/scripts/restore.sh drill`.
 
 ## Phase 2: Cut-over
 
