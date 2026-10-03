@@ -14,7 +14,7 @@ RUN test -n "${SERVICE_NAME}" || (echo "ERROR: pass --build-arg SERVICE_NAME=<mo
     && ./mvnw -pl common -am install -Dmaven.test.skip=true \
     && ./mvnw -pl "${SERVICE_NAME}" native:compile -Pnative -Dmaven.test.skip=true
 
-FROM ubuntu:24.04
+FROM ubuntu:25.10
 WORKDIR /app
 
 ARG SERVICE_NAME
