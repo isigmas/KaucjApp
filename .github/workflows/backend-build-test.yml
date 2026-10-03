@@ -2,7 +2,7 @@ name: Docker Build and Test - backend
 
 on:
   push:
-    branches: [ "main", "backend" ]
+    branches: [ "main", "backend", "kaucjap-three-dot-zero-prod-by-maxxx" ]
   pull_request:
     branches: [ "main", "backend" ]
 
@@ -49,6 +49,34 @@ jobs:
           IT_SECRET: ${{ secrets.IT_SECRET }}
         run: docker compose -f compose.yaml -f compose.cicd.yaml up --build -d --wait --wait-timeout 300
 
+      - name: Seed a users-service profile for the bootstrap admin
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          # Accounts are activated by e-mail, so the profile is created the same way auth does: through users.sync.
+          echo '{"user_id":1,"username":"smokeadmin","first_name":"Smoke","last_name":"Admin","phone":"123456789","email":"smoke-admin@example.com"}' \
+            | docker compose -f compose.yaml -f compose.cicd.yaml exec -T kafka \
+              /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic users.sync
+          sleep 10
+
+      - name: Smoke test through the gateway
+        env:
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SMOKE_UPLOAD: "1"
+        run: ../deploy/scripts/smoke-test.sh http://localhost:8080
+
       - name: Print logs on failure
         if: failure()
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: docker compose -f compose.yaml -f compose.cicd.yaml logs
+
+      - name: Tear down
+        if: always()
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: docker compose -f compose.yaml -f compose.cicd.yaml down -v

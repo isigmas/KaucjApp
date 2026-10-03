@@ -6,6 +6,7 @@ export interface User {
   firstName: string;
   lastName: string;
   phone: string;
+  profilePictureUrl?: string | null;
   createdAt: string;
   collectedBottleCount: number;
   collectedCanCount: number;

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.isigmas.kaucjapp.users.DTO.*;
+import pl.isigmas.kaucjapp.users.service.ProfilePictureStorageService;
 import pl.isigmas.kaucjapp.users.service.UserPeriodStatsService;
 import pl.isigmas.kaucjapp.users.service.UserService;
 import pl.isigmas.kaucjapp.users.service.RatingService;
@@ -33,6 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final RatingService ratingService;
+    private final ProfilePictureStorageService profilePictureStorage;
     private final UserPeriodStatsService userPeriodStatsService;
     private final Logger logger;
 
@@ -334,10 +336,10 @@ public class UserController {
 
     @GetMapping("/me/profile-picture/upload-url")
     @Operation(
-            summary = "Get SAS URL for profile picture upload",
-            description = "Returns a short-lived URL for direct PUT upload to blob storage. "
+            summary = "Get presigned URL for profile picture upload",
+            description = "Returns a short-lived URL for direct PUT upload to object storage (S3-compatible). "
                     + "Optional query content_type: image/jpeg (default), image/png, image/webp. "
-                    + "Mobile must PUT with matching Content-Type and x-ms-blob-type: BlockBlob.")
+                    + "Mobile must PUT the raw image bytes with the matching Content-Type header (no other special headers).")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "upload_url and blob_name for the client."),
             @ApiResponse(responseCode = "400", description = "Unsupported content_type (USER_008)."),
@@ -346,13 +348,16 @@ public class UserController {
     public ResponseEntity<UploadUrlDTO> getUploadUrl(
             @RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam(value = "content_type", required = false, defaultValue = "image/jpeg") String contentType) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        log.info("Getting upload url for profile picture for user {}", currentUserId);
+        logger.info("Getting upload url for profile picture for user %d".formatted(currentUserId));
+        UploadUrlDTO dto = profilePictureStorage.generateUploadUrl(currentUserId, contentType);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/me/profile-picture/confirm")
     @Operation(
             summary = "Confirm profile picture upload",
-            description = "Validates the uploaded blob (ownership, size, JPEG/PNG/WebP), saves public URL, then deletes the previous blob.")
+            description = "Validates the uploaded object (ownership, size, JPEG/PNG/WebP signature), saves public URL, then deletes the previous object.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Updated UserDTO with profile_picture_url."),
             @ApiResponse(responseCode = "400", description = "Invalid blob_name or upload validation failed (USER_008)."),
@@ -361,7 +366,14 @@ public class UserController {
     public ResponseEntity<UserDTO> confirmUpload(
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody ConfirmUploadDTO dto) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+
+        log.info("Confirming upload of profile picture for user {}", currentUserId);
+        logger.info("Confirming upload of profile picture for user %d".formatted(currentUserId));
+        UserDTO current = userService.getUserById(currentUserId);
+        String publicUrl = profilePictureStorage.confirmProfilePicture(currentUserId, dto.blobName());
+        UserDTO updated = userService.updateProfilePictureUrl(currentUserId, publicUrl);
+        profilePictureStorage.deleteByStoredUrl(current.getProfilePictureUrl());
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/me/profile-picture")
@@ -375,7 +387,13 @@ public class UserController {
     })
     public ResponseEntity<Void> deleteProfilePicture(
             @RequestHeader("X-User-Id") Long currentUserId) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+
+        log.info("Deleting profile picture for user {}", currentUserId);
+        logger.info("Deleting profile picture for user %d".formatted(currentUserId));
+        UserDTO current = userService.getUserById(currentUserId);
+        userService.clearProfilePicture(currentUserId);
+        profilePictureStorage.deleteByStoredUrl(current.getProfilePictureUrl());
+        return ResponseEntity.noContent().build();
     }
 
 }

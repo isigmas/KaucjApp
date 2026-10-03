@@ -43,6 +43,7 @@ export const useAuth = () => {
           firstName: userData.firstName,
           lastName: userData.lastName,
           phone: userData.phone,
+          profilePictureUrl: userData.profilePictureUrl ?? null,
           addresses: userData.addresses,
           createdAt: userData.createdAt,
           collectedBottleCount: userData.collectedBottleCount,

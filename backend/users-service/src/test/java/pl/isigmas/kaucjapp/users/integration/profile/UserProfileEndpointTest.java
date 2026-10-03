@@ -141,7 +141,7 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
     }
 
     @Test
-    void deleteProfilePicture_returnsNotImplemented() throws Exception {
+    void deleteProfilePicture_withoutPicture_isIdempotentAndReturnsNoContent() throws Exception {
         String createdUserJson = """
                 {
                     "user_id": 1006,
@@ -162,6 +162,48 @@ public class UserProfileEndpointTest extends BaseIntegrationTest {
                 .getId();
 
         mockMvc.perform(delete("/api/user/me/profile-picture").header("X-User-Id", userId))
-                .andExpect(status().isNotImplemented());
+                .andExpect(status().isNoContent());
+
+        assertThat(userRepository.findById(userId).orElseThrow().getProfilePictureUrl()).isNull();
+    }
+
+    @Test
+    void uploadUrl_returnsPresignedUrlForCurrentUser() throws Exception {
+        postCreateUser("""
+                {
+                    "user_id": 1007,
+                    "username": "uploader",
+                    "first_name": "U",
+                    "last_name": "P",
+                    "phone": "111222337",
+                    "email": "uploader@example.com"
+                }
+                """);
+
+        mockMvc.perform(get("/api/user/me/profile-picture/upload-url")
+                        .header("X-User-Id", 1007L)
+                        .param("content_type", "image/png"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.blob_name").value(org.hamcrest.Matchers.startsWith("user-1007-")))
+                .andExpect(jsonPath("$.upload_url").value(org.hamcrest.Matchers.containsString("X-Amz-Signature=")));
+    }
+
+    @Test
+    void uploadUrl_unsupportedContentType_returns400() throws Exception {
+        postCreateUser("""
+                {
+                    "user_id": 1008,
+                    "username": "uploader2",
+                    "first_name": "U",
+                    "last_name": "P",
+                    "phone": "111222338",
+                    "email": "uploader2@example.com"
+                }
+                """);
+
+        mockMvc.perform(get("/api/user/me/profile-picture/upload-url")
+                        .header("X-User-Id", 1008L)
+                        .param("content_type", "application/pdf"))
+                .andExpect(status().isBadRequest());
     }
 }
