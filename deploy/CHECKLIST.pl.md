@@ -48,7 +48,7 @@ Domeny nie trzeba kupować: `kaucjapp.pl` przejmiesz od kolegi. Do tego czasu u�
 - [ ] **7. Sekrety w GitHubie** (z katalogu repo, podmień `<...>`)
   ```bash
   gh api -X PUT repos/isigmas/KaucjApp/environments/production
-  E="--env production"
+  E=(--env production)
 
   gh variable set DEPLOY_HOST $E --body "<IP>"
   gh variable set API_DOMAIN $E --body "kaucjapp.duckdns.org"
