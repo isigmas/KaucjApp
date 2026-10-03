@@ -6,7 +6,8 @@ import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.kafka.{ConsumerSettings, Subscriptions}
 import org.apache.pekko.kafka.scaladsl.Consumer
 import org.apache.pekko.stream.scaladsl.Sink
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, PropertyNamingStrategies}
+import org.apache.pekko.stream.{ActorAttributes, Supervision}
 import pl.isigmas.kaucjapp.common.logger.{LogLevel, SystemLog}
 import pl.isigmas.kaucjapp.monitor.db.LogRepository
 
@@ -17,7 +18,11 @@ object DatabaseLogSaver {
   def start(implicit system: ActorSystem[?]): Unit = {
     import system.executionContext
     val config = system.settings.config
-    val mapper = new ObjectMapper().findAndRegisterModules()
+    // Producers (see SnakeCaseKafkaJsonSerializer in common) publish snake_case JSON.
+    val mapper = new ObjectMapper()
+      .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      .findAndRegisterModules()
 
     val dbConsumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(config.getString("app.kafka.bootstrap-servers"))
@@ -32,6 +37,8 @@ object DatabaseLogSaver {
     Consumer
       .plainSource(dbConsumerSettings, Subscriptions.topics(kafkaTopic))
       .map(record => mapper.readValue(record.value(), classOf[SystemLog]))
+      // a malformed message must be skipped, not terminate the whole log pipeline
+      .withAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
 
       // ignore INFO level logs
       .filter(log => log.level == LogLevel.IMPORTANT || log.level == LogLevel.WARN || log.level == LogLevel.ERROR)

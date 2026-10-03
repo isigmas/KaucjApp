@@ -2,7 +2,7 @@ package pl.isigmas.kaucjapp.monitor.guardian
 
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
-import pl.isigmas.kaucjapp.monitor.db.DatabaseLogSaver
+import pl.isigmas.kaucjapp.monitor.db.{DatabaseLogSaver, LogRepository}
 import pl.isigmas.kaucjapp.monitor.server.MonitoringServer
 import pl.isigmas.kaucjapp.monitor.worker.{KafkaMonitorWorker, KafkaWorkerCommand}
 
@@ -12,6 +12,9 @@ enum MonitorCommand:
 
 object MonitorGuardian:
   def apply(): Behavior[MonitorCommand] = Behaviors.setup { context =>
+
+    // Fail fast (and let the container restart) if the database is unreachable or a migration fails.
+    LogRepository.init()
 
     MonitoringServer.start(using context.system)
 
