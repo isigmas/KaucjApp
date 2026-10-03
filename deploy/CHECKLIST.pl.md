@@ -50,37 +50,37 @@ Domeny nie trzeba kupować: `kaucjapp.pl` przejmiesz od kolegi. Do tego czasu u�
   gh api -X PUT repos/isigmas/KaucjApp/environments/production
   E=(--env production)
 
-  gh variable set DEPLOY_HOST $E --body "<IP>"
-  gh variable set API_DOMAIN $E --body "kaucjapp.duckdns.org"
-  gh variable set ACME_EMAIL $E --body "<twoj mail>"
-  gh variable set DB_USER $E --body "kaucjapp"
-  gh variable set ADMIN_USERNAME $E --body "admin"
-  gh variable set ADMIN_EMAIL $E --body "<twoj mail>"
-  gh variable set STORAGE_S3_ENDPOINT $E --body "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-  gh variable set STORAGE_S3_BUCKET $E --body "kaucjapp-profile-pictures"
-  gh variable set STORAGE_S3_PUBLIC_BASE_URL $E --body "https://pub-<...>.r2.dev"
-  gh variable set BACKUP_S3_ENDPOINT $E --body "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-  gh variable set BACKUP_S3_BUCKET $E --body "kaucjapp-backups"
+  gh variable set DEPLOY_HOST "${E[@]}" --body "<IP>"
+  gh variable set API_DOMAIN "${E[@]}" --body "kaucjapp.duckdns.org"
+  gh variable set ACME_EMAIL "${E[@]}" --body "<twoj mail>"
+  gh variable set DB_USER "${E[@]}" --body "kaucjapp"
+  gh variable set ADMIN_USERNAME "${E[@]}" --body "admin"
+  gh variable set ADMIN_EMAIL "${E[@]}" --body "<twoj mail>"
+  gh variable set STORAGE_S3_ENDPOINT "${E[@]}" --body "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+  gh variable set STORAGE_S3_BUCKET "${E[@]}" --body "kaucjapp-profile-pictures"
+  gh variable set STORAGE_S3_PUBLIC_BASE_URL "${E[@]}" --body "https://pub-<...>.r2.dev"
+  gh variable set BACKUP_S3_ENDPOINT "${E[@]}" --body "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+  gh variable set BACKUP_S3_BUCKET "${E[@]}" --body "kaucjapp-backups"
 
-  openssl rand -hex 32 | gh secret set DB_PASSWORD $E
-  openssl rand -hex 32 | gh secret set REDIS_PASSWORD $E
-  openssl rand -hex 32 | gh secret set JWT_SECRET $E
-  openssl rand -hex 8  | gh secret set PASSWORD_SALT $E
-  openssl rand -hex 32 | gh secret set IT_SECRET $E
-  gh secret set DEPLOY_SSH_KEY $E < ~/.ssh/kaucjapp_deploy
-  gh secret set DEPLOY_KNOWN_HOSTS $E --body "<linia z kroku 3, bez 'DEPLOY_KNOWN_HOSTS = '>"
+  openssl rand -hex 32 | gh secret set DB_PASSWORD "${E[@]}"
+  openssl rand -hex 32 | gh secret set REDIS_PASSWORD "${E[@]}"
+  openssl rand -hex 32 | gh secret set JWT_SECRET "${E[@]}"
+  openssl rand -hex 8  | gh secret set PASSWORD_SALT "${E[@]}"
+  openssl rand -hex 32 | gh secret set IT_SECRET "${E[@]}"
+  gh secret set DEPLOY_SSH_KEY "${E[@]}" < ~/.ssh/kaucjapp_deploy
+  gh secret set DEPLOY_KNOWN_HOSTS "${E[@]}" --body "<linia z kroku 3, bez 'DEPLOY_KNOWN_HOSTS = '>"
   ```
   Sekrety wpisywane ręcznie (`gh` zapyta o wartość):
   ```bash
-  gh secret set ADMIN_PASSWORD $E          # tylko litery i cyfry; zapisz w menedżerze haseł
-  gh secret set MAIL_PASSWORD $E           # klucz Resend, ten sam co MAIL_PASSWORD w backend/.env
-  gh secret set STORAGE_S3_ACCESS_KEY $E   # Access Key ID z R2
-  gh secret set STORAGE_S3_SECRET_KEY $E   # Secret Access Key z R2
-  gh secret set BACKUP_S3_ACCESS_KEY $E    # ten sam Access Key ID
-  gh secret set BACKUP_S3_SECRET_KEY $E    # ten sam Secret Access Key
-  gh secret set BACKUP_HEALTHCHECK_URL $E  # ping URL z healthchecks.io
+  gh secret set ADMIN_PASSWORD "${E[@]}"          # tylko litery i cyfry; zapisz w menedżerze haseł
+  gh secret set MAIL_PASSWORD "${E[@]}"           # klucz Resend, ten sam co MAIL_PASSWORD w backend/.env
+  gh secret set STORAGE_S3_ACCESS_KEY "${E[@]}"   # Access Key ID z R2
+  gh secret set STORAGE_S3_SECRET_KEY "${E[@]}"   # Secret Access Key z R2
+  gh secret set BACKUP_S3_ACCESS_KEY "${E[@]}"    # ten sam Access Key ID
+  gh secret set BACKUP_S3_SECRET_KEY "${E[@]}"    # ten sam Secret Access Key
+  gh secret set BACKUP_HEALTHCHECK_URL "${E[@]}"  # ping URL z healthchecks.io
   ```
-  Kontrola: `gh variable list $E` (11 zmiennych) i `gh secret list $E` (14 sekretów).
+  Kontrola: `gh variable list "${E[@]}"` (11 zmiennych) i `gh secret list "${E[@]}"` (14 sekretów).
   Wartości nie mogą zawierać spacji, `$`, `#`, cudzysłowów ani backslasha (workflow to sprawdza).
 
 - [ ] **8. Pierwszy deploy**
