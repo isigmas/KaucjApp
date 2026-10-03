@@ -61,6 +61,23 @@ is created from `ADMIN_*` on first start.
 
 The repository also needs the secrets used by the existing test workflow (`backend-build-test.yml`).
 
+### Temporary setup without access to the domain's DNS
+Everything works before the `kaucjapp.pl` DNS is available:
+
+* `API_DOMAIN`: a free [DuckDNS](https://www.duckdns.org) name such as `kaucjapp.duckdns.org` pointing at the server IP.
+  `duckdns.org` is on the Public Suffix List, so Let's Encrypt rate limits are not shared with other users (unlike `sslip.io`/`nip.io`).
+* `STORAGE_S3_PUBLIC_BASE_URL`: the bucket's public development URL (R2 → bucket → Settings → Public Development URL → Enable),
+  e.g. `https://pub-<id>.r2.dev`. It is rate limited by Cloudflare, so switch to the custom domain before a public release.
+* E-mail: Resend only needs the API key (`MAIL_PASSWORD`); the sender domain is already verified, no DNS change is required.
+
+Switching later: set the new `API_DOMAIN` / `STORAGE_S3_PUBLIC_BASE_URL`, run Deploy, then rewrite the stored picture URLs
+(otherwise old pictures can no longer be deleted by users):
+
+```bash
+cd /opt/kaucjapp && source scripts/lib.sh && dc exec -T postgres psql -U "$(env_get DB_USER)" -d users_db -c \
+  "UPDATE users SET profile_picture_url = replace(profile_picture_url, 'https://pub-<id>.r2.dev', 'https://cdn.kaucjapp.pl')"
+```
+
 ## Everyday operation
 
 * **Deploy**: merge to `main`. Images are built (only changed services are rebuilt, the rest are re-tagged), then `Deploy` runs automatically.
