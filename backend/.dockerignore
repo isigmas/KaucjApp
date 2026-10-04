@@ -1,12 +1,7 @@
 .workflows
 
-# Environment files and local-only config (never bake secrets into images)
+# Environment files
 .env
-.env.*
-**/application-local.yml
-**/application-local.yaml
-**/application-local.properties
-compose*.yaml
 
 # Compiled files
 target/

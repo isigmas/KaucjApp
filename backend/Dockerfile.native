@@ -10,9 +10,8 @@ ARG SERVICE_NAME
 
 COPY . .
 
-RUN test -n "${SERVICE_NAME}" || (echo "ERROR: pass --build-arg SERVICE_NAME=<module>, e.g. auth" && exit 1) \
-    && ./mvnw -pl common -am install -Dmaven.test.skip=true \
-    && ./mvnw -pl "${SERVICE_NAME}" native:compile -Pnative -Dmaven.test.skip=true
+RUN ./mvnw -pl common -am install -Dmaven.test.skip=true \
+    && cd ${SERVICE_NAME} && ../mvnw native:compile -Pnative -Dmaven.test.skip=true
 
 FROM ubuntu:24.04
 WORKDIR /app

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import { colors, rounded, spacing } from "@/src/theme";
 import { Star } from "lucide-react-native";
@@ -29,17 +29,10 @@ export default function UserProfileInfo({
   const body = (
     <View style={styles.courierRow}>
       <View style={styles.avatar}>
-        {user.profilePictureUrl ? (
-          <Image
-            source={{ uri: user.profilePictureUrl }}
-            style={styles.avatarImage}
-          />
-        ) : (
-          <Text style={styles.avatarText}>
-            {user.firstName.charAt(0)}
-            {user.lastName.charAt(0)}
-          </Text>
-        )}
+        <Text style={styles.avatarText}>
+          {user.firstName.charAt(0)}
+          {user.lastName.charAt(0)}
+        </Text>
       </View>
 
       <View style={styles.courierInfo}>
@@ -93,11 +86,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1.5,
     borderColor: colors.accent.base + "60",
-    overflow: "hidden",
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
   },
   avatarText: {
     fontSize: 17,

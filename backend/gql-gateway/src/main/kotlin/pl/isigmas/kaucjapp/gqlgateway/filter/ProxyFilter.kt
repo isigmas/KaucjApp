@@ -15,7 +15,6 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.filter.OncePerRequestFilter
 import pl.isigmas.kaucjapp.gqlgateway.config.GatewayProperties
 import java.io.ByteArrayOutputStream
-import java.net.URI
 
 @Order(0)
 @Component
@@ -82,11 +81,7 @@ open class ProxyFilter(
         log.debug("Proxying {} {} -> {}", method, request.requestURI, targetUrl)
 
         try {
-            // The path and query come from the raw request and are already percent-encoded. Passing a String would
-            // make RestClient encode them again ("%2F" -> "%252F"), so hand it a ready-made URI whenever possible.
-            val requestSpec = toUri(targetUrl)
-                ?.let { restClient.method(method).uri(it) }
-                ?: restClient.method(method).uri(targetUrl)
+            val requestSpec = restClient.method(method).uri(targetUrl)
 
             // Copy filtered headers
             val headerNames = request.headerNames
@@ -142,13 +137,6 @@ open class ProxyFilter(
             }
         }
     }
-
-    private fun toUri(url: String): URI? =
-        try {
-            URI.create(url)
-        } catch (_: IllegalArgumentException) {
-            null // e.g. unencoded characters in the query: fall back to RestClient's own encoding
-        }
 
     private fun buildTargetUrl(
         route: GatewayProperties.Route,

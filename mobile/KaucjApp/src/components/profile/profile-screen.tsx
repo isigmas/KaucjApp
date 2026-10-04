@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import Animated, {
   FadeInLeft,
   useSharedValue,
@@ -16,83 +9,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, rounded, shadows, spacing } from "@/src/theme";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/use-auth";
-import * as ImagePicker from "expo-image-picker";
 import UserProfile from "../ui/user-profile";
-import {
-  PROFILE_PICTURE_MAX_BYTES,
-  useDeleteProfilePicture,
-  useUploadProfilePicture,
-} from "@/src/api/hooks/use-profile-picture";
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { user } = useAuth();
 
   const router = useRouter();
-
-  const uploadPicture = useUploadProfilePicture();
-  const deletePicture = useDeleteProfilePicture();
-  const isPictureBusy = uploadPicture.isPending || deletePicture.isPending;
-
-  const pickFromLibrary = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        // < 1 makes the picker re-encode as JPEG (also converts HEIC), which keeps files well below the 5 MB limit
-        quality: 0.8,
-      });
-      if (result.canceled || !result.assets[0]) return;
-
-      const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > PROFILE_PICTURE_MAX_BYTES) {
-        Alert.alert("Zdjęcie jest za duże", "Maksymalny rozmiar to 5 MB.");
-        return;
-      }
-
-      uploadPicture.mutate(
-        {
-          uri: asset.uri,
-          mimeType: asset.mimeType,
-          fileName: asset.fileName,
-        },
-        {
-          onError: (error) =>
-            Alert.alert("Nie udało się zmienić zdjęcia", error.userMessage),
-        },
-      );
-    } catch (error) {
-      console.warn("[Profile picture] Image picker failed", error);
-      Alert.alert(
-        "Nie udało się otworzyć galerii",
-        "Sprawdź uprawnienia do zdjęć w ustawieniach telefonu.",
-      );
-    }
-  };
-
-  const removePicture = () => {
-    deletePicture.mutate(undefined, {
-      onError: (error) =>
-        Alert.alert("Nie udało się usunąć zdjęcia", error.userMessage),
-    });
-  };
-
-  const openPictureMenu = () => {
-    Alert.alert("Zdjęcie profilowe", undefined, [
-      { text: "Wybierz z galerii", onPress: pickFromLibrary },
-      ...(user?.profilePictureUrl
-        ? [
-            {
-              text: "Usuń zdjęcie",
-              style: "destructive" as const,
-              onPress: removePicture,
-            },
-          ]
-        : []),
-      { text: "Anuluj", style: "cancel" as const },
-    ]);
-  };
 
   return (
     <ScrollView
@@ -109,12 +32,7 @@ export default function ProfileScreen() {
             })
           }
         >
-          <UserProfile
-            user={user}
-            role="creator"
-            onAvatarPress={openPictureMenu}
-            isAvatarLoading={isPictureBusy}
-          />
+          <UserProfile user={user} role="creator" />
         </Pressable>
       )}
 

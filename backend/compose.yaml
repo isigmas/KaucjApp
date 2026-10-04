@@ -1,21 +1,4 @@
-# Dev / CI environment. Same topology as production (deploy/compose.prod.yaml):
-# one Postgres with a database per service, one Kafka, one Redis, an S3-compatible store for profile pictures.
 services:
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ../deploy/postgres/init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d users_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
-
   kafka:
     image: apache/kafka:4.1.2
     ports:
@@ -35,47 +18,21 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  kafka-init:
-    image: apache/kafka:4.1.2
-    restart: "no"
-    entrypoint: ["/bin/sh", "/create-topics.sh"]
-    volumes:
-      - ../deploy/kafka/create-topics.sh:/create-topics.sh:ro
-      - ../deploy/kafka/topics.txt:/topics.txt:ro
-    depends_on:
-      kafka:
-        condition: service_healthy
-
-  redis:
-    image: redis:7-alpine
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-devredis}", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
+  offers-db:
+    image: postgres:latest
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-devredis}
-    volumes:
-      - redis_data:/data
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: offers_db
     healthcheck:
-      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q PONG"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
-      timeout: 3s
-      retries: 10
-
-  # S3-compatible store for profile pictures (Cloudflare R2 in production).
-  storage:
-    image: adobe/s3mock:5.2.3
-    ports:
-      - "9090:9090"
-    environment:
-      - COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=profile-pictures
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 5s
+      timeout: 5s
+      retries: 5
 
   offers-service:
     build:
@@ -84,22 +41,34 @@ services:
       args:
         SERVICE_NAME: offers-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/offers_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://offers-db:5432/offers_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      postgres:
+      offers-db:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/offer/test"]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 30s
+
+  users-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: users_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   users-service:
     build:
@@ -109,24 +78,15 @@ services:
         SERVICE_NAME: users-service
     environment:
       - IT_SECRET=${IT_SECRET}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/users_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - STORAGE_S3_ENDPOINT=http://storage:9090
-      # Must be reachable from the phone/emulator; override in .env when testing on a physical device (LAN IP).
-      - STORAGE_S3_PUBLIC_ENDPOINT=${STORAGE_PUBLIC_ENDPOINT:-http://localhost:9090}
-      - STORAGE_S3_PUBLIC_BASE_URL=${STORAGE_PUBLIC_ENDPOINT:-http://localhost:9090}/profile-pictures
-      - STORAGE_S3_BUCKET=profile-pictures
-      - STORAGE_S3_ACCESS_KEY=dev
-      - STORAGE_S3_SECRET_KEY=dev
     depends_on:
-      postgres:
+      users-db:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
-      storage:
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/user/test"]
@@ -135,6 +95,28 @@ services:
       retries: 20
       start_period: 30s
 
+  auth-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: auth_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis-auth:
+    image: redis:alpine
+    volumes:
+      - redis_data_auth:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   auth-service:
     build:
       context: .
@@ -142,7 +124,7 @@ services:
       args:
         SERVICE_NAME: auth-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/auth_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
       - IT_SECRET=${IT_SECRET}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -153,16 +135,12 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_HOST=redis-auth
       - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-devredis}
-      - SPRING_DATA_REDIS_DATABASE=0
     depends_on:
-      postgres:
+      auth-db:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
-      redis:
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/auth/status"]
@@ -171,6 +149,18 @@ services:
       retries: 20
       start_period: 30s
 
+  deposit-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: deposit_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   deposit-service:
     build:
       context: .
@@ -178,22 +168,34 @@ services:
       args:
         SERVICE_NAME: deposit-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/deposit_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://deposit-db:5432/deposit_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      postgres:
+      deposit-db:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/deposit/test"]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/deposit/test" ]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 30s
+
+  notification-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: notification_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   notification-service:
     build:
@@ -202,7 +204,7 @@ services:
       args:
         SERVICE_NAME: notification-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/notification_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/notification_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
@@ -210,16 +212,43 @@ services:
       - BASE_URL=http://localhost:8080
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      postgres:
+      notification-db:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/notification/status"]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/notification/status" ]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 30s
+
+  monitor-db:
+    image: cassandra:latest
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MonitorCluster"
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE CLUSTER'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  monitor-db-init:
+    image: cassandra:latest
+    restart: "no"
+    volumes:
+      - ./monitor/src/main/resources/init.cql:/init.cql
+    command: >
+      /bin/bash -c "
+      until cqlsh monitor-db -e 'describe cluster' > /dev/null 2>&1; do
+        sleep 5
+      done &&
+      cqlsh monitor-db -f /init.cql
+      "
+    depends_on:
+      monitor-db:
+        condition: service_healthy
 
   monitor-service:
     build:
@@ -231,20 +260,39 @@ services:
       - KAFKA_SERVERS=kafka:9092
       - SERVER_PORT=8080
       - SERVER_HOST=0.0.0.0
-      - MONITOR_DB_URL=jdbc:postgresql://postgres:5432/monitor_db
-      - MONITOR_DB_USERNAME=${DB_USER}
-      - MONITOR_DB_PASSWORD=${DB_PASSWORD}
+      - CASSANDRA_CONTACT_POINTS=monitor-db:9042
+      - CASSANDRA_DATACENTER=datacenter1
     depends_on:
-      postgres:
+      monitor-db:
         condition: service_healthy
-      kafka-init:
+      kafka:
+        condition: service_healthy
+      monitor-db-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/monitor/status"]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/monitor/status" ]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 20s
+      
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000"
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    volumes:
+      - azurite_data:/data
+
+  redis-gateway:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   gql-gateway:
     build:
@@ -254,10 +302,8 @@ services:
         SERVICE_NAME: gql-gateway
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_HOST=redis-gateway
       - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-devredis}
-      - SPRING_DATA_REDIS_DATABASE=1
     depends_on:
       offers-service:
         condition: service_healthy
@@ -271,13 +317,13 @@ services:
         condition: service_healthy
       monitor-service:
         condition: service_healthy
-      redis:
+      redis-gateway:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/gateway/status"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 20s
 
   nginx:
@@ -291,5 +337,8 @@ services:
         condition: service_healthy
 
 volumes:
-  postgres_data:
+  azurite_data:
   redis_data:
+    driver: local
+  redis_data_auth:
+    driver: local

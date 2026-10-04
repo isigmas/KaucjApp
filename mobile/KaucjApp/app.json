@@ -41,12 +41,6 @@
         }
       ],
       "expo-secure-store",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "KaucjApp potrzebuje dostępu do zdjęć, abyś mógł ustawić zdjęcie profilowe."
-        }
-      ],
       "expo-web-browser",
       "expo-font"
     ],

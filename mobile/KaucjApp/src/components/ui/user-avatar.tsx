@@ -1,27 +1,15 @@
 import { colors, shadows, spacing } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
 interface BottleCapAvatarProps {
-  imageUrl?: string | null;
+  imageUrl?: string;
   color?: "primary" | "accent";
-  /** Shows a camera badge and makes the avatar tappable. */
-  onPress?: () => void;
-  /** Dims the picture and shows a spinner (e.g. while uploading). */
-  isLoading?: boolean;
 }
 
 export default function BottleCapAvatar({
   imageUrl,
   color = "primary",
-  onPress,
-  isLoading = false,
 }: BottleCapAvatarProps) {
   const theme = colors[color] || colors.primary;
 
@@ -31,7 +19,7 @@ export default function BottleCapAvatar({
     dark: shadowColor,
   } = theme;
 
-  const cap = (
+  return (
     <View
       style={[styles.capOuter, { borderColor, backgroundColor, shadowColor }]}
     >
@@ -43,36 +31,8 @@ export default function BottleCapAvatar({
             <Ionicons name="person" size={40} color={borderColor} />
           </View>
         )}
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator color="#fff" />
-          </View>
-        )}
       </View>
-
-      {onPress && (
-        <View
-          style={[styles.editBadge, { backgroundColor: borderColor }]}
-          pointerEvents="none"
-        >
-          <Ionicons name="camera" size={14} color="#fff" />
-        </View>
-      )}
     </View>
-  );
-
-  if (!onPress) return cap;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={isLoading}
-      accessibilityRole="button"
-      accessibilityLabel="Zmień zdjęcie profilowe"
-      hitSlop={8}
-    >
-      {cap}
-    </Pressable>
   );
 }
 
@@ -106,24 +66,6 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     flex: 1,
     backgroundColor: colors.primary.light,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  editBadge: {
-    position: "absolute",
-    right: -6,
-    bottom: -4,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },

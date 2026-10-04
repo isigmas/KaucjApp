@@ -1,0 +1,97 @@
+name: kaucjapp-microservices
+metadata:
+  template: azd-init@1.0.0
+infra:
+  path: .
+
+services:
+  auth-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=auth
+
+  offers-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=offers-service
+
+  users-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=users-service
+
+  deposit-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .  
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=deposit-service
+
+  notification-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .    
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=notification-service
+
+  gql-gateway:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 3600
+    docker:
+      remoteBuild: true
+      path: Dockerfile.native
+      context: .  
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=gql-gateway
+
+  monitor-service:
+    project: ../backend
+    language: java
+    host: containerapp
+    deployTimeout: 1800
+    docker:
+      remoteBuild: true
+      path: monitor/Dockerfile
+      context: .  
+      platform: linux/amd64
+      buildArgs:
+        - SERVICE_NAME=monitor-service

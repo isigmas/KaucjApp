@@ -18,9 +18,6 @@ interface UserProfileProps {
   showRating?: boolean;
   showDetailedStats?: boolean;
   color?: "primary" | "accent";
-  /** When set, the avatar is tappable and shows a camera badge (own profile only). */
-  onAvatarPress?: () => void;
-  isAvatarLoading?: boolean;
 }
 
 export default function UserProfile({
@@ -29,8 +26,6 @@ export default function UserProfile({
   showRating = true,
   showDetailedStats = false,
   color = "primary",
-  onAvatarPress,
-  isAvatarLoading = false,
 }: UserProfileProps) {
   const { data: userRating, isLoading: isLoadingRating } = useUserRating(
     user.userId,
@@ -38,12 +33,7 @@ export default function UserProfile({
 
   return (
     <View style={styles.headerSection}>
-      <BottleCapAvatar
-        color={color}
-        imageUrl={user.profilePictureUrl}
-        onPress={onAvatarPress}
-        isLoading={isAvatarLoading}
-      />
+      <BottleCapAvatar color={color} />
 
       <Animated.Text
         entering={FadeInDown.delay(100).springify()}

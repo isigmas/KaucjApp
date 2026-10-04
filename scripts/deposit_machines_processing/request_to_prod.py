@@ -1,11 +1,9 @@
 import argparse
 import json
-import os
 
 import requests
 
-# Override with KAUCJAPP_API_URL (base URL, no trailing slash) to target another environment.
-API_URL = os.environ.get("KAUCJAPP_API_URL", "https://api.kaucjapp.pl").rstrip("/") + "/api/deposit/machine"
+API_URL = "https://gql-gateway.thankfulpebble-13b4343c.polandcentral.azurecontainerapps.io/api/deposit/machine"
 
 
 def parse_args():

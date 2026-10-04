@@ -71,25 +71,11 @@
             <version>2.15.4</version>
         </dependency>
 
-        <!-- Versions below are managed by the Spring Boot parent BOM -->
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
+            <groupId>io.getquill</groupId>
+            <artifactId>quill-cassandra_3</artifactId>
+            <version>4.8.6</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -129,8 +115,6 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>all</shadedClassifierName>
                             <transformers combine.children="append">
-                                <!-- Flyway plugins and JDBC drivers are discovered via ServiceLoader -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
                                 </transformer>
